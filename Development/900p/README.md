@@ -31,3 +31,9 @@ CPU墙钟平均16.889ms。5,760,000个历史float全部有限；RGB范围20～22
 按Zero要求切900p：DLL SHA256 `72F87A97BFB3AD5D0EFD3FF11DA56B8FBFB778478BE2DF908E30E43CDCE15FD2`，DLL+13个配套shader文件部署并逐项hash核对，flags清除旧720条目、加入`DLSS5_NETWORK_HEIGHT=900`。Magpie已重启；FSR4/FG等效果组设置不改。游戏窗口可选1600×900以对比完整900输入。
 
 备份`D:\DLSSNR-Lab\network-900p\before-magpie-900p\`，回退到此前720安装：`D:\DLSSNR-Lab\network-900p\deploy.ps1 -Action Restore`。部署/回退会先关闭Magpie；包含DLL、shader、manifest和flags，不碰游戏文件。更早0.15备份仍在network-720p/before-magpie-720p。
+
+## 0.15-900P整包（2026-09-14）
+
+Zero实玩确认900p效果比720p更好、帧率还算稳定，1080p加插帧则不稳，要求打0.15-900P。固定900，不做自适应。
+
+包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15-900P.zip`，358,038,890字节，SHA256 `718d77941674d6e851e7babc14b40a596da52e86aec603f44f956b99ff6811d5`；同路径`.zip.sha256`。676个文件逐个解压hash校验通过。DLL仍为刚实玩的`72F87A97…`，包含全部匹配的900p预编译及运行时shader；flags默认900、光流1/0/0、FSR4充满屏幕、XeSS FG开启。原0.15包保留。尚待Zero上传后补下载链接。

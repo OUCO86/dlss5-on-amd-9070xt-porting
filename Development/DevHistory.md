@@ -634,3 +634,5 @@ Zero要求直接测试真正720p内部计算，并明确独立git分支、开发
 ## 2026-09-14：900P分支与部署
 
 Zero于09-13 23:54反馈720游戏链（游戏内FSR→DLSS5→2K→XeSS FG）仍约60/30帧、GPU95%以上，稍稳，要求试900。日志确认720内部计算已生效；未把测试台成绩当游戏帧率。用户外层已切900P，子仓库从dba82fd另建900P。新增`DLSS5_NETWORK_HEIGHT=900`，有效1600×900/处理1600×1024、400token；50×32 split/head及decoder映射已验证。独立测试60帧平均16.708ms/59.85fps，最短16.552ms，历史5,760,000个float全部有限，输出图正常。已把本机Magpie换900DLL `72F87A97…`及13个配套shader，设置900flag、重启等待实玩。备份network-900p/before-magpie-900p，回退同目录deploy.ps1 -Action Restore。main/0.15发布包/tag不变。细节Development/900p/README.md。
+
+- **2026-09-14 0.15-900P包**：Zero实玩900p优于720p且较稳，1080p+FG不稳。按要求固定900打包，自适应暂不做。整包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15-900P.zip`，358038890字节，SHA256 `718d77941674d6e851e7babc14b40a596da52e86aec603f44f956b99ff6811d5`，676个文件逐个解压hash通过；DLL和配套shader取已测安装，光流1/0/0。原0.15不改，待新链接。

@@ -5,6 +5,7 @@ param(
  [string]$Version='0.15',
  [string]$SourceVersion='0.14',
  [string]$Payload='D:\DLSSNR-Lab\release-0.15',
+ [string]$ShaderOverlay='',
  [string]$ExpectedAddon='6FB89C030CEC9AC62731D616494A24E50D68364533E5CD21B92A6AF28D8A313E'
 )
 $ErrorActionPreference='Stop'
@@ -35,13 +36,23 @@ if(!$VerifyOnly){
  foreach($name in @('native_codec_encode.hlsl','native_codec_decode.hlsl','native_temporal_coordinates.hlsl')){
   if((Get-FileHash (Join-Path $Payload $name)).Hash -ne (Get-FileHash (Join-Path $installed "DLSS5-AMD\native-game-tiled-assets\$name")).Hash){throw "Repository shader differs from tested install: $name"}
  }
+ $shaderFiles=@()
+ if($ShaderOverlay){
+  $shaderFiles=@(Get-ChildItem $ShaderOverlay -File | Where-Object {$_.Extension -in @('.cso','.hlsl','.hlsli')})
+  if(!$shaderFiles.Count){throw 'Shader overlay is empty.'}
+  foreach($file in $shaderFiles){
+   $live=Join-Path $installed ('DLSS5-AMD\native-game-tiled-assets\'+$file.Name)
+   if(!(Test-Path $live) -or (Get-FileHash $live).Hash -ne (Get-FileHash $file.FullName).Hash){throw "Shader overlay differs from tested install: $($file.Name)"}
+  }
+ }
  $flags=Get-Content (Join-Path $Payload 'magpie-flags.txt')
  foreach($flag in @('DLSS5_FIT_INPUT=1','DLSS5_SHOW_FPS=1','DLSS5_CODEC_SRGB=1')){if($flags -notcontains $flag){throw "Missing release flag $flag"}}
+ if($Version -eq '0.15-900P' -and ($flags -notcontains 'DLSS5_NETWORK_HEIGHT=900' -or !$ShaderOverlay)){throw '900P requires matching shaders and height=900.'}
  if($flags -match '^DLSS5_(DEBUG_DUMPS|BLACK_PROBE|GAME_PROBE)=1$'){throw 'Diagnostic flag enabled.'}
  $readme=Get-Content (Join-Path $Payload 'package-README-magpie.txt') -Raw -Encoding UTF8
  if(!$readme.Contains("DLSS5-AMD $Version")){throw 'README version differs.'}
  if($Repack){
-  if($Version -notmatch '^0\.[0-9]+$' -or $stage -eq $source){throw 'Invalid repack target.'}
+  if($Version -notmatch '^0\.[0-9]+(-(720|900|1080)P)?$' -or $stage -eq $source){throw 'Invalid repack target.'}
   $previous=Join-Path $Payload 'previous-package'
   if(Test-Path $previous){throw 'Previous repack backup already exists; inspect it first.'}
   New-Item -ItemType Directory -Path $previous | Out-Null
@@ -57,6 +68,7 @@ if(!$VerifyOnly){
  foreach($name in @('native_codec_encode.hlsl','native_codec_decode.hlsl','native_temporal_coordinates.hlsl')){
   Copy-Item (Join-Path $Payload $name) (Join-Path $stage "DLSS5-AMD\native-game-tiled-assets\$name") -Force
  }
+ foreach($file in $shaderFiles){Copy-Item $file.FullName (Join-Path $stage ('DLSS5-AMD\native-game-tiled-assets\'+$file.Name)) -Force}
  # Retain the portable baseline, replacing only its DLSS5 preset with the game-tested one.
  $configPath=Join-Path $stage 'config\config.json'
  $cfg=Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
