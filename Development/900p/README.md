@@ -39,3 +39,11 @@ Zero实玩确认900p效果比720p更好、帧率还算稳定，1080p加插帧则
 包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15-900P.zip`，358,038,890字节，SHA256 `718d77941674d6e851e7babc14b40a596da52e86aec603f44f956b99ff6811d5`；同路径`.zip.sha256`。676个文件逐个解压hash校验通过。DLL仍为刚实玩的`72F87A97…`，包含全部匹配的900p预编译及运行时shader；flags默认900、光流1/0/0、FSR4充满屏幕、XeSS FG开启。原0.15包保留。尚待Zero上传后补下载链接。
 
 2026-09-14 00:25：整包已上传，下载 https://pan.quark.cn/s/a5339e4c8549 。
+
+## 2026-09-14 07:42：《剑星》游戏内接入
+
+按Zero要求，游戏退出后部署900p DLL到Steam《剑星》`SB\Binaries\Win64\native-submission-order.addon64`，继续使用该目录既有ReShade `d3d12.dll`与Agility721。游戏目录无本地DLSS5-AMD遮蔽，资产/flags仍读`D:\DLSSNR-Lab`。DLL+40个shader文件逐项hash校验通过；游戏FFX库导出ffxDispatch/ffxDestroyContext检查通过，驱动仍32.0.31007.2048。
+
+游戏参数：`DLSS5_NETWORK_HEIGHT=900`、`DLSS5_FIT_INPUT=1`、`DLSS5_CODEC_SRGB=0`、`DLSS5_SHOW_FPS=1`；使用原生引擎运动向量和时序。去掉旧DEBUG_DUMPS/BLACK_PROBE/GAME_PROBE/DEBUG_TINT/RESERVE_VRAM_MB，保留其余游戏参数。`scripts/game-flags.txt`与`Development/900p/game-flags.txt`记录该配置。
+
+备份`D:\DLSSNR-Lab\network-900p\before-stellarblade-900p`，回退同目录上一级`deploy-stellarblade.ps1 -Action Restore`（要求游戏退出）。保留原Magpie安装和发布包。尚未启动游戏验画面；游戏内开启FSR触发网络，使用游戏内钩子时保持Magpie关闭。

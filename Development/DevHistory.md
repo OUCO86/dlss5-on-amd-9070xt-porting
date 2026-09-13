@@ -638,3 +638,5 @@ Zero于09-13 23:54反馈720游戏链（游戏内FSR→DLSS5→2K→XeSS FG）仍
 - **2026-09-14 0.15-900P包**：Zero实玩900p优于720p且较稳，1080p+FG不稳。按要求固定900打包，自适应暂不做。整包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15-900P.zip`，358038890字节，SHA256 `718d77941674d6e851e7babc14b40a596da52e86aec603f44f956b99ff6811d5`，676个文件逐个解压hash通过；DLL和配套shader取已测安装，光流1/0/0。原0.15不改，待新链接。
 
 - **2026-09-14 00:25**：Zero上传0.15-900P，链接 https://pan.quark.cn/s/a5339e4c8549 ，中英文README版本号入口已补。按Zero要求，900P分支移除README中0.14网盘链接，保留历史版本记录。
+
+- **2026-09-14 07:42《剑星》内接入**：Zero要求把900DLL集成Steam游戏。游戏已退出，替换native-submission-order.addon64（72F87A97…）及D:\DLSSNR-Lab资产的40个配套shader，逐项hash通过；启用900/FIT_INPUT/线性codec/FPS，清掉旧转储、黑帧探针和占位参数，原生运动与时序保留。ffxDispatch/ffxDestroyContext导出齐全，SDK/驱动检查通过。备份network-900p/before-stellarblade-900p，回退deploy-stellarblade.ps1 -Action Restore。尚待实玩，Magpie/发布包未动。
