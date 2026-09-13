@@ -1,6 +1,6 @@
 # 真正的720p网络计算实验
 
-开发分支：`720p`，从`main`的`85feab0`分出。正式0.15安装、包、tag与main不变。
+开发分支：`720p`，从`main`的`85feab0`分出。0.15发布包、tag与main不变；本机Magpie于下述23:13部署记录中按Zero要求切到720p测试版。
 
 `DLSS5_NETWORK_720P=1`选择网络有效1280×720、处理1280×768；默认0仍为1920×1080/1920×1152。外部窗口仍可到1920×1080，codec按网络实际尺寸进行适配并还原外部尺寸。它与`DLSS5_FIT_INPUT`不同：后者只允许较小窗口接入，不改变网络计算尺寸。
 
@@ -32,4 +32,10 @@ CPU墙钟平均1080p22.178ms、720p11.107ms。720p约2倍吞吐。最短帧是�
 - 本地构建、日志与输出：`release/720p/`（git忽略）。可信结果`720-b.log`和`1080-b.log`，`720-a`是修tile之前的作废结果。
 - 远端隔离目录：`D:\DLSSNR-Lab\network-720p\`，内有`benchmark_frame.exe`、`D3D12\`、独立`DLSS5-AMD\`及assets。
 - 全量shader编译仍用`scripts/compile-shaders.ps1`，已补m1 QKV编译；`compile-vit-m1.ps1`是本次局部修复时用的单核编译命令。
-- 插件候选`release/720p/dlss5-amd.addon64`未部署到正式Magpie或游戏。不要只换DLL：本分支的decoder、ViT及运行时shader必须配套。
+- 插件候选`release/720p/dlss5-amd.addon64`按下述记录已部署到本机Magpie，游戏目录未改。不要只换DLL：本分支的decoder、ViT及运行时shader必须配套。
+
+## 2026-09-13 23:13：本机Magpie部署
+
+Zero明确要求把720p DLL安装到Magpie。关闭原Magpie进程后，部署DLL与35个有差异/新增shader，逐文件hash核对，设置`DLSS5_NETWORK_720P=1`；随后重启Magpie等待游戏测试。DLL SHA256 `A9E27526AAA22B5102ED133A4D3CA1D8FD8EAE40C8EBE1D6F74951BBC079D3E9`。
+
+备份`D:\DLSSNR-Lab\network-720p\before-magpie-720p\`，包含被替换文件、参数及manifest；回退脚本同目录上一级`deploy-magpie.ps1 -Action Restore -StopMagpie`。新增文件在回退时删除，原文件恢复。0.15发布zip/tag和main不变。

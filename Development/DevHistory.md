@@ -628,3 +628,5 @@ Zero实测FSR4和XeSS插帧额外打开AMD光流反而发糊，关闭后更清�
 ## 2026-09-13：720p独立开发分支
 
 Zero要求直接测试真正720p内部计算，并明确独立git分支、开发不影响0.15。已从85feab0创建`720p`；全链改为1280×768处理、240真实ViT token，默认仍保留1080。GPU独立测试60帧：720平均10.934ms/91.46fps，1080平均22.010ms/45.43fps，约2倍吞吐。初测发现m1 ViT expand缺tile布局导致暗图，修复后才采用上述结果。历史全float有限、输出梯度/棋盘恢复。正式安装和main未动，真实游戏画质/帧率未验。复现、范围与坑详见`Development/720p/README.md`。
+
+- **2026-09-13 23:13**：Zero要求720p安装到Magpie；已停止Magpie，备份并替换DLL+35个配套shader，hash核对通过，开启`DLSS5_NETWORK_720P=1`，重启待实机。原版备份`D:\DLSSNR-Lab\network-720p\before-magpie-720p\`，回退`deploy-magpie.ps1 -Action Restore -StopMagpie`。仅本机Magpie测试安装改变，main/0.15发布包/tag不变。
