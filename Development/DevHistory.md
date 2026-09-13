@@ -605,3 +605,12 @@ Zero 在《鬼武者》菜单选 1080p 窗口，捕获实际为 1914×1063。现
 ### 2026-09-13 21:07：Zero《鬼武者》实机反馈
 
 Zero 亲测：游戏设为1080p窗口、中画质，DLSS5正常生效，随后放大到2K，保持30帧。小窗口适配与后接放大已获得真实游戏验证。30帧按用户现场反馈记录，未另行区分帧生成前后读数。
+
+### 2026-09-13：0.15 Magpie 发布包
+
+用户要求升版打包。Magpie默认开启`DLSS5_FIT_INPUT=1`，发布说明放宽到≤1920×1080普通窗口。读取Zero实测后配置发现FSR4已设为Fill（`scalingType=3`，充满屏幕），包按这份实测配置：FSR3原尺寸→DLSS5→FSR4充满屏幕→XeSS FG，FSR4/FG光流参数保留当前值；不是早先合成测试的Fit1。便携包保留0.14基底，仅替换该效果组、已验DLL及3个shader、运行flags与说明。
+
+- `scripts/release-check.sh`通过：全部编译cso对游戏资产一致、game flags一致；重新交叉构建通过。游戏侧DLL仍是之前版本，hash行仅作信息；Magpie包DLL取Zero刚验过的`6FB89C03…`，与运行安装一致。无网络核/runner变化，bench编译清单保持现有有效版本。
+- `Development/tools/package-magpie-fps.ps1`沿用同一文件，升级为可指定版本的整包脚本；检查基础Magpie/FSR4/FG运行库与实测安装哈希相同、3个shader与源码相同、参数无诊断开关。新添`DLSS5-AMD-VERSION.txt`供版本识别。
+- 整包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15.zip`，358,010,364字节，SHA256 `af9a03192b9c7c816250997f7778e40c79e653535f809ae5976282811a8bd2f6`；旁置`.zip.sha256`。672个文件逐个解压计算hash通过，检查无多余未列文件。
+- 中英文README与包说明同步更新；0.15网盘链接待Zero上传后补，0.14历史链接仍在对应版本行。版本标签`0.15`对应本次发布。
