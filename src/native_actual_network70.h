@@ -35,7 +35,7 @@ public:
  void Create(ID3D12Device*d,ID3D12Resource*rgb_tiles,ID3D12Resource*rgb_hwc,
              const std::vector<float>&noise,const std::wstring&dir,ID3D12Resource*temporal_rgb=nullptr,UINT post_shift=0){
   const auto geometry=NativeCurrentNetworkGeometry();const UINT W=geometry.processing_width,H=geometry.processing_height;
-  const UINT vit_tokens=geometry.valid_height==720?240u:640u;
+  const UINT vit_tokens=geometry.VitTokens();
   if(post_shift>3)throw std::runtime_error("network post shift");
   if(device||!d||!rgb_tiles||!rgb_hwc||noise.size()!=201326592/4)throw std::runtime_error("network initialization contract");
   if(_wgetenv(L"DLSS5_POST_BASE_ONLY"))throw std::runtime_error("diagnostic post forbidden");

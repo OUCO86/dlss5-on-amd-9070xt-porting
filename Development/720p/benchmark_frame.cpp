@@ -1,5 +1,5 @@
 // Isolated synthetic native inference ceiling, NOT game/capture/upscaler/FG FPS.
-// benchmark_frame.exe ASSETS FLAGS 720|1080 OUTPUT_PREFIX [frames=30] [temporal=1]
+// benchmark_frame.exe ASSETS FLAGS 720|900|1080 OUTPUT_PREFIX [frames=30] [temporal=1]
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <dxgi1_6.h>
@@ -15,9 +15,9 @@ static void barrier(ID3D12GraphicsCommandList*c,ID3D12Resource*r,D3D12_RESOURCE_
 static void env(const char*k,const char*v){if(_putenv_s(k,v))throw std::runtime_error("environment update");std::wstring wk(k,k+strlen(k)),wv(v,v+strlen(v));if(_wputenv_s(wk.c_str(),wv.c_str()))throw std::runtime_error("wide environment update");}
 static void flags(const wchar_t*path){std::ifstream f(path);if(!f)throw std::runtime_error("flags missing");std::string s;while(std::getline(f,s)){auto p=s.find_first_not_of(" \t\r");if(p==std::string::npos||s[p]=='#'||s[p]==';')continue;s=s.substr(p);auto eq=s.find('=');if(eq==std::string::npos)continue;auto name=s.substr(0,eq),value=s.substr(eq+1);while(!name.empty()&&isspace((unsigned char)name.back()))name.pop_back();while(!value.empty()&&isspace((unsigned char)value.back()))value.pop_back();auto start=value.find_first_not_of(" \t");value=start==std::string::npos?"":value.substr(start);if(name.rfind("DLSS5_",0))continue;env(name.c_str(),value.c_str());}}
 int wmain(int argc,wchar_t**argv){try{
- if(argc<5||argc>7){fprintf(stderr,"usage: benchmark_frame ASSETS FLAGS 720|1080 OUTPUT_PREFIX [frames=30] [temporal=1]\n");return 2;}
- const UINT H=wcstoul(argv[3],nullptr,10),W=H==720?1280:1920,N=argc>5?wcstoul(argv[5],nullptr,10):30;const bool temporal=argc<7||wcstoul(argv[6],nullptr,10)!=0;if((H!=720&&H!=1080)||!N||N>10000)throw std::runtime_error("invalid height/frame count");flags(argv[2]);
- env("DLSS5_NETWORK_720P",H==720?"1":"0");env("DLSS5_DEBUG_DUMPS","");env("DLSS5_BLACK_PROBE","0");env("DLSS5_GAME_PROBE","0");env("DLSS5_SHOW_FPS","0");env("DLSS5_OVERLAP","0");env("DLSS5_TEST_SUBMISSION_TIMING","0");
+ if(argc<5||argc>7){fprintf(stderr,"usage: benchmark_frame ASSETS FLAGS 720|900|1080 OUTPUT_PREFIX [frames=30] [temporal=1]\n");return 2;}
+ const UINT H=wcstoul(argv[3],nullptr,10),W=H==720?1280:H==900?1600:1920,N=argc>5?wcstoul(argv[5],nullptr,10):30;const bool temporal=argc<7||wcstoul(argv[6],nullptr,10)!=0;if((H!=720&&H!=900&&H!=1080)||!N||N>10000)throw std::runtime_error("invalid height/frame count");flags(argv[2]);
+ env("DLSS5_NETWORK_720P",H==720?"1":"0");env("DLSS5_NETWORK_HEIGHT",std::to_string(H).c_str());env("DLSS5_DEBUG_DUMPS","");env("DLSS5_BLACK_PROBE","0");env("DLSS5_GAME_PROBE","0");env("DLSS5_SHOW_FPS","0");env("DLSS5_OVERLAP","0");env("DLSS5_TEST_SUBMISSION_TIMING","0");
  const IID experimental={0x76f5573e,0xf13a,0x40f5,{0xb2,0x97,0x81,0xce,0x9e,0x18,0x93,0x3f}};ck(D3D12EnableExperimentalFeatures(1,&experimental,nullptr,nullptr));
  IDXGIFactory6*f=nullptr;ck(CreateDXGIFactory2(0,IID_PPV_ARGS(&f)));ID3D12Device*d=nullptr;for(UINT i=0;;i++){IDXGIAdapter1*a=nullptr;if(f->EnumAdapterByGpuPreference(i,DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,IID_PPV_ARGS(&a))==DXGI_ERROR_NOT_FOUND)break;DXGI_ADAPTER_DESC1 info{};a->GetDesc1(&info);if(info.VendorId==0x1002){ck(D3D12CreateDevice(a,D3D_FEATURE_LEVEL_12_0,IID_PPV_ARGS(&d)));wprintf(L"adapter=%ls\n",info.Description);}a->Release();if(d)break;}f->Release();if(!d)throw std::runtime_error("AMD adapter missing");
  ID3D12CommandQueue*q=nullptr;D3D12_COMMAND_QUEUE_DESC qd{};ck(d->CreateCommandQueue(&qd,IID_PPV_ARGS(&q)));NativeGameSubmission submit;submit.Create(q);

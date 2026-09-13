@@ -30,8 +30,8 @@ groupshared float tile_input[8*33],tile_weight[32*33];
   total=part==0?a:H(total+a);
  }
  // Explicit square main extents through128 (block66); contracts checked by host.
- uint width=tokens==61440?320:tokens==15360?160:tokens==3840?80:tokens==960?40:tokens==240?20:tokens==138240?480:tokens==34560?240:tokens==8640?120:tokens==2160?60:tokens==640?32:tokens==16384?128:tokens==4096?64:tokens==1024?32:tokens==256?16:8;
- uint output_width=tokens==240?40:tokens==640?60:width*2,output_height=tokens==61440?384:tokens==15360?192:tokens==3840?96:tokens==960?48:tokens==240?24:tokens==138240?576:tokens==34560?288:tokens==8640?144:tokens==2160?72:tokens==640?36:width*2;
+ uint width=tokens==102400?400:tokens==25600?200:tokens==6400?100:tokens==1600?50:tokens==400?25:tokens==61440?320:tokens==15360?160:tokens==3840?80:tokens==960?40:tokens==240?20:tokens==138240?480:tokens==34560?240:tokens==8640?120:tokens==2160?60:tokens==640?32:tokens==16384?128:tokens==4096?64:tokens==1024?32:tokens==256?16:8;
+ uint output_width=tokens==400?50:tokens==240?40:tokens==640?60:width*2,output_height=tokens==102400?512:tokens==25600?256:tokens==6400?128:tokens==1600?64:tokens==400?32:tokens==61440?384:tokens==15360?192:tokens==3840?96:tokens==960?48:tokens==240?24:tokens==138240?576:tokens==34560?288:tokens==8640?144:tokens==2160?72:tokens==640?36:width*2;
  [unroll]for(uint dy=0;dy<2;dy++)[unroll]for(uint dx=0;dx<2;dx++){
   uint x=token%width*2+dx,y=token/width*2+dy;
   if(x>=output_width||y>=output_height)continue;

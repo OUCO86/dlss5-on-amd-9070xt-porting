@@ -1,4 +1,4 @@
-# Native 720p / 1080p inference benchmark
+# Native 720p / 900p / 1080p inference benchmark
 
 Cross-build from the repository root:
 
@@ -11,7 +11,7 @@ The EXE needs the existing Agility SDK 721 `D3D12` directory beside it, experime
 Arguments:
 
 ```text
-benchmark_frame.exe ASSETS FLAGS 720|1080 OUTPUT_PREFIX [frames=30] [temporal=1]
+benchmark_frame.exe ASSETS FLAGS 720|900|1080 OUTPUT_PREFIX [frames=30] [temporal=1]
 ```
 
 Run each height in a separate process against the same flags and matching isolated assets. Output prefix's parent must already exist. Close other GPU workloads for ceiling measurement. Temporal mode defaults on with zero-motion RG16F input and a deterministic fixed gradient/checkerboard source. Each iteration restores that frozen source before timing. This exercises history reuse without recursively feeding already-processed color back into inference.

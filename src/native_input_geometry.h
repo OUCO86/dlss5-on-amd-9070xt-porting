@@ -9,7 +9,7 @@ struct NativeInputGeometry {
  static bool Supported(uint64_t w,unsigned h){return w>0&&h>0&&w<=1920&&h<=1080;}
  static NativeInputGeometry Make(unsigned w,unsigned h,unsigned nw=1920,unsigned nh=1080){
   if(!Supported(w,h))throw std::runtime_error("input must fit within 1920x1080");
-  if(!((nw==1920&&nh==1080)||(nw==1280&&nh==720)))throw std::runtime_error("unsupported network viewport");
+  if(!((nw==1920&&nh==1080)||(nw==1280&&nh==720)||(nw==1600&&nh==900)))throw std::runtime_error("unsupported network viewport");
   NativeInputGeometry g{w,h,0,0,nw,nh,nw,nh};
   if(uint64_t(w)*nh>=uint64_t(h)*nw)g.fit_height=unsigned((uint64_t(h)*nw+w/2)/w);
   else g.fit_width=unsigned((uint64_t(w)*nh+h/2)/h);

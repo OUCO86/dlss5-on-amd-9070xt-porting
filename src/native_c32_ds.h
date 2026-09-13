@@ -24,8 +24,9 @@ public:
  ~NativeC32Downsample(){if(pool_pso)pool_pso->Release();if(input)input->Release();if(weights)weights->Release();if(output)output->Release();if(root)root->Release();if(pso)pso->Release();}
  // Raw path pools already-cropped half-valued HWC, then projects C -> 2C.
  void Create(ID3D12Device*d,ID3D12Resource*src,UINT width,UINT height,UINT shift,const std::vector<float>&w,const std::wstring&dir,bool c64_raw=false,UINT channels=64,NativeMatrixWorkspace*shared=nullptr){
+  // 50x32 uses exact 2x2 pooling to 25x16 (400 rows, divisible by the matrix tile height 16).
   const bool padded_head=c64_raw&&channels==512&&width==60&&height==36;
-  if(channels==512&&!padded_head&&(width<8||height<8||width%8||height%8))throw std::runtime_error("unverified split pool/head extent");
+  if(channels==512&&!padded_head&&!(width==50&&height==32)&&(width<8||height<8||width%8||height%8))throw std::runtime_error("unverified split pool/head extent");
   if(input||!d||!src||(channels!=64&&channels!=128&&channels!=256&&channels!=512)||(!c64_raw&&channels!=64)||w.size()!=(c64_raw?2*channels*channels:2048)||!width||!height||(c64_raw?(width%2||height%2):(width%8||height%8))||shift>3||(c64_raw&&shift))throw std::runtime_error("DS contract");
   input=src;input->AddRef();geometry[0]=width/2;geometry[1]=height/2;geometry[3]=(shift&1)?2:0;geometry[4]=(shift&2)?2:0;geometry[2]=width/2+geometry[3]*2;
   if(c64_raw)geometry[2]=width;

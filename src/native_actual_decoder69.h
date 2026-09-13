@@ -22,7 +22,7 @@ public:
   if(created)throw std::runtime_error("actual decoder already created");
   auto read=[&](const std::wstring&name){return NativeReadF32(dir+L"\\"+name,"actual decoder coefficient");};
   const auto geometry=NativeCurrentNetworkGeometry();const UINT W=geometry.processing_width,H=geometry.processing_height;
-  const UINT tokens=geometry.valid_height==720?240u:640u;
+  const UINT tokens=geometry.VitTokens();
   auto map=NativeVitLogicalMap(tokens,true);
   if(tokens==640){auto captured=read(L"vit-to-hwc.i32");if(captured.size()!=map.size()||std::memcmp(captured.data(),map.data(),map.size()*4))throw std::runtime_error("decoder bridge disagrees with captured inverse map");}
   inverse.Create(d,vit38,map,dir);
