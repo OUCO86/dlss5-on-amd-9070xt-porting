@@ -614,3 +614,5 @@ Zero 亲测：游戏设为1080p窗口、中画质，DLSS5正常生效，随后�
 - `Development/tools/package-magpie-fps.ps1`沿用同一文件，升级为可指定版本的整包脚本；检查基础Magpie/FSR4/FG运行库与实测安装哈希相同、3个shader与源码相同、参数无诊断开关。新添`DLSS5-AMD-VERSION.txt`供版本识别。
 - 整包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15.zip`，358,010,364字节，SHA256 `af9a03192b9c7c816250997f7778e40c79e653535f809ae5976282811a8bd2f6`；旁置`.zip.sha256`。672个文件逐个解压计算hash通过，检查无多余未列文件。
 - 中英文README与包说明同步更新；0.15网盘链接待Zero上传后补，0.14历史链接仍在对应版本行。版本标签`0.15`对应本次发布。
+
+- **2026-09-13 21:16**：Zero已上传0.15整包，夸克链接 https://pan.quark.cn/s/e474fe2061c9 。中英文README下载入口已补齐，包及校验值不变。

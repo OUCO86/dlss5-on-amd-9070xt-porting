@@ -10,7 +10,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 用户实玩《鬼武者》：1080p 窗口放大到 2K，保持约 **30 帧**。另用测试窗口在 4K 桌面验证，网络约 **29 fps**；这是两种场景，不是插帧前后的对比。
 
-便携预设为 **FSR3 保持输入尺寸 → DLSS5 → FSR4 充满屏幕 → XeSS 帧生成**。默认开启小窗口适配（`DLSS5_FIT_INPUT=1`）和网络帧率显示，FPS 数字至少间隔三秒刷新。整包：`Magpie-DLSS5-AMD-0.15.zip`（下载链接待补）。
+便携预设为 **FSR3 保持输入尺寸 → DLSS5 → FSR4 充满屏幕 → XeSS 帧生成**。默认开启小窗口适配（`DLSS5_FIT_INPUT=1`）和网络帧率显示，FPS 数字至少间隔三秒刷新。整包：[Magpie-DLSS5-AMD-0.15.zip](https://pan.quark.cn/s/e474fe2061c9)。
 
 需要 Windows 开发人员模式和 AMD 26.10.07.02 预览驱动。显存紧张会掉帧；《星刃》游戏内钩子版的贴图质量应选「高」或更低。`scripts/game-flags.txt` 和 `scripts/magpie-flags.txt` 分别记录两种运行配置，`scripts/bench.ps1` 编译配套 shader。安装方法见 [Magpie 包内说明](scripts/package-README-magpie.txt)。
 
@@ -83,7 +83,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | `0.12` | 09-12 | 屏幕提示（`native_text_overlay.h` / `.hlsl`）：上采样输出不是 1920×1080 时（2K/4K 屏 Magpie 选了适应屏幕，或游戏窗口不是 1080p）插件不再默默旁观，直接把 "DLSS5-AMD: INPUT MUST BE 1920X1080 (NOW WxH)" 写进画面；接管的 3～5 秒显示 "INITIALIZING..."，初始化失败（开发人员模式没开、驱动不对）显示 "INIT FAILED - SEE DLSS5-AMD\LOGS"。5×7 点阵字体画进自己的缓冲再拷进宿主贴图，在游戏那批命令之后用自己的命令列表提交（对宿主贴图建 UAV、或往游戏的命令列表里录命令，在 Magpie 里都会让 D3D12Core 崩）。flag 文件里 `DLSS5_NOTICE=0` 关掉。另：`DLSS5_OVERLAP`（网络放自己的计算队列、落后一帧；这张卡上 null，默认关）、`DLSS5_BUILD_C32_LDS_SLIM`（融合 C32 核少用 4KB LDS；逐位相同、无收益，默认关）。数值不变。Magpie 包 `Magpie-DLSS5-AMD-0.12.zip` | 不变 |
 | `0.13` | 09-12 | `DLSS5_SHOW_FPS=1`（Magpie 包默认开）：网络自己的帧率用提示字体画在角上。钩子按游戏声明的输出状态接管（映射 ffx_api 状态位），不再只认 UAV。pre 块错误带源码行号。踩坑记录：Windows Update 会悄悄把预览驱动换成正式驱动（SM 6.10 没了，每个 PSO 都 E_INVALIDARG，屏幕写 INIT FAILED）——重装 26.10.07.02，并设 `ExcludeWUDriversInQualityUpdate=1`。Magpie 包的效果组在 FSR3_SR 后面挂了 XeSS 帧生成（ZeroMV，跨厂商）：9070 XT 上网络 28 帧、显示 55 帧，多一帧延迟，网络本身在光流旁边慢 20% 左右。数值不变。Magpie 包 `Magpie-DLSS5-AMD-0.13.zip`（sha256 9104C48D…） | 不变 |
 | `0.14`（整包） | 09-12 | FPS 数字至少三秒刷新一次，不变的字条直接复用，贴字并入已有输出提交，去掉单独的同步提交。保留 XeSS FG ZeroMV 预设。整包清理备份 DLL、日志及 shader 缓存，重新生成文件校验清单。[Magpie-DLSS5-AMD-0.14.zip](https://pan.quark.cn/s/8bbc3033181d)，358,004,639 字节；SHA256 `14ccde3c752b40821cb9f30024579304627a2499e087e06e9aec399bfe734eed`。尚未打 0.14 tag。 | 编译通过；671 个包内文件校验通过；帧率收益未测 |
-| `0.15` | 09-13 | 普通窗口宽≤1920、高≤1080 即可输入，按原宽高比适配固定网络尺寸，再还原窗口尺寸交给 FSR4。便携预设：FSR3 保持输入尺寸 → DLSS5 → FSR4 充满屏幕 → XeSS FG ZeroMV。默认 `DLSS5_FIT_INPUT=1`，保留三秒刷新 FPS。整包 `Magpie-DLSS5-AMD-0.15.zip`，下载链接待补。  358,010,364 字节；SHA256 `af9a03192b9c7c816250997f7778e40c79e653535f809ae5976282811a8bd2f6`。| 672 个包内文件校验通过；《鬼武者》中画质2K约30帧 |
+| `0.15` | 09-13 | 普通窗口宽≤1920、高≤1080 即可输入，按原宽高比适配固定网络尺寸，再还原窗口尺寸交给 FSR4。便携预设：FSR3 保持输入尺寸 → DLSS5 → FSR4 充满屏幕 → XeSS FG ZeroMV。默认 `DLSS5_FIT_INPUT=1`，保留三秒刷新 FPS。整包 [Magpie-DLSS5-AMD-0.15.zip](https://pan.quark.cn/s/e474fe2061c9)。  358,010,364 字节；SHA256 `af9a03192b9c7c816250997f7778e40c79e653535f809ae5976282811a8bd2f6`。| 672 个包内文件校验通过；《鬼武者》中画质2K约30帧 |
 
 ## 权重
 
