@@ -1,5 +1,6 @@
 #pragma once
 #include "native_lab_paths.h"
+#include "native_network_geometry.h"
 #include "native_block_skip.h"
 #include "native_vram_log.h"
 #include <fstream>
@@ -7,7 +8,7 @@
 #include "native_c64_shift.h"
 #include "native_c32_stage.h"
 #include "native_runtime_shifts.h"
-// Controlled RGB512 and captured1920x1152 geometries; weights are loaded once, never in Record.
+// Controlled RGB512 and selectable game geometries; weights are loaded once, never in Record.
 class NativeDecoderTail69 {
  NativeC64Shift c256[7],c128[5],c64[3],body56,body62;
  NativeC32Stage body66,c32[3];
@@ -17,7 +18,8 @@ public:
  NativeDecoderTail69()=default;NativeDecoderTail69(const NativeDecoderTail69&)=delete;
  void Create(ID3D12Device*d,ID3D12Resource*input48,ID3D12Resource*skip14,ID3D12Resource*skip8,ID3D12Resource*skip4,const std::wstring&dir,bool game_extent=false,NativeMatrixWorkspace*workspace=nullptr){
   if(output||!d||!input48||!skip14||!skip8||!skip4)throw std::runtime_error("decoder tail contract");
-  const UINT w=game_extent?120:32,h=game_extent?72:32;
+  const auto geometry=NativeCurrentNetworkGeometry();
+  const UINT w=game_extent?geometry.processing_width/16:32,h=game_extent?geometry.processing_height/16:32;
   auto capacity=[&](ID3D12Resource*r,UINT64 values){if(r->GetDesc().Dimension!=D3D12_RESOURCE_DIMENSION_BUFFER||r->GetDesc().Width<values*4)throw std::runtime_error("decoder tail buffer capacity");};
   capacity(input48,UINT64(w)*h*256);capacity(skip14,UINT64(w)*h*4*128);capacity(skip8,UINT64(w)*h*16*64);capacity(skip4,UINT64(w)*h*64*32);
   auto read=[&](UINT block,const wchar_t*name){return NativeReadF32(dir+L"\\block"+std::to_wstring(block)+L"-"+name+L".f32","decoder tail coefficient");};

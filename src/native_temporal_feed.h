@@ -1,10 +1,12 @@
 #pragma once
+#include "native_network_geometry.h"
 #include "native_pso.h"
 #include "native_lab_paths.h"
 #include "native_pinned_resource.h"
 #include "native_split.h"
 // Motion-vector texture -> motion buffer, and network output -> history buffer.
 class NativeTemporalFeed {
+ NativeNetworkGeometry geometry=NativeNetworkGeometry::FromHeight(1080);
  ID3D12Resource*motion{},*history{},*rgb{},*bound_texture{};ID3D12DescriptorHeap*heap{};
  ID3D12RootSignature*motion_root{},*history_root{};ID3D12PipelineState*motion_pso{},*history_pso{};
  UINT mw{},mh{};float scale[2]{};bool motion_recorded{},history_recorded{};
@@ -17,8 +19,8 @@ public:
  // motion_w/h: motion texture size; pixel scale: 1080p pixels per motion unit (upscale size for UV-unit vectors).
  void Create(ID3D12Device*d,UINT motion_w,UINT motion_h,float pixel_scale_x,float pixel_scale_y,const std::wstring&dir){
   if(motion||!d||!motion_w||!motion_h)throw std::runtime_error("temporal feed contract");
-  mw=motion_w;mh=motion_h;scale[0]=pixel_scale_x;scale[1]=pixel_scale_y;
-  motion=Buffer(d,UINT64(mw)*mh*16);history=Buffer(d,1920ull*1080*16);
+  geometry=NativeCurrentNetworkGeometry();mw=motion_w;mh=motion_h;scale[0]=pixel_scale_x;scale[1]=pixel_scale_y;
+  motion=Buffer(d,UINT64(mw)*mh*16);history=Buffer(d,UINT64(geometry.valid_width)*geometry.valid_height*16);
   D3D12_DESCRIPTOR_HEAP_DESC hd{D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,1,D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,0};ck(d->CreateDescriptorHeap(&hd,IID_PPV_ARGS(&heap)));
   {D3D12_DESCRIPTOR_RANGE range{D3D12_DESCRIPTOR_RANGE_TYPE_SRV,1,0,0,0};D3D12_ROOT_PARAMETER p[3]{};p[0].ParameterType=D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;p[0].DescriptorTable={1,&range};p[1].ParameterType=D3D12_ROOT_PARAMETER_TYPE_UAV;p[2].ParameterType=D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;p[2].Constants={0,0,5};D3D12_ROOT_SIGNATURE_DESC desc{};desc.NumParameters=3;desc.pParameters=p;ID3DBlob*b=nullptr,*e=nullptr;ck(D3D12SerializeRootSignature(&desc,D3D_ROOT_SIGNATURE_VERSION_1,&b,&e));ck(d->CreateRootSignature(0,b->GetBufferPointer(),b->GetBufferSize(),IID_PPV_ARGS(&motion_root)));b->Release();if(e)e->Release();}
   {D3D12_ROOT_PARAMETER p[3]{};p[0].ParameterType=D3D12_ROOT_PARAMETER_TYPE_SRV;p[1].ParameterType=D3D12_ROOT_PARAMETER_TYPE_UAV;p[2].ParameterType=D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;p[2].Constants={0,0,4};D3D12_ROOT_SIGNATURE_DESC desc{};desc.NumParameters=3;desc.pParameters=p;ID3DBlob*b=nullptr,*e=nullptr;ck(D3D12SerializeRootSignature(&desc,D3D_ROOT_SIGNATURE_VERSION_1,&b,&e));ck(d->CreateRootSignature(0,b->GetBufferPointer(),b->GetBufferSize(),IID_PPV_ARGS(&history_root)));b->Release();if(e)e->Release();}
@@ -43,8 +45,8 @@ public:
  void RecordHistory(ID3D12GraphicsCommandList*c){
   if(!rgb)throw std::runtime_error("history source not bound");
   if(history_recorded)Transition(c,history,true);
-  UINT words[4]={1920,1080,0,0};
-  c->SetComputeRootSignature(history_root);c->SetComputeRootShaderResourceView(0,rgb->GetGPUVirtualAddress());c->SetComputeRootUnorderedAccessView(1,history->GetGPUVirtualAddress());c->SetComputeRoot32BitConstants(2,4,words,0);c->SetPipelineState(history_pso);c->Dispatch(120,68,1);
+  UINT words[4]={geometry.valid_width,geometry.valid_height,0,0};
+  c->SetComputeRootSignature(history_root);c->SetComputeRootShaderResourceView(0,rgb->GetGPUVirtualAddress());c->SetComputeRootUnorderedAccessView(1,history->GetGPUVirtualAddress());c->SetComputeRoot32BitConstants(2,4,words,0);c->SetPipelineState(history_pso);c->Dispatch((geometry.valid_width+15)/16,(geometry.valid_height+15)/16,1);
   Transition(c,history,false);history_recorded=true;
  }
  ID3D12Resource*Motion()const{return motion;}ID3D12Resource*History()const{return history;}

@@ -19,8 +19,8 @@ RWStructuredBuffer<float4> motion:register(u0);
 StructuredBuffer<float> rgb:register(t0);
 RWStructuredBuffer<float4> history:register(u0);
 [numthreads(16,16,1)]void history_main(uint3 id:SV_DispatchThreadID){
- if(id.x>=1920||id.y>=1080)return;
- uint p=(id.y*1920+id.x)*3;
- history[id.y*1920+id.x]=float4(rgb[p],rgb[p+1],rgb[p+2],1);
+ if(id.x>=motion_width||id.y>=motion_height)return;
+ uint p=(id.y*motion_width+id.x)*3;
+ history[id.y*motion_width+id.x]=float4(rgb[p],rgb[p+1],rgb[p+2],1);
 }
 #endif

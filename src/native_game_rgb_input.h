@@ -4,13 +4,14 @@
 #include "native_pinned_resource.h"
 #include "native_device_identity.h"
 #include "native_rgb_reflect.h"
+#include "native_network_geometry.h"
 
 // One stable texture binding per instance. Caller must fence all users before
 // destroying this object or modifying the texture. Does not submit game lists.
 class NativeGameRgbInput {
  ID3D12Resource *source{},*tiles{},*color{};
  ID3D12DescriptorHeap*heap{};ID3D12RootSignature*root{};ID3D12PipelineState*pso{};
- bool recorded{};
+ bool recorded{};NativeNetworkGeometry geometry=NativeNetworkGeometry::FromHeight(1080);
  static void ck(HRESULT h){if(FAILED(h))throw std::runtime_error("game RGB HRESULT="+std::to_string(unsigned(h)));}
  static void transition(ID3D12GraphicsCommandList*c,ID3D12Resource*r,D3D12_RESOURCE_STATES a,D3D12_RESOURCE_STATES b){
   if(a==b)return;D3D12_RESOURCE_BARRIER t{};t.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -21,14 +22,14 @@ public:
  ~NativeGameRgbInput(){for(auto*r:{source,tiles,color})if(r)r->Release();if(heap)heap->Release();if(root)root->Release();if(pso)pso->Release();}
  void Create(ID3D12Device*d,ID3D12Resource*texture,const std::wstring&dir){
   if(source||!d||!texture)throw std::runtime_error("game RGB initialization");
-  auto desc=texture->GetDesc();
-  if(desc.Dimension!=D3D12_RESOURCE_DIMENSION_TEXTURE2D||desc.Width!=1920||desc.Height!=1080||desc.DepthOrArraySize!=1||desc.MipLevels!=1||desc.SampleDesc.Count!=1||(desc.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE))throw std::runtime_error("game RGB texture geometry");
+  geometry=NativeCurrentNetworkGeometry();auto desc=texture->GetDesc();
+  if(desc.Dimension!=D3D12_RESOURCE_DIMENSION_TEXTURE2D||desc.Width!=geometry.valid_width||desc.Height!=geometry.valid_height||desc.DepthOrArraySize!=1||desc.MipLevels!=1||desc.SampleDesc.Count!=1||(desc.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE))throw std::runtime_error("game RGB texture geometry");
   // Initially accept only explicit float formats; other game formats need proof.
   if(NativeViewFormat(desc.Format)!=DXGI_FORMAT_R32G32B32A32_FLOAT&&!NativeIsGameColor(desc.Format))throw std::runtime_error("unverified game RGB format");
   ID3D12Device*owner=nullptr;ck(texture->GetDevice(IID_PPV_ARGS(&owner)));bool same=NativeSameDevice(owner,d);owner->Release();if(!same)throw std::runtime_error("game RGB device mismatch");
   source=texture;source->AddRef();
   D3D12_HEAP_PROPERTIES hp{};hp.Type=D3D12_HEAP_TYPE_DEFAULT;D3D12_RESOURCE_DESC bd{};
-  bd.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;bd.Width=1920ull*1152*16;bd.Height=1;bd.DepthOrArraySize=bd.MipLevels=1;bd.SampleDesc.Count=1;bd.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;bd.Flags=D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+  bd.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;bd.Width=UINT64(geometry.processing_width)*geometry.processing_height*16;bd.Height=1;bd.DepthOrArraySize=bd.MipLevels=1;bd.SampleDesc.Count=1;bd.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;bd.Flags=D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   for(auto**r:{&tiles,&color})ck(NativeCreateCommittedResource(d,&hp,D3D12_HEAP_FLAG_NONE,&bd,D3D12_RESOURCE_STATE_UNORDERED_ACCESS,nullptr,IID_PPV_ARGS(r)));
   D3D12_DESCRIPTOR_HEAP_DESC hd{D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,1,D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,0};ck(d->CreateDescriptorHeap(&hd,IID_PPV_ARGS(&heap)));
   D3D12_SHADER_RESOURCE_VIEW_DESC sv{};sv.Format=NativeViewFormat(desc.Format);sv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;sv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;sv.Texture2D.MipLevels=1;d->CreateShaderResourceView(source,&sv,heap->GetCPUDescriptorHandleForHeapStart());
@@ -47,7 +48,7 @@ public:
   transition(c,source,before,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
   c->SetDescriptorHeaps(1,&heap);c->SetComputeRootSignature(root);c->SetPipelineState(pso);
   c->SetComputeRootDescriptorTable(0,heap->GetGPUDescriptorHandleForHeapStart());
-  c->SetComputeRootUnorderedAccessView(1,tiles->GetGPUVirtualAddress());c->SetComputeRootUnorderedAccessView(2,color->GetGPUVirtualAddress());c->Dispatch(240,144,1);
+  c->SetComputeRootUnorderedAccessView(1,tiles->GetGPUVirtualAddress());c->SetComputeRootUnorderedAccessView(2,color->GetGPUVirtualAddress());c->Dispatch(geometry.processing_width/8,geometry.processing_height/8,1);
   for(auto*r:{tiles,color})transition(c,r,D3D12_RESOURCE_STATE_UNORDERED_ACCESS,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
   transition(c,source,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,before);recorded=true;
  }

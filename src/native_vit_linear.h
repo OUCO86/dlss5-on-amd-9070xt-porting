@@ -19,15 +19,15 @@ public:
  static NativeSkip8Source&PendingSkip8(){static NativeSkip8Source s;return s;}
  NativeSkip8Source skip8;
  void Create(ID3D12Device*d,ID3D12Resource*src,ID3D12Resource*skip,UINT tokens,UINT inputs,UINT out,bool expand,const std::vector<float>&coefficients,const std::wstring&dir,bool decoder=false){
-  const bool game_decoder=decoder&&inputs==1024&&out==512&&tokens==640;
-  const bool game_up48=decoder&&inputs==512&&out==256&&tokens==2160;
-  const bool game_up56=decoder&&inputs==256&&out==128&&tokens==8640;
-  const bool game_up62=decoder&&inputs==128&&out==64&&tokens==34560;
-  const bool game_up66=decoder&&inputs==64&&out==32&&tokens==138240;
+  const bool game_decoder=decoder&&inputs==1024&&out==512&&(tokens==640||tokens==240);
+  const bool game_up48=decoder&&inputs==512&&out==256&&(tokens==2160||tokens==960);
+  const bool game_up56=decoder&&inputs==256&&out==128&&(tokens==8640||tokens==3840);
+  const bool game_up62=decoder&&inputs==128&&out==64&&(tokens==34560||tokens==15360);
+  const bool game_up66=decoder&&inputs==64&&out==32&&(tokens==138240||tokens==61440);
   if(game_up66&&PendingSkip8().main8){skip8=PendingSkip8();PendingSkip8()=NativeSkip8Source{};}
   const bool decoder_shape=game_decoder||game_up48||game_up56||game_up62||game_up66||(inputs==1024&&out==512&&tokens==64)||(inputs==512&&out==256&&(tokens==64||tokens==256))||(inputs==256&&out==128&&(tokens==64||tokens==1024))||(inputs==128&&out==64&&(tokens==64||tokens==4096))||(inputs==64&&out==32&&(tokens==64||tokens==16384));
-  if(input||!d||!src||(!decoder&&tokens!=64&&tokens!=256&&tokens!=640)||(!expand&&!skip)||(decoder?(expand||!decoder_shape):(expand?(inputs!=1024||out!=4096):(out!=1024||(inputs!=1024&&inputs!=4096))))||coefficients.size()!=size_t(inputs)*out+(expand?0:out))throw std::runtime_error("ViT/decoder linear contract");
-  UINT64 output_values=game_decoder?UINT64(60)*36*out:UINT64(tokens)*out*(decoder?4:1);
+  if(input||!d||!src||(!decoder&&tokens!=64&&tokens!=256&&tokens!=240&&tokens!=640)||(!expand&&!skip)||(decoder?(expand||!decoder_shape):(expand?(inputs!=1024||out!=4096):(out!=1024||(inputs!=1024&&inputs!=4096))))||coefficients.size()!=size_t(inputs)*out+(expand?0:out))throw std::runtime_error("ViT/decoder linear contract");
+  UINT64 output_values=game_decoder?UINT64(tokens==240?40:60)*(tokens==240?24:36)*out:UINT64(tokens)*out*(decoder?4:1);
   if(decoder&&(src->GetDesc().Width<UINT64(tokens)*inputs*4||skip->GetDesc().Width<output_values*4))throw std::runtime_error("decoder buffer capacity");
   /* FAST PATH (DLSS5_DECODER_OUT16): the upsample projections 56/62/66 write their raster as f16 (kernel NATIVE_DECODER_OUT16, needs DLSS5_BUILD_DECODER_FAST); the first block after each reads it as f16 (C32 map mode 10 / multihead f16 source and feature). */
   if(const wchar_t*o16=_wgetenv(L"DLSS5_DECODER_OUT16")){if(wcscmp(o16,L"0")&&wcscmp(o16,L"1"))throw std::runtime_error("invalid decoder out16 flag");out16=!wcscmp(o16,L"1")&&(game_up56||game_up62||game_up66);}

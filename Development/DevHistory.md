@@ -624,3 +624,7 @@ Zero实测FSR4和XeSS插帧额外打开AMD光流反而发糊，关闭后更清�
 同名新包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15.zip`，358,010,545字节，SHA256 `9bb7a021d09d987986f96dbd920589018606c9800dbd08e007f4b309388e5909`，旁置`.zip.sha256`已刷新。672个文件逐个解压校验通过；与初包清单对比，仅`config/config.json`与`README.txt`变化（以及校验清单自身），DLL仍`6FB89C03…`、全部shader/权重一致，无需重编。旧zip及清单留在`D:\DLSSNR-Lab\release-0.15\previous-package\`供回退。tag0.15保持不动。当前README下载链接和初包hash仍对应已上传的初包，新包待Zero重新上传后更新链接/校验值。
 
 - **2026-09-13 22:07**：Zero已上传0.15光流预设修正版，新链接 https://pan.quark.cn/s/1601ca8f80ae 。中英文README版本号链接、大小与SHA256已切换到重打包版本（358,010,545字节，`9bb7a021…`）。
+
+## 2026-09-13：720p独立开发分支
+
+Zero要求直接测试真正720p内部计算，并明确独立git分支、开发不影响0.15。已从85feab0创建`720p`；全链改为1280×768处理、240真实ViT token，默认仍保留1080。GPU独立测试60帧：720平均10.934ms/91.46fps，1080平均22.010ms/45.43fps，约2倍吞吐。初测发现m1 ViT expand缺tile布局导致暗图，修复后才采用上述结果。历史全float有限、输出梯度/棋盘恢复。正式安装和main未动，真实游戏画质/帧率未验。复现、范围与坑详见`Development/720p/README.md`。

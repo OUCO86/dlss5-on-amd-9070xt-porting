@@ -109,8 +109,8 @@ using C=dx::linalg::Matrix<dx::linalg::ComponentType::F32,16,16,dx::linalg::Matr
 #if NATIVE_FAST_ACCUMULATE
  [unroll]for(uint n=0;n<BLOCK_N;n++)for(uint i=0;i<total[n].Length();i++)total[n].Set(i,H(total[n].Get(i)));
 #endif
- uint width=tokens==138240?480:tokens==34560?240:tokens==8640?120:tokens==2160?60:tokens==640?32:tokens==16384?128:tokens==4096?64:tokens==1024?32:tokens==256?16:8;
- uint output_width=tokens==640?60:width*2,output_height=tokens==138240?576:tokens==34560?288:tokens==8640?144:tokens==2160?72:tokens==640?36:width*2;
+ uint width=tokens==61440?320:tokens==15360?160:tokens==3840?80:tokens==960?40:tokens==240?20:tokens==138240?480:tokens==34560?240:tokens==8640?120:tokens==2160?60:tokens==640?32:tokens==16384?128:tokens==4096?64:tokens==1024?32:tokens==256?16:8;
+ uint output_width=tokens==240?40:tokens==640?60:width*2,output_height=tokens==61440?384:tokens==15360?192:tokens==3840?96:tokens==960?48:tokens==240?24:tokens==138240?576:tokens==34560?288:tokens==8640?144:tokens==2160?72:tokens==640?36:width*2;
 #if NATIVE_DECODER_FAST
  [unroll]for(uint n=0;n<BLOCK_N;n++){
   const uint col=(gid.y*BLOCK_N+n)*16;

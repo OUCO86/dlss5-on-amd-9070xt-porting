@@ -38,7 +38,7 @@ public:
  }
  // after the sampler (warped in SRV state): transition to UAV, patch in place, back to SRV
  void Record(ID3D12GraphicsCommandList*c){
-  if(!enabled)return;const UINT pixels=1920*1152;UINT words[4];std::memcpy(words,&dark,4);std::memcpy(words+1,&bright,4);words[2]=pixels;words[3]=0;
+  if(!enabled)return;const auto ng=NativeCurrentNetworkGeometry();const UINT pixels=ng.processing_width*ng.processing_height;UINT words[4];std::memcpy(words,&dark,4);std::memcpy(words+1,&bright,4);words[2]=pixels;words[3]=0;
   D3D12_RESOURCE_BARRIER b{};b.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;b.Transition={warped,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_UNORDERED_ACCESS};c->ResourceBarrier(1,&b);
   c->SetComputeRootSignature(root);c->SetPipelineState(pso);c->SetComputeRootShaderResourceView(0,base->GetGPUVirtualAddress());c->SetComputeRootUnorderedAccessView(1,warped->GetGPUVirtualAddress());c->SetComputeRoot32BitConstants(2,4,words,0);c->Dispatch((pixels+63)/64,1,1);
   std::swap(b.Transition.StateBefore,b.Transition.StateAfter);c->ResourceBarrier(1,&b);
@@ -60,7 +60,7 @@ public:
  }
  // rgb is in SRV state after post70; transitioned to UAV for the pass and back. warped must be SRV-readable.
  void Record(ID3D12GraphicsCommandList*c){
-  if(!enabled)return;const UINT pixels=1920*1080;UINT words[4];std::memcpy(words,&threshold,4);std::memcpy(words+1,&strength,4);words[2]=pixels;words[3]=0;
+  if(!enabled)return;const auto ng=NativeCurrentNetworkGeometry();const UINT pixels=ng.valid_width*ng.valid_height;UINT words[4];std::memcpy(words,&threshold,4);std::memcpy(words+1,&strength,4);words[2]=pixels;words[3]=0;
   D3D12_RESOURCE_BARRIER b{};b.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;b.Transition={rgb,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_UNORDERED_ACCESS};c->ResourceBarrier(1,&b);
   c->SetComputeRootSignature(root);c->SetPipelineState(pso);c->SetComputeRootShaderResourceView(0,warped->GetGPUVirtualAddress());c->SetComputeRootUnorderedAccessView(1,rgb->GetGPUVirtualAddress());c->SetComputeRoot32BitConstants(2,4,words,0);c->Dispatch((pixels+63)/64,1,1);
   std::swap(b.Transition.StateBefore,b.Transition.StateAfter);c->ResourceBarrier(1,&b);
@@ -120,6 +120,7 @@ public:
 inline void NativeGameFrameStep(const char*step,ID3D12Device*d=nullptr){if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-game-oneshot.txt").c_str(),L"ab")){fprintf(f,"pid=%lu tick=%llu event=frame_create_step detail=%s removed=%08x\n",GetCurrentProcessId(),GetTickCount64(),step,d?unsigned(d->GetDeviceRemovedReason()):0u);fclose(f);}}
 class NativeGameFrame {
  struct Resources {
+  NativeNetworkGeometry geometry=NativeCurrentNetworkGeometry();
   ID3D12Resource*original{}; // Kept alive by encode/decode resource references.
   NativeGameSubmission submit;
   NativeGameCodec encode;
@@ -171,7 +172,7 @@ public:
     }}
    NativeGameFrameStep("encode",d);resources->encode.Create(d,{source},directory);
    resources->original=source;
-   {const auto&g=resources->encode.Geometry();char info[160];snprintf(info,sizeof info,"input=%ux%u network=1920x1080 viewport=%u,%u,%u,%u output=%ux%u",g.width,g.height,g.x,g.y,g.fit_width,g.fit_height,g.width,g.height);NativeGameFrameStep(info,d);}
+   {const auto&g=resources->encode.Geometry();char info[160];snprintf(info,sizeof info,"input=%ux%u network=%ux%u viewport=%u,%u,%u,%u output=%ux%u",g.width,g.height,g.network_width,g.network_height,g.x,g.y,g.fit_width,g.fit_height,g.width,g.height);NativeGameFrameStep(info,d);}
    NativeGameFrameStep("input",d);resources->input.Create(d,resources->encode.Output(),directory);
    if(temporal_config&&!temporal_rgb){
     // Motion vectors arrive in UV units of the render grid; the coordinate pass uses the captured
@@ -179,20 +180,20 @@ public:
     auto&t=*temporal_config;auto&r=*resources;
     /* raster motion -> pixels of the 1080p output: value * mvscale = render-grid pixels (FFX contract), * 1920/render_w = output pixels. Stellar Blade declares
        mvscale = render size (UV units) -> 1920 exactly as before; Magpie declares (1,1) with a 1920 render grid (pixel units) -> 1. No declaration (XeSS): UV units. */
-    const auto fit=resources->encode.Geometry();
+    const auto fit=resources->encode.Geometry();const auto ng=resources->geometry;
     const float*mvs=NativeMotionVectorScale();const float sx=(mvs[0]!=0.f&&t.render_width)?mvs[0]*float(fit.fit_width)/float(t.render_width):float(fit.fit_width),sy=(mvs[1]!=0.f&&t.render_height)?mvs[1]*float(fit.fit_height)/float(t.render_height):float(fit.fit_height);
     r.feed.Create(d,t.motion_width,t.motion_height,sx*NativeMotionSign(),sy*NativeMotionSign(),directory);r.motion_w=t.motion_width;r.motion_h=t.motion_height;
     const float rx=float(t.render_width)/float(fit.fit_width),ry=float(t.render_height)/float(fit.fit_height);
-    const float transform[6]={-float(fit.x)*rx,-float(fit.y)*ry,fit.Adapted()?1920.f*rx:float(t.render_width),fit.Adapted()?1080.f*ry:float(t.render_height),1.f/1920.f,1.f/1080.f};
+    const float transform[6]={-float(fit.x)*rx,-float(fit.y)*ry,fit.Adapted()?float(ng.valid_width)*rx:float(t.render_width),fit.Adapted()?float(ng.valid_height)*ry:float(t.render_height),1.f/float(ng.valid_width),1.f/float(ng.valid_height)};
     const float viewport[4]={float(fit.x),float(fit.y),float(fit.fit_width),float(fit.fit_height)};
-    r.coordinates.Create(d,r.feed.Motion(),1920,1080,1920,1152,t.motion_width,t.motion_height,transform,directory,true,fit.Adapted()?viewport:nullptr);
+    r.coordinates.Create(d,r.feed.Motion(),ng.valid_width,ng.valid_height,ng.processing_width,ng.processing_height,t.motion_width,t.motion_height,transform,directory,true,fit.Adapted()?viewport:nullptr);
     std::ifstream f((directory+L"\\normalized-output.f32").c_str(),std::ios::binary|std::ios::ate);if(!f||f.tellg()!=33554432)throw std::runtime_error("reciprocal table missing");
     std::vector<float>table(8388608);f.seekg(0);if(!f.read(reinterpret_cast<char*>(table.data()),33554432))throw std::runtime_error("reciprocal table read");
     D3D12_HEAP_PROPERTIES hp{};hp.Type=D3D12_HEAP_TYPE_UPLOAD;D3D12_RESOURCE_DESC rd{};rd.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;rd.Width=33554432;rd.Height=1;rd.DepthOrArraySize=rd.MipLevels=1;rd.SampleDesc.Count=1;rd.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     ID3D12Resource*upload=nullptr;if(FAILED(NativeCreateCommittedResource(d,&hp,D3D12_HEAP_FLAG_NONE,&rd,D3D12_RESOURCE_STATE_GENERIC_READ,nullptr,IID_PPV_ARGS(&upload))))throw std::runtime_error("reciprocal upload");
     void*p=nullptr;D3D12_RANGE none{};if(FAILED(upload->Map(0,&none,&p)))throw std::runtime_error("reciprocal map");std::memcpy(p,table.data(),33554432);upload->Unmap(0,nullptr);
     r.reciprocals=NativeResidentTable(d,upload);
-    r.sampler.Create(d,r.feed.History(),r.coordinates.Output(),1920,1080,1920*1152,directory,true,r.reciprocals);
+    r.sampler.Create(d,r.feed.History(),r.coordinates.Output(),ng.valid_width,ng.valid_height,ng.processing_width*ng.processing_height,directory,true,r.reciprocals);
     temporal_rgb=r.sampler.Output();r.temporal=true;
    }
    // Captured original post origin(-4,-4) corresponds to shift3.
@@ -200,7 +201,7 @@ public:
    NativeGameFrameStep("neural",d);resources->neural.Create(d,resources->network.Output(),directory);
    if(resources->temporal)resources->smooth.Create(d,resources->network.Output(),resources->sampler.Output(),directory);
    if(resources->temporal)resources->history_guard.Create(d,resources->sampler.Output(),resources->input.PostBase(),directory);
-   resources->black.Create(d,resources->network.Output(),1920*1080,directory);
+   resources->black.Create(d,resources->network.Output(),resources->geometry.valid_width*resources->geometry.valid_height,directory);
    if(resources->temporal)resources->feed.BindNetworkOutput(resources->network.Output());
    {const wchar_t*v=_wgetenv(L"DLSS5_SHOW_FPS");const wchar_t*n=_wgetenv(L"DLSS5_NOTICE");resources->show_fps=v&&wcstoul(v,nullptr,10)!=0&&(!n||wcstoul(n,nullptr,10)>=2);if(resources->show_fps)resources->fps_overlay.Prepare(source);}
    NativeGameFrameStep("decode",d);resources->decode.Create(d,{resources->encode.Output(),resources->neural.Output(),resources->overlap?resources->original_copy:source},directory);NativeGameFrameStep("ready",d);ready=true;
@@ -244,9 +245,9 @@ private:
    r.submit.Flush();void*p=nullptr;D3D12_RANGE range{0,SIZE_T(bytes)},none{};if(FAILED(rb->Map(0,&range,&p)))throw std::runtime_error("dump map");
    FILE*f=_wfopen((prefix+name).c_str(),L"wb");if(f){fwrite(p,1,size_t(bytes),f);fclose(f);}rb->Unmap(0,&none);rb->Release();
   };
-  dump_buffer(r.feed.History(),1920ull*1080*16,L"-history.f32");
+  dump_buffer(r.feed.History(),UINT64(r.geometry.valid_width)*r.geometry.valid_height*16,L"-history.f32");
   dump_buffer(r.feed.Motion(),UINT64(r.feed_motion_width())*r.feed_motion_height()*16,L"-motion.f32");
-  dump_buffer(r.sampler.Output(),1920ull*1152*16,L"-warped.f32");
+  dump_buffer(r.sampler.Output(),UINT64(r.geometry.processing_width)*r.geometry.processing_height*16,L"-warped.f32");
   auto color=NativeReadSubmittedFrame(r.submit_queue(),r.encode.Output(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
   FILE*f=_wfopen((prefix+L"-color.rgba16f").c_str(),L"wb");if(f){fwrite(color.data(),1,color.size(),f);fclose(f);}
  }

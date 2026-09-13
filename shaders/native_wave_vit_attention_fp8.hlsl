@@ -13,6 +13,8 @@ groupshared uint p8[16*MAX_TOKENS/4];
 groupshared float16_t sc16[512];
 groupshared float16_t ones16[512];
 groupshared float inverse[16];
+// The 720p bottleneck has 240 tokens: stage the final 16 V rows and zero the missing half-tile.
+groupshared uint tail_v8[32*16/4];
 using A8=dx::linalg::Matrix<dx::linalg::ComponentType::F8_E4M3FN,16,32,dx::linalg::MatrixUse::A,dx::linalg::MatrixScope::Wave>;
 using B8=dx::linalg::Matrix<dx::linalg::ComponentType::F8_E4M3FN,32,16,dx::linalg::MatrixUse::B,dx::linalg::MatrixScope::Wave>;
 using AH=dx::linalg::Matrix<dx::linalg::ComponentType::F16,16,32,dx::linalg::MatrixUse::A,dx::linalg::MatrixScope::Wave>;
@@ -26,9 +28,12 @@ using C=dx::linalg::Matrix<dx::linalg::ComponentType::F32,16,16,dx::linalg::Matr
  C rs=C::Splat(0.0f);
  for(uint key=0;key<tokens;key+=32){
   [unroll]for(uint j=0;j<2;j++){
-   B8 k=B8::Load(qkv,(tokens+key+j*16)*1024+head*32,1024,dx::linalg::MatrixLayout::ColMajor,16);
-   C s=dx::linalg::Multiply<dx::linalg::ComponentType::F32>(q,k);
-   for(uint i=0;i<s.Length();i++){float affine=clamp(s.Get(i)*f16tof32(0x2dbb)+1.708984375,1.439453125,1.9775390625);uint b=f32tof16(affine);s.Set(i,f16tof32(((b<<4)+0x4000)&65535));}
+   C s=C::Splat(0.0f);
+   if(key+j*16<tokens){
+    B8 k=B8::Load(qkv,(tokens+key+j*16)*1024+head*32,1024,dx::linalg::MatrixLayout::ColMajor,16);
+    s=dx::linalg::Multiply<dx::linalg::ComponentType::F32>(q,k);
+    for(uint i=0;i<s.Length();i++){float affine=clamp(s.Get(i)*f16tof32(0x2dbb)+1.708984375,1.439453125,1.9775390625);uint b=f32tof16(affine);s.Set(i,f16tof32(((b<<4)+0x4000)&65535));}
+   }
    s.Cast<dx::linalg::ComponentType::F16>().Store(sc16,j*16,32,dx::linalg::MatrixLayout::RowMajor);
    s.Cast<dx::linalg::ComponentType::F8_E4M3FN>().Store(p8,(key+j*16)/4,prow,dx::linalg::MatrixLayout::RowMajor);
   }
@@ -43,8 +48,16 @@ using C=dx::linalg::Matrix<dx::linalg::ComponentType::F32,16,16,dx::linalg::Matr
  for(uint key=0;key<tokens;key+=32){
   A8 pa=A8::Load(p8,key/4,prow,dx::linalg::MatrixLayout::RowMajor);
   [unroll]for(uint half_index=0;half_index<2;half_index++){
-   B8 vb=B8::Load(qkv,(2*tokens+key)*1024+head*32+half_index*16,1024,dx::linalg::MatrixLayout::RowMajor,16);
-   acc[half_index].MultiplyAccumulate(pa,vb);
+   if(key+32<=tokens){
+    B8 vb=B8::Load(qkv,(2*tokens+key)*1024+head*32+half_index*16,1024,dx::linalg::MatrixLayout::RowMajor,16);
+    acc[half_index].MultiplyAccumulate(pa,vb);
+   }else{
+    for(uint i=t;i<128;i+=32){uint row=i/4,col=(i%4)*4;tail_v8[i]=key+row<tokens?qkv.Load((2*tokens+key+row)*1024+head*32+half_index*16+col):0;}
+    GroupMemoryBarrierWithGroupSync();
+    B8 vb=B8::Load(tail_v8,0,4,dx::linalg::MatrixLayout::RowMajor);
+    acc[half_index].MultiplyAccumulate(pa,vb);
+    GroupMemoryBarrierWithGroupSync();
+   }
   }
  }
  [unroll]for(uint half_index=0;half_index<2;half_index++)for(uint i=0;i<acc[half_index].Length();i++){

@@ -9,7 +9,7 @@ class NativeVitBlock {
  ID3D12RootSignature*fused_root{};ID3D12PipelineState*fused_pso{};bool fused{},fused_recorded{};UINT token_count{};
  static void Check(HRESULT hr){if(FAILED(hr))throw std::runtime_error("ViT fused FFN HRESULT="+std::to_string(unsigned(hr)));}
  void CreateFused(ID3D12Device*d,const std::wstring&dir){
-  const wchar_t*f=_wgetenv(L"DLSS5_VIT_FUSED_FFN");if(f&&wcscmp(f,L"0")&&wcscmp(f,L"1"))throw std::runtime_error("invalid ViT fused FFN flag");fused=f&&!wcscmp(f,L"1");if(!fused)return;
+  const wchar_t*f=_wgetenv(L"DLSS5_VIT_FUSED_FFN");if(f&&wcscmp(f,L"0")&&wcscmp(f,L"1"))throw std::runtime_error("invalid ViT fused FFN flag");fused=f&&!wcscmp(f,L"1")&&token_count%32==0;if(!fused)return;
   if(!expand.HasPackedInput()||!expand.WaveTiled()||!contract.WaveTiled()||!contract.SplitK()||token_count%32)throw std::runtime_error("ViT fused FFN needs the packed tiled E4M3 chain (DLSS5_VIT_PACKED_INPUT, DLSS5_VIT_TILED, DLSS5_VIT_SPLIT_K)");
   D3D12_ROOT_PARAMETER params[6]{};for(UINT i=0;i<4;i++){params[i].ParameterType=D3D12_ROOT_PARAMETER_TYPE_SRV;params[i].Descriptor.ShaderRegister=i;}params[4].ParameterType=D3D12_ROOT_PARAMETER_TYPE_UAV;params[5].ParameterType=D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;params[5].Constants={0,0,1};
   D3D12_ROOT_SIGNATURE_DESC desc{};desc.NumParameters=6;desc.pParameters=params;ID3DBlob*blob=nullptr,*error=nullptr;Check(D3D12SerializeRootSignature(&desc,D3D_ROOT_SIGNATURE_VERSION_1,&blob,&error));Check(d->CreateRootSignature(0,blob->GetBufferPointer(),blob->GetBufferSize(),IID_PPV_ARGS(&fused_root)));blob->Release();if(error)error->Release();

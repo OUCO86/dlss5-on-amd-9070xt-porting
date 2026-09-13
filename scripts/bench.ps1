@@ -96,6 +96,9 @@ $env:DLSS5_PREBLOCK_MAIN8='1'
 # (drops the scalar normalize dispatch and the pack8 dispatch per layer).
 & $Dxc -I $Inc -T cs_6_10 -E project_fused -HV 2021 -enable-16bit-types -O3 -D NATIVE_FAST_ACCUMULATE=1 -D NATIVE_PACKED_INPUT=1 -D BLOCK_M=4 -D NATIVE_QKV_FUSED=1 -D "NATIVE_VIT_TILED=$(if($env:DLSS5_BUILD_VIT_TILED -eq '1'){1}else{0})" native_wave_vit_qkv.hlsl -Fo native_wave_vit_qkv_fused_m4.cso
 if($LASTEXITCODE -ne 0){throw 'ViT fused QKV compilation failed'}
+# 720p: 240 real tokens require the 16-row variant (no padded attention tokens).
+& $Dxc -I $Inc -T cs_6_10 -E project_fused -HV 2021 -enable-16bit-types -O3 -D NATIVE_FAST_ACCUMULATE=1 -D NATIVE_PACKED_INPUT=1 -D BLOCK_M=1 -D NATIVE_QKV_FUSED=1 -D "NATIVE_VIT_TILED=$(if($env:DLSS5_BUILD_VIT_TILED -eq '1'){1}else{0})" native_wave_vit_qkv.hlsl -Fo native_wave_vit_qkv_fused_m1.cso
+if($LASTEXITCODE -ne 0){throw 'native_wave_vit_qkv_fused_m1 failed'}
 $env:DLSS5_VIT_QKV_FUSED='1'
 # ---- run_batch_submits2_network.ps1
 # FAST PATH: batch level 2 -- ViT 4 layers per command list, decoder in two lists (~6 lists/frame). CPU-side only.

@@ -6,6 +6,7 @@
 #include "native_game_rgb_input.h"
 #include <array>
 #include "native_input_geometry.h"
+#include "native_network_geometry.h"
 // Validated mode1 math, fixed1080p float16 textures. Caller owns queue ordering.
 // This is a resource stage, not a game callback or a history-feedback policy.
 class NativeGameCodec {
@@ -24,17 +25,18 @@ public:
  // Encode: {linear original}. Decode: {encoded proxy, encoded neural, linear original}.
  void Create(ID3D12Device*d,const std::vector<ID3D12Resource*>&inputs,const std::wstring&dir){
   if(count||!d||(inputs.size()!=1&&inputs.size()!=3))throw std::runtime_error("codec initialization contract");
+  const auto network=NativeCurrentNetworkGeometry();
   for(size_t i=0;i<inputs.size();i++){
    auto*r=inputs[i];if(!r)throw std::runtime_error("codec null input");auto desc=r->GetDesc();
    if(desc.Dimension!=D3D12_RESOURCE_DIMENSION_TEXTURE2D||!NativeInputGeometry::Supported(desc.Width,desc.Height)||desc.DepthOrArraySize!=1||desc.MipLevels!=1||desc.SampleDesc.Count!=1||!NativeIsGameColor(desc.Format)||(desc.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE))throw std::runtime_error("codec unverified input format/geometry");
-   if(inputs.size()==3&&i<2&&(desc.Width!=1920||desc.Height!=1080))throw std::runtime_error("codec network surface geometry");
+   if(inputs.size()==3&&i<2&&(desc.Width!=network.valid_width||desc.Height!=network.valid_height))throw std::runtime_error("codec network surface geometry");
    for(size_t j=0;j<i;j++)if(inputs[j]==r)throw std::runtime_error("codec aliased inputs");
    ID3D12Device*owner=nullptr;check(r->GetDevice(IID_PPV_ARGS(&owner)),"input-getdevice");bool same=NativeSameDevice(owner,d);owner->Release();if(!same)throw std::runtime_error("codec device mismatch");
   }
   step(d,"inputs-checked");
   count=UINT(inputs.size());for(UINT i=0;i<count;i++){source[i]=inputs[i];source[i]->AddRef();}
-  auto external=source[count==3?2:0]->GetDesc();geometry=NativeInputGeometry::Make(unsigned(external.Width),external.Height);
-  out_width=count==3?geometry.width:1920;out_height=count==3?geometry.height:1080;
+  auto external=source[count==3?2:0]->GetDesc();geometry=NativeInputGeometry::Make(unsigned(external.Width),external.Height,network.valid_width,network.valid_height);
+  out_width=count==3?geometry.width:network.valid_width;out_height=count==3?geometry.height:network.valid_height;
   auto desc=source[0]->GetDesc();desc.Width=out_width;desc.Height=out_height;desc.Flags=D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   /* Typeless game textures: the encoder's output (our intermediate) is FP16; the decoder's output is copied raw into the game texture, so it takes the game's interpretation (UNORM for Ronin). */
   unorm_out=count==3&&NativeViewFormat(source[2]->GetDesc().Format)==DXGI_FORMAT_R16G16B16A16_UNORM;
@@ -82,7 +84,7 @@ public:
      result is lerped against the original frame (TransferStrength: luminance/detail) and its OkLab colour correction (ColorStrength).
      This is the "intensity" of the NVIDIA app; a lower value keeps more of the original picture. Unset = the captured 1,1. */
   static const std::array<float,2>strength=[]{std::array<float,2>v{1.f,1.f};if(const wchar_t*e=_wgetenv(L"DLSS5_STRENGTH")){float a=1.f,b=1.f;if(swscanf(e,L"%f,%f",&a,&b)==2&&a>=0.f&&a<=1.f&&b>=0.f&&b<=1.f){v[0]=a;v[1]=b;}}return v;}();
-  uint32_t words[20]={out_width,out_height,geometry.width,geometry.height,0,0,1920,1080,0,0x3f800000,0x3f800000,1};
+  uint32_t words[20]={out_width,out_height,geometry.width,geometry.height,0,0,geometry.network_width,geometry.network_height,0,0x3f800000,0x3f800000,1};
   const float viewport[]={float(geometry.x),float(geometry.y),float(geometry.fit_width),float(geometry.fit_height)};std::memcpy(words+12,viewport,sizeof viewport);words[16]=row_pitch;std::memcpy(words+8,&paper_white,4);std::memcpy(words+9,&strength[0],4);std::memcpy(words+10,&strength[1],4);
   c->SetDescriptorHeaps(1,&heap);c->SetComputeRootSignature(root);c->SetPipelineState(pso);c->SetComputeRootDescriptorTable(0,heap->GetGPUDescriptorHandleForHeapStart());c->SetComputeRoot32BitConstants(1,20,words,0);c->Dispatch((out_width+15)/16,(out_height+15)/16,1);
   transition(c,output,D3D12_RESOURCE_STATE_UNORDERED_ACCESS,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);

@@ -124,7 +124,11 @@ float Activate(float v){float g=clamp(v,-4.0,4.0),p=g*(abs(g)*(-.055908203125)+.
  [unroll]for(uint n=0;n<BLOCK_N;n++)acc[n]=C::Splat(0.0f);
  [loop]for(uint g=0;g<32;g++){
 #if NATIVE_PACKED_INPUT
+#if NATIVE_VIT_TILED
+  A a=A::Load(input8,IN_TILE(first,g*32),32,dx::linalg::MatrixLayout::RowMajor,16);
+#else
   A a=A::Load(input8,first*1024+g*32,1024,dx::linalg::MatrixLayout::RowMajor,16);
+#endif
 #else
 #define EXPAND_SRC(i) input_f32[(first+(i)/32)*1024+g*32+(i)%32]
   STAGE_A(EXPAND_SRC)
@@ -133,7 +137,11 @@ float Activate(float v){float g=clamp(v,-4.0,4.0),p=g*(abs(g)*(-.055908203125)+.
 #endif
   [unroll]for(uint n=0;n<BLOCK_N;n++){
    uint col=(gid.y*BLOCK_N+n)*16;
+#if NATIVE_VIT_TILED
+   B b=B::Load(weights,((col/16)*32+g)*512,16,dx::linalg::MatrixLayout::RowMajor,16);
+#else
    B b=B::Load(weights,(col*1024+g*32)*ELEM,1024*ELEM,dx::linalg::MatrixLayout::ColMajor,16);
+#endif
 #if NATIVE_FAST_ACCUMULATE
    acc[n].MultiplyAccumulate(a,b);
 #else
@@ -160,7 +168,9 @@ float Activate(float v){float g=clamp(v,-4.0,4.0),p=g*(abs(g)*(-.055908203125)+.
    acc[n].Set(i,F(H(a*p)));
   }
 #endif
-#if NATIVE_SCATTER_STORE
+#if NATIVE_VIT_TILED
+  acc[n].Cast<HIDDEN_TYPE>().Store(output,HID_TILE(first,col),32*HELEM,dx::linalg::MatrixLayout::RowMajor,16);
+#elif NATIVE_SCATTER_STORE
   for(uint i=0;i<acc[n].Length();i++){uint2 rc=acc[n].GetCoordinate(i);output.Store<float16_t>(((first+rc.x)*4096+col+rc.y)*2,float16_t(acc[n].Get(i)));}
 #else
   acc[n].Cast<HIDDEN_TYPE>().Store(output,(first*4096+col)*HELEM,4096*HELEM,dx::linalg::MatrixLayout::RowMajor,16);

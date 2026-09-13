@@ -11,6 +11,7 @@
 #include "native_network_timestamps.h"
 #include "native_lab_paths.h"
 #include <functional>
+#include "native_network_geometry.h"
 
 // Actual processing extent, with externally supplied GPU RGB tiles and HWC base.
 // No fixture activations, oracles, game command lists, or CPU pixel readbacks.
@@ -33,38 +34,40 @@ public:
  ~NativeActualNetwork70(){if(device)device->Release();}
  void Create(ID3D12Device*d,ID3D12Resource*rgb_tiles,ID3D12Resource*rgb_hwc,
              const std::vector<float>&noise,const std::wstring&dir,ID3D12Resource*temporal_rgb=nullptr,UINT post_shift=0){
+  const auto geometry=NativeCurrentNetworkGeometry();const UINT W=geometry.processing_width,H=geometry.processing_height;
+  const UINT vit_tokens=geometry.valid_height==720?240u:640u;
   if(post_shift>3)throw std::runtime_error("network post shift");
   if(device||!d||!rgb_tiles||!rgb_hwc||noise.size()!=201326592/4)throw std::runtime_error("network initialization contract");
   if(_wgetenv(L"DLSS5_POST_BASE_ONLY"))throw std::runtime_error("diagnostic post forbidden");
   for(auto*r:{rgb_tiles,rgb_hwc,temporal_rgb}){
    if(!r)continue;
-   if(r->GetDesc().Dimension!=D3D12_RESOURCE_DIMENSION_BUFFER||r->GetDesc().Width<1920ull*1152*16)throw std::runtime_error("network RGB capacity");
+   if(r->GetDesc().Dimension!=D3D12_RESOURCE_DIMENSION_BUFFER||r->GetDesc().Width<UINT64(W)*H*16)throw std::runtime_error("network RGB capacity");
    ID3D12Device*owner=nullptr;auto hr=r->GetDevice(IID_PPV_ARGS(&owner));if(FAILED(hr))throw std::runtime_error("network RGB device query");bool same=NativeSameDevice(owner,d);owner->Release();if(!same)throw std::runtime_error("network RGB device mismatch");
   }
   device=d;device->AddRef();auto read=[&](const std::wstring&name){return Read(dir+L"\\"+name);};
   if(const wchar_t*v=_wgetenv(L"DLSS5_TEST_ISOLATE")){for(;*v;v++)isolate+=char(*v);isolate_timestamps.Create(d);if(const wchar_t*r=_wgetenv(L"DLSS5_TEST_ISOLATE_REPEAT")){wchar_t*end=nullptr;auto n=wcstoul(r,&end,10);if(!*r||*end||n<1||n>2000)throw std::runtime_error("isolate repeat must be 1..2000");isolate_repeat=UINT(n);}}
   if(const wchar_t*v=_wgetenv(L"DLSS5_NETWORK_GPU_PROFILE")){if(wcscmp(v,L"1"))throw std::runtime_error("invalid network profile flag");profile=true;timestamps.Create(d);}
   if(const wchar_t*s=_wgetenv(L"DLSS5_TEST_SHARED_MATRIX_WORKSPACE")){if(wcscmp(s,L"0")&&wcscmp(s,L"1"))throw std::runtime_error("invalid shared matrix workspace flag");share_matrix=!wcscmp(s,L"1");if(share_matrix)matrix_workspace.Create(d,(_wgetenv(L"DLSS5_TEST_MATRIX_C64")&&!wcscmp(_wgetenv(L"DLSS5_TEST_MATRIX_C64"),L"1"))?488ull*296*64:248ull*152*128);}
-  NativeVramLog(d,"before");pre.Create(d,rgb_tiles,1920,1152,read(L"block0-ffn.f32"),read(L"block0-attention.f32"),dir,true,false,&noise,temporal_rgb);temporal_bound=temporal_rgb!=nullptr;
+  NativeVramLog(d,"before");pre.Create(d,rgb_tiles,W,H,read(L"block0-ffn.f32"),read(L"block0-attention.f32"),dir,true,false,&noise,temporal_rgb);temporal_bound=temporal_rgb!=nullptr;
   NativeVramLog(d,"pre");const UINT shifts[]={0,3,1,2,0,3,1,2};auto*source=pre.Downsample();
   const wchar_t*c32_mapped=_wgetenv(L"DLSS5_C32_MAPPED_INPUT");if(c32_mapped&&wcscmp(c32_mapped,L"0")&&wcscmp(c32_mapped,L"1")&&wcscmp(c32_mapped,L"2"))throw std::runtime_error("invalid mapped C32 flag");
   const wchar_t*cr=_wgetenv(L"DLSS5_C32_CHAIN_RAW");if(cr&&wcscmp(cr,L"0")&&wcscmp(cr,L"1"))throw std::runtime_error("invalid C32 chain raw flag");const bool chain_raw=cr&&!wcscmp(cr,L"1");
   // FAST PATH (DLSS5_C32_SKIP8): block 4 finish writes E4M3 main8 (no f32 main, no crop); the block 66 projection reads it as the skip residual.
   bool skip8=false;{const wchar_t*s8=_wgetenv(L"DLSS5_C32_SKIP8");if(s8&&wcscmp(s8,L"0")&&wcscmp(s8,L"1"))throw std::runtime_error("invalid C32 skip8 flag");skip8=s8&&!wcscmp(s8,L"1");if(skip8&&!(_wgetenv(L"DLSS5_PREBLOCK_MAIN8")&&!wcscmp(_wgetenv(L"DLSS5_PREBLOCK_MAIN8"),L"1")))throw std::runtime_error("C32 skip8 needs DLSS5_PREBLOCK_MAIN8");}
-  for(UINT i=0;i<4;i++){auto p=L"block"+std::to_wstring(i+1);NativePreblockRuntime::PendingMain8()=skip8&&i==3;c32[i].Create(d,source,960,576,shifts[i],read(p+L"-ffn.f32"),read(p+L"-attention.f32"),dir,false,c32_mapped&&(!wcscmp(c32_mapped,L"1")||(!wcscmp(c32_mapped,L"2")&&i==0)));
+  for(UINT i=0;i<4;i++){auto p=L"block"+std::to_wstring(i+1);NativePreblockRuntime::PendingMain8()=skip8&&i==3;c32[i].Create(d,source,W/2,H/2,shifts[i],read(p+L"-ffn.f32"),read(p+L"-attention.f32"),dir,false,c32_mapped&&(!wcscmp(c32_mapped,L"1")||(!wcscmp(c32_mapped,L"2")&&i==0)));
    if(c32_mapped&&!wcscmp(c32_mapped,L"1")){if(i){if(chain_raw){c32[i].ChainFromRaw(c32[i-1]);c32[i-1].SetSkipFinish(true);}else c32[i].ChainFrom(c32[i-1]);}else c32[i].MapFromRaster(source);if(i)c32[i-1].SetCropNeeded(false);}else if(c32_mapped&&!wcscmp(c32_mapped,L"2")&&i==0)c32[i].MapFromRaster(source);
    source=(chain_raw&&i<3)?c32[i].RawWork():c32[i].Output();} // chained stages: the next Create only needs a resource for its unused SRV
   NativePreblockRuntime::PendingMain8()=false;if(skip8){if(!c32[3].Main8())throw std::runtime_error("C32 skip8: block 4 has no main8 finish");if(!_wgetenv(L"DLSS5_TEST_SKIP8_PROBE"))c32[3].SetCropNeeded(false);/* probe: keep the crop */NativeVitLinear::PendingSkip8()=NativeSkip8Source{c32[3].Main8(),c32[3].WorkWidth(),c32[3].ShiftX(),c32[3].ShiftY()};}
-  NativeVramLog(d,"c32x4");ds4.Create(d,c32[3].PooledWork(),960,576,2,read(L"block4-ds.f32"),dir);source=ds4.Output();
+  NativeVramLog(d,"c32x4");ds4.Create(d,c32[3].PooledWork(),W/2,H/2,2,read(L"block4-ds.f32"),dir);source=ds4.Output();
   auto group=[&](NativeC64Shift*layers,UINT count,UINT first,UINT w,UINT h,UINT channels,NativeC32Downsample&ds){
    for(UINT i=0;i<count;i++){auto p=L"block"+std::to_wstring(first+i);layers[i].Create(d,source,w,h,shifts[i],read(p+L"-ffn.f32"),read(p+L"-attention.f32"),dir,i+1==count,channels,false,share_matrix?&matrix_workspace:nullptr,i>0,i+1<count);source=layers[i].Output();}
    ds.Create(d,source,w,h,0,read(L"block"+std::to_wstring(first+count-1)+L"-ds.f32"),dir,true,channels,share_matrix?&matrix_workspace:nullptr);source=ds.Output();
   };
-  group(c64,4,5,480,288,64,ds8);NativeVramLog(d,"c64x4");group(c128,6,9,240,144,128,ds14);NativeVramLog(d,"c128x6");group(c256,8,15,120,72,256,ds22);NativeVramLog(d,"c256x8");
-  for(UINT i=0;i<8;i++){auto p=L"block"+std::to_wstring(23+i);split[i].Create(d,source,60,36,shifts[i],read(p+L"-ffwd.f32"),read(p+L"-ffwd-projection.f32"),read(p+L"-attention.f32"),dir,i==7,share_matrix?&matrix_workspace:nullptr,(i?1u:0u)|(i<7?2u:0u));source=split[i].Output();NativeVramLog(d,i?"split":"split0");}
-  head.Create(d,source,60,36,0,read(L"head-matrix.f32"),dir,true,512,share_matrix?&matrix_workspace:nullptr);
-  NativeVramLog(d,"head");auto rawmap=read(L"hwc-to-vit.i32");if(rawmap.size()!=655360)throw std::runtime_error("network bridge map size");std::vector<UINT>map(rawmap.size());std::memcpy(map.data(),rawmap.data(),map.size()*4);bridge.Create(d,head.Output(),map,dir);source=bridge.Output();
-  for(UINT i=0;i<8;i++){auto p=L"block"+std::to_wstring(31+i)+L"-";vit[i].Create(d,source,640,read(p+L"expand.f32"),read(p+L"contract.f32"),read(p+L"qkv.f32"),read(p+L"projection.f32"),dir);source=vit[i].Output();NativeVramLog(d,"vit");}
+  group(c64,4,5,W/4,H/4,64,ds8);NativeVramLog(d,"c64x4");group(c128,6,9,W/8,H/8,128,ds14);NativeVramLog(d,"c128x6");group(c256,8,15,W/16,H/16,256,ds22);NativeVramLog(d,"c256x8");
+  for(UINT i=0;i<8;i++){auto p=L"block"+std::to_wstring(23+i);split[i].Create(d,source,W/32,H/32,shifts[i],read(p+L"-ffwd.f32"),read(p+L"-ffwd-projection.f32"),read(p+L"-attention.f32"),dir,i==7,share_matrix?&matrix_workspace:nullptr,(i?1u:0u)|(i<7?2u:0u));source=split[i].Output();NativeVramLog(d,i?"split":"split0");}
+  head.Create(d,source,W/32,H/32,0,read(L"head-matrix.f32"),dir,true,512,share_matrix?&matrix_workspace:nullptr);
+  NativeVramLog(d,"head");auto map=NativeVitLogicalMap(vit_tokens);if(vit_tokens==640){auto captured=read(L"hwc-to-vit.i32");if(captured.size()!=map.size()||std::memcmp(captured.data(),map.data(),map.size()*4))throw std::runtime_error("network bridge disagrees with captured map");}bridge.Create(d,head.Output(),map,dir);source=bridge.Output();
+  for(UINT i=0;i<8;i++){auto p=L"block"+std::to_wstring(31+i)+L"-";vit[i].Create(d,source,vit_tokens,read(p+L"expand.f32"),read(p+L"contract.f32"),read(p+L"qkv.f32"),read(p+L"projection.f32"),dir);source=vit[i].Output();NativeVramLog(d,"vit");}
   // FAST PATH (DLSS5_POST70_LOW_RAW): 1 = post70 reads block 69's raw tiles (Ffast; block 69 skips finish+crop; post FFN +0.45ms, not worth it);
   // 2 = block 69 finish writes E4M3 main8 (no f32 main, no crop) and post70 reads the bytes (mode 9).
   UINT low_raw=0;{const wchar_t*lr=_wgetenv(L"DLSS5_POST70_LOW_RAW");if(lr&&wcscmp(lr,L"0")&&wcscmp(lr,L"1")&&wcscmp(lr,L"2"))throw std::runtime_error("invalid post70 low raw flag");low_raw=lr?UINT(lr[0]-L'0'):0u;if(low_raw&&!pre.Main8Mode())throw std::runtime_error("post70 low raw needs DLSS5_PREBLOCK_MAIN8");}
@@ -72,7 +75,7 @@ public:
   NativeVramLog(d,"c512+vit");decoder.Create(d,source,split[7].Output(),c256[7].Output(),c128[5].Output(),c64[3].Output(),skip8?c32[3].RawWork():c32[3].Output(),dir,share_matrix?&matrix_workspace:nullptr);
   {const wchar_t*bs=_wgetenv(L"DLSS5_BATCH_SUBMITS");if(bs&&wcscmp(bs,L"0")&&wcscmp(bs,L"1")&&wcscmp(bs,L"2"))throw std::runtime_error("invalid batch submits flag");batch_submits=bs?UINT(bs[0]-L'0'):0u;}
   auto&last=decoder.Tail().Last();if(low_raw==1){last.SetSkipFinish(true);last.SetCropNeeded(false);}if(low_raw==2){if(!last.Main8())throw std::runtime_error("post70 low raw 2: block 69 has no main8 finish");last.SetCropNeeded(false);}
-  NativeVramLog(d,"decoder");post.Create(d,low_raw==1?last.RawWork():low_raw==2?last.Main8():decoder.Output(),pre.DownOnly()?pre.RawTiles():pre.Main8Mode()?pre.Main8():pre.Main(),rgb_hwc,1920,1152,read(L"post70-scales.f32"),read(L"post70-ffn.f32"),read(L"post70-attention.f32"),read(L"post70-head.f32"),dir,.03125f,post_shift,pre.DownOnly()?6u:pre.Main8Mode()?7u:4u,pre.DownOnly()?pre.WorkWidth():0u,low_raw?last.WorkWidth():0u,low_raw?last.ShiftX():0u,low_raw?last.ShiftY():0u,low_raw==2?9u:8u);NativeVramLog(d,"post70");ready=true;
+  NativeVramLog(d,"decoder");post.Create(d,low_raw==1?last.RawWork():low_raw==2?last.Main8():decoder.Output(),pre.DownOnly()?pre.RawTiles():pre.Main8Mode()?pre.Main8():pre.Main(),rgb_hwc,W,H,read(L"post70-scales.f32"),read(L"post70-ffn.f32"),read(L"post70-attention.f32"),read(L"post70-head.f32"),dir,.03125f,post_shift,pre.DownOnly()?6u:pre.Main8Mode()?7u:4u,pre.DownOnly()?pre.WorkWidth():0u,low_raw?last.WorkWidth():0u,low_raw?last.ShiftX():0u,low_raw?last.ShiftY():0u,low_raw==2?9u:8u);NativeVramLog(d,"post70");ready=true;
   NativeResidentFlush();NativePrefetchRelease();
  }
  // Caller serializes whole frames and must retain this object after GPU timeout.
