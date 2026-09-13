@@ -26,6 +26,7 @@ struct NativeDredData:public IUnknown{virtual HRESULT STDMETHODCALLTYPE GetAutoB
 static constexpr GUID NativeDredIid={0x98931D33,0x5AE8,0x4791,{0xAA,0x3C,0x1A,0x73,0xA2,0x93,0x4E,0x71}};
 class NativeGameOneShot {
  std::atomic<unsigned>phase{0}; // idle, initializing, ready, rendering, done, failed
+ unsigned source_width{},source_height{},motion_width{},motion_height{},render_width{},render_height{};
  NativeGameFrame*frame{};ID3D12CommandQueue*queue{};
  std::mutex request_mutex;unsigned long last_request{},armed_request{};ULONGLONG next_poll{};bool every_frame{};unsigned long every_frame_count{};ULONGLONG every_frame_tick{};bool bypass{},f6_down{};
  struct Init {NativeGameOneShot*self;ID3D12Resource*source;NativeGameFrame::TemporalConfig temporal;};
@@ -53,7 +54,7 @@ class NativeGameOneShot {
    // environment before the network is created, mirroring the validated test runner chain.
    {unsigned applied=0;if(FILE*flags=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,flags)){size_t n=strlen(line);while(n&&(line[n-1]=='\n'||line[n-1]=='\r'||line[n-1]==' '))line[--n]=0;if(n<8||strncmp(line,"DLSS5_",6)||!strchr(line,'='))continue;if(!_putenv(line))applied++;}fclose(flags);}
     Log("flags_applied",std::to_string(applied).c_str());}
-   {const bool temporal_on=GetFileAttributesW(NativeLabPath(L"temporal-history.txt").c_str())!=INVALID_FILE_ATTRIBUTES&&task->temporal.motion_width&&task->temporal.render_width;
+   {const bool temporal_on=GetFileAttributesW(NativeLabPath(L"temporal-history.txt").c_str())!=INVALID_FILE_ATTRIBUTES&&task->temporal.motion_width>=2&&task->temporal.motion_height>=2&&task->temporal.render_width&&task->temporal.render_height;
     char text[160];snprintf(text,sizeof text,"temporal=%u motion=%ux%u render=%ux%u",temporal_on?1u:0u,task->temporal.motion_width,task->temporal.motion_height,task->temporal.render_width,task->temporal.render_height);Log("temporal_config",text);
     NativeReleaseReservedVram();
     self->frame->Create(self->queue,task->source,noise,NativeLabPath(L"native-game-tiled-assets").c_str(),nullptr,temporal_on?&task->temporal:nullptr);}
@@ -119,11 +120,17 @@ public:
  /* state: the D3D12 state the upscaler declared for its output (the frame transitions from it and back to it) */
  void OnSubmitted(ID3D12CommandQueue*q,ID3D12Resource*source,ID3D12Resource*motion=nullptr,bool reset=false,unsigned mw=0,unsigned mh=0,unsigned rw=0,unsigned rh=0,D3D12_RESOURCE_STATES state=D3D12_RESOURCE_STATE_UNORDERED_ACCESS){
   {const unsigned state=phase.load();if(state==5||((state==2||state==4)&&queue&&q!=queue)){if(!ResetForNewSession(state==5?"previous initialization/render failed":"upscaler queue changed"))return;}}
+  if(source&&(phase.load()==2||phase.load()==4)){
+   auto desc=source->GetDesc();
+   if(desc.Width!=source_width||desc.Height!=source_height||mw!=motion_width||mh!=motion_height||rw!=render_width||rh!=render_height)
+    if(!ResetForNewSession("input or motion geometry changed"))return;
+  }
   unsigned expected=0;
   if(phase.compare_exchange_strong(expected,1)){
    if(!q||!source||q->GetDesc().Type!=D3D12_COMMAND_LIST_TYPE_DIRECT){Log("initialization_failed","queue/source");phase=5;return;}
    Init*task=nullptr;
    try{task=new Init{this,source,{mw,mh,rw,rh}};}catch(const std::exception&e){Log("initialization_failed",e.what());phase=5;return;}
+   source_width=unsigned(source->GetDesc().Width);source_height=source->GetDesc().Height;motion_width=mw;motion_height=mh;render_width=rw;render_height=rh;
    queue=q;queue->AddRef();source->AddRef();
    HANDLE thread=CreateThread(nullptr,0,Initialize,task,0,nullptr);
    if(!thread){source->Release();delete task;Log("initialization_failed","thread creation");phase=5;return;}
@@ -153,7 +160,7 @@ public:
     phase=4;return;
    }
    auto before=NativeReadSubmittedFrame(q,source,state);Save(request,L"before",before);
-   auto input_check=CheckNativeFrameInput(before);
+   auto input_desc=source->GetDesc();auto input_check=CheckNativeFrameInput(before,unsigned(input_desc.Width),input_desc.Height,NativeIsRgba8Unorm(input_desc.Format)?4:8);
    if(input_check!=NativeFrameInputCheck::valid){Log("input_rejected",input_check==NativeFrameInputCheck::black?"black RGB; no neural write; new request required":"invalid input; no neural write; new request required");phase=2;return;}
    frame->RebindSourceAfterCompletion(source);
    Log("render_begin",frame->TemporalReady()?"seed=0 temporal path armed (history from previous processed frame)":"seed=0 history=0 explicit diagnostic reset");

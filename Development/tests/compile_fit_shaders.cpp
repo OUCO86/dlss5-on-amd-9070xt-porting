@@ -1,0 +1,23 @@
+#include <windows.h>
+#include <d3dcompiler.h>
+#include <cstdio>
+#include <string>
+int wmain(int argc,wchar_t**argv){
+ if(argc!=2)return 2;
+ unsigned count=0;
+ for(const char*fit:{"0","1"})for(const char*srgb:{"0","1"})for(unsigned output=0;output<4;output++){
+  D3D_SHADER_MACRO m[]={{"NATIVE_CODEC_FIT",fit},{"NATIVE_CODEC_SRGB_IO",srgb},{"NATIVE_CODEC_UNORM8_OUT",output>=2?"1":"0"},{"NATIVE_CODEC_UINT_OUT",output==1?"1":"0"},{"NATIVE_CODEC_BGRA",output==3?"1":"0"},{nullptr,nullptr}};
+  for(const wchar_t*name:{L"native_codec_encode.hlsl",L"native_codec_decode.hlsl"}){
+   std::wstring path=std::wstring(argv[1])+L"\\"+name;ID3DBlob*b=nullptr,*e=nullptr;
+   HRESULT hr=D3DCompileFromFile(path.c_str(),m,D3D_COMPILE_STANDARD_FILE_INCLUDE,"main","cs_5_1",D3DCOMPILE_OPTIMIZATION_LEVEL3,0,&b,&e);
+   if(e){fwrite(e->GetBufferPointer(),1,e->GetBufferSize(),stderr);e->Release();}if(FAILED(hr)){fprintf(stderr,"FAIL fit=%s srgb=%s output=%u shader=%ls hr=%08x\n",fit,srgb,output,name,unsigned(hr));return 1;}b->Release();count++;
+  }
+ }
+ for(const char*viewport:{"0","1"})for(const char*fast:{"0","1"}){
+  D3D_SHADER_MACRO m[]={{"NATIVE_INPUT_VIEWPORT",viewport},{"NATIVE_FAST_TEMPORAL",fast},{"NORMALIZED_COORDINATES","1"},{nullptr,nullptr}};
+  auto path=std::wstring(argv[1])+L"\\native_temporal_coordinates.hlsl";ID3DBlob*b=nullptr,*e=nullptr;
+  auto hr=D3DCompileFromFile(path.c_str(),m,D3D_COMPILE_STANDARD_FILE_INCLUDE,"main","cs_5_1",D3DCOMPILE_OPTIMIZATION_LEVEL3,0,&b,&e);
+  if(e){fwrite(e->GetBufferPointer(),1,e->GetBufferSize(),stderr);e->Release();}if(FAILED(hr))return 1;b->Release();count++;
+ }
+ printf("PASS %u shader variants compiled with production D3DCompiler\n",count);return 0;
+}

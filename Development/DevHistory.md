@@ -586,3 +586,18 @@ decoder 实际移位序列（09-06 从 5090 launch 参数直接解码，取代�
 ---
 
 光之朱雀，2026-09-10
+
+---
+
+## 2026-09-13：小窗口适配 + Magpie 后接 FSR4（闇）
+
+Zero 在《鬼武者》菜单选 1080p 窗口，捕获实际为 1914×1063。现场原链是 FSR3 1914×1063→3840×2133、FSR4再到7680×4266，所以 DLSS5 `armed=0 ran=0`。Zero 定：宽≤1920、高≤1080的窗口都应能输入，不要求用户精确调整客户区。
+
+- 新开关 `DLSS5_FIT_INPUT=1`，默认关闭；本机 Magpie 已开启。encode/decode 内完成保比例双线性缩放、居中黑边与输出逆映射，网络仍用1920×1080有效区/1920×1152计算区。1914×1063→1920×1066，上下7像素；输出还原为1914×1063。运动坐标和位移同步按视口变换，补边运动为零。奇数宽度raw输出按256字节行距写/拷，读回检查也用实际尺寸；尺寸变化重建会话，释放前等待GPU；单像素运动图关闭时序。原1080p保留原shader分支。
+- Magpie两站设置：FSR3 `scalingType=0 scale=1,1`（相对输入），FSR4 `scalingType=1 scale=1,1`（适屏），保留原XeSS FG参数。Magpie会省略保存默认值字段，部署脚本用Add-Member处理，不能直接假设scalingType存在。
+- 每站各有自己的D3D12提交，后接Signal→D3D11 Wait→CopyResource；第一站after-submit补跑网络能交给第二站，无需改Magpie本体。第一FFX context负责网络和尺寸提示，销毁后才重新选，后续FSR4不再覆盖motion/计数/提示。销毁钩子完整转发allocationCallbacks；固定loader模块生命周期。跟踪dispatch后同列表同资源的barrier，Magpie输出提交时是COMMON，不是dispatch时声明的UAV。
+- 验证：CPU穷举2,073,600合法尺寸；生产D3DCompiler编译36组合；9070真实codec回读五种尺寸（1914×1063/1280×720/1440×1080/641×479/1920×1080）全过，强度0,0时原图逐字节一致，黑边与行padding哨兵正确。测试文件在`Development/tests/`。
+- 整链现场：合成动画源受Windows150%DPI影响，初次误变2871×1595；测试窗口修正后WGC实际1914×1064，FSR3保持该尺寸，FSR4输出3840×2135（4K画布内保比例）。网络初始化、连续处理通过；早期候选运行约3000帧，约35ms/帧。最终候选同进程停开再初始化成功，重开后300帧34.5～34.8ms。是无游戏的合成源结果，不是《鬼武者》帧率/画质验收。
+- 初期超限窗口的双FSR提示路径出现两次进程访问异常（网络未启动）；最终候选将超限提示也绑定第一context并固定loader生命周期。未把早期异常直接归因成单一已证实根因。
+- 已部署Magpie add-on SHA256 `6FB89C030CEC9AC62731D616494A24E50D68364533E5CD21B92A6AF28D8A313E`，三个运行时hlsl同步更新，配置改为上述链。备份`D:\DLSSNR-Lab\fit-input\before-fit-input\`；`Development/tools/deploy-fit-input.ps1 -Action Restore`回退DLL/shader/flags/config，要求Magpie退出。游戏目录/发布zip/tag未动。
+- 开发说明`Development/fit-input.md`，候选`release/fit-input/`及远端同名目录；真实游戏的运动画质由Zero继续看。
