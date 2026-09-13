@@ -1,6 +1,7 @@
 # Magpie bundle builder. Historical filename retained so repeat packaging uses the same tool.
 param(
  [switch]$VerifyOnly,
+ [switch]$Repack,
  [string]$Version='0.15',
  [string]$SourceVersion='0.14',
  [string]$Payload='D:\DLSSNR-Lab\release-0.15',
@@ -16,7 +17,7 @@ $installed='D:\Magpie-DLSS5\Magpie-Experimental-x64\Magpie-Experimental-x64'
 $utf8=New-Object System.Text.UTF8Encoding($false)
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 if(!$VerifyOnly){
- if((Test-Path $stage) -or (Test-Path $zip)){throw 'Output exists; inspect before replacing.'}
+ if(((Test-Path $stage) -or (Test-Path $zip)) -and !$Repack){throw 'Output exists; inspect before replacing or use -Repack.'}
  $addon=Join-Path $installed 'dlss5-amd.addon64'
  if((Get-FileHash $addon).Hash -ne $ExpectedAddon){throw 'Installed addon differs from the game-tested build.'}
  # Use the tested host and dependencies; no running installation is modified.
@@ -29,6 +30,7 @@ if(!$VerifyOnly){
  $effects=$groups[0].effects
  if($effects.Count -ne 3 -or $effects[0].name -ne 'FSR3\FSR3_SR' -or $effects[1].name -ne 'FSR4\FSR4_SR' -or $effects[2].name -ne 'XeSSFG\XeSS_FrameGeneration_x2_ZeroMV'){throw 'Unexpected tested effect order.'}
  if([int]$effects[0].scalingType -ne 0 -or [int]$effects[1].scalingType -ne 3){throw 'Expected original-size FSR3 and screen-fill FSR4.'}
+ if([int]$effects[0].parameters.opticalFlowMethod -ne 1 -or [int]$effects[1].parameters.opticalFlowMethod -ne 0 -or [int]$effects[2].parameters.opticalFlowMethod -ne 0){throw 'Expected AMDOF only on the DLSS5/FSR3 stage; FSR4 and XeSS FG must use None.'}
  if($effects[0].scale -and ($effects[0].scale.x -ne 1 -or $effects[0].scale.y -ne 1)){throw 'FSR3 is not original size.'}
  foreach($name in @('native_codec_encode.hlsl','native_codec_decode.hlsl','native_temporal_coordinates.hlsl')){
   if((Get-FileHash (Join-Path $Payload $name)).Hash -ne (Get-FileHash (Join-Path $installed "DLSS5-AMD\native-game-tiled-assets\$name")).Hash){throw "Repository shader differs from tested install: $name"}
@@ -38,6 +40,16 @@ if(!$VerifyOnly){
  if($flags -match '^DLSS5_(DEBUG_DUMPS|BLACK_PROBE|GAME_PROBE)=1$'){throw 'Diagnostic flag enabled.'}
  $readme=Get-Content (Join-Path $Payload 'package-README-magpie.txt') -Raw -Encoding UTF8
  if(!$readme.Contains("DLSS5-AMD $Version")){throw 'README version differs.'}
+ if($Repack){
+  if($Version -notmatch '^0\.[0-9]+$' -or $stage -eq $source){throw 'Invalid repack target.'}
+  $previous=Join-Path $Payload 'previous-package'
+  if(Test-Path $previous){throw 'Previous repack backup already exists; inspect it first.'}
+  New-Item -ItemType Directory -Path $previous | Out-Null
+  if(Test-Path (Join-Path $stage 'SHA256SUMS.txt')){Copy-Item (Join-Path $stage 'SHA256SUMS.txt') (Join-Path $previous 'SHA256SUMS.txt')}
+  if(Test-Path $zip){Move-Item $zip $previous}
+  if(Test-Path "$zip.sha256"){Move-Item "$zip.sha256" $previous}
+  if(Test-Path $stage){Remove-Item $stage -Recurse -Force}
+ }
  Copy-Item $source $stage -Recurse
  Copy-Item $addon (Join-Path $stage 'dlss5-amd.addon64') -Force
  Copy-Item (Join-Path $Payload 'package-README-magpie.txt') (Join-Path $stage 'README.txt') -Force

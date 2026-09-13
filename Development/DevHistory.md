@@ -616,3 +616,9 @@ Zero 亲测：游戏设为1080p窗口、中画质，DLSS5正常生效，随后�
 - 中英文README与包说明同步更新；0.15网盘链接待Zero上传后补，0.14历史链接仍在对应版本行。版本标签`0.15`对应本次发布。
 
 - **2026-09-13 21:16**：Zero已上传0.15整包，夸克链接 https://pan.quark.cn/s/e474fe2061c9 。中英文README下载入口已补齐，包及校验值不变。
+
+### 2026-09-13 22:02：0.15同版本重打包（光流预设修正）
+
+Zero实测FSR4和XeSS插帧额外打开AMD光流反而发糊，关闭后更清晰，要求DLL和版本不变、重打包。最终预设`opticalFlowMethod`按FSR3/FSR4/XeSS FG依次为1/0/0；第一项DLSS5保留AMDOF，后两项None。包内README和仓库中英文说明已说明该设置。
+
+同名新包`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.15.zip`，358,010,545字节，SHA256 `9bb7a021d09d987986f96dbd920589018606c9800dbd08e007f4b309388e5909`，旁置`.zip.sha256`已刷新。672个文件逐个解压校验通过；与初包清单对比，仅`config/config.json`与`README.txt`变化（以及校验清单自身），DLL仍`6FB89C03…`、全部shader/权重一致，无需重编。旧zip及清单留在`D:\DLSSNR-Lab\release-0.15\previous-package\`供回退。tag0.15保持不动。当前README下载链接和初包hash仍对应已上传的初包，新包待Zero重新上传后更新链接/校验值。

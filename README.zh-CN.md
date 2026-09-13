@@ -10,7 +10,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 用户实玩《鬼武者》：1080p 窗口放大到 2K，保持约 **30 帧**。另用测试窗口在 4K 桌面验证，网络约 **29 fps**；这是两种场景，不是插帧前后的对比。
 
-**效果组里的 `FSR3_SR` 就是 DLSS5 的入口**：插件在这一项接入 DLSS5，界面仍显示 FSR3；不用再找或添加单独的 DLSS5 滤镜。第一项保持输入尺寸，后面的 FSR4 负责放大。
+**效果组里的 `FSR3_SR` 就是 DLSS5 的入口**：插件在这一项接入 DLSS5，界面仍显示 FSR3；不用再找或添加单独的 DLSS5 滤镜。第一项保持输入尺寸，后面的 FSR4 负责放大。光流只在第一项选 AMDOF；FSR4 和 XeSS 插帧的 Optical Flow Method 选 None，避免额外光流造成发糊。
 
 便携预设为 **FSR3（由本插件接入 DLSS5）→ FSR4 充满屏幕 → XeSS 帧生成**。默认开启小窗口适配（`DLSS5_FIT_INPUT=1`）和网络帧率显示，FPS 数字至少间隔三秒刷新。
 

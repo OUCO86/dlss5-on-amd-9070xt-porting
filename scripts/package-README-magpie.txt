@@ -40,6 +40,8 @@ DLSS5-AMD 0.15 · Magpie 版（2026-09-13）
 ----
   1. 解压到任意目录（路径别带中文），运行 Magpie.exe。便携配置随包，选择效果组 "DLSS5-AMD" 即可。
      已预设 FSR3_SR -> FSR4_SR -> XeSS_FrameGeneration_x2_ZeroMV。
+     光流默认只在第一项 FSR3（DLSS5）开启 AMDOF；FSR4 和 XeSS 插帧的 Optical Flow Method 均选 None。
+     关掉后两项的额外光流不会关闭放大或插帧。
      如果自己调整效果组：FSR3 的缩放选相对于输入尺寸、水平/垂直均 1 倍；
      FSR4 选充满屏幕。不要把 FSR3 设成适应屏幕。
      不需要插帧时，删掉最后的 XeSS_FrameGeneration_x2_ZeroMV 即可。
@@ -57,7 +59,7 @@ DLSS5-AMD 0.15 · Magpie 版（2026-09-13）
   - 小窗口适配默认开启（DLSS5-AMD\native-game-flags.txt 中 DLSS5_FIT_INPUT=1），FPS 和 XeSS 帧生成也默认开启。
   - 输入是显示用的 8 位 sRGB 图（不是游戏内钩子那种线性 HDR 场景色）；插件按 sRGB 直通处理（DLSS5_CODEC_SRGB=1），
     亮度和原图一致。0.09 里暗部皮肤上偶尔闪的 8 像素方块在 0.10 修掉了（硬件 FP8 转换对超范围值不饱和、出 NaN，现在进矩阵前夹到 ±448）。
-  - 运动向量来自 Magpie 的光流估计（效果参数 Optical Flow Method 选 AMDOF）；光流在平坦暗部会给出几万像素的垃圾向量，
+  - DLSS5（第一项 FSR3）的运动向量来自 Magpie 的光流估计（Optical Flow Method 选 AMDOF）；光流在平坦暗部会给出几万像素的垃圾向量，
     插件把超过 64 像素的向量当静止处理（DLSS5-AMD\native-game-flags.txt 的 DLSS5_MOTION_MAX_PX），否则会出现黑色/粉色的方块闪烁。
   - 强度：DLSS5-AMD\native-game-flags.txt 里加一行 DLSS5_STRENGTH=<细节>,<颜色>（各 0～1，默认 1,1 = 网络结果全用；
     0.5,1 就是细节一半原图一半、颜色修正全用）。这是 NVIDIA 面板里"强度"那个滑杆对应的两个混合系数；改完重启 Magpie 生效。

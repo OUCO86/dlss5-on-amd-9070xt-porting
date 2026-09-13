@@ -12,7 +12,7 @@ FP8 (E4M3) operands, and wired into a game through a ReShade add-on that hooks t
 
 In the user's *Onimusha* test, a 1080p window scaled to 2K maintained about **30 fps**. A separate synthetic-window test on a 4K desktop measured about **29 network fps**; these are different scenarios, not a before/after frame-generation comparison.
 
-**The `FSR3_SR` item in the effect group is the DLSS5 entry point.** The add-on runs DLSS5 through that item while its UI name remains FSR3; there is no separate DLSS5 filter to add. Keep this first item at input size; the following FSR4 item handles upscaling.
+**The `FSR3_SR` item in the effect group is the DLSS5 entry point.** The add-on runs DLSS5 through that item while its UI name remains FSR3; there is no separate DLSS5 filter to add. Keep this first item at input size; the following FSR4 item handles upscaling. Enable AMDOF only for the first item; set Optical Flow Method to None for FSR4 and XeSS Frame Generation, which looked sharper in the user’s test.
 
 The portable preset runs **FSR3 (DLSS5 through this add-on) → FSR4 filling the screen → XeSS Frame Generation**. Small-window adaptation (`DLSS5_FIT_INPUT=1`) and the network FPS display are enabled; the FPS number refreshes at intervals of at least three seconds.
 
