@@ -601,3 +601,7 @@ Zero 在《鬼武者》菜单选 1080p 窗口，捕获实际为 1914×1063。现
 - 初期超限窗口的双FSR提示路径出现两次进程访问异常（网络未启动）；最终候选将超限提示也绑定第一context并固定loader生命周期。未把早期异常直接归因成单一已证实根因。
 - 已部署Magpie add-on SHA256 `6FB89C030CEC9AC62731D616494A24E50D68364533E5CD21B92A6AF28D8A313E`，三个运行时hlsl同步更新，配置改为上述链。备份`D:\DLSSNR-Lab\fit-input\before-fit-input\`；`Development/tools/deploy-fit-input.ps1 -Action Restore`回退DLL/shader/flags/config，要求Magpie退出。游戏目录/发布zip/tag未动。
 - 开发说明`Development/fit-input.md`，候选`release/fit-input/`及远端同名目录；真实游戏的运动画质由Zero继续看。
+
+### 2026-09-13 21:07：Zero《鬼武者》实机反馈
+
+Zero 亲测：游戏设为1080p窗口、中画质，DLSS5正常生效，随后放大到2K，保持30帧。小窗口适配与后接放大已获得真实游戏验证。30帧按用户现场反馈记录，未另行区分帧生成前后读数。
