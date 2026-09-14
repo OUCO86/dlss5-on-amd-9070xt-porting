@@ -640,3 +640,16 @@ Zero于09-13 23:54反馈720游戏链（游戏内FSR→DLSS5→2K→XeSS FG）仍
 - **2026-09-14 00:25**：Zero上传0.15-900P，链接 https://pan.quark.cn/s/a5339e4c8549 ，中英文README版本号入口已补。按Zero要求，900P分支移除README中0.14网盘链接，保留历史版本记录。
 
 - **2026-09-14 07:42《剑星》内接入**：Zero要求把900DLL集成Steam游戏。游戏已退出，替换native-submission-order.addon64（72F87A97…）及D:\DLSSNR-Lab资产的40个配套shader，逐项hash通过；启用900/FIT_INPUT/线性codec/FPS，清掉旧转储、黑帧探针和占位参数，原生运动与时序保留。ffxDispatch/ffxDestroyContext导出齐全，SDK/驱动检查通过。备份network-900p/before-stellarblade-900p，回退deploy-stellarblade.ps1 -Action Restore。尚待实玩，Magpie/发布包未动。
+
+
+## 2026-09-14 22:57：HIP 分支第一阶段——完整网络与原生 WMMA 数值通过
+
+Zero创建HIP分支，授权移植推理后端，目标是摆脱SM6.10预览版DirectX依赖。实现集中在`Development/HIP/`，尚未替换Magpie/《剑星》900P安装。
+
+- **无SDK编译链**：动态调用Windows驱动自带`amd_comgr_3.dll`（Clang21），源码→LLVM BC→目标文件→gfx1201 HSACO；`-nogpuinc -nogpulib`，不安装HIP SDK。`hip_api.h`动态加载`amdhip64_7.dll`。当前9070XT仍为预览驱动32.0.31007.2048；HIP路线未启用实验D3D功能，正式驱动兼容性仍待单独实测。
+- **GPU共享资源**：D3D12共享buffer与共享fence导入HIP成功，完成D3D写→HIP等待/读取→HIP写/发信号→D3D等待/回读；共享buffer上的原生FP8 WMMA输出256个16全部正确。HIP probe无Agility SDK/实验feature调用。
+- **矩阵契约**：79组K32矩阵测试，HIP原生FP8 WMMA与HLSL FP8 CooperativeVector的K32、拆分K16、首K16结果各20224个float逐位一致。必须保留每K32从零积累后H(previous+dot)的舍入边界，不能把残差提前塞进WMMA累加器。模型的自定义指数、归一化树、half中点、移位/裁边按原实现移植。
+- **完整参考图**：prefix、C32、多头64/128/256/512、split、ViT、decoder、post70均已HIP实现。512×512真实测试输入、seed0/postshift0，0–70块最终786432个RGB float与既有原版oracle逐位一致，非有限值0。SHA256 `bd52c601b68c4ed27f271cd2c7bcffc8511519f652534f2a0c51ffa9450e6da4`。block0/39/69中间结果也逐位一致。最初错误地用live postshift3导致最终差异；恢复本测试契约的shift0后完全一致。
+- **WMMA接入**：C32的6个矩阵算子、多头FFN/QKV/score/AV/projection/pool及deep的8个矩阵算子改为gfx12原生FP8/F16 WMMA。C32全链、MH32/64/128/256/512逐阶段、deep真实block31/block23/decoder39/block66两套输入均bitdiff=0。完整512图开启`--wmma`后最终786432值仍与oracle逐位一致，SHA同上。MH额外导出的split_project未单独测，主图未使用它。
+- **计时边界**：参考路径一次含dump约2.085秒；WMMA一次无dump约0.640秒。这是含冷权重上传、分配及逐kernel同步的整次验证耗时，条件不同，不能据此报加速比或游戏FPS。还没有实时内存复用、GPU整图计时或游戏接入。
+- **复现入口**：`Development/HIP/README.md`与各ABI/toolchain文档；诊断输出在忽略目录`release/HIP/`及远端`D:\DLSSNR-Lab\hip-backend`。下一阶段处理缓冲复用/同步、720P与900P图、游戏D3D12桥接及性能验证。阶段性提交和DevHistory同步推进。
