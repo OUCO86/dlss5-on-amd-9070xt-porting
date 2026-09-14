@@ -688,3 +688,11 @@ COMGR及host编译通过。完整512与原版oracle786432值逐位一致；完�
 新增编译选项`build-addon.sh --hip`，保留既有`--tiled`生产HLSL构建。`NativeHipNetwork`接入NativeGameFrame，使用其同一DIRECT/COMPUTE队列、RGBA base与采样历史；输出共享buffer允许UAV，以支持后置平滑。HIP构建跳过SDK721/实验SM初始化。候选DLL SHA256 `8962d835bfc260e42ac7f18e1b1acf513a0c438a9c02b5fea046d844a1e300b8`；导入表无D3D12EnableExperimentalFeatures。原HLSL分支回归编译通过（源码条件块改变行号，构建hash不作为旧安装替换依据）。
 
 独立benchmark以`DLSS5_USE_HIP`构建，取消测试EXE的Agility导出与experimental enable，模块路径设实验isa-half目录。900P完整encode→input/时序→HIP精确网络→history/neural/decode，3帧预热+2帧测量通过：GPU队列平均136.681ms、墙钟136.877ms（7.32fps，仅测试台），RGB25–227，历史5760000个float非有限值0。候选仍慢，尚未部署Magpie/《剑星》；正式驱动也未切换测试。快路径数学正在独立对照，不用这份精确后端冒充已完成实时移植。
+
+### 2026-09-14：生产C32 FAST3/FAST4数值对齐
+
+- 新增独立`c32_fast`：无中间H的expand与持续FP32累加contract，普通残差与map3三份E4M3对角矩阵残差分开导出。原FAST3 HLSL（不是重写公式的替身）三类输入：FP8、half、饱和边界。首次11904差异定位到最终显式f32tof16在D3D驱动走RTZ；修成RTZ后普通残差三pattern全0，随后map3三pattern也全0。真原始raw与F(main)只有F(input)一致且shift一致时才能互换map3输入。
+- 新增独立`c32_fast_attention`，六阶段整体切换。原FAST4 HLSL逐段dump证明QKV/norm最初就逐位一致，首次分叉在exp的显式f32tof16：改RTZ后六段全部一致。再对齐production HW_H=1的projection RTZ，复测两pattern、六段全部bitdiff0/invalid0。矩阵Cast<F16>仍RNE，不能全模块粗暴改同一种half舍入。
+- 前馈/attention验证器已独立命名`c32_fast_ffn_validate`与`c32_fast_attention_validate`，消除并行编写时临时文件撞名；旧冲突文件清掉。
+- MH快前馈末尾RTZ也已GPU/CPU独立复核解释所有差异，C64/128/256六pattern全0；QKV+normalize真实生产CSO对照C64/128/256/512八pattern全0，剩余attention/projection继续独立推进。其模块尚未整链接入。
+- 实验图仅先切C32快速数学（前缀和其他家族仍精确参考），900热墙钟149.565ms，混合精度图与生产RMSE0.0152379，未改善整体差异。不能将已验算子等同整网生产路径完成；还需prefix、MH、deep、边界与融合的完整对应。
