@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory=$true)][string]$Compiler,
     [Parameter(Mandatory=$true)][string]$OutputDir,
-    [string]$SourceDir = $PSScriptRoot
+    [string]$SourceDir = $PSScriptRoot,
+    [switch]$IsaHalf
 )
 $ErrorActionPreference = 'Stop'
 $OutputDir = [IO.Path]::GetFullPath($OutputDir)
@@ -18,7 +19,7 @@ $modules = @(
     @('wave-pointwise', @('c32_reference.hip', 'wave_pointwise.hip'))
 )
 foreach ($module in $modules) {
-    $source = ''
+    $source = if ($IsaHalf) { "#define HIP_ISA_HALF 1`n" } else { '' }
     foreach ($part in $module[1]) {
         $source += [IO.File]::ReadAllText((Join-Path $SourceDir $part)) + "`n"
     }

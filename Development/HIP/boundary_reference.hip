@@ -10,7 +10,12 @@ DEV uint index1(){return __builtin_amdgcn_workgroup_id_x()*256u+__builtin_amdgcn
 DEV float absf(float x){return value(bits(x)&0x7fffffffu);}
 DEV uint rshift(uint x,uint n){if(n>31)return 0;uint q=x>>n,r=x&((1u<<n)-1u),m=1u<<(n-1);return q+uint(r>m||(r==m&&(q&1)));}
 DEV float half_from(uint h){uint s=(h&0x8000u)<<16,e=(h>>10)&31u,m=h&1023;if(e==31)return value(s|0x7f800000u|(m<<13));if(!e){if(!m)return value(s);float f=float(m)*5.9604644775390625e-8f;return s?-f:f;}return value(s|((e+112)<<23)|(m<<13));}
+#ifdef HIP_ISA_HALF
+// Keep f32 expression evaluation and both rounding boundaries opaque to fusion.
+DEV float H(float x){uint h;float result;asm("v_cvt_f16_f32 %0, %1" : "=v"(h) : "v"(x));asm("v_cvt_f32_f16 %0, %1" : "=v"(result) : "v"(h));return result;}
+#else
 DEV float H(float x){uint b=bits(x),a=b&0x7fffffffu,s=(b>>16)&0x8000u;int e=int(a>>23)-127;if(a>=0x7f800000u)return x;if(e<-25)return value(b&0x80000000u);if(e<-14)return half_from(s|rshift((a&0x7fffffu)|0x800000u,uint(-e-1)));if(e>15)return half_from(s|0x7c00u);uint h=((a+0xfffu+((a>>13)&1u))>>13)-0x1c000u;return half_from(s|(h>=0x7c00u?0x7c00u:h));}
+#endif
 DEV uint reflected(uint p,uint size){if(size<=1)return 0;uint n=p%(2*size-2);return n<size?n:2*size-2-n;}
 DEV uint tile_pixel(uint x,uint y,uint width){return ((y/8)*(width/8)+x/8)*64+(y%8)*8+x%8;}
 KERNEL void hip_input_reflect(const float*input,float*base,float*tiles,uint vw,uint vh,uint pw,uint ph){uint p=index1();if(p>=pw*ph)return;uint x=p%pw,y=p/pw,s=(reflected(y,vh)*vw+reflected(x,vw))*4,t=tile_pixel(x,y,pw)*4;for(uint c=0;c<4;c++){float v=input[s+c];base[p*4+c]=v;tiles[t+c]=v;}}
