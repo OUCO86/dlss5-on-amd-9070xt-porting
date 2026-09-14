@@ -1,6 +1,6 @@
 # HIP backend development
 
-The HIP branch contains a complete GPU inference backend and an experimental D3D12 bridge/addon. Current Magpie/Stellar Blade installations still use the validated900P HLSL release.
+The HIP branch contains a complete GPU inference backend and an experimental D3D12 bridge/addon. Magpie retains the validated900P HLSL release. On2026-09-15, the user requested and received the experimental HIP candidate in Stellar Blade; rollback instructions are below.
 
 | Path | Verified result | Remaining limitation |
 |---|---|---|
@@ -55,7 +55,7 @@ Gaussian fast math has small measured sin/cos differences; its projection is ind
 bash scripts/build-addon.sh third_party/minhook third_party/reshade/include release/HIP/dlss5-hip-candidate.addon64 --hip
 ```
 
-The compile-time HIP switch preserves ordinary D3D12 codec/temporal passes and skips SDK721/experimental-SM setup. Modules default to ASSETS/HIP, overridden by `DLSS5_HIP_MODULES`. The current addon selects the exact backend; fast options remain in the offline runner pending whole-graph acceptance.
+The compile-time HIP switch preserves ordinary D3D12 codec/temporal passes and skips SDK721/experimental-SM setup. Modules default to ASSETS/HIP, overridden by `DLSS5_HIP_MODULES`. The addon defaults to the exact backend; `DLSS5_HIP_FAST=1` explicitly selects the experimental fast/fused/prepacked path. Whole-graph production parity remains outstanding.
 
 `hlsl_network_oracle.cpp` uses Agility721 only as the production HLSL oracle. `replay_prefix.cpp` is a deliberately labelled diagnostic that injects captured block0/4 states to locate divergence; it must never be presented as normal end-to-end verification. Other validators and their ABI documents describe each independently tested family. Captures, logs, executables and code objects belong in ignored `release/HIP/`.
 
@@ -66,3 +66,9 @@ The compile-time HIP switch preserves ordinary D3D12 codec/temporal passes and s
 Matrix bytes occupy the beginning of their original float regions. Biases/scales and region offsets stay unchanged; unused padding remains allocated in this first version. This reduces matrix reads/conversions, **not total weight allocation by four times**. FP16-only matrices keep their original representation. Non-FP8-exact coefficients are rejected rather than requantized.
 
 `benchmark-packed-weights.ps1` runs baseline/packed/packed/baseline with a fresh process per leg, excludes the cold first iteration, checks full output SHA256 and writes timings.csv. On the900 fixture, MH-only gave no clear gain (70.413→70.222ms); adding ViT/split FP8 matrices gave70.4165→65.217ms median hot wall time, ten samples per variant. All outputs equal baseline `7b959143…`; this preserves existing output, not a new claim of matching HLSL. Seed123 with supplied history also matches baseline. Current game installs are unchanged.
+
+## Stellar Blade trial installation (2026-09-15)
+
+Installed DLL SHA256 `60f69f6f843486527afdf2f0052ee490ab061ff2669c285d7153f82141277131`, fast900P+packed weights. Game-local DLSS5-AMD contains isolated flags/logs/23 modules and an asset junction to the validated lab asset set. Global flags, Magpie and drivers were not changed. Full temporal frame check passed at about63ms per frame; actual game validation belongs to the user trial.
+
+After closing the game, run `D:\DLSSNR-Lab\hip-backend\stellarblade-hip\restore-stellarblade.cmd` to restore the backed-up900P HLSL DLL and disable the local HIP root. F6 only bypasses neural processing to the game's own FSR; it does not restore the old DLL.

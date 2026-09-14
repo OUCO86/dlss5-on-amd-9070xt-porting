@@ -726,3 +726,13 @@ Zero授权开始优化。先完成初始化期lossless FP8权重打包：MH FFN/
 CPU验证覆盖254个有限E4M3编码往返、不可精确表示/非有限输入拒绝、非矩阵字段不变、范围重叠检查；MinGW host和三种COMGR packed模块编译通过。ABBA四个独立进程，每进程6次，首轮cold排除，各方案10个hot样本：MH-only70.413→70.2215ms，未见明确收益；加ViT/split FP8矩阵后70.4165→65.217ms，耗时降低约7.38%。四轮全部RGB SHA256仍`7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d`。seed123+history输入额外对照也逐位一致。数字是900离线墙钟、含上传/回读，不是游戏FPS；原有HIP/HLSL整图差异没有被这次优化解决。
 
 可复现脚本`Development/HIP/benchmark-packed-weights.ps1`，记录`release/HIP/packed-weight-benchmark.log`和`packed-weight-deep-benchmark.log`。源/模块统一由build-modules.ps1生成。当前正式DLL/驱动未部署变更。
+
+### 2026-09-15：《剑星》HIP试用部署
+
+Zero明确要求安装试用。先确认SB-Win64-Shipping退出。新增`DLSS5_HIP_FAST=1`游戏入口，启用已测fast/fusion/wave-normalize/packed-weights组合，保留0为reference；启动日志写runtime/fast/packed/geometry/modules便于识别。重编HIP DLL SHA256 `60f69f6f843486527afdf2f0052ee490ab061ff2669c285d7153f82141277131`，无D3D12EnableExperimentalFeatures导入。
+
+同版NativeGameFrame完整900时序测试：3warm+2测量，GPU队列均值63.158ms、CPU墙钟63.239ms，历史5760000个float非有限值0。首次测试指定全局assets发现noise不在该目录（旧游戏使用lab下fallback），改为已验证、含noise的network-720p资产目录；游戏私有root采用junction指向这份完整资产集。
+
+已替换Steam剑星Win64/native-submission-order.addon64，并创建游戏本地DLSS5-AMD配置、日志和23个匹配HSACO，逐文件hash校验通过。游戏私有flags为900/线性codec/原生时序/FPS，新增HIP_FAST1及私有HIP模块路径；continuous-every-frame与temporal-history开启，不复制旧PID请求或SDK721开关。全局D:\DLSSNR-Lab flags及Magpie安装未改，驱动未改。
+
+原900P DLL `72F87A97…`保存在`D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-stellarblade`，hash已核。退出游戏后运行同目录上一级`restore-stellarblade.cmd`回退：恢复原DLL，并在C盘原位重命名HIP私有root使旧DLL重新使用全局lab；不递归删除资产junction。部署脚本Development/HIP/deploy-stellarblade.ps1。尚待Zero实际游戏画面/帧率反馈，快图与HLSL剩余差异仍如前述，不以该安装宣称正式驱动/生产数值验收。
