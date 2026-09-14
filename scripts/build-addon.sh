@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ $# -lt 3 || $# -gt 4 || ! -f "$1/include/MinHook.h" || ! -f "$2/reshade.hpp" ]]; then
-  echo "usage: bash $0 MINHOOK_SOURCE RESHADE_INCLUDE OUTPUT_ADDON64 [--tiled]" >&2
+  echo "usage: bash $0 MINHOOK_SOURCE RESHADE_INCLUDE OUTPUT_ADDON64 [--tiled|--hip]" >&2
   exit 2
 fi
 probe_source_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
@@ -10,8 +10,9 @@ probe_reshade_include=$2
 probe_output=$3
 probe_defines=()
 if [[ $# -eq 4 ]]; then
-  [[ $4 == --tiled ]] || exit 2
+  [[ $4 == --tiled || $4 == --hip ]] || exit 2
   probe_defines+=(-DNATIVE_GAME_TILED_VERIFICATION)
+  [[ $4 != --hip ]] || probe_defines+=(-DDLSS5_USE_HIP)
 fi
 probe_build_dir=$(mktemp -d /tmp/native-game-verification.XXXXXX)
 probe_objects=()

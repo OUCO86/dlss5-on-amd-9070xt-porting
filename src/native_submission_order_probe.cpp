@@ -396,6 +396,9 @@ static DWORD WINAPI worker(void*){
 // the game folder and enable the experimental shader-model feature so SM6.10 wave-matrix PSOs
 // can be created on the game device. Gated by D:\DLSSNR-Lab\enable-game-sdk721.txt.
 static bool on_create_device(reshade::api::device_api api,uint32_t&){
+#ifdef DLSS5_USE_HIP
+ (void)api;return false; // HIP kernels do not require SM6.10 or a private Agility runtime.
+#else
  if(api!=reshade::api::device_api::d3d12||GetFileAttributesW(NativeLabPath(L"enable-game-sdk721.txt").c_str())==INVALID_FILE_ATTRIBUTES)return false;
  static std::atomic<bool>attempted{false};if(attempted.exchange(true))return false;
  /* Diagnostic (D:\DLSSNR-Lab\enable-dred.txt): Device Removed Extended Data, breadcrumbs + page faults, dumped by the frame when initialization fails. */
@@ -413,6 +416,7 @@ static bool on_create_device(reshade::api::device_api api,uint32_t&){
  if(SUCCEEDED(set)){const GUID feature={0x76f5573e,0xf13a,0x40f5,{0xb2,0x97,0x81,0xce,0x9e,0x18,0x93,0x3f}};experimental=D3D12EnableExperimentalFeatures(1,&feature,nullptr,nullptr);}
  if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu sdk721_before_device get=%08x set=%08x experimental=%08x\n",GetCurrentProcessId(),unsigned(get),unsigned(set),unsigned(experimental));fclose(f);}
  return false;
+#endif
 }
 // VRAM reservation (DLSS5_RESERVE_VRAM_MB=N in native-game-flags.txt): right after the game creates its device, hold N MB of
 // video memory in a placeholder buffer so the game sizes its texture pool with that much less; the placeholder is released

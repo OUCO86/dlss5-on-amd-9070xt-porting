@@ -7,6 +7,9 @@
 #include "native_device_identity.h"
 #include "native_game_rgb_input.h"
 #include "native_actual_network70.h"
+#ifdef DLSS5_USE_HIP
+#include "native_hip_network.h"
+#endif
 #include "native_rgb_texture.h"
 #include "native_temporal_feed.h"
 #include "native_temporal_coordinates.h"
@@ -125,7 +128,11 @@ class NativeGameFrame {
   NativeGameSubmission submit;
   NativeGameCodec encode;
   NativeGameRgbInput input;
+#ifdef DLSS5_USE_HIP
+  NativeHipNetwork network;
+#else
   NativeActualNetwork70 network;
+#endif
   NativeRgbTexture neural;NativeOutputSmooth smooth;NativeHistoryGuard history_guard;NativeBlackProbe black;
   NativeGameCodec decode;
   NativeTextOverlay fps_overlay;bool show_fps{};char fps_text[80]{};ULONGLONG fps_tick{};
@@ -197,7 +204,12 @@ public:
     temporal_rgb=r.sampler.Output();r.temporal=true;
    }
    // Captured original post origin(-4,-4) corresponds to shift3.
-   NativeGameFrameStep("network",d);resources->network.Create(d,resources->input.Tiles(),resources->input.PostBase(),noise,directory,temporal_rgb,3);
+   NativeGameFrameStep("network",d);
+#ifdef DLSS5_USE_HIP
+   resources->network.Create(resources->overlap?resources->compute_queue:resources->queue,resources->input.PostBase(),noise,directory,temporal_rgb,3);
+#else
+   resources->network.Create(d,resources->input.Tiles(),resources->input.PostBase(),noise,directory,temporal_rgb,3);
+#endif
    NativeGameFrameStep("neural",d);resources->neural.Create(d,resources->network.Output(),directory);
    if(resources->temporal)resources->smooth.Create(d,resources->network.Output(),resources->sampler.Output(),directory);
    if(resources->temporal)resources->history_guard.Create(d,resources->sampler.Output(),resources->input.PostBase(),directory);

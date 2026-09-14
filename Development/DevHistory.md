@@ -682,3 +682,9 @@ COMGR及host编译通过。完整512与原版oracle786432值逐位一致；完�
 - 开启ISA_HALF+WMMA+wave+tiled后，完整512和900输出hash仍不变；热墙钟51232.626ms、900148.116ms，均包含上传/回读。不与HLSL16.7ms基准混算。
 - 新增`hlsl_network_oracle`（Agility721只用于HLSL对照），对同一900输入直接运行生产网络。最初PSO根签名缺t3：production prefix shader即使history off也声明t3，修成绑定base占位但Run temporal=false。成功输出4915200有限值，hash `ba7f9cd853ccd68886f789926a0c2b4479d0fc6003a097a3eeaff82ba023ea6a`；与HIP精确参考4882871值不同、maxabs0.0983276、RMSE0.01514156。
 - 已核实生产FAST_PREFIX直接生成Gaussian，C32 fused FFN/FAST4以及MH fast路径省略多个中间H，与逐值参考精度日程不同。不能把HIP内部一致或512原版oracle一致写成900生产fast一致。正新增独立production-fast核，保留exact参考；阶段dump入口用于继续定位。
+
+### 2026-09-14：HIP候选DLL与完整时序幀流水线
+
+新增编译选项`build-addon.sh --hip`，保留既有`--tiled`生产HLSL构建。`NativeHipNetwork`接入NativeGameFrame，使用其同一DIRECT/COMPUTE队列、RGBA base与采样历史；输出共享buffer允许UAV，以支持后置平滑。HIP构建跳过SDK721/实验SM初始化。候选DLL SHA256 `8962d835bfc260e42ac7f18e1b1acf513a0c438a9c02b5fea046d844a1e300b8`；导入表无D3D12EnableExperimentalFeatures。原HLSL分支回归编译通过（源码条件块改变行号，构建hash不作为旧安装替换依据）。
+
+独立benchmark以`DLSS5_USE_HIP`构建，取消测试EXE的Agility导出与experimental enable，模块路径设实验isa-half目录。900P完整encode→input/时序→HIP精确网络→history/neural/decode，3帧预热+2帧测量通过：GPU队列平均136.681ms、墙钟136.877ms（7.32fps，仅测试台），RGB25–227，历史5760000个float非有限值0。候选仍慢，尚未部署Magpie/《剑星》；正式驱动也未切换测试。快路径数学正在独立对照，不用这份精确后端冒充已完成实时移植。

@@ -8,7 +8,9 @@
 #include <cstdio>
 #include <cmath>
 #include "native_game_frame.h"
+#ifndef DLSS5_USE_HIP
 extern "C" {__declspec(dllexport) extern const UINT D3D12SDKVersion=721;__declspec(dllexport) const char*D3D12SDKPath=".\\D3D12\\";}
+#endif
 static void ck(HRESULT hr){if(FAILED(hr))throw std::runtime_error("HRESULT="+std::to_string(unsigned(hr)));}
 static ID3D12Resource* buffer(ID3D12Device*d,UINT64 n,D3D12_HEAP_TYPE type){D3D12_HEAP_PROPERTIES hp{};hp.Type=type;D3D12_RESOURCE_DESC r{};r.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;r.Width=n;r.Height=1;r.DepthOrArraySize=r.MipLevels=1;r.SampleDesc.Count=1;r.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;ID3D12Resource*b=nullptr;ck(d->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&r,type==D3D12_HEAP_TYPE_UPLOAD?D3D12_RESOURCE_STATE_GENERIC_READ:D3D12_RESOURCE_STATE_COPY_DEST,nullptr,IID_PPV_ARGS(&b)));return b;}
 static void barrier(ID3D12GraphicsCommandList*c,ID3D12Resource*r,D3D12_RESOURCE_STATES a,D3D12_RESOURCE_STATES b){if(a==b)return;D3D12_RESOURCE_BARRIER x{};x.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;x.Transition={r,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,a,b};c->ResourceBarrier(1,&x);}
@@ -18,7 +20,9 @@ int wmain(int argc,wchar_t**argv){try{
  if(argc<5||argc>7){fprintf(stderr,"usage: benchmark_frame ASSETS FLAGS 720|900|1080 OUTPUT_PREFIX [frames=30] [temporal=1]\n");return 2;}
  const UINT H=wcstoul(argv[3],nullptr,10),W=H==720?1280:H==900?1600:1920,N=argc>5?wcstoul(argv[5],nullptr,10):30;const bool temporal=argc<7||wcstoul(argv[6],nullptr,10)!=0;if((H!=720&&H!=900&&H!=1080)||!N||N>10000)throw std::runtime_error("invalid height/frame count");flags(argv[2]);
  env("DLSS5_NETWORK_720P",H==720?"1":"0");env("DLSS5_NETWORK_HEIGHT",std::to_string(H).c_str());env("DLSS5_DEBUG_DUMPS","");env("DLSS5_BLACK_PROBE","0");env("DLSS5_GAME_PROBE","0");env("DLSS5_SHOW_FPS","0");env("DLSS5_OVERLAP","0");env("DLSS5_TEST_SUBMISSION_TIMING","0");
+#ifndef DLSS5_USE_HIP
  const IID experimental={0x76f5573e,0xf13a,0x40f5,{0xb2,0x97,0x81,0xce,0x9e,0x18,0x93,0x3f}};ck(D3D12EnableExperimentalFeatures(1,&experimental,nullptr,nullptr));
+#endif
  IDXGIFactory6*f=nullptr;ck(CreateDXGIFactory2(0,IID_PPV_ARGS(&f)));ID3D12Device*d=nullptr;for(UINT i=0;;i++){IDXGIAdapter1*a=nullptr;if(f->EnumAdapterByGpuPreference(i,DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,IID_PPV_ARGS(&a))==DXGI_ERROR_NOT_FOUND)break;DXGI_ADAPTER_DESC1 info{};a->GetDesc1(&info);if(info.VendorId==0x1002){ck(D3D12CreateDevice(a,D3D_FEATURE_LEVEL_12_0,IID_PPV_ARGS(&d)));wprintf(L"adapter=%ls\n",info.Description);}a->Release();if(d)break;}f->Release();if(!d)throw std::runtime_error("AMD adapter missing");
  ID3D12CommandQueue*q=nullptr;D3D12_COMMAND_QUEUE_DESC qd{};ck(d->CreateCommandQueue(&qd,IID_PPV_ARGS(&q)));NativeGameSubmission submit;submit.Create(q);
  D3D12_HEAP_PROPERTIES hp{};hp.Type=D3D12_HEAP_TYPE_DEFAULT;D3D12_RESOURCE_DESC td{};td.Dimension=D3D12_RESOURCE_DIMENSION_TEXTURE2D;td.Width=W;td.Height=H;td.DepthOrArraySize=td.MipLevels=1;td.Format=DXGI_FORMAT_R8G8B8A8_UNORM;td.SampleDesc.Count=1;ID3D12Resource*target=nullptr,*motion=nullptr;ck(d->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&td,D3D12_RESOURCE_STATE_COPY_DEST,nullptr,IID_PPV_ARGS(&target)));D3D12_PLACED_SUBRESOURCE_FOOTPRINT fp{};UINT64 bytes;d->GetCopyableFootprints(&td,0,1,0,&fp,nullptr,nullptr,&bytes);auto*upload=buffer(d,bytes,D3D12_HEAP_TYPE_UPLOAD);auto*rb=buffer(d,bytes,D3D12_HEAP_TYPE_READBACK);void*p=nullptr;D3D12_RANGE none{};ck(upload->Map(0,&none,&p));memset(p,0,size_t(bytes));for(UINT y=0;y<H;y++)for(UINT x=0;x<W;x++){auto*v=(unsigned char*)p+fp.Offset+size_t(y)*fp.Footprint.RowPitch+x*4;v[0]=32+x*192/W;v[1]=32+y*192/H;v[2]=((x/24+y/24)%2)?192:64;v[3]=255;}upload->Unmap(0,nullptr);
