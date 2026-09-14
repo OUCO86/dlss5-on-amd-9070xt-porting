@@ -18,9 +18,11 @@ Run on Windows:
 reference_network.exe ASSETS MODULES INPUT_RGBA_F32 NOISE_F32 OUTPUT_RGB_F32 --wmma
 ```
 
-Default512×512/postshift0 matches the checked oracle. `--1080` selects1920×1152/postshift3 but that complete HIP geometry has not yet been verified. Input/history contain the full processing grid; output is RGB float32. Optional `--seed N`, `--history FILE`, `--post-shift 0..3`, `--dump EXISTING_DIRECTORY`, `--runtime 6|7`. Use runtime7 for the validated path. Omit `--wmma` for scalar reference matrices. Keep original f32 weights, or their exact f16 cache; noise contains50331648 floats.
+Default512×512/postshift0 matches the checked oracle. `--720` selects1280×768/240 tokens; `--900` selects1600×1024/400 tokens; `--1080` selects1920×1152/640 tokens. All use postshift3 by default. 900P WMMA matches the HIP scalar graph bitwise on the tiled test image; 720P/1080P complete HIP graphs have not yet been verified. Input/history contain the full processing grid; output is RGB float32. Optional `--seed N`, `--history FILE`, `--post-shift 0..3`, `--dump EXISTING_DIRECTORY`, `--runtime 6|7`. Use runtime7 for the validated path. Omit `--wmma` for scalar reference matrices. Keep original f32 weights, or their exact f16 cache; noise contains50331648 floats.
 
-Each current kernel synchronizes; tensors allocate/free individually and weights upload lazily. Reported wall time includes these costs. Buffer reuse, frame scheduling, live integration and formal-driver verification are unfinished.
+`--pooled` reuses dead tensor allocations on the single HIP stream and removes per-kernel CPU waits. Uploads/dumps/final readback still wait explicitly. `--repeat N` repeats the same input without temporal feedback; `--profile` reports HIP event totals per kernel. Negative/nonfinite event intervals invalidate an iteration (observed at cold startup). Reported wall time includes uploads/readback and host work; it is not game FPS. Live integration and formal-driver verification remain unfinished.
+
+`build-modules.ps1 -Compiler PATH_TO_RTC_COMPILE_EXE -OutputDir DIRECTORY` assembles and compiles all seven modules from this directory.
 
 ## Validation
 

@@ -653,3 +653,13 @@ Zero创建HIP分支，授权移植推理后端，目标是摆脱SM6.10预览版D
 - **WMMA接入**：C32的6个矩阵算子、多头FFN/QKV/score/AV/projection/pool及deep的8个矩阵算子改为gfx12原生FP8/F16 WMMA。C32全链、MH32/64/128/256/512逐阶段、deep真实block31/block23/decoder39/block66两套输入均bitdiff=0。完整512图开启`--wmma`后最终786432值仍与oracle逐位一致，SHA同上。MH额外导出的split_project未单独测，主图未使用它。
 - **计时边界**：参考路径一次含dump约2.085秒；WMMA一次无dump约0.640秒。这是含冷权重上传、分配及逐kernel同步的整次验证耗时，条件不同，不能据此报加速比或游戏FPS。还没有实时内存复用、GPU整图计时或游戏接入。
 - **复现入口**：`Development/HIP/README.md`与各ABI/toolchain文档；诊断输出在忽略目录`release/HIP/`及远端`D:\DLSSNR-Lab\hip-backend`。下一阶段处理缓冲复用/同步、720P与900P图、游戏D3D12桥接及性能验证。阶段性提交和DevHistory同步推进。
+
+### 2026-09-14：HIP 缓冲复用、900P参考图与计时
+
+新增单stream张量池：最后一个活跃tensor引用释放后可被后续kernel复用，池保存allocation直到Network销毁，依靠同stream执行顺序；权重仍驻留缓存，上传/dump/readback显式等待。`--pooled --repeat 3`的512输出仍与原版oracle哈希相同，热墙钟99.661/93.392ms（仍包含输入/噪声上传、输出回读及CPU工作）。
+
+新增720/900几何与真实240/400 token fast ViT路径；实际验证900P：将512测试输入平铺到1600×1024，WMMA与HIP scalar的4915200输出float逐位一致、非有限值0，SHA256 `3ce76cb30277c73e847d9bbab0883fd02d58c37b3b12208f53c007db5420dc5c`。900 WMMA第二次墙钟576.159ms，尚不实时；这轮不是与900 HLSL生产图的比较。720/1080整图未测。
+
+`--profile`按kernel汇总HIP events，冷启动曾返回负时长，必须丢弃该轮，代码显式标无效；热轮发现概率归一化、归一化与多头矩阵仍占主要时间。`build-modules.ps1`提供可复现的七模块编译入口。
+
+失败实验：将软件H(x)替换为`float(_Float16(x))`，编译通过但512最终779563值不同、maxabs0.0656862；900最终4881246值不同、maxabs0.0703125。该改动已撤回，不能以有限输出或略快冒充正确。下一步保留精确舍入、改wave协作归约。
