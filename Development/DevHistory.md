@@ -673,3 +673,12 @@ COMGR及host编译通过。完整512与原版oracle786432值逐位一致；完�
 ### 2026-09-14：HIP 硬件half舍入边界通过
 
 追加定位：1258048组有限float（随机bit及half舍入边界），单独软件H、普通_Float16、bitcast half、内联v_cvt四种转换全部逐位一致。先前整网差异因此不能归咎于硬件转换本身；普通cast允许编译器在周围表达式上做不同优化。改为两个内联asm明确f32→f16→f32边界后，512与900完整输出均恢复逐位一致、hash不变。`HIP_ISA_HALF`宏/构建脚本`-IsaHalf`可选启用，软件参考仍保留。512热墙钟68.531ms，900343.748ms，输入/回读仍计入。下一步重点是WMMA输入打包和跨wave复用，并建立900 HLSL生产图独立oracle。
+
+### 2026-09-14：HIP显存接口、完整D3D12桥接、共享矩阵tile
+
+- `Network::SetNoise/Enqueue`：输入/历史/输出接收GPU指针，噪声一次驻留，ViT gather索引缓存；结果GPU→GPU拷入调用者缓冲，游戏调用路径无CPU像素回读。`device_network`三次连续512/900运行，最终hash与精确参考保持一致；热墙钟51248.889ms/900327.115ms（该轮还未启用tiled）。
+- `D3D12Bridge`：同一HIP GPU与D3D12 adapter校验，共享输入/历史/输出buffer与fence，D3D拷输入→Signal→HIP Wait→完整网络→HIP Signal→D3D Wait→SRV输出。新增NativeGameSubmission只读Queue访问器用于校验同队列。独立`bridge_network`900连续三次通过，最终RGB hash `3ce76cb3…`，与HIP参考完全一致；热墙钟326.728ms。桥接未启用Agility/实验D3D功能，尚未接入运行游戏DLL；多HIP GPU暂不支持。
+- C32 tiled（4个矩阵算子）和MH tiled（6个dense算子）使用LDS打包FP8后跨wave复用。C32 T64/80/256/4096，MH C32/64/128/256/512、M400与poolM100、N32及越界哨兵，全部bitdiff0/invalid0。小矩阵部分算子会变慢，不能把共享LDS等同必然加速。
+- 开启ISA_HALF+WMMA+wave+tiled后，完整512和900输出hash仍不变；热墙钟51232.626ms、900148.116ms，均包含上传/回读。不与HLSL16.7ms基准混算。
+- 新增`hlsl_network_oracle`（Agility721只用于HLSL对照），对同一900输入直接运行生产网络。最初PSO根签名缺t3：production prefix shader即使history off也声明t3，修成绑定base占位但Run temporal=false。成功输出4915200有限值，hash `ba7f9cd853ccd68886f789926a0c2b4479d0fc6003a097a3eeaff82ba023ea6a`；与HIP精确参考4882871值不同、maxabs0.0983276、RMSE0.01514156。
+- 已核实生产FAST_PREFIX直接生成Gaussian，C32 fused FFN/FAST4以及MH fast路径省略多个中间H，与逐值参考精度日程不同。不能把HIP内部一致或512原版oracle一致写成900生产fast一致。正新增独立production-fast核，保留exact参考；阶段dump入口用于继续定位。

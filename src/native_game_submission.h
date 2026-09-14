@@ -111,6 +111,7 @@ public:
  }
  bool Deferred()const{return deferred;}
  ID3D12Device*Device()const{return device;}
+ ID3D12CommandQueue*Queue()const{return queue;}
  /* cross-queue ordering (DLSS5_OVERLAP): this queue waits on the GPU for another submission's fence value before its next Submit */
  ID3D12Fence*Fence()const{return fence;}
  void WaitOn(ID3D12Fence*other,UINT64 target){std::lock_guard<std::mutex>guard(mutex);if(!queue||!other||!target)return;ck(queue->Wait(other,target));}

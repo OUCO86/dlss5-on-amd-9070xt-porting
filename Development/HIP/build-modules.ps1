@@ -16,7 +16,9 @@ $modules = @(
     @('c32_wmma', @('c32_wmma.hip')),
     @('multihead-wmma', @('multihead_wmma.hip')),
     @('deep_wmma', @('deep_wmma.hip')),
-    @('wave-pointwise', @('c32_reference.hip', 'wave_pointwise.hip'))
+    @('wave-pointwise', @('c32_reference.hip', 'wave_pointwise.hip')),
+    @('c32_tiled', @('c32_tiled.hip')),
+    @('multihead-tiled', @('multihead_tiled.hip'))
 )
 foreach ($module in $modules) {
     $source = if ($IsaHalf) { "#define HIP_ISA_HALF 1`n" } else { '' }
