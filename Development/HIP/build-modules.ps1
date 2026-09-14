@@ -14,7 +14,8 @@ $modules = @(
     @('boundary_reference', @('boundary_reference.hip')),
     @('c32_wmma', @('c32_wmma.hip')),
     @('multihead-wmma', @('multihead_wmma.hip')),
-    @('deep_wmma', @('deep_wmma.hip'))
+    @('deep_wmma', @('deep_wmma.hip')),
+    @('wave-pointwise', @('c32_reference.hip', 'wave_pointwise.hip'))
 )
 foreach ($module in $modules) {
     $source = ''
