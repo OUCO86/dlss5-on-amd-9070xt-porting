@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory=$true)][string]$Compiler,
     [Parameter(Mandatory=$true)][string]$OutputDir,
     [string]$SourceDir = $PSScriptRoot,
-    [switch]$IsaHalf
+    [switch]$IsaHalf,
+    [switch]$Fast
 )
 $ErrorActionPreference = 'Stop'
 $OutputDir = [IO.Path]::GetFullPath($OutputDir)
@@ -20,6 +21,21 @@ $modules = @(
     @('c32_tiled', @('c32_tiled.hip')),
     @('multihead-tiled', @('multihead_tiled.hip'))
 )
+if ($Fast) {
+    $modules += @(
+        @('c32_fast', @('c32_fast.hip')),
+        @('c32_fast_attention', @('c32_fast_attention.hip')),
+        @('boundary-fast', @('c32_fast_attention.hip', 'boundary_fast.hip')),
+        @('c32_fused_attention', @('c32_fused_attention_packed.hip')),
+        @('c32_fused_ffn_attention', @('c32_fused_ffn_attention.hip')),
+        @('prefix_fast', @('prefix_fast.hip')),
+        @('multihead-fast', @('multihead_fast.hip')),
+        @('multihead-fast-padded-wave', @('multihead_fast_padded.hip')),
+        @('multihead_fused_attention', @('multihead_fused_attention.hip')),
+        @('deep_fast', @('deep_fast.hip'))
+    )
+}
+$manifest = @()
 foreach ($module in $modules) {
     $source = if ($IsaHalf) { "#define HIP_ISA_HALF 1`n" } else { '' }
     foreach ($part in $module[1]) {
@@ -29,4 +45,11 @@ foreach ($module in $modules) {
     [IO.File]::WriteAllText($sourcePath, $source, $utf8)
     & $Compiler (Join-Path $OutputDir ($module[0] + '.hsaco')) $sourcePath comgr
     if ($LASTEXITCODE -ne 0) { throw "COMGR failed: $($module[0])" }
+    $manifest += [pscustomobject]@{
+        module = $module[0]
+        source_sha256 = (Get-FileHash $sourcePath -Algorithm SHA256).Hash
+        code_sha256 = (Get-FileHash (Join-Path $OutputDir ($module[0] + '.hsaco')) -Algorithm SHA256).Hash
+    }
 }
+
+[IO.File]::WriteAllText((Join-Path $OutputDir 'modules.json'), ($manifest | ConvertTo-Json -Depth 3), $utf8)

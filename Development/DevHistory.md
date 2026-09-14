@@ -708,3 +708,7 @@ COMGR及host编译通过。完整512与原版oracle786432值逐位一致；完�
 - 补齐生产skip42/43/46与decoder48/55/61/65浮点输出路径额外Hrtz。各局部优化全图A/B保持相同输出；但HIP生产快图对现有HLSL整图仍RMSE约0.00927，尚未完成整体对齐。pre-main8仅86/52428800差；诊断replay注入HLSL pre和block4 main/down后仍约0.00921，说明剩余问题不能全归Gaussian。replay只用于定位、游戏Enqueue禁止observer，不是正常端到端验证。
 - 首次replay诊断误用了未同步更新的boundary模块（host新传空down，旧kernel未判空），两次hipErrorLaunchFailure719；同步重编后正常，后续融合图成功。该失败不作为数值结果。
 - HIP7持续通过；显式HIP6整图尝试进程exit5且无有效输出，不认为支持HIP6，也不做自动回退。当前仍预览驱动，正式驱动未实测。AMD官方HIP SDK7.2发布说明已列普通Adrenalin26.6.x/HIP7使用，见https://rocm.docs.amd.com/projects/install-on-windows/en/latest/about/releasenotes.html；官方部署说明与实机兼容验证仍需分开。
+
+### 2026-09-15：快图接线与常驻分配阶段提交
+
+完整保留reference路径，新增快族/融合/skip配置选择，模块编译脚本`-Fast`统一生成匹配代码对象并写source/code SHA清单，避免再次混用旧boundary。当前900快图全融合、wave normalization、skip42/43/46、decoder48/55/61/65额外half规则，离线热墙钟72.066ms，graph持有1910MiB；正常输出对HLSL RMSE0.00926926。replay精确pre后0.00923003、再替换block4后0.00920935，剩余问题在后续路径，不能只归因Gaussian。真实NativeC64Shift整块对照正在补，用来排查手选CSO没有覆盖的实际路径选择。HIP addon仍选择reference，当前运行安装未改。

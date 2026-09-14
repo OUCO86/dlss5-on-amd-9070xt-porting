@@ -1,41 +1,60 @@
 # HIP backend development
 
-Experimental HIP branch; installed Magpie/Stellar Blade and release packages still use the validated 900P HLSL backend.
+The HIP branch contains a complete GPU inference backend and an experimental D3D12 bridge/addon. Current Magpie/Stellar Blade installations still use the validated900P HLSL release.
 
-The complete 512×512 graph (blocks0–70) passes bitwise comparison against the existing original-network RGB oracle, both scalar and `--wmma`. Output:786432 float32 values, zero differences/nonfinite values, SHA256 `bd52c601b68c4ed27f271cd2c7bcffc8511519f652534f2a0c51ffa9450e6da4`. This is a numerical development runner, not a realtime addon.
+| Path | Verified result | Remaining limitation |
+|---|---|---|
+| Exact512 graph |786432 RGB float values bitwise equal to original oracle|Offline reference/performance development|
+| Exact900 graph |WMMA equals HIP scalar, including pooled execution|Uses original precision schedule, distinct from shipped fast HLSL|
+| Production operator families |True HLSL comparisons passed for C32, MH, ViT, split, decoder and pool|Whole fast graph still differs from production output|
+| GPU pointer/D3D12 bridge |Complete900 graph round-trips with identical output; temporal frame test passed|Candidate not installed; formal driver not tested|
 
-## Build and run
+Exact512 SHA256: `bd52c601b68c4ed27f271cd2c7bcffc8511519f652534f2a0c51ffa9450e6da4`. Latest fast900 offline hot wall time is about70–72ms, with1.9GiB graph allocations. This is slower than the existing HLSL release. Whole fast output RMSE is about0.00927 against the shipped HLSL on the tiled fixture; it is not accepted as production parity. See [DevHistory](../DevHistory.md) for test conditions, failures and later updates.
 
-The compiler in [TOOLCHAIN.md](TOOLCHAIN.md) uses the installed Windows COMGR3 DLL; HIP SDK headers/libraries are unnecessary. Runtime uses System32 HIP7. Tested on RX9070XT/gfx1201 with driver32.0.31007.2048. Formal-driver testing remains outstanding.
+## Build
 
-Compile `c32_reference.hip` concatenated with `prefix_reference.hip` as `c32_prefix_reference.hsaco`. Compile remaining sources separately as `multihead-reference.hsaco`, `deep_reference.hsaco`, `boundary_reference.hsaco`; WMMA sources become `c32_wmma.hsaco`, `multihead-wmma.hsaco`, `deep_wmma.hsaco`. Keep all ten in MODULES.
+[TOOLCHAIN.md](TOOLCHAIN.md) describes the SDKless COMGR compiler. It uses installed Windows COMGR3; headers/device libraries and experimental DirectX are unnecessary for HIP compilation/execution. Tested GPU: RX9070XT/gfx1201; runtime: System32 `amdhip64_7.dll`; driver32.0.31007.2048. HIP6 explicitly failed in a separate attempt, so there is no automatic fallback. Official [HIP SDK release notes](https://rocm.docs.amd.com/projects/install-on-windows/en/latest/about/releasenotes.html) and actual formal-driver verification are separate evidence.
 
-Build host with `x86_64-w64-mingw32-g++ -std=c++17 -O2 -static Development/HIP/reference_network.cpp -o reference_network.exe`.
+On Windows, with sources available locally:
 
-Run on Windows:
-
+```powershell
+.\build-modules.ps1 -Compiler PATH_TO_RTC_COMPILE_EXE -OutputDir MODULE_DIRECTORY -IsaHalf -Fast
 ```
-reference_network.exe ASSETS MODULES INPUT_RGBA_F32 NOISE_F32 OUTPUT_RGB_F32 --wmma
+
+`-Fast` includes experimental production and fused kernels; omit it for reference modules only. A source/code SHA256 manifest is written as `modules.json`. Build all matching modules before running a newly built host; changed kernel contracts must not be mixed with old code objects.
+
+Linux host cross-build:
+
+```sh
+x86_64-w64-mingw32-g++ -std=c++17 -O2 -static Development/HIP/reference_network.cpp -o reference_network.exe
 ```
 
-Default512×512/postshift0 matches the checked oracle. `--720` selects1280×768/240 tokens; `--900` selects1600×1024/400 tokens; `--1080` selects1920×1152/640 tokens. All use postshift3 by default. 900P WMMA matches the HIP scalar graph bitwise on the tiled test image; 720P/1080P complete HIP graphs have not yet been verified. Input/history contain the full processing grid; output is RGB float32. Optional `--seed N`, `--history FILE`, `--post-shift 0..3`, `--dump EXISTING_DIRECTORY`, `--runtime 6|7`. Use runtime7 for the validated path. Omit `--wmma` for scalar reference matrices. Keep original f32 weights, or their exact f16 cache; noise contains50331648 floats.
+## Run offline
 
-`--pooled` reuses dead tensor allocations on the single HIP stream and removes per-kernel CPU waits. Uploads/dumps/final readback still wait explicitly. `--repeat N` repeats the same input without temporal feedback; `--profile` reports HIP event totals per kernel. Negative/nonfinite event intervals invalidate an iteration (observed at cold startup). Reported wall time includes uploads/readback and host work; it is not game FPS. Live integration and formal-driver verification remain unfinished.
+```text
+reference_network.exe ASSETS MODULES INPUT_RGBA_F32 NOISE_F32 OUTPUT_RGB_F32 --wmma --wave --tiled --pooled
+```
 
-`build-modules.ps1 -Compiler PATH_TO_RTC_COMPILE_EXE -OutputDir DIRECTORY` assembles and compiles all ten modules from this directory.
+Default512×512/postshift0 matches the original oracle. `--720` selects1280×768/240tokens; `--900`1600×1024/400tokens; `--1080`1920×1152/640tokens. Input/history are full processing-grid RGBA floats; output is RGB floats. Full720/1080 HIP validation remains pending.
 
-## Validation
+Experimental fast900 arguments additionally use:
 
-Standalone probes cover D3D12/HIP shared memory and fences, native WMMA/HLSL arithmetic, prefix, C32, multihead and deep kernels. See their source CLI and ABI documents. GPU tests run serially. HLSL oracle executables require the existing preview SDK; HIP inference and interop do not enable experimental D3D12 features. Logs and binary captures live under ignored `release/HIP/`; results and limitations are recorded in [DevHistory](../DevHistory.md).
+```text
+--900 --fast-prefix --fast-deep --fast-mh --mh-wave --fused-c32 --fused-ffn --fused-mh --skip-blocks 42,43,46
+```
 
-`--wave` loads `wave-pointwise.hsaco` (c32_reference + wave_pointwise) for cooperative Q/K normalization and probability rows. Eight wave32 rows per256-thread block; host multiplies reference row counts by32. Both512 and900 complete graph outputs retain their bitwise reference hashes. Original H/F arithmetic and reduction order are preserved.
+Options: `--repeat N`, `--seed N`, `--history FILE`, `--post-shift 0..3`, `--dump EXISTING_DIR`, `--dump-only comma,separated,stages`. `--profile` collects HIP events, but negative intervals have occurred even after warmup; an invalid iteration must be discarded. Wall timing includes host work and transfers. No test figure is game FPS.
 
-`-IsaHalf` on the build script enables explicit gfx12 `v_cvt_f16_f32` / `v_cvt_f32_f16` assembly boundaries. Unlike a plain `_Float16` cast, this retains complete512/900 output parity under COMGR optimization. Default software H remains available as the reference. `half_probe.hip` + `half_validate.cpp` isolate conversion behavior across1258048 finite float inputs.
+Gaussian fast math has small measured sin/cos differences; its projection is independently exact on supplied HLSL features. Each conversion site follows its actual production contract: explicit legacy half conversions oftenRTZ, matrix half casts and selected software helpersRNE. Keep the original reference path for comparisons.
 
-`--tiled` additionally loads c32_tiled and multihead-tiled modules for shared FP8 operand staging. Complete512 and900 exact-reference hashes are unchanged. Cold/warm timings and isolated-tail validation are in DevHistory; use `-IsaHalf` consistently when comparing performance.
+## Integration and diagnostics
 
-`Network::SetNoise` and `Enqueue` provide a device-pointer path. `device_network.cpp` verifies uploads/readback outside repeated inference. `hip_d3d12_bridge.h` and `bridge_network.cpp` verify D3D12 shared buffers/fences through the complete900 graph without experimental DirectX features. The bridge currently requires one HIP GPU matching the D3D12 adapter and serialized frames. This is an offline verified bridge, not an installed game addon.
+`device_network.cpp` checks persistent GPU-pointer inference. `bridge_network.cpp` checks shared D3D12 resources/fences without preview DirectX. The bridge requires one HIP GPU matching the D3D12 adapter and serialized calls. `Network::Enqueue` forbids host observers/readback diagnostics.
 
-`hlsl_network_oracle.cpp` runs the existing900 production HLSL network on the same processing-grid floats, seed0/postshift3/no history. Production fast flags change Gaussian generation and intermediate rounding, so this output currently differs from the exact HIP graph (RMSE0.01514 on the tiled fixture). Separate production-fast HIP kernels are being developed; exact-reference parity must not be described as production-fast parity.
+```sh
+bash scripts/build-addon.sh third_party/minhook third_party/reshade/include release/HIP/dlss5-hip-candidate.addon64 --hip
+```
 
-Experimental addon build: `bash scripts/build-addon.sh third_party/minhook third_party/reshade/include release/HIP/dlss5-hip-candidate.addon64 --hip`. This compile-time switch selects NativeHipNetwork, skips SDK721/experimental-SM setup and keeps ordinary D3D12 codec/temporal passes. Modules default to ASSETS/HIP; `DLSS5_HIP_MODULES` overrides the path. The same switch can compile the existing720p benchmark for a full frame test. Independent900 temporal frame testing passed with5760000 finite history floats, but the exact backend is still about137ms per frame and the candidate has not been installed into a game.
+The compile-time HIP switch preserves ordinary D3D12 codec/temporal passes and skips SDK721/experimental-SM setup. Modules default to ASSETS/HIP, overridden by `DLSS5_HIP_MODULES`. The current addon selects the exact backend; fast options remain in the offline runner pending whole-graph acceptance.
+
+`hlsl_network_oracle.cpp` uses Agility721 only as the production HLSL oracle. `replay_prefix.cpp` is a deliberately labelled diagnostic that injects captured block0/4 states to locate divergence; it must never be presented as normal end-to-end verification. Other validators and their ABI documents describe each independently tested family. Captures, logs, executables and code objects belong in ignored `release/HIP/`.

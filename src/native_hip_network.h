@@ -9,7 +9,7 @@ public:
  NativeHipNetwork()=default;NativeHipNetwork(const NativeHipNetwork&)=delete;
  ~NativeHipNetwork(){if(color)color->Release();if(history)history->Release();}
  void Create(ID3D12CommandQueue*q,ID3D12Resource*rgb,const std::vector<float>&noise,const std::wstring&directory,ID3D12Resource*temporal,UINT post_shift){
-  if(color||!rgb)throw std::runtime_error("HIP network initialization");auto g=NativeCurrentNetworkGeometry();hip_reference::Options o;o.width=g.processing_width;o.height=g.processing_height;o.post_shift=post_shift;o.fast_vit=true;o.wmma=o.wave=o.tiled=o.pooled=true;o.assets=Utf8(directory);
+  if(color||!rgb)throw std::runtime_error("HIP network initialization");auto g=NativeCurrentNetworkGeometry();hip_reference::Options o;o.width=g.processing_width;o.height=g.processing_height;o.post_shift=post_shift;o.fast_vit=true;o.wmma=o.wave=o.tiled=o.pooled=true;o.assets=Utf8(directory);if(const wchar_t*skip=_wgetenv(L"DLSS5_SKIP_BLOCKS"))o.skip_blocks=hip_reference::ParseSkipBlocks(Utf8(skip));
   const wchar_t*modules=_wgetenv(L"DLSS5_HIP_MODULES");o.modules=Utf8(modules&&*modules?std::wstring(modules):directory+L"\\HIP");bridge.Create(q,o,noise);color=rgb;color->AddRef();history=temporal;if(history)history->AddRef();
  }
  template<class Submission>void Run(Submission&submit,UINT seed,bool use_history=false){if(use_history&&!history)throw std::runtime_error("HIP history not bound");bridge.Run(submit,color,use_history?history:nullptr,seed);}
