@@ -718,3 +718,11 @@ COMGR及host编译通过。完整512与原版oracle786432值逐位一致；完�
 `build-modules.ps1 -IsaHalf -Fast`从独立源码快照重建20个模块全部成功，写modules.json。重建后的512 reference输出hash仍`bd52c601…`；900快图重建与之前输出hash同为`7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d`。HIP候选DLL重新构建成功，SHA256 `ff02886282b7b100cb1d7fe27b27b7e42208e33955e256df8b82a65e2beac9db`，未部署。
 
 新增`whole_mh_block_validate.cpp`直接走NativeC64Shift、900flags、共享workspace与ResidentFlush，不手挑CSO。block5/shift0/rawfalse/inF32/outFP8在16×16及实际400×256两个尺寸、各两pattern，contract/FFN projection/normalize/AV/final五阶段全部bitdiff0。证明这组真实整块路径已对齐，尚不能替代真实图中各block输入的整网差异定位。
+
+### 2026-09-15 06:07起：权重预打包优化
+
+Zero授权开始优化。先完成初始化期lossless FP8权重打包：MH FFN/QKV/projection矩阵及ViT FP8 linear/split projection直接读取打包DWORD，取消每frame重复float→FP8转换。尺度/bias继续f32；矩阵起始byte offset维持原契约，第一版保留空闲padding，不虚报权重显存缩至1/4。F16专用矩阵不改。`--packed-weights`独立选项，旧路径保留。
+
+CPU验证覆盖254个有限E4M3编码往返、不可精确表示/非有限输入拒绝、非矩阵字段不变、范围重叠检查；MinGW host和三种COMGR packed模块编译通过。ABBA四个独立进程，每进程6次，首轮cold排除，各方案10个hot样本：MH-only70.413→70.2215ms，未见明确收益；加ViT/split FP8矩阵后70.4165→65.217ms，耗时降低约7.38%。四轮全部RGB SHA256仍`7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d`。seed123+history输入额外对照也逐位一致。数字是900离线墙钟、含上传/回读，不是游戏FPS；原有HIP/HLSL整图差异没有被这次优化解决。
+
+可复现脚本`Development/HIP/benchmark-packed-weights.ps1`，记录`release/HIP/packed-weight-benchmark.log`和`packed-weight-deep-benchmark.log`。源/模块统一由build-modules.ps1生成。当前正式DLL/驱动未部署变更。

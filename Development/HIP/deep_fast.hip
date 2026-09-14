@@ -40,7 +40,19 @@ DEV uint rc(){return __builtin_amdgcn_workitem_id_x()&15u;}
 DEV uint gr(){return __builtin_amdgcn_workitem_id_x()>>4;}
 DEV uint bid(){return __builtin_amdgcn_workgroup_id_x();}
 DEV void pack(i2&x,uint e,float v){uint b=uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(v,-448.f,448.f),0.f,0,false))&255;x[e/4]=int(uint(x[e/4])|(b<<(8*(e%4))));}
-DEV f8 dot8(const float*in,const float*w,uint first,uint row,uint channels,uint begin,uint end,f8 a){for(uint k=begin;k<end;k+=16){i2 x{},y{};for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(x,e,in[(first+rc())*channels+j]);pack(y,e,w[(row+rc())*channels+j]);}a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);}return a;}
+DEV f8 dot8(const float*in,const float*w,uint first,uint row,uint channels,uint begin,uint end,f8 a){
+ for(uint k=begin;k<end;k+=16){i2 x{},y{};
+  for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(x,e,in[(first+rc())*channels+j]);
+#ifndef HIP_PREPACKED_WEIGHTS
+   pack(y,e,w[(row+rc())*channels+j]);
+#endif
+  }
+#ifdef HIP_PREPACKED_WEIGHTS
+  const uint*pw=reinterpret_cast<const uint*>(w);uint offset=((row+rc())*channels+k+gr()*8)/4;y={int(pw[offset]),int(pw[offset+1])};
+#endif
+  a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);
+ }return a;
+}
 WAVE void vit_expand(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=tokens)return;f8 a{};a=dot8(in,w,first,row,inputs,0,inputs,a);for(uint e=0;e<8;e++){float v=a[e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);out[(first+gr()*8+e)*outputs+row+rc()]=F(v*poly);}}
 WAVE void vit_project(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=tokens)return;f8 total{};
  if(inputs==4096){for(uint e=0;e<8;e++)total[e]=H(skip[(first+gr()*8+e)*outputs+row+rc()]*w[inputs*outputs+row+rc()]);for(uint p=0;p<4;p++){f8 a{};a=dot8(in,w,first,row,inputs,p*(inputs/4),(p+1)*(inputs/4),a);for(uint e=0;e<8;e++)total[e]+=a[e];}}

@@ -32,12 +32,16 @@ if ($Fast) {
         @('multihead-fast', @('multihead_fast.hip')),
         @('multihead-fast-padded-wave', @('multihead_fast_padded.hip')),
         @('multihead_fused_attention', @('multihead_fused_attention.hip')),
-        @('deep_fast', @('deep_fast.hip'))
+        @('deep_fast', @('deep_fast.hip')),
+        @('deep_fast-packed', @('deep_fast.hip')),
+        @('multihead-fast-packed', @('multihead_fast.hip')),
+        @('multihead-fast-padded-wave-packed', @('multihead_fast_padded.hip'))
     )
 }
 $manifest = @()
 foreach ($module in $modules) {
     $source = if ($IsaHalf) { "#define HIP_ISA_HALF 1`n" } else { '' }
+    if ($module[0] -like '*-packed') { $source += "#define HIP_PREPACKED_WEIGHTS 1`n" }
     foreach ($part in $module[1]) {
         $source += [IO.File]::ReadAllText((Join-Path $SourceDir $part)) + "`n"
     }

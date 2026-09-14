@@ -58,3 +58,11 @@ bash scripts/build-addon.sh third_party/minhook third_party/reshade/include rele
 The compile-time HIP switch preserves ordinary D3D12 codec/temporal passes and skips SDK721/experimental-SM setup. Modules default to ASSETS/HIP, overridden by `DLSS5_HIP_MODULES`. The current addon selects the exact backend; fast options remain in the offline runner pending whole-graph acceptance.
 
 `hlsl_network_oracle.cpp` uses Agility721 only as the production HLSL oracle. `replay_prefix.cpp` is a deliberately labelled diagnostic that injects captured block0/4 states to locate divergence; it must never be presented as normal end-to-end verification. Other validators and their ABI documents describe each independently tested family. Captures, logs, executables and code objects belong in ignored `release/HIP/`.
+
+## 2026-09-15 weight prepacking
+
+`--packed-weights` enables lossless initialization-time FP8 packing for MH dense matrices and, when `--fast-deep` is active, ViT FP8 linear / split projection matrices. Build with `-Fast -IsaHalf` to include the three `*-packed.hsaco` variants. Original paths remain available for A/B comparison.
+
+Matrix bytes occupy the beginning of their original float regions. Biases/scales and region offsets stay unchanged; unused padding remains allocated in this first version. This reduces matrix reads/conversions, **not total weight allocation by four times**. FP16-only matrices keep their original representation. Non-FP8-exact coefficients are rejected rather than requantized.
+
+`benchmark-packed-weights.ps1` runs baseline/packed/packed/baseline with a fresh process per leg, excludes the cold first iteration, checks full output SHA256 and writes timings.csv. On the900 fixture, MH-only gave no clear gain (70.413→70.222ms); adding ViT/split FP8 matrices gave70.4165→65.217ms median hot wall time, ten samples per variant. All outputs equal baseline `7b959143…`; this preserves existing output, not a new claim of matching HLSL. Seed123 with supplied history also matches baseline. Current game installs are unchanged.

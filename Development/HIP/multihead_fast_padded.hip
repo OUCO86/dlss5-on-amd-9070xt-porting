@@ -96,8 +96,17 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
   uint row=t/8,word=t%8,k=chunk*32+word*4,p=mr+row,n=nc+row;
   float a0=0,a1=0,a2=0,a3=0,b0=0,b1=0,b2=0,b3=0;
   if(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height))){uint off=p*K+k;a0=input[off];a1=input[off+1];a2=input[off+2];a3=input[off+3];}
+  #ifndef HIP_PREPACKED_WEIGHTS
   if(n<N){uint off=matrix_offset+n*K+k;b0=weights[off];b1=weights[off+1];b2=weights[off+2];b3=weights[off+3];}
-  sa[row*9+word]=pack4(a0,a1,a2,a3);sb[row*9+word]=pack4(b0,b1,b2,b3);
+#endif
+  sa[row*9+word]=pack4(a0,a1,a2,a3);
+#ifdef HIP_PREPACKED_WEIGHTS
+  // Matrix bytes start at the original float-region offset; nonmatrix fields stay f32.
+  const uint* packed_weights=reinterpret_cast<const uint*>(weights);
+  sb[row*9+word]=n<N?packed_weights[matrix_offset+(n*K+k)/4]:0u;
+#else
+  sb[row*9+word]=pack4(b0,b1,b2,b3);
+#endif
   __builtin_amdgcn_s_barrier();
   #pragma unroll
   for(uint half=0;half<2;half++){
