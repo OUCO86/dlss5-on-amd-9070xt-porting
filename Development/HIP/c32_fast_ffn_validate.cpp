@@ -4,13 +4,16 @@
 #undef main
 extern "C" {__declspec(dllexport) extern const UINT D3D12SDKVersion=721;__declspec(dllexport) const char*D3D12SDKPath=".\\D3D12\\";}
 int main(int argc,char**argv){try{
- if(argc!=5&&argc!=6){puts("usage: c32_fast_ffn_validate.exe assets fast.hsaco fast3.cso prefix [map3]");return 2;}
- const bool map3=argc==6&&std::string(argv[5])=="map3";if(argc==6&&!map3)throw std::runtime_error("mode must be map3");
- clear_flags();auto fw=read(wide(argv[1])+L"\\block1-ffn.f32",8736);std::string prefix=argv[4];std::ofstream report(prefix+"-report.txt");
+ if(argc<5||argc>7){puts("usage: c32_fast_ffn_validate.exe assets fast.hsaco fast3.cso prefix [map0|map3 [block]]");return 2;}
+ const bool map3=argc>=6&&std::string(argv[5])=="map3";if(argc>=6&&!map3&&std::string(argv[5])!="map0")throw std::runtime_error("mode must be map0 or map3");unsigned block=argc==7?unsigned(std::stoul(argv[6])):1u;if(block>70)throw std::runtime_error("block range");
+ clear_flags();auto fw=read(wide(argv[1])+L"\\block"+std::to_wstring(block)+L"-ffn.f32",8736);std::string prefix=argv[4];std::ofstream report(prefix+"-report.txt");
  std::ifstream shaderfile(argv[3],std::ios::binary|std::ios::ate);if(!shaderfile)throw std::runtime_error("oracle CSO missing");std::vector<char>code(size_t(shaderfile.tellg()));shaderfile.seekg(0);if(!shaderfile.read(code.data(),code.size()))throw std::runtime_error("oracle CSO read");
  std::vector<float>packed(27776/4,0);auto*bytes=reinterpret_cast<unsigned char*>(packed.data());memcpy(bytes+16384,fw.data()+8704,128);
  for(unsigned part=0;part<2;part++)for(unsigned i=0;i<4096;i++){float v=fw[(part?4608:512)+i];bool found=false;for(unsigned b=0;b<256;b++)if((b&127)<127&&fp8(b)==v){bytes[(part?16512:20608)+i]=static_cast<unsigned char>(b);found=true;break;}if(!found)throw std::runtime_error("matrix weight not FP8 exact");}
- if(map3){for(unsigned c=0;c<32;c++){float remaining=fw[8704+c];for(unsigned part=0;part<3;part++){unsigned best=0;double besterror=1e99;for(unsigned b=0;b<127;b++){double error=std::abs(double(std::abs(remaining))-fp8(b));if(error<besterror||(error==besterror&&!(b&1u))){best=b;besterror=error;}}if(remaining<0)best|=128;remaining-=fp8(best);bytes[24704+((c/16)*3+part)*512+c*16+c%16]=static_cast<unsigned char>(best);}}}
+ auto e4m3r=[](float v,float&decoded)->unsigned char{unsigned bits;memcpy(&bits,&v,4);unsigned char sg=static_cast<unsigned char>((bits>>24)&0x80u);float m=std::fabs(v);if(m<.015625f){float q=std::nearbyint(m*512.f);if(q>7)q=7;decoded=(sg?-1.f:1.f)*q/512.f;return static_cast<unsigned char>(sg|static_cast<unsigned char>(q));}if(m>=448.f)throw std::runtime_error("residual scale out of FP8 range");int e=int(std::floor(std::log2(m)));float step=std::ldexp(1.f,e-3),q=std::nearbyint(m/step);if(q==16){q=8;e++;step*=2.f;}if(e+7<1||e+7>15)throw std::runtime_error("residual scale part exponent");decoded=(sg?-1.f:1.f)*q*step;return static_cast<unsigned char>(sg|((e+7)<<3)|(static_cast<unsigned char>(q)&7));};
+ if(map3){for(unsigned c=0;c<32;c++){float remaining=fw[8704+c];for(unsigned part=0;part<3;part++){float decoded;unsigned char byte=e4m3r(remaining,decoded);remaining-=decoded;bytes[24704+((c/16)*3+part)*512+c*16+c%16]=byte;}}}
+ printf("block=%u residual=%s\n",block,map3?"map3-native-e4m3r":"ordinary");
+
  const IID experimental={0x76f5573e,0xf13a,0x40f5,{0xb2,0x97,0x81,0xce,0x9e,0x18,0x93,0x3f}};ck(D3D12EnableExperimentalFeatures(1,&experimental,nullptr,nullptr));
  IDXGIFactory1*factory=nullptr;ck(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));ID3D12Device*d=nullptr;for(unsigned i=0;;i++){IDXGIAdapter1*a=nullptr;if(factory->EnumAdapters1(i,&a)==DXGI_ERROR_NOT_FOUND)break;DXGI_ADAPTER_DESC1 desc{};a->GetDesc1(&desc);if(desc.VendorId==0x1002)D3D12CreateDevice(a,D3D_FEATURE_LEVEL_12_0,IID_PPV_ARGS(&d));a->Release();if(d)break;}factory->Release();if(!d)throw std::runtime_error("AMD missing");
  ID3D12CommandQueue*q=nullptr;D3D12_COMMAND_QUEUE_DESC qd{};ck(d->CreateCommandQueue(&qd,IID_PPV_ARGS(&q)));NativeGameSubmission submit;submit.Create(q,false);

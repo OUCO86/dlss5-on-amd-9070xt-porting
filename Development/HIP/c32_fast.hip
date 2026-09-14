@@ -45,6 +45,8 @@ DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sign=(b>>16)&0x8000u;int 
  if(e>15)return from_half(sign|0x7bffu);
  return from_half(sign|((a>>13)-0x1c000u));
 }
+// Match NativePreblockRuntime::e4m3r packing, including its subnormal q<=7 rule.
+DEV float scale_piece(float v){float m=absf(v);if(m<.015625f){float x=m*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1u)));if(q>7)q=7;return value((bits(v)&0x80000000u)|bits(float(q)/512.f));}return F(v);}
 DEV uint pack4(const float*p){
  float x0=__builtin_amdgcn_fmed3f(p[0],-448.f,448.f),x1=__builtin_amdgcn_fmed3f(p[1],-448.f,448.f);
  float x2=__builtin_amdgcn_fmed3f(p[2],-448.f,448.f),x3=__builtin_amdgcn_fmed3f(p[3],-448.f,448.f);
@@ -74,7 +76,7 @@ template<uint Mode,bool Map3=false> DEV void tiled(const float*input,const float
   for(uint part=0;part<3;part++){
    for(uint i=tid;i<N*8;i+=Threads){uint c=i/8,k0=(i%8)*4;float remaining=weights[8704+c],piece=0;
     #pragma unroll
-    for(uint j=0;j<=part;j++){piece=F(remaining);remaining=remaining-piece;}
+    for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining=remaining-piece;}
     uint word=0;if(c>=k0&&c<k0+4)word=packed_fp8(piece)<<(8*(c-k0));b8[i]=word;
    }
    sync_block();

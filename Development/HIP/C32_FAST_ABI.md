@@ -40,7 +40,7 @@ c32_fast_ffn_validate.exe ASSETS_DIR c32_fast.hsaco c32_fast_oracle.cso OUTPUT_P
 
 `release/HIP/c32-fast-ffn-rtz-validation.log`：RTZ 修复后的三个 pattern 全部 bitdiff=0、invalid=0。普通残差路径已在这些输入上与真生产 FAST3 HLSL 逐位一致。
 
-新增 `c32_ffn_contract_fast_map3(input, hidden, fw, output, tokens, raw_output)`，launch 与普通 contract 相同。残差 scale 依次拆成 `s0=F(scale)`、`s1=F(scale-s0)`、`s2=F(scale-s0-s1)`，构成三份对角 FP8 矩阵；从零 seed 做三次 K32 WMMA，再接四次 contract K32 WMMA，末尾 RTZ。没有以普通乘法替代这条路径。
+新增 `c32_ffn_contract_fast_map3(input, hidden, fw, output, tokens, raw_output)`，launch 与普通 contract 相同。残差 scale 依次拆成 `s0=R(scale)`、`s1=R(scale-s0)`、`s2=R(scale-s0-s1)`，构成三份对角 FP8 矩阵；从零 seed 做三次 K32 WMMA，再接四次 contract K32 WMMA，末尾 RTZ。没有以普通乘法替代这条路径。
 
 原始 raw tile 与对应 F(main) 都可以作为新导出的输入，前提是量化结果 F(input) 相同、窗口和 shift 已正确映射；expand 与 map3 残差都只消费该 FP8 量化结果。不要把同一层 hidden 当作 input 残差。原 map0 contract 仍要求它自己的原始残差值，不能因为 map3 可量化而一起改线。
 
@@ -55,3 +55,12 @@ host 按原 NativePreblockRuntime 字节布局打包三份对角矩阵，与 HIP
 map3 GPU 复测（2026-09-14）：三个 pattern 最终 FFN 全部 bitdiff=0。该三对角 WMMA 残差实现已在这组生产 HLSL map3 对照上通过。
 
 Map3 GPU validation now passed all three patterns bitwise (`release/HIP/c32-fast-map3-validation.log`); no nonfinite values. The ordinary residual and diagonal-matrix residual are separately verified entries.
+
+
+## map3 scale 打包契约修正（2026-09-15）
+
+R 是 NativePreblockRuntime 的 `e4m3r`，**并非一般 F()**：当绝对值小于1/64时，q=RNE(abs(v)×512)，然后强制q≤7，不允许进位到8。GPU与host现均遵循该规则；正常FP8激活量化F()不改。
+
+真实 block2/3/4/67/68/69 的32个scale中，分别1/1/2/1/1/2个通道的三part分解改变。block4 channel21、block67 channel22、block68 channel30的三part和各增加1/512；其余5个通道的和不变。详细值见 `release/HIP/map3-scale-packing-audit.json`，可用 `audit_map3_scale_parts.py ASSETS --output REPORT` 重算。不能仅凭这些变化就认定整网误差根因。
+
+validator新增可选block：`... PREFIX map3 67`；省略默认block1。之前三pattern通过记录只覆盖block1，不能代表所有生产block。两端修复后模块38,312字节、MinGW host均编译通过，扩大GPU对照待主进程执行。

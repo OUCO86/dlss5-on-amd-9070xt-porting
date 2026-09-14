@@ -696,3 +696,15 @@ COMGR及host编译通过。完整512与原版oracle786432值逐位一致；完�
 - 前馈/attention验证器已独立命名`c32_fast_ffn_validate`与`c32_fast_attention_validate`，消除并行编写时临时文件撞名；旧冲突文件清掉。
 - MH快前馈末尾RTZ也已GPU/CPU独立复核解释所有差异，C64/128/256六pattern全0；QKV+normalize真实生产CSO对照C64/128/256/512八pattern全0，剩余attention/projection继续独立推进。其模块尚未整链接入。
 - 实验图仅先切C32快速数学（前缀和其他家族仍精确参考），900热墙钟149.565ms，混合精度图与生产RMSE0.0152379，未改善整体差异。不能将已验算子等同整网生产路径完成；还需prefix、MH、deep、边界与融合的完整对应。
+
+
+## 2026-09-15：HIP生产快路径、融合与剩余整图差异
+
+- MH快前馈、QKV归一化、attention三段、标量/三对角投影、RAW与C512 stream1raw/stream18、C32/64/128/256/512池化投影均已对真实生产CSO逐值通过。ViT64/400、attention、五种decoder、split FFWD及stream0f投影也通过。ViT激活外层需要FMA，早期6个正负零差由此修正；不能全改F(0)符号。
+- C32 map3补齐真实CPU e4m3r的subnormal q≤7规则。原host普通nearest并不完全等同生产打包，先前block1验证不能覆盖其他scale。六个实际chain block共8通道分解变化，block4/67/68各一通道的三项和变化1/512；修正后block2/3/4/67/68/69各三pattern全通过。
+- prefix直接数学模式的矩阵投影逐位通过，Gaussian存在小量sin/cos近似差：采样256点中a/b/c/d、log、sqrt、angles逐位相同，三角函数观察max3.80e-7、raw Gaussian max9.91e-7，跨half RTZ边界会放大。是近似选项，未宣称全输入误差上界或整网逐位一致。
+- C32 packed attention与FFN+attention融合均逐值通过（LDS15KiB/19.25KiB）；MH三段融合四通道规格均通过。MF normalization由单线程148VGPR改wave协作9VGPR，保留0→31顺序求和；C64 T65536真生产对照全0，计时约0.91–0.96ms→0.17ms。无近似树归约。
+- 修复张量池让常驻小权重占住巨大空闲buffer的问题：权重/索引常驻独立分配，900精确图持有10281.6→5268.4MiB，输出hash不变；快图融合后持有1910.0MiB。900快图热墙钟约70–72ms（含输入/回读），仍慢于现有HLSL约16.7ms测试台，不作为实时发布版。
+- 补齐生产skip42/43/46与decoder48/55/61/65浮点输出路径额外Hrtz。各局部优化全图A/B保持相同输出；但HIP生产快图对现有HLSL整图仍RMSE约0.00927，尚未完成整体对齐。pre-main8仅86/52428800差；诊断replay注入HLSL pre和block4 main/down后仍约0.00921，说明剩余问题不能全归Gaussian。replay只用于定位、游戏Enqueue禁止observer，不是正常端到端验证。
+- 首次replay诊断误用了未同步更新的boundary模块（host新传空down，旧kernel未判空），两次hipErrorLaunchFailure719；同步重编后正常，后续融合图成功。该失败不作为数值结果。
+- HIP7持续通过；显式HIP6整图尝试进程exit5且无有效输出，不认为支持HIP6，也不做自动回退。当前仍预览驱动，正式驱动未实测。AMD官方HIP SDK7.2发布说明已列普通Adrenalin26.6.x/HIP7使用，见https://rocm.docs.amd.com/projects/install-on-windows/en/latest/about/releasenotes.html；官方部署说明与实机兼容验证仍需分开。
