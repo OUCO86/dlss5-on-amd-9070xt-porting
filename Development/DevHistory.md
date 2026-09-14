@@ -736,3 +736,9 @@ Zero明确要求安装试用。先确认SB-Win64-Shipping退出。新增`DLSS5_H
 已替换Steam剑星Win64/native-submission-order.addon64，并创建游戏本地DLSS5-AMD配置、日志和23个匹配HSACO，逐文件hash校验通过。游戏私有flags为900/线性codec/原生时序/FPS，新增HIP_FAST1及私有HIP模块路径；continuous-every-frame与temporal-history开启，不复制旧PID请求或SDK721开关。全局D:\DLSSNR-Lab flags及Magpie安装未改，驱动未改。
 
 原900P DLL `72F87A97…`保存在`D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-stellarblade`，hash已核。退出游戏后运行同目录上一级`restore-stellarblade.cmd`回退：恢复原DLL，并在C盘原位重命名HIP私有root使旧DLL重新使用全局lab；不递归删除资产junction。部署脚本Development/HIP/deploy-stellarblade.ps1。尚待Zero实际游戏画面/帧率反馈，快图与HLSL剩余差异仍如前述，不以该安装宣称正式驱动/生产数值验收。
+
+### 2026-09-15 07:29：《剑星》HIP设备身份误判修复候选
+
+Zero反馈init failed。实机日志显示HIP7/fast/packed和所有frame对象已创建成功，第一次render在`bridge input device mismatch`被拒，device removed reason=0。桥接InputContract错误使用owner==device指针相等；ReShade包装设备与原始资源设备的接口地址可不同。改为项目既有NativeSameDevice（经已验证unwrap接口取IUnknown身份），保留真正不同设备拒绝，未降为仅比较adapter LUID。
+
+MinGW重编通过，native/proxy双向同一性、不同设备/错误/null拒绝及引用计数平衡测试通过。修正版DLL SHA256 `0202b4dc4ff94bb0a80300b3488b2b6e7ae942d0e4a58021c941d5924be40bba`，已暂存hip-backend/stellarblade-hip/dlss5-hip-identity-fix.addon64。诊断时游戏PID23984运行，先只暂存候选；复查确认游戏已退出后直接部署，安装hash已核。旧HIP DLL另存before-identity-fix.addon64，原900P HLSL回退副本72F87A97…保持可用。待Zero重开游戏实机复测；内核和模型参数未改。

@@ -69,6 +69,6 @@ Matrix bytes occupy the beginning of their original float regions. Biases/scales
 
 ## Stellar Blade trial installation (2026-09-15)
 
-Installed DLL SHA256 `60f69f6f843486527afdf2f0052ee490ab061ff2669c285d7153f82141277131`, fast900P+packed weights. Game-local DLSS5-AMD contains isolated flags/logs/23 modules and an asset junction to the validated lab asset set. Global flags, Magpie and drivers were not changed. Full temporal frame check passed at about63ms per frame; actual game validation belongs to the user trial.
+Installed DLL SHA256 `0202b4dc4ff94bb0a80300b3488b2b6e7ae942d0e4a58021c941d5924be40bba`, fast900P+packed weights, including the ReShade/native COM identity fix. Game-local DLSS5-AMD contains isolated flags/logs/23 modules and an asset junction to the validated lab asset set. Global flags, Magpie and drivers were not changed. Full temporal frame check passed at about63ms per frame; actual game validation belongs to the user trial.
 
 After closing the game, run `D:\DLSSNR-Lab\hip-backend\stellarblade-hip\restore-stellarblade.cmd` to restore the backed-up900P HLSL DLL and disable the local HIP root. F6 only bypasses neural processing to the game's own FSR; it does not restore the old DLL.

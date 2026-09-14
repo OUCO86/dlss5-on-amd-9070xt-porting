@@ -1,5 +1,6 @@
 #pragma once
 #include "hip_reference_network.h"
+#include "../../src/native_device_identity.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
 namespace hip_reference {
@@ -17,7 +18,7 @@ class D3D12Bridge {
   hip_probe::MemoryDesc md{};md.type=5;md.handle.win32.handle=s.handle;md.size=device->GetResourceAllocationInfo(0,1,&rd).SizeInBytes;md.flags=1;api.Check(api.hipImportExternalMemory(&s.imported,&md),"import D3D12 resource");hip_probe::BufferDesc bd{};bd.size=bytes;api.Check(api.hipExternalMemoryGetMappedBuffer(&s.mapped,s.imported,&bd),"map shared resource");
  }
  void Release(Shared&s){auto&api=network->Runtime();if(s.mapped)api.hipFree(s.mapped);if(s.imported)api.hipDestroyExternalMemory(s.imported);if(s.handle)CloseHandle(s.handle);if(s.resource)s.resource->Release();s={};}
- void InputContract(ID3D12Resource*r){if(!r||r->GetDesc().Dimension!=D3D12_RESOURCE_DIMENSION_BUFFER||r->GetDesc().Width<pixels*16)throw std::runtime_error("bridge input capacity");ID3D12Device*owner{};Check(r->GetDevice(IID_PPV_ARGS(&owner)),"input device");auto a=owner->GetAdapterLuid(),b=device->GetAdapterLuid();bool same=owner==device&&a.HighPart==b.HighPart&&a.LowPart==b.LowPart;owner->Release();if(!same)throw std::runtime_error("bridge input device mismatch");}
+ void InputContract(ID3D12Resource*r){if(!r||r->GetDesc().Dimension!=D3D12_RESOURCE_DIMENSION_BUFFER||r->GetDesc().Width<pixels*16)throw std::runtime_error("bridge input capacity");ID3D12Device*owner{};Check(r->GetDevice(IID_PPV_ARGS(&owner)),"input device");bool same=NativeSameDevice(owner,device);owner->Release();if(!same)throw std::runtime_error("bridge input device mismatch");}
 public:
  D3D12Bridge()=default;D3D12Bridge(const D3D12Bridge&)=delete;D3D12Bridge&operator=(const D3D12Bridge&)=delete;
  ~D3D12Bridge(){
