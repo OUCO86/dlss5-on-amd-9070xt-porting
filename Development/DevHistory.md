@@ -712,3 +712,9 @@ COMGR及host编译通过。完整512与原版oracle786432值逐位一致；完�
 ### 2026-09-15：快图接线与常驻分配阶段提交
 
 完整保留reference路径，新增快族/融合/skip配置选择，模块编译脚本`-Fast`统一生成匹配代码对象并写source/code SHA清单，避免再次混用旧boundary。当前900快图全融合、wave normalization、skip42/43/46、decoder48/55/61/65额外half规则，离线热墙钟72.066ms，graph持有1910MiB；正常输出对HLSL RMSE0.00926926。replay精确pre后0.00923003、再替换block4后0.00920935，剩余问题在后续路径，不能只归因Gaussian。真实NativeC64Shift整块对照正在补，用来排查手选CSO没有覆盖的实际路径选择。HIP addon仍选择reference，当前运行安装未改。
+
+### 2026-09-15：统一重建与真实整块验证
+
+`build-modules.ps1 -IsaHalf -Fast`从独立源码快照重建20个模块全部成功，写modules.json。重建后的512 reference输出hash仍`bd52c601…`；900快图重建与之前输出hash同为`7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d`。HIP候选DLL重新构建成功，SHA256 `ff02886282b7b100cb1d7fe27b27b7e42208e33955e256df8b82a65e2beac9db`，未部署。
+
+新增`whole_mh_block_validate.cpp`直接走NativeC64Shift、900flags、共享workspace与ResidentFlush，不手挑CSO。block5/shift0/rawfalse/inF32/outFP8在16×16及实际400×256两个尺寸、各两pattern，contract/FFN projection/normalize/AV/final五阶段全部bitdiff0。证明这组真实整块路径已对齐，尚不能替代真实图中各block输入的整网差异定位。
