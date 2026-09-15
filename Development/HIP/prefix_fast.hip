@@ -75,14 +75,16 @@ void dlss5_prefix_fast_project(const float*features,const float*weights,float*pr
  for(uint e=0;e<8;e++){uint p=first+group*8+e;if(p<tokens)prefix[p*32+col+rc]=Hrtz(sum[e]);}
 }
 
+template<bool Raster=false>
 DEV void fused_prefix_values(const float*rgba,const float*history,uint p,uint width,uint seed,uint temporal,float*f){
  uint tile=p/64,x=(tile%(width/8))*8+p%8,y=(tile/(width/8))*8+(p%64)/8;
+ uint rgbp=Raster?(y*width+x):p;
  uint h=production_pcg((x*0x8da6b343u)^(y*0xd8163841u)^(seed*0x9e3779b9u)^0x243f6a88u);
  float a=production_uniform(h*0xcaa5b80du+0x21dd796bu),b=production_uniform(h*0x2c9277b5u+0xac564b05u),c=production_uniform(h*0x83232c31u+0x3463e0acu),d=production_uniform(h*0xfa6dc5f9u+0x4712a88eu);
  float r0=__builtin_amdgcn_sqrtf(-2.f*(__builtin_amdgcn_logf(a)*.6931471805599453f)),r1=__builtin_amdgcn_sqrtf(-2.f*(__builtin_amdgcn_logf(b)*.6931471805599453f));
  float ct=(6.283185482025146f*c)*.15915494309189535f,dt=(6.283185482025146f*d)*.15915494309189535f;
  float g0=Hrtz(r0*__builtin_amdgcn_cosf(ct)),g1=Hrtz(r1*__builtin_amdgcn_cosf(dt)),g2=Hrtz(r1*__builtin_amdgcn_sinf(dt));
- float red=Hrtz(Hrtz(Hrtz(rgba[p*4])-.5f)*.125f),green=Hrtz(Hrtz(Hrtz(rgba[p*4+1])-.5f)*.125f),blue=Hrtz(Hrtz(Hrtz(rgba[p*4+2])-.5f)*.125f);
+ float red=Hrtz(Hrtz(Hrtz(rgba[rgbp*4])-.5f)*.125f),green=Hrtz(Hrtz(Hrtz(rgba[rgbp*4+1])-.5f)*.125f),blue=Hrtz(Hrtz(Hrtz(rgba[rgbp*4+2])-.5f)*.125f);
  float values[16]={g1,g2,green,blue,g0,1,.0078125f,1,red,green,1,1,blue,red,1,0};
  if(temporal){uint q=(y*width+x)*4;values[13]=Hrtz(Hrtz(Hrtz(history[q])-.5f)*.125f);values[2]=Hrtz(Hrtz(Hrtz(history[q+1])-.5f)*.125f);values[3]=Hrtz(Hrtz(Hrtz(history[q+2])-.5f)*.125f);}
  for(uint i=0;i<16;i++)f[i]=values[i];
@@ -92,6 +94,19 @@ void dlss5_prefix_fast_fused(const float*rgba,const float*history,const float*we
  uint first=__builtin_amdgcn_workgroup_id_x()*16,lane=__builtin_amdgcn_workitem_id_x(),rc=lane&15,group=lane>>4,tokens=width*height;
  __attribute__((shared)) float values[16*16];
  if(lane<16){float f[16]{};if(first+lane<tokens)fused_prefix_values(rgba,history,first+lane,width,seed,temporal,f);for(uint k=0;k<16;k++)values[lane*16+k]=f[k];}
+ __builtin_amdgcn_s_barrier();
+ float8 sum[2]{};
+ for(uint tile=0;tile<2;tile++){half8 a{};for(uint e=0;e<8;e++){uint k=tile*16+group*8+e;a[e]=(_Float16)(k<16?values[rc*16+k]:0.f);}
+  for(uint col=0;col<2;col++){half8 b{};for(uint e=0;e<8;e++){uint k=tile*16+group*8+e;b[e]=(_Float16)(k<16?weights[(col*16+rc)*16+k]:0.f);}sum[col]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,sum[col]);}
+ }
+ for(uint col=0;col<2;col++)for(uint e=0;e<8;e++){uint p=first+group*8+e;if(p<tokens)prefix[p*32+col*16+rc]=Hrtz(sum[col][e]);}
+}
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(32,32)))
+void dlss5_prefix_fast_fused_raster(const float*rgba,const float*history,const float*weights,float*prefix,uint width,uint height,uint seed,uint temporal){
+ uint first=__builtin_amdgcn_workgroup_id_x()*16,lane=__builtin_amdgcn_workitem_id_x(),rc=lane&15,group=lane>>4,tokens=width*height;
+ __attribute__((shared)) float values[16*16];
+ if(lane<16){float f[16]{};if(first+lane<tokens)fused_prefix_values<true>(rgba,history,first+lane,width,seed,temporal,f);for(uint k=0;k<16;k++)values[lane*16+k]=f[k];}
  __builtin_amdgcn_s_barrier();
  float8 sum[2]{};
  for(uint tile=0;tile<2;tile++){half8 a{};for(uint e=0;e<8;e++){uint k=tile*16+group*8+e;a[e]=(_Float16)(k<16?values[rc*16+k]:0.f);}

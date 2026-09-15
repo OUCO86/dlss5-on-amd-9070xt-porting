@@ -1351,3 +1351,11 @@ compare-current-backends.ps1改用benchmark_hlsl_edges.exe/benchmark_prefix_fuse
 HLSL/HIP/HIP/HLSL四轮热中位16.743/24.826/24.907/16.775ms，后端内部最终分别匹配C7C2F49D…/FEEA9EF3…，首尾有限。当前同条件差距约8.1ms，目标仍未达成；不将首尾检查称为全帧验证。日志release/HIP/backend-scalar-current.log。
 
 桥接代码审计：D3D12Bridge用DEFAULT shared资源和HIP外部内存映射，输入/历史由GPU CopyBufferRegion复制到共享缓冲、输出由共享缓冲返回D3D，围绕HIP Enqueue使用外部信号量；未见每帧神经网络通过CPU读回整图再上传。尚未独立测桥接copy/cache代价，不能据此称桥接开销为零。游戏未改。
+
+
+### 2026-09-16：HIP直接消费工作区raster，去掉入口重复副本
+新增fused_prefix_values<Raster>及dlss5_prefix_fast_fused_raster，噪声/历史坐标保持，仅RGB从工作区raster按(x,y)读取。direct_prefix_input路径不再分配base/tiles副本、不启动hip_input_reflect，末端原色也直接读取原输入。原hip_input_reflect调用的有效/工作尺寸均W/H，所以此处没有丢失额外反射操作；输入合同仍要求完整工作区。900P逻辑上省两份25MiB缓冲。共享资源由bridge持有、队列在HIP完成信号前不能执行下一帧覆盖，保留原外部同步。
+
+HIP_FAST默认开启，DLSS5_HIP_DIRECT_INPUT=0/1可覆盖，要求fast_prefix/prefix_fused。连续40帧ABBA：基线24.921/24.903ms，候选24.688/24.757ms，最终FEEA9EF3…一致、首尾有限。随后40帧全检和24帧每8帧reset全有限，最终匹配FEEA9EF3…/22C171FC…。queued_direct_input对颜色+motion两张轮换及12张轮换/淘汰，全部12帧拼接hash均43712DDE…匹配既有同步参考。
+
+内核、runner、排队探针和完整DLL编译通过：release/HIP/native-direct-input.addon64 SHAc4a256596c1cbfb540e3877db65bcb5d9897abd0ada6b7241525258a5d4e3f87；prefix_fast模块SHA24AD5E702A81C858C1EC6CB65EBBE9E772552AB15C2619E09847E515D4E699AB；24模块固定prefix-direct-input-release-modules。未部署，游戏仍3894351c…+mh-scalar-diagonal。run-queued-frame.ps1增加Flags/Modules参数，test-prefix-direct-input.ps1和validate-direct-input.ps1复现；日志release/HIP/prefix-direct-input-build/test.log、direct-input-validation.log。
