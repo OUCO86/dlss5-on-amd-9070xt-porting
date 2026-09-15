@@ -1267,3 +1267,9 @@ HIP_FAST默认prefix_fused=true；DLSS5_HIP_PREFIX_FUSED=0/1可覆盖，referenc
 同一COMGR产物中普通half C32 VGPR207、inline193，LDS均17664byte、private均0；并未出现预想的寄存器溢出，不能以寄存器压力作为无收益的已证原因。补丁experiments/prefix-inline.patch，test-prefix-inline.ps1；需应用补丁构建测试程序和C32模块，定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1。日志release/HIP/prefix-inline-build/test.log。
 
 保留最优固定候选native-prefix-fused.addon64/3894351c…+prefix-fused-release-modules，尚未部署。游戏仍b4e46e15…+mh-input-mapped。
+
+
+### 2026-09-15：部署前置特征/投影融合候选
+部署脚本确认游戏退出，安装native-prefix-fused.addon64（SHA3894351ccba9080524095cd5c87644806224c62f071250ead3c3e18526283f9b）及prefix-fused-release-modules全部24个HSACO，逐hash校验通过。再次确认900P/HIP_FAST1/ASYNC_SUBMIT1，prefix_fast为F9AF53C5…匹配，未设置覆盖默认的PREFIX_FUSED/INLINE字段。默认采用特征+投影融合，不含完全内联C32实验，含FFN input pack4。
+
+旧b4e46e15… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-prefix-fused。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-prefix-fused（游戏须退出）。本次未启动游戏、未验证实机FPS；连续负载约25.36ms仅是离线性能。当前游戏安装已更新为3894351c…，不是b4e46e15；最后明确实机900P30FPS仍对应更早13c7版。
