@@ -1765,3 +1765,11 @@ current比较/profile脚本更新固定模块和benchmark_split_ffn_fp8.exe（�
 部署脚本确认游戏退出，安装native-vit-qkv-halfweight.addon64（SHA121042cdfd89492e4dee4b1477142470abdc67b6f678e6617d2952744de34883）及vit-qkv-halfweight-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-qkv-halfweight。新版实际游戏FPS尚无反馈。
 
 current比较/profile脚本更新固定模块和benchmark_vit_qkv_halfweight.exe，compare_layers_current.exe重编译上传。连续40帧edges-only ABBA：HLSL16.772/16.770ms，HIP19.681/19.687ms，各自最终golden匹配、首尾有限；当前差距约2.91ms，仍未达到目标。日志release/HIP/backend-vit-halfweight-current.log。本轮完成部署及复核，无额外内核改动。
+
+
+### 2026-09-16：C512 mix精确half权重预打包暂不采用
+新增独立@split-mix-f16缓存，PackHalfMatrix精确打包前262144个mix权重；split_mix_halfweight直接加载half向量，输入转换、F16 WMMA/K16顺序及输出F(Hrtz)保持。展开/收缩沿原路径。
+
+COMGR和专用benchmark编译通过；连续40帧ABBA基线19.647/19.680ms，候选19.636/19.595ms，最终FEEA9EF3…一致、首尾有限。约0.05ms差异，未扩大全帧/reset，不纳入生产，源码恢复，游戏仍121042cd…+vit-qkv-halfweight-release-modules。
+
+补丁experiments/split-mix-halfweight.patch、test-split-mix-halfweight.ps1；需匹配benchmark_split_mix_halfweight.exe及HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块deep_fast-packed.hsaco。日志release/HIP/split-mix-halfweight-test.log。
