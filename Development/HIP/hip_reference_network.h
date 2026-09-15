@@ -14,6 +14,7 @@
 #include <set>
 #include <cmath>
 #include <tuple>
+#include <chrono>
 #include <type_traits>
 namespace hip_reference {
 using U=uint32_t;using Api=hip_probe::Api;using Handle=hip_probe::Handle;
@@ -23,10 +24,11 @@ inline std::vector<float> ReadWeights(const std::string&path){std::ifstream test
 struct Allocation {Api*api;void*ptr{};size_t bytes,capacity;bool owned=true;Allocation(Api&a,size_t n):api(&a),bytes(n),capacity(n){if(!n)throw std::runtime_error("zero HIP allocation");a.Check(a.hipMalloc(&ptr,n),"hipMalloc");}Allocation(Api&a,void*p,size_t n):api(&a),ptr(p),bytes(n),capacity(n),owned(false){}~Allocation(){if(ptr&&owned){api->hipDeviceSynchronize();api->hipFree(ptr);}}};
 using Tensor=std::shared_ptr<Allocation>;
 inline std::set<U> ParseSkipBlocks(const std::string&s){std::set<U>out;size_t p=0;while(p<s.size()){size_t q=s.find(',',p);if(q==std::string::npos)q=s.size();auto word=s.substr(p,q-p);size_t used=0;unsigned long b=std::stoul(word,&used);if(used!=word.size()||!((b>=5&&b<=30)||(b>=40&&b<=65)))throw std::runtime_error("unsupported skipped residual block");out.insert(U(b));p=q+1;}return out;}
-struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7;bool fast_vit=false,wmma=false,pooled=false,profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false;};
+struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7;bool fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false;};
 class Network {
  Api api;Handle stream{};std::map<std::string,Handle>modules,functions;std::map<std::string,Tensor>weights;Options opt;
  struct Timing{std::string name;Handle begin{},end{};};std::vector<Timing>timings;
+ std::map<std::string,std::pair<double,unsigned>>wall_timings;
  std::vector<Tensor>pool;Tensor device_noise;std::map<U,Tensor>gather_maps[2];
  U W,H;std::function<void(const std::string&)>progress;std::function<void(const std::string&,void*,size_t)>observer;
  static U Count(size_t n){if(!n||n>std::numeric_limits<U>::max())throw std::runtime_error("HIP reference index count overflow");return U(n);}
@@ -104,8 +106,11 @@ class Network {
   if(module=="c32_fast_ffn"){bool expand=kernel=="c32_ffn_expand_fast";U tokens=count/(expand?128:32);threads=expand?512:256;groups=((tokens+63)/64)*(expand?2:1);}
   if(module=="c32_fast_attention")threads=32;
   if(opt.wave&&(kernel=="c32_attn_normalize"||kernel=="c32_attn_probabilities"||kernel=="mh_normalize"||kernel=="mh_probabilities")){module="wave";kernel+="_wave";count=Count(size_t(count)*32);}
+  if(opt.wall_profile)api.Check(api.hipStreamSynchronize(stream),"wall profile drain");
+  auto wall_begin=opt.wall_profile?std::chrono::steady_clock::now():std::chrono::steady_clock::time_point{};
   Timing timing{kernel};if(opt.profile){api.Check(api.hipEventCreate(&timing.begin),"event create");api.Check(api.hipEventCreate(&timing.end),"event create");timings.push_back(timing);api.Check(api.hipEventRecord(timing.begin,stream),"event begin");}
   void*argv[]={static_cast<void*>(&args)...};api.Check(api.hipModuleLaunchKernel(Fn(module,kernel),groups?groups:(count+255ull)/256,1,1,threads,1,1,0,stream,argv,nullptr),name);if(opt.profile)api.Check(api.hipEventRecord(timing.end,stream),"event end");if(!opt.pooled)api.Check(api.hipStreamSynchronize(stream),name);
+  if(opt.wall_profile){api.Check(api.hipStreamSynchronize(stream),"wall profile completion");auto&entry=wall_timings[kernel];entry.first+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-wall_begin).count();++entry.second;}
  }
  void Stage(const std::string&name,const Tensor&t){if(progress)progress(name);if(observer){Synchronize();observer(name,P(t),t->bytes);}if(opt.dump_dir.empty()||(!opt.dump_only.empty()&&(","+opt.dump_only+",").find(","+name+",")==std::string::npos))return;api.Check(api.hipStreamSynchronize(stream),"before dump");std::vector<char>b(t->bytes);api.Check(api.hipMemcpy(b.data(),P(t),b.size(),2),"stage dump");std::ofstream f(opt.dump_dir+"/"+name+".f32",std::ios::binary);if(!f.write(b.data(),b.size()))throw std::runtime_error("stage dump write");}
  static std::string Block(U b,const char*s){return "block"+std::to_string(b)+"-"+s+".f32";}
@@ -176,14 +181,15 @@ if(opt.fast_c32){const char*f[][2]={{"c32_fast_ffn","c32_fast.hsaco"},{"c32_fast
  std::vector<float> Infer(const std::vector<float>&rgba,const std::vector<float>&noise,const std::vector<float>*history=nullptr){
   if(rgba.size()!=size_t(W)*H*4||noise.size()!=50331648||(history&&history->size()!=rgba.size()))throw std::runtime_error("network input sizes");
   auto color=Upload(rgba.data(),rgba.size()*4),noisegpu=opt.fast_prefix?Tensor{}:Upload(noise.data(),noise.size()*4),hist=history?Upload(history->data(),history->size()*4):Tensor{};
-  auto out=RunGraph(color,noisegpu,hist);std::vector<float>result(size_t(W)*H*3);api.Check(api.hipStreamSynchronize(stream),"before readback");api.Check(api.hipMemcpy(result.data(),P(out),result.size()*4,2),"final readback");if(opt.profile){bool valid=true;std::map<std::string,double>ms;for(auto&t:timings){float elapsed;api.Check(api.hipEventElapsedTime(&elapsed,t.begin,t.end),"event elapsed");if(!std::isfinite(elapsed)||elapsed<0)valid=false;ms[t.name]+=elapsed;api.hipEventDestroy(t.begin);api.hipEventDestroy(t.end);}timings.clear();double total=0;for(auto&m:ms){std::printf("kernel_ms %s %.6f\n",m.first.c_str(),m.second);total+=m.second;}if(valid)std::printf("kernel_ms TOTAL %.6f\n",total);else std::printf("PROFILE INVALID: negative/nonfinite HIP event intervals; discard this iteration\n");}return result;}
+  wall_timings.clear();auto out=RunGraph(color,noisegpu,hist);std::vector<float>result(size_t(W)*H*3);api.Check(api.hipStreamSynchronize(stream),"before readback");api.Check(api.hipMemcpy(result.data(),P(out),result.size()*4,2),"final readback");if(opt.wall_profile){for(auto&m:wall_timings)std::printf("serialized_kernel_ms %s %.6f calls=%u\n",m.first.c_str(),m.second.first,m.second.second);}
+  if(opt.profile){bool valid=true;std::map<std::string,double>ms;for(auto&t:timings){float elapsed;api.Check(api.hipEventElapsedTime(&elapsed,t.begin,t.end),"event elapsed");if(!std::isfinite(elapsed)||elapsed<0)valid=false;ms[t.name]+=elapsed;api.hipEventDestroy(t.begin);api.hipEventDestroy(t.end);}timings.clear();double total=0;for(auto&m:ms){std::printf("kernel_ms %s %.6f\n",m.first.c_str(),m.second);total+=m.second;}if(valid)std::printf("kernel_ms TOTAL %.6f\n",total);else std::printf("PROFILE INVALID: negative/nonfinite HIP event intervals; discard this iteration\n");}return result;}
  // Device callers initialize once and use this stream for external fence waits/signals.
  void SetNoise(const std::vector<float>&noise){if(noise.size()!=50331648)throw std::runtime_error("noise size");api.Check(api.hipStreamSynchronize(stream),"set noise");device_noise=opt.fast_prefix?Tensor{}:Upload(noise.data(),noise.size()*4,true);}
  Handle Stream()const{return stream;}
  Api& Runtime(){return api;}
  void Synchronize(){api.Check(api.hipStreamSynchronize(stream),"network completion");}
  void Enqueue(void*rgba,void*history,void*rgb_output,U seed){
-  if(!rgba||!rgb_output||(!device_noise&&!opt.fast_prefix)||!opt.pooled||opt.profile||observer||!opt.dump_dir.empty())throw std::runtime_error("device graph requires initialized noise, pooled mode and no diagnostic readbacks");
+  if(!rgba||!rgb_output||(!device_noise&&!opt.fast_prefix)||!opt.pooled||opt.profile||opt.wall_profile||observer||!opt.dump_dir.empty())throw std::runtime_error("device graph requires initialized noise, pooled mode and no diagnostic readbacks");
   opt.seed=seed;auto color=std::make_shared<Allocation>(api,rgba,size_t(W)*H*16);auto hist=history?std::make_shared<Allocation>(api,history,size_t(W)*H*16):Tensor{};
   auto out=RunGraph(color,device_noise,hist);api.Check(api.hipMemcpyAsync(rgb_output,P(out),size_t(W)*H*12,3,stream),"device output copy");
  }

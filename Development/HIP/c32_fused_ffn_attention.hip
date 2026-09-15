@@ -39,6 +39,16 @@ DEV uint rc(){return __builtin_amdgcn_workitem_id_x()&15;}
 DEV uint gr(){return (__builtin_amdgcn_workitem_id_x()&31)>>4;}
 DEV uint bid(){return __builtin_amdgcn_workgroup_id_x();}
 // D3D explicit f32tof16 maps to RTZ here; matrix Cast<F16> remains RNE.
+#ifndef HIP_C32_RTZ_ISA
+#define HIP_C32_RTZ_ISA 1
+#endif
+#if HIP_C32_RTZ_ISA
+DEV float Hrtz(float x){uint h;float result;
+ asm("v_cvt_pkrtz_f16_f32 %0, %1, %1" : "=v"(h) : "v"(x));
+ asm("v_cvt_f32_f16 %0, %1" : "=v"(result) : "v"(h));
+ return result;
+}
+#else
 DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=int(a>>23)-127;
  if(a>=0x7f800000u)return from_half(sg|0x7c00u|((a&0x7fffffu)?0x200u:0u));
  if(e>15)return from_half(sg|0x7bffu);
@@ -46,6 +56,7 @@ DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=
  if(e<-14)return from_half(sg|(((a&0x7fffffu)|0x800000u)>>uint(-e-1)));
  return from_half(sg|((a>>13)-0x1c000u));
 }
+#endif
 DEV uint fp8(float f){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(f,-448.f,448.f),0.f,0,false))&255u;}
 DEV void put(i2&v,uint e,float x){v[e/4]=int(uint(v[e/4])|(fp8(x)<<(8*(e%4))));}
 
@@ -55,6 +66,14 @@ DEV float scale_piece(float v){float m=absf(v);if(m<.015625f){float x=m*512.f;ui
 // Packed attention: shared raw/exp scratch 8448 bytes + normalized/prob/AV bytes 6912.
 using ushort=unsigned short;
 DEV void put_bits(i2&v,uint e,uint b){v[e/4]=int(uint(v[e/4])|((b&255u)<<(8*(e%4))));}
+// Byte-preserving packed LDS reads; memcpy does not impose pointer alignment.
+DEV i2 load8(const unsigned char*p){
+#ifdef HIP_C32_LDS_VECTOR
+ i2 result;__builtin_memcpy(&result,p,8);return result;
+#else
+ i2 result{};for(uint e=0;e<8;e++)put_bits(result,e,p[e]);return result;
+#endif
+}
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
 void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output){
  uint window=bid();if(window>=windows)return;uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=wave*16,base=window*64;
@@ -68,7 +87,7 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
  for(uint i=tid;i<128*36;i+=128){uint row=i/36,k=i%36;packed[64*36+i]=k<32?static_cast<unsigned char>(fp8(fw[512+row*32+k])):0;}
  sync_window();
  for(uint col=0;col<128;col+=16){f8 sum{};
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,packed[64*36+(col+rc())*36+k]);}sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=load8(packed+64*36+(col+rc())*36+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
   for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
  }
  sync_window();
@@ -80,7 +99,7 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
    for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,k==c?fp8(piece):0u);}acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
   }}
  for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=chunk*32+kt*16+gr()*8+e;put_bits(a,e,scratch.hidden[(first+rc())*132+k]);put_bits(b,e,packed[64*36+(ci*16+rc())*132+k]);}acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=chunk*32+kt*16+gr()*8;a=load8(scratch.hidden+(first+rc())*132+k);b=load8(packed+64*36+(ci*16+rc())*132+k);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
  }
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)ffn[(first+gr()*8+e)*34+ci*16+rc()]=(_Float16)Hrtz(acc[ci][e]);
  sync_window();
@@ -97,7 +116,7 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
  }
  // Q/K packed rows: 36-byte stride. Exponent values stored exactly as half bits.
  for(uint key=0;key<64;key+=16){f8 acc{};
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,packed[(64+key+rc())*36+k]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=load8(packed+(64+key+rc())*36+k);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);scratch.ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
  }
  sync_window();

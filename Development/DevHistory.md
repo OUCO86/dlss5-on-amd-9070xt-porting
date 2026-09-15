@@ -760,3 +760,13 @@ Zero留游戏PID4132在装备菜单，实机截图确认人物变成黑色轮廓
 COMGR3/gfx1201 baseline与pair均编译成功；benchmark_expand_pair.cpp在tokens16/400/1600、K1024/N4096、混合符号及E4M3小值输入上输出bitdiff0。ABBA批量墙钟：tokens400 baseline0.241/0.200ms，pair0.183/0.176ms；tokens1600 baseline0.809/0.806ms，pair0.723/0.705ms；tokens16反而较慢。局部结果不代表整网收益。
 
 游戏已退出后执行benchmark-expand-pair.ps1，独立模块目录不动游戏：900完整快图packed+skip42/43/46，四轮各6次排除cold，两方案各10个hot样本。baseline中位65.2045ms、pair65.0745ms，仅约0.20%差异，未确认稳定整网收益；四轮最终RGB SHA256均7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d。保持可选，不启用默认、不部署DLL/内核。日志release/HIP/expand-pair-benchmark.log与expand-pair-network.log。
+
+### 2026-09-15：串行热点诊断与C32硬件RTZ优化
+
+新增--wall-profile：逐kernel执行前drain、执行后等待，用steady_clock累计调用墙钟和次数。包含host提交/等待且改变调度，不当成纯GPU时间或正常帧占比；设备游戏路径拒绝诊断。正常路径关闭时不调用计时钟。900热轮C32融合FFN+attention约17.388ms/10calls，ViT展开2.151ms/8calls。
+
+共享内存连续8个FP8字节以memcpy整组读入寄存器（HIP_C32_LDS_VECTOR可选），编译与四轮整网hash通过，但65.267→65.307ms无收益，保持关闭。
+
+C32融合Hrtz改用v_cvt_pkrtz_f16_f32后转回f32，保留软件路径HIP_C32_RTZ_ISA=0，默认1。COMGR/gfx1201编译成功，代码对象55640→37976字节；共享内存仍19712字节，VGPR166→183，实际收益来自减少指令而非寄存器下降。test_rtz.cpp+rtz_probe.hip覆盖所有有限half及邻接float、随机有限float共1186626个输入，half位差0。
+
+完整900 packed快图，独立模块目录、ABBA四进程各6次排除cold，每方案10hot：seed0中位65.260→61.0745ms（约6.41%），四轮RGB SHA均7b959143…；seed123中位65.5015→61.2275ms（约6.52%），四轮SHA均75b62d2f…。均为正常非profile离线墙钟，非游戏FPS。测试期间游戏退出；安装DLL/HSACO未更换。日志release/HIP/wall-profile.log、c32-vector-network.log、c32-rtz-network.log、c32-rtz-seed123-network.log、rtz-probe.log。benchmark-module-swap.ps1保存每轮日志并检查hash，失败立即停止。

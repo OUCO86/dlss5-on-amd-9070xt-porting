@@ -72,3 +72,19 @@ Matrix bytes occupy the beginning of their original float regions. Biases/scales
 Installed DLL SHA256 `0202b4dc4ff94bb0a80300b3488b2b6e7ae942d0e4a58021c941d5924be40bba`, fast900P+packed weights, including the ReShade/native COM identity fix. Game-local DLSS5-AMD contains isolated flags/logs/23 modules and an asset junction to the validated lab asset set. Global flags, Magpie and drivers were not changed. Full temporal frame check passed at about63ms per frame; actual game validation belongs to the user trial.
 
 After closing the game, run `D:\DLSSNR-Lab\hip-backend\stellarblade-hip\restore-stellarblade.cmd` to restore the backed-up900P HLSL DLL and disable the local HIP root. F6 only bypasses neural processing to the game's own FSR; it does not restore the old DLL.
+
+### C32 native RTZ and diagnostics (2026-09-15)
+
+The reference runner now accepts --wall-profile. It drains before each kernel
+and measures launch through completion with a monotonic CPU clock. Reported
+serialized_kernel_ms includes submission/wait overhead and changes scheduling;
+it identifies candidates, not pure GPU time or normal frame percentages.
+Device-only game inference rejects this diagnostic mode.
+
+C32 fused FFN/attention defaults HIP_C32_RTZ_ISA=1, replacing software truncation
+with hardware RTZ. Define 0 for the old path. test_rtz.cpp and rtz_probe.hip
+validated 1,186,626 finite inputs including half boundaries. The ABBA runner
+benchmark-module-swap.ps1 checks complete output hashes: seed0 65.260→61.0745ms,
+seed123 65.5015→61.2275ms, identical outputs in each comparison. These are offline
+wall timings. No installed module was replaced. HIP_C32_LDS_VECTOR remains an
+optional disabled experiment: it showed no whole-network gain.
