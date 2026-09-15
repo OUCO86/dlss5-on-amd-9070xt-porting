@@ -1,3 +1,6 @@
+#ifndef HIP_QKV_ROW_SUM
+#define HIP_QKV_ROW_SUM 1
+#endif
 #ifndef HIP_ISA_HALF
 #define HIP_ISA_HALF 1
 #endif
@@ -134,6 +137,23 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
   __builtin_amdgcn_s_barrier();
   // Production fast path: keep accumulator live across every K16/K32.
  }
+#if HIP_QKV_ROW_SUM
+ if constexpr(Normalize){
+  __attribute__((shared)) float tile_qkv[64*65],norm_inv[128];
+  for(uint e=0;e<8;e++)tile_qkv[(wm*16+group*8+e)*65+wn*16+rc]=accum[e];
+  __builtin_amdgcn_s_barrier();
+  uint channels=N/3,heads=channels/32,scale=4*channels*channels+heads*4096;
+  if(t<128){uint row=t%64,h=t/64,n=nc+h*32,part=n/channels,head=(n%channels)/32;float inv=1.f;
+   if(mr+row<M&&n<N&&part<2){float ss=0.f;
+    for(uint j=0;j<32;j++){float v=tile_qkv[row*65+h*32+j];ss+=v*v;}
+    inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?weights[scale+head]:1.f);
+   }norm_inv[h*64+row]=inv;
+  }
+  __builtin_amdgcn_s_barrier();
+  for(uint e=0;e<8;e++){uint row=wm*16+group*8+e,p=mr+row,n=col+rc;if(p<M&&n<N)reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(q8(F(accum[e]*norm_inv[(wn/2)*64+row])));}
+  return;
+ }
+#else
  if constexpr(Normalize){
   __attribute__((shared)) float tile_qkv[64*64];
   for(uint e=0;e<8;e++)tile_qkv[(wm*16+group*8+e)*64+wn*16+rc]=accum[e];
@@ -153,6 +173,7 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
   }
   return;
  }
+#endif
  #pragma unroll
  for(uint e=0;e<8;e++){uint p=first+group*8+e,n=col+rc;if(p>=M||n>=N)continue;float a=accum[e],v;
   if(epilogue==1){float gate=clampf(a,-4.f,4.f),q=absf(gate)*(-.055908203125f)+.447265625f,poly=gate*q+.89453125f;v=F(a*poly);}

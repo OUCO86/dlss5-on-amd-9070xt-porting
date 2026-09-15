@@ -1033,3 +1033,11 @@ compare_layers.cpp增加mh-only过滤，并在所选融合FFN配置中启用iden
 对照native_wave_qkv_normalize.hlsl，试验单wave16×64输出、四acc共用A，替代HIP fast_dense的512线程64×64；QKV平方和仍保持原32项顺序，以LDS每行串行求和，不启用HLSL可选half平方MMA以避免混改精度。COMGR及runner编译通过；正常900 ABBA4轮各6次去cold32.939→33.727ms更慢，四轮RGB7b959143…一致。未继续历史/HDR，已撤回生产改动。补丁experiments/mh-qkv-wave4.patch、脚本test-mh-wave4.ps1；需应用补丁再构建实验runner/模块，当前默认源码不含该入口。日志release/HIP/mh-wave4-build/test.log。
 
 最优固定候选仍a7b7521b…DLL+post-merge-fold-release-modules，游戏仍5ab7d7d3…+inputDWORD，未部署新实验。
+
+
+### 2026-09-15：MH QKV逐行平方和替换readlane串行广播
+核对native_wave_qkv_normalize.hlsl的NATIVE_QKV_FAST2默认0，源码构建路径未找到显式启用宏；本轮不引入half平方MMA，不更改精度。保留HIP fast_dense的512线程64×64矩阵结构，QKV写入64×65带padding的float LDS，由128个线程各负责一行/一head的32项顺序平方和，存inverse后全组同步；其余线程从各自原accum和inverse输出byte。消除原每wave反复32次readlane，保持逐项加法顺序。HIP_QKV_ROW_SUM默认1，0保留旧实现。
+
+COMGR/gfx1201编译通过。正常900 ABBA4轮各6次去cold32.722→31.6795ms；seed123/history34.277→32.9245ms。各组四轮最终RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧30.328ms/FEEA9EF3…，24帧每8帧reset30.258ms/22C171FC…，均全有限；HDR非同期ABBA，不把30ms当游戏FPS或直接拼接前轮收益。
+
+新multihead-fast-padded-wave-packed模块SHA49458E566DF2E94E2098333BE1DB7F3D15D83A0655E39BDA9D01363910A53A8C；24模块固定mh-row-sum-release-modules。主机DLL无需修改，配套native-post-merge.addon64/a7b7521b…；未部署，游戏仍5ab7d7d3…+inputDWORD（用户900P26～27FPS）。test-mh-row-sum.ps1复现；日志release/HIP/mh-row-sum-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_ROW_SUM=1。
