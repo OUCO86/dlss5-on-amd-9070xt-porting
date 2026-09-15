@@ -1467,3 +1467,9 @@ COMGR与benchmark编译通过；同新模块、连续40帧ABBA：基线22.906/22
 完整DLL编译成功：release/HIP/native-vit-qkv-fused.addon64 SHA256=13d4dc10e6507eb05120b056a6710498e4922a53e699dd6878be2674614ae821；固定24模块vit-qkv-fused-release-modules，deep_fast-packed模块SHA256=5AFA30B02A10269FD6AE69D68DAD542C5432150E58EC5ACC63D54A48BFC0FEE7。未部署，游戏仍801cfc5c… FFN/QKV融合版。
 
 脚本test-vit-qkv-fused.ps1、test_vit_qkv.cpp、validate-vit-qkv.ps1、validate-vit-qkv-history.ps1；日志release/HIP/vit-qkv-fused-test.log、vit-qkv-validation.log。编译deep_fast.hip时HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-16：部署ViT QKV融合并刷新profile
+部署脚本确认游戏退出，安装native-vit-qkv-fused.addon64（SHA13d4dc10e6507eb05120b056a6710498e4922a53e699dd6878be2674614ae821）和vit-qkv-fused-release-modules全部24模块，逐hash校验通过。AsyncSubmit保持1，旧版本备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-qkv-fused。新实机FPS未测。
+
+profile-current.ps1改为固定ViT融合模块并显式传--vit-qkv-fused，运行通过，最终RGB7b959143…匹配。日志release/HIP/profile-vit-qkv-current.log。注意日志包含两轮，不能混排后当单轮汇总；串行逐核计时包括等待，只用于定位。MH attention及crop投影仍居前。
