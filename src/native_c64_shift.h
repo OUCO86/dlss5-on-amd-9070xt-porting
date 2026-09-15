@@ -3,6 +3,9 @@
 #include "native_pinned_resource.h"
 #include "native_c64.h"
 class NativeC64Shift {
+#ifdef DLSS5_LAYER_BENCH
+ friend struct HlslLayerBenchmark;
+#endif
  NativeC64 body;ID3D12Resource*input{},*padded{},*output{};
  ID3D12RootSignature*root{};ID3D12PipelineState*pso[2]{};UINT geometry[6]{};bool recorded{},coalesced{},fused{};UINT channel_count{};
  static void Check(HRESULT hr){if(FAILED(hr))throw std::runtime_error("C64 shift HRESULT="+std::to_string(unsigned(hr)));}

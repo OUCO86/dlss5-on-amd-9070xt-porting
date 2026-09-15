@@ -8,6 +8,9 @@
 #include "native_network_timestamps.h"
 #include "native_matrix_workspace.h"
 class NativeC64 {
+#ifdef DLSS5_LAYER_BENCH
+ friend struct HlslLayerBenchmark;
+#endif
  NativeMatrixWorkspace*workspace{};
  ID3D12Resource*qkv_weights{},*qkv_raw{};ID3D12PipelineState*qkv_pso{};bool matrix_qkv{},wave_scores{};
  ID3D12Resource*matrix_weights{},*matrix_input{};ID3D12PipelineState*pack_pso{};bool matrix_expand{},pack_matrix{},wave_expand{},wave_contract{},blocked_ffn{},wave_project{};ID3D12Resource*project_weights[2]{};ID3D12Resource*qkv_norm{};ID3D12PipelineState*normalize_pso{};bool direct_attention{};ID3D12Resource*raster_input{},*raster_output{};UINT raster[4]{};bool fused_shift{};bool shared_scratch{},ffn_tiled_weights{},tiled_weights{},attn_fused_qkv{},fp8_ffn{},fp8_qkv{},fused_qkv_normalize{},fused_ffn{},fp8_activations{},fp8_qkv_norm{},fp8_stream{},input_fp8{},output_fp8{},input_f16{};ID3D12PipelineState*fp8_pack_mapped_src8_pso{};ID3D12PipelineState*fp8_pack_pso{},*fp8_pack_mapped_pso{};ID3D12PipelineState*mapped_pack_pso{},*mapped_project_pso[2]{};

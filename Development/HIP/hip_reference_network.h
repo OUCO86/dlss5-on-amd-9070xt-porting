@@ -26,6 +26,10 @@ using Tensor=std::shared_ptr<Allocation>;
 inline std::set<U> ParseSkipBlocks(const std::string&s){std::set<U>out;size_t p=0;while(p<s.size()){size_t q=s.find(',',p);if(q==std::string::npos)q=s.size();auto word=s.substr(p,q-p);size_t used=0;unsigned long b=std::stoul(word,&used);if(used!=word.size()||!((b>=5&&b<=30)||(b>=40&&b<=65)))throw std::runtime_error("unsupported skipped residual block");out.insert(U(b));p=q+1;}return out;}
 struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7;bool fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false,packed_c32=false,fp8_normalized=false,fp8_ffn=false,fp8_av=false,fp8_deep=false,fp8_middle=false,half_c32=false,crop_c32=false,fused_qkv_norm=false,graph=false;};
 class Network {
+#ifdef DLSS5_LAYER_BENCH
+ friend struct LayerBenchmark;
+ unsigned diagnostic_kernel_repeats=1;
+#endif
  Api api;Handle stream{};std::map<std::string,Handle>modules,functions;std::map<std::string,Tensor>weights;Options opt;
  struct Timing{std::string name;Handle begin{},end{};};std::vector<Timing>timings;
  std::map<std::string,std::pair<double,unsigned>>wall_timings;
@@ -121,8 +125,12 @@ class Network {
   if(opt.wall_profile)api.Check(api.hipStreamSynchronize(stream),"wall profile drain");
   auto wall_begin=opt.wall_profile?std::chrono::steady_clock::now():std::chrono::steady_clock::time_point{};
   Timing timing{kernel};if(opt.profile){api.Check(api.hipEventCreate(&timing.begin),"event create");api.Check(api.hipEventCreate(&timing.end),"event create");timings.push_back(timing);api.Check(api.hipEventRecord(timing.begin,stream),"event begin");}
-  void*argv[]={static_cast<void*>(&args)...};api.Check(api.hipModuleLaunchKernel(Fn(module,kernel),groups?groups:(count+255ull)/256,1,1,threads,1,1,0,stream,argv,nullptr),name);if(opt.profile)api.Check(api.hipEventRecord(timing.end,stream),"event end");if(!opt.pooled)api.Check(api.hipStreamSynchronize(stream),name);
-  if(opt.wall_profile){api.Check(api.hipStreamSynchronize(stream),"wall profile completion");auto&entry=wall_timings[kernel];entry.first+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-wall_begin).count();++entry.second;}
+  unsigned launch_repeats=1;
+#ifdef DLSS5_LAYER_BENCH
+  if(opt.wall_profile)launch_repeats=diagnostic_kernel_repeats;
+#endif
+  void*argv[]={static_cast<void*>(&args)...};for(unsigned repeat=0;repeat<launch_repeats;repeat++)api.Check(api.hipModuleLaunchKernel(Fn(module,kernel),groups?groups:(count+255ull)/256,1,1,threads,1,1,0,stream,argv,nullptr),name);if(opt.profile)api.Check(api.hipEventRecord(timing.end,stream),"event end");if(!opt.pooled)api.Check(api.hipStreamSynchronize(stream),name);
+  if(opt.wall_profile){api.Check(api.hipStreamSynchronize(stream),"wall profile completion");auto&entry=wall_timings[kernel];entry.first+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-wall_begin).count()/launch_repeats;++entry.second;}
  }
  void Stage(const std::string&name,const Tensor&t){if(progress)progress(name);if(observer){Synchronize();observer(name,P(t),t->bytes);}if(opt.dump_dir.empty()||(!opt.dump_only.empty()&&(","+opt.dump_only+",").find(","+name+",")==std::string::npos))return;api.Check(api.hipStreamSynchronize(stream),"before dump");std::vector<char>b(t->bytes);api.Check(api.hipMemcpy(b.data(),P(t),b.size(),2),"stage dump");std::ofstream f(opt.dump_dir+"/"+name+".f32",std::ios::binary);if(!f.write(b.data(),b.size()))throw std::runtime_error("stage dump write");}
  static std::string Block(U b,const char*s){return "block"+std::to_string(b)+"-"+s+".f32";}

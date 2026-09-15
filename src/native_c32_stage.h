@@ -5,6 +5,9 @@
 // Ordinary C32 stage: zero-pad shifted windows, native FP8 body, crop to HWC.
 // Does not claim to implement the special learned downsample of a DS block.
 class NativeC32Stage {
+#ifdef DLSS5_LAYER_BENCH
+ friend struct HlslLayerBenchmark;
+#endif
  NativePreblockRuntime body;
  ID3D12Device*device{};ID3D12Resource*packed{},*output{};
  ID3D12RootSignature*root{};ID3D12PipelineState*pso[2]{};ID3D12DescriptorHeap*heap[2]{};

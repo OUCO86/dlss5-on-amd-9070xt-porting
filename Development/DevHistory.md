@@ -832,3 +832,15 @@ COMGR/gfx1201及完整HIP DLL编译通过。900正常离线ABBA4轮各6次、去
 完成8组正常900 ABBA，每组四进程各6次、排除cold，每方案10hot；全部最终RGB SHA7b959143…逐位一致。C32 QKV输入寄存器缓存45.255→45.2555ms；全MH32行256线程tile45.568→46.129ms。单内核32行：QKV+norm45.4285→45.527，FFN expand45.337→45.728，contract45.4835→46.131，FFN project45.4655→45.476，attention matrix project45.534→45.3835（幅度小，不认定稳定收益）。C32残差scale三分量初始化预计算45.2945→45.346ms。
 
 各候选COMGR/gfx1201编译通过、主机runner重编通过。没有发现值得替换默认的稳定加速，实验实现已从默认源码撤回；补丁和完整对照表留存Development/HIP/experiments/c32-cache-and-mh-tile32.patch及同名.md，补丁基于e847b44。实验日志release/HIP/c32-cache-test.log、tile32-test.log、tile32-k0..k4.log、scale-test.log。正式候选仍24b54e08…/qkv-modules约45.37ms，游戏安装仍68c8…，本轮未替换DLL/内核。
+
+### 2026-09-15 17:19：HIP/HLSL同输入、实际尺寸层比较
+
+完成compare_layers.cpp与compare-layers.ps1。相同逻辑输入分别提前上传GPU默认内存，真实权重/900层尺寸；涵盖C32 block1/4/post70（pack、mapped raster、raw-chain三种输入模式）、MH block5/6/9/15、Split block23、ViT block31/400tokens。两pattern，每案例预热20次，HLSL/HIP/HIP/HLSL四批每批20次，批结束等待，不含上传/初始化/读回。HLSL另记GPU timestamp，HIP细分使用当前调用位置重复kernel20次摊销等待、三轮平均，重复后核对完整HIP输出不变。FP8读回显式识别0x7f/0xff NaN；两pattern全部有限。
+
+最终pattern1两批墙钟均值(ms)：C32 post70显式pack HLSL1.705/HIP3.320；HLSL mapped1.063/HIP3.408。block1 mapped0.309/0.817，block4 raw-chain0.291/0.878，C64 block5 0.314/0.702，C64 block6 shift3 0.323/0.739，C128 block9 0.226/0.436，C256 block15 0.210/0.318，C512 split23 0.145/0.285，ViT31 0.201/0.626。这些是代表层独立批量成本，不直接累加推断整网。
+
+pattern1的C32、C64 block5、C512和ViT输出逐位相同；block6/9/15分别330/496/129元素不同（max0.5/2/2）。pattern0其他层也有少量差异，ViT7906/409600不同、max2，既有HIP/HLSL数值对齐尚未完成。最初block4用HIP三分量残差比HLSL普通模式，及先建小C32造成共享scratch不足的轮次已作废；正式测试按残差模式对齐且先建最大post70实例。
+
+运行时确认HLSL MH fused_ffn=1、fused_shift=1、fused_qkv_norm=1、fp8_stream=1，而fused_proj0/attn_fused_qkv=0；HIP MH仍分别执行expand和contract。HLSL ViT expand/contract/projection权重tiled=1、contract SplitK=1、fused_ffn=0；HIP矩阵布局/分段执行与之不同。C32源码对照显示HLSL FFN矩阵输出留在寄存器并使用wave局部scratch，HIP有额外half共享数组往返及workgroup barrier；HLSL还可直接映射上游布局，HIP独立pack。代表post70 HIP批量诊断pack约0.72ms、核心约2.65ms，差距不只来自搬运。细分时间不与整层机械相加。
+
+详细表与边界说明Development/HIP/layer-comparison.md。原始CSV/log在release/HIP/layers-p0/p1与layers-final-p0/p1系列。普通runner和诊断runner均MinGW编译通过；诊断friend与重复执行仅DLSS5_LAYER_BENCH下启用。默认推理算术和游戏安装未改。

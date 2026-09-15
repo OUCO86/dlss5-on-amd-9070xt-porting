@@ -13,6 +13,9 @@
 // Input: tile-major 8x8 RGBA32F. Outputs: full HWC32 and half-resolution HWC32,
 // represented as FP32 values on the E4M3 lattice. No CPU readback in Record.
 class NativePreblockRuntime {
+#ifdef DLSS5_LAYER_BENCH
+ friend struct HlslLayerBenchmark;
+#endif
  ID3D12Device* device{};
  ID3D12Resource*prefix_ffn_weights{},*test_prefix_readback{};bool prefix_wave{};
  ID3D12Resource *ffn{},*raw{},*main{},*down{},*weights[2]{},*noise{},*temporal{};

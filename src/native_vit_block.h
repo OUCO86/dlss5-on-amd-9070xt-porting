@@ -4,6 +4,9 @@
 #include "native_vit_qkv.h"
 #include "native_vit_attention.h"
 class NativeVitBlock {
+#ifdef DLSS5_LAYER_BENCH
+ friend struct HlslLayerBenchmark;
+#endif
  NativeVitLinear expand,contract,projection;ID3D12Resource*block_input{};NativeVitQkv qkv;NativeVitAttention attention;
  /* FAST PATH (DLSS5_VIT_FUSED_FFN): expand+contract in one dispatch (native_wave_vit_ffn_fused.hlsl); the hidden layer stays in LDS. Bit-exact. */
  ID3D12RootSignature*fused_root{};ID3D12PipelineState*fused_pso{};bool fused{},fused_recorded{};UINT token_count{};
