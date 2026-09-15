@@ -1359,3 +1359,11 @@ HLSL/HIP/HIP/HLSL四轮热中位16.743/24.826/24.907/16.775ms，后端内部最�
 HIP_FAST默认开启，DLSS5_HIP_DIRECT_INPUT=0/1可覆盖，要求fast_prefix/prefix_fused。连续40帧ABBA：基线24.921/24.903ms，候选24.688/24.757ms，最终FEEA9EF3…一致、首尾有限。随后40帧全检和24帧每8帧reset全有限，最终匹配FEEA9EF3…/22C171FC…。queued_direct_input对颜色+motion两张轮换及12张轮换/淘汰，全部12帧拼接hash均43712DDE…匹配既有同步参考。
 
 内核、runner、排队探针和完整DLL编译通过：release/HIP/native-direct-input.addon64 SHAc4a256596c1cbfb540e3877db65bcb5d9897abd0ada6b7241525258a5d4e3f87；prefix_fast模块SHA24AD5E702A81C858C1EC6CB65EBBE9E772552AB15C2619E09847E515D4E699AB；24模块固定prefix-direct-input-release-modules。未部署，游戏仍3894351c…+mh-scalar-diagonal。run-queued-frame.ps1增加Flags/Modules参数，test-prefix-direct-input.ps1和validate-direct-input.ps1复现；日志release/HIP/prefix-direct-input-build/test.log、direct-input-validation.log。
+
+
+### 2026-09-16：HIP D3D raster-only边界实验暂不默认
+代码确认NativeGameFrame的HIP分支只给网络传PostBase，Tiles消费者在HLSL分支。实验为NativeGameRgbInput增加emit_tiles参数（默认true），HIP测试通过DLSS5_HIP_RASTER_ONLY控制；false不分配Tiles，使用仅写post_base的专用shader，跳过null资源barrier，根签名未使用u0绑定到有效color地址。HLSL默认保持两份输出。
+
+测试程序编译并运行成功，连续40帧ABBA：基线24.803/24.773ms，候选24.693/24.745ms，四轮最终FEEA9EF3…匹配、首尾有限。减少逻辑25MiB缓冲和每帧写入，但时间收益仅约0.03–0.11ms，未进一步全帧/reset或默认采用；生产源码恢复。
+
+补丁experiments/rgb-raster-only.patch，shader存experiments/native_game_rgb_raster_input.hlsl，test-rgb-raster-only.ps1复现；需应用补丁并将实验shader复制到测试资产目录。测试资产只新增该专用文件，没有覆盖旧shader；游戏旧DLL不会使用新文件。日志release/HIP/rgb-raster-only-test.log。最优未部署候选仍c4a25659…+prefix-direct-input-release-modules，游戏仍3894351c…+mh-scalar-diagonal模块。
