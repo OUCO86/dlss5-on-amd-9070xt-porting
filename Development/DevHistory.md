@@ -1849,3 +1849,11 @@ COMGR编译通过；连续40帧ABBA基线19.340/19.337ms，候选19.860/19.822ms
 读取上轮候选与已验证attention融合基线COMGR汇编，C64 VGPR94→82/SGPR30→53，C128118→106/30→53，C256152→133/42→43；三者private/spill仍0。C64静态FP8编码102→81、解码54→33，v_dual_fmac_f32从38→3。减少转换/寄存器并不意味着更快，编译器同时改变指令安排。
 
 完整表experiments/mh-exact-feature-isa.md。以上是静态资源和指令数量，不是动态周期/占用率或因果证明；原版更快的结论仍来自上一轮ABBA。本轮无生产代码/游戏修改。
+
+
+### 2026-09-16：C256单独直接读取精确FP8残差仍慢
+依据上轮ISA中C256 SGPR只增1而C64/128增23的差异，单独测试C256去掉decode(fp8(feature))，保留其余通道原转换及全部三段FMA顺序。COMGR编译通过。
+
+连续40帧ABBA基线19.289/19.330ms，候选19.481/19.509ms，最终FEEA9EF3…匹配、首尾有限。单独C256也更慢，未扩大全帧/reset，源码恢复，游戏保持c8842686…+ffn-qkv-round-byte-release-modules。
+
+补丁experiments/c256-exact-feature.patch、test-c256-exact-feature.ps1，编译HIP_ISA_HALF=1，目标multihead_fused_attention.hsaco，复用benchmark_vit_qkv_compact.exe。日志release/HIP/c256-exact-feature-test.log。此结果排除仅其他通道造成整体退化的解释，但不证明具体硬件根因。
