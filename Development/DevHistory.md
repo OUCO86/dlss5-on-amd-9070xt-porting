@@ -1103,3 +1103,11 @@ mh_qkv_normalize_fused对64/128/256/512通道分支传递编译期常量N/K给fa
 COMGR/gfx1201编译通过，正常900 ABBA4轮各6次去cold30.7635→30.9125ms略慢，四轮RGB7b959143…一致。编译后QKV LDS25856byte（旧21760）、VGPR69（旧45）、private0。资源使用增加与耗时变化同时出现，但未独立证明单一因果。未继续历史/HDR，生产源码已恢复，维持K32默认。
 
 补丁experiments/mh-qkv-k64.patch，test-mh-qkv-k64.ps1，编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_K64=1；日志release/HIP/mh-qkv-k64-build/test.log。最优固定候选仍mh-qkv-special-release-modules+a7b7521b DLL，当前游戏仍mh-input-dword模块，未部署本实验。
+
+
+### 2026-09-15：MH FFN第三投影融合
+mh_ffn_fused_body新增Project模板分支：收缩完成后全组同步，将原F(Hrtz(acc))的byte中间值放入复用LDS，再同步后直接执行第三投影；从原input计算Hrtz残差初值，按原K16顺序累加，输出F(result) float。支持默认C64/C128行权重与C256 tiled前两矩阵，第三矩阵仍原packed行布局。省去独立mh_ffn_project_fast_fp8调用及全局middle缓冲，共36个普通MH块；C512 split路径不改。--fused-ffn-project独立，验证所选packed/byte-middle/tiled-min256配置；HIP_FAST默认开启并记录。
+
+正常900 ABBA4轮各6次去cold31.0285→29.842ms；seed123/history32.4015→31.313ms。每组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧30.132ms/FEEA9EF3…，24帧每8帧reset28.605ms/22C171FC…，全有限；HDR非同期ABBA，不将其与旧轮次硬比。
+
+COMGR模块、runner和完整DLL编译通过：release/HIP/native-ffn-project.addon64 SHA2934f7950ffab96539238afac0dfb9619f088952b22dade20d934af6d263d9ef；multihead-fast-padded-wave-packed模块SHAE778FAFF162C8F24CBD146E9FB3016EFCE075B322781C54913ABDF2C8F788FDB，24模块固定mh-ffn-project-release-modules。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-mh-ffn-project.ps1，日志release/HIP/mh-ffn-project-build/test/history/hdr/reset.log。编译MH模块定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
