@@ -19,6 +19,10 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
  [switch]$CandidateCropC32,
  [switch]$BothCropC32,
  [switch]$CandidateFusedQkvNorm,
+ [switch]$BothFusedQkvNorm,
+ [switch]$CandidateFusedMhFfn,
+ [switch]$CandidateTiledMhFfn,
+ [switch]$CandidateTiledMhFfnLarge,
  [string]$BaselineModules='',
  [string]$CandidateModules='',
  [string]$Tag='module-swap-test',
@@ -49,7 +53,10 @@ foreach($round in 0..3){
  if($BothCompactPipeline){$extra+=@('--fp8-deep','--fp8-middle','--half-c32')}
  if($variant -eq 'candidate' -and $CandidateCropC32){$extra+='--crop-c32'}
  if($BothCropC32){$extra+='--crop-c32'}
- if($variant -eq 'candidate' -and $CandidateFusedQkvNorm){$extra+='--fused-qkv-norm'}
+ if($BothFusedQkvNorm -or ($variant -eq 'candidate' -and $CandidateFusedQkvNorm)){$extra+='--fused-qkv-norm'}
+ if($variant -eq 'candidate' -and $CandidateFusedMhFfn){$extra+='--fused-mh-ffn'}
+ if($variant -eq 'candidate' -and $CandidateTiledMhFfn){$extra+='--tiled-mh-ffn'}
+ if($variant -eq 'candidate' -and $CandidateTiledMhFfnLarge){$extra+='--tiled-mh-ffn-large'}
  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
  if($LASTEXITCODE -ne 0){throw ($log -join "
 ")}

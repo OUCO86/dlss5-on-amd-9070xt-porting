@@ -171,3 +171,23 @@ mh_qkv_normalize_fused and the host together. Old exports remain available.
 900 ABBA47.868→45.3685ms with identical RGB. Real HDR40-frame replay hot median
 45.317ms, all finite and final raw HDR identical to the earlier HIP output.
 No installed game files were changed by this optimization.
+
+### Fused multihead FFN (2026-09-15)
+
+--fused-mh-ffn fuses expand+contract for C64/128/256. Each group handles16 tokens
+with C/16 waves. Input is cooperatively quantized once, and the shared array is
+reused for FP8 hidden values after a group barrier. Contract preserves the
+original increasing-K order and F(Hrtz) output. Requires packed weights and
+byte middle; original two-pass kernels remain available.
+
+--tiled-mh-ffn selects [N16][K32][K][N] packed FFN weights for every channel size.
+--tiled-mh-ffn-large selects them only for C256. HIP_FAST defaults to the latter:
+C64/128 prefer ordinary packed rows, C256 prefers tiled weights. Third-matrix
+projection weights and scales keep their original offsets/layout. New exports
+have explicit c64/c128/c256 and _tiled names; rebuild host and padded MH module
+together. Cooperation can be disabled at build time with HIP_FFN_COOP_INPUT=0.
+
+Final900 ABBA45.384→43.340ms, identical RGB. Real HDR40-frame hot median43.527ms,
+all finite, identical final HDR. The new DLL compiles but is not installed.
+Layer comparison accepts optional fused-ffn, fused-tiled or fused-selected after
+the pattern argument. Logs and intermediate variants are detailed in DevHistory.

@@ -844,3 +844,15 @@ pattern1的C32、C64 block5、C512和ViT输出逐位相同；block6/9/15分别33
 运行时确认HLSL MH fused_ffn=1、fused_shift=1、fused_qkv_norm=1、fp8_stream=1，而fused_proj0/attn_fused_qkv=0；HIP MH仍分别执行expand和contract。HLSL ViT expand/contract/projection权重tiled=1、contract SplitK=1、fused_ffn=0；HIP矩阵布局/分段执行与之不同。C32源码对照显示HLSL FFN矩阵输出留在寄存器并使用wave局部scratch，HIP有额外half共享数组往返及workgroup barrier；HLSL还可直接映射上游布局，HIP独立pack。代表post70 HIP批量诊断pack约0.72ms、核心约2.65ms，差距不只来自搬运。细分时间不与整层机械相加。
 
 详细表与边界说明Development/HIP/layer-comparison.md。原始CSV/log在release/HIP/layers-p0/p1与layers-final-p0/p1系列。普通runner和诊断runner均MinGW编译通过；诊断friend与重复执行仅DLSS5_LAYER_BENCH下启用。默认推理算术和游戏安装未改。
+
+### 2026-09-15 17:57：MH FFN融合、合作输入与按通道选权重布局
+
+实现C64/128/256的16-token/group融合FFN，分别128/256/512线程；每wave四个expand累加器共用输入，hidden以FP8留LDS，然后按原K16顺序contract，输出F(Hrtz) byte middle。保留HIP既有激活及捨入，不借优化改变数值。初版45.2915→45.2645ms，无明确收益；合作输入打包一次并复用hidden空间后45.370→44.617ms。输入与hidden共享同一LDS数组，覆写前全组同步，不增加另一块共享内存。
+
+补FFN两块权重的byte重排[N16][K32][K][N]，按新_tiled入口装载，投影矩阵和scale区域保持原位置/布局。全通道重排45.4845→43.7165ms。层测显示C64/C128原布局更快（融合core约0.094/0.087ms，重排约0.126/0.100ms），C256重排更快（约0.165→0.101ms）；最终C64/128融合但保留行排列，C256融合+重排。
+
+最终正常900 ABBA四轮各6次、去cold，每方案10hot：45.384→43.340ms（约4.50%），四轮RGB SHA7b959143…一致；seed123/history=input900.rgba32f：46.747→44.8335ms，四轮SHA75b62d2f…一致。正常HDR40帧、去前5热中位43.527ms，全部有限，最终SHA FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58与前版一致。另做普通与tiled融合的同输入HLSL层对照；这些步骤保持原HIP输出，不宣称消除既有HIP/HLSL数值差异。
+
+--fused-mh-ffn独立控制；--tiled-mh-ffn为全通道重排参考，--tiled-mh-ffn-large为最终C256重排。HIP_FAST默认fused_mh_ffn/tiled_mh_ffn开启、tiled_ffn_min_c=256。合作输入默认开，HIP_FFN_COOP_INPUT=0保留首版实验。普通两步FFN仍可用。检查packed weights、byte middle与16-token组对齐，避免ABI误用。
+
+COMGR/gfx1201内核、离线runner、层比较与完整DLL均编译通过。最终DLL release/HIP/native-fused-mh-ffn.addon64，SHA256 03269b74ce1f102ad89cb6a724e3a18e7c432fc5ada140145cef0c6a053d681a；配套24模块在远端hip-backend/ffn-tiled-modules。日志release/HIP/ffn-fused-test.log、ffn-coop-test.log、ffn-tiled-test.log、ffn-layer.log、ffn-final-validation.log、ffn-selected-test.log、ffn-selected-history.log、ffn-selected-hdr.log。游戏安装未替换，仍68c8…。

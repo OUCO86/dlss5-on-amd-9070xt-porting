@@ -64,9 +64,9 @@ struct LayerBenchmark {
 };
 }
 int main(int argc,char**argv){try{
- if(argc!=5&&argc!=6)throw std::runtime_error("usage: compare_layers.exe ASSETS FLAGS MODULES OUTPUT.csv [pattern]");
- unsigned pattern=argc==6?std::stoul(argv[5]):0;if(pattern>1)throw std::runtime_error("pattern must be0 or1");
- load_flags(argv[2]);const unsigned repeats=20;
+ if(argc!=5&&argc!=6&&argc!=7)throw std::runtime_error("usage: compare_layers.exe ASSETS FLAGS MODULES OUTPUT.csv [pattern] [fused-ffn]");
+ unsigned pattern=argc>=6?std::stoul(argv[5]):0;if(pattern>1)throw std::runtime_error("pattern must be0 or1");
+ if(argc==7&&(std::string(argv[6])!="fused-ffn"&&std::string(argv[6])!="fused-tiled"&&std::string(argv[6])!="fused-selected"))throw std::runtime_error("unknown layer option");load_flags(argv[2]);const unsigned repeats=20;
  const IID experimental={0x76f5573e,0xf13a,0x40f5,{0xb2,0x97,0x81,0xce,0x9e,0x18,0x93,0x3f}};
  ck(D3D12EnableExperimentalFeatures(1,&experimental,nullptr,nullptr));
  IDXGIFactory1*factory{};ck(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));ID3D12Device*d{};
@@ -86,7 +86,7 @@ int main(int argc,char**argv){try{
 
   hip_reference::Options o;o.assets=argv[1];o.modules=argv[3];o.width=1600;o.height=1024;o.post_shift=3;
   o.wmma=o.wave=o.tiled=o.pooled=o.fast_vit=o.fast_c32=o.fused_c32=o.fused_ffn=o.fast_mh=o.fused_mh=o.mh_wave=o.fast_deep=o.fast_prefix=o.packed_weights=o.packed_c32=o.fp8_normalized=o.fp8_ffn=o.fp8_av=o.fp8_deep=o.fp8_middle=o.half_c32=o.crop_c32=o.fused_qkv_norm=true;
-  hip_reference::Network net(o);auto hi=hip_reference::LayerBenchmark::Input(net,input);hip_reference::Tensor ho;
+  o.fused_mh_ffn=argc==7;o.tiled_mh_ffn=argc==7&&std::string(argv[6])!="fused-ffn";o.tiled_ffn_min_c=argc==7&&std::string(argv[6])=="fused-selected"?256:64;hip_reference::Network net(o);auto hi=hip_reference::LayerBenchmark::Input(net,input);hip_reference::Tensor ho;
   unsigned current_mode=0;auto hiprun=[&]{ho.reset();ho=hip_reference::LayerBenchmark::Run(net,hi,W,H,C,b,shift,current_mode==2);};hiprun();net.Synchronize();
   size_t output_count=C==32?size_t(W+((shift&1)?8:0))*(H+((shift&2)?8:0))*32:count;
   auto actual=hip_reference::LayerBenchmark::Read(net,ho,output_count,C==32);

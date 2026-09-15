@@ -26,4 +26,11 @@ inline void PackWeightRegions(std::vector<float>&values,const std::vector<std::p
   uint8_t encoded=ExactWeightFp8(values[r.first+i]);bytes[r.first*4+i]=encoded;
  }
 }
+// Reorder packed row-major B into [N/16][K/32][K32][N16], preserving bytes.
+inline void TilePackedMatrix(std::vector<float>&v,size_t start,size_t rows,size_t columns){
+ if(rows%16||columns%32||start>v.size()||rows*columns>(v.size()-start)*4)throw std::runtime_error("packed tile shape");
+ auto*dst=reinterpret_cast<uint8_t*>(v.data()+start);std::vector<uint8_t>src(dst,dst+rows*columns);
+ for(size_t n=0;n<rows;n++)for(size_t k=0;k<columns;k++)dst[((n/16)*(columns/32)+k/32)*512+(k%32)*16+n%16]=src[n*columns+k];
+}
+
 }
