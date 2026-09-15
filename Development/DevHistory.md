@@ -1495,3 +1495,13 @@ profile-current.ps1改为固定ViT融合模块并显式传--vit-qkv-fused，运�
 COMGR编译通过；mh_attention_crop资源：LDS8704 bytes、VGPR43、SGPR34、private segment0、spill0。连续40帧ABBA：基线22.799/22.820ms，候选22.823/22.802ms，最终FEEA9EF3…匹配、首尾有限。未见收益，未扩大全帧/reset验证，生产源码恢复，游戏仍13d4dc10… ViT融合版。
 
 补丁experiments/mh-crop-k64.patch、test-mh-crop-k64.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块名multihead-fast-padded-wave-packed.hsaco。日志release/HIP/mh-crop-k64-test.log。
+
+
+### 2026-09-16：刷新当前全帧及逐层HLSL/HIP对照
+compare-current-backends.ps1更新至vit-qkv-fused-release-modules及明确启用当前融合选项，使用benchmark_vit_qkv_fused.exe。连续40帧edges-only ABBA：HLSL16.782/16.799ms，HIP22.847/22.816ms；各自最终C7C2F49D…/FEEA9EF3…匹配、首尾有限，整帧差距仍约6ms，未达目标。
+
+compare_layers.cpp的fused-selected过滤模式补上grouped_mh_contract/ffn_qkv/max256/vit_qkv_fused；MH与C32脚本均更新固定模块。重新编译与运行通过。代表性单层ABBA wall：C64 block5 HIP0.350/0.320ms、HLSL0.334/0.283；位移block6 HIP0.389/0.380、HLSL0.339/0.301；C128 block9 HIP0.180/0.178、HLSL0.238/0.217；C256 block15 HIP0.161/0.157、HLSL0.215/0.197；C512 block23 HIP0.218/0.198、HLSL0.151/0.135。block5/23逐位一致，其余跨后端bitdiff分别330/496/129、maxabs0.5/2/2，无非有限值；不能声称全网络跨后端数值相同。
+
+C32 mode2 raw half-chain测试：block70 HIP1.729/1.714ms、HLSL1.087/1.117；block1 HIP0.463/0.402、HLSL0.316/0.266；block4 HIP0.552/0.418、HLSL0.390/0.267，三者输出逐位一致。block70这里测原始stage本体，不是实际postmerge融合完整路径。单层重复调度/时钟条件与整网不同，不能直接将差值相加归因6ms。
+
+日志release/HIP/backend-vit-current.log、compare-mh-fused-current.log、compare-c32-vit-current.log。生产游戏未更换。

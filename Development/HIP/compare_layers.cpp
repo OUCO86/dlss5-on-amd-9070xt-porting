@@ -90,7 +90,7 @@ int main(int argc,char**argv){try{
   hip_reference::Options o;o.assets=argv[1];o.modules=argv[3];o.width=1600;o.height=1024;o.post_shift=3;
   o.wmma=o.wave=o.tiled=o.pooled=o.fast_vit=o.fast_c32=o.fused_c32=o.fused_ffn=o.fast_mh=o.fused_mh=o.mh_wave=o.fast_deep=o.fast_prefix=o.packed_weights=o.packed_c32=o.fp8_normalized=o.fp8_ffn=o.fp8_av=o.fp8_deep=o.fp8_middle=o.half_c32=o.crop_c32=o.fused_qkv_norm=true;
   o.fused_mh_ffn=argc>=7;o.tiled_mh_ffn=argc>=7&&std::string(argv[6])!="fused-ffn";o.tiled_ffn_min_c=argc>=7&&std::string(argv[6])=="fused-selected"?256:64;o.elide_identity_shift=true;
-  if(argc==8){if(std::string(argv[6])!="fused-selected")throw std::runtime_error("current MH comparison requires fused-selected");o.fused_ffn_project=true;o.mh_project_crop=true;o.mh_input_mapped=true;o.split_ffn_fused=true;o.split_mix_blocked=true;o.split_project_blocked=true;}
+  if(argc==8){if(std::string(argv[6])!="fused-selected")throw std::runtime_error("current MH comparison requires fused-selected");o.fused_ffn_project=true;o.mh_project_crop=true;o.mh_input_mapped=true;o.split_ffn_fused=true;o.split_mix_blocked=true;o.split_project_blocked=true;o.grouped_mh_contract=true;o.ffn_qkv=true;o.ffn_qkv_max_c=256;o.vit_qkv_fused=true;}
   hip_reference::Network net(o);auto hi=hip_reference::LayerBenchmark::Input(net,input);auto hi_raw=C==32?hip_reference::LayerBenchmark::Input(net,bytes):hip_reference::Tensor{};hip_reference::Tensor ho;
   unsigned current_mode=0;auto hiprun=[&]{ho.reset();ho=hip_reference::LayerBenchmark::Run(net,current_mode==2?hi_raw:hi,W,H,C,b,shift,current_mode);};hiprun();net.Synchronize();
   size_t output_count=C==32?size_t(W+((shift&1)?8:0))*(H+((shift&2)?8:0))*32:count;
