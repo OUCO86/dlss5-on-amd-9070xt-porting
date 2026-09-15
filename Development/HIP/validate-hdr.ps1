@@ -1,0 +1,15 @@
+param([string]$Modules='c32-mapped-modules',[string]$Name='hdr-validation',
+ [ValidateRange(1,10000)][int]$Frames=40,[int]$ResetEvery=0,[string]$ExpectedHash='')
+$ErrorActionPreference='Stop'
+if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game running'}
+$r='D:\DLSSNR-Lab\hip-backend';$prefix=Join-Path $r $Name
+& "$r\benchmark_live_capture.exe" "$r\..\network-720p\DLSS5-AMD\native-game-tiled-assets" "$r\compare-hip-sync-flags.txt" "$r\live-menu-before.f16" $prefix $Frames 1 (Join-Path $r $Modules) $ResetEvery > "$prefix.log"
+if($LASTEXITCODE){throw 'HDR benchmark failed'}
+$hash=(Get-FileHash "$prefix.f16").Hash
+if($ExpectedHash -and $hash -ne $ExpectedHash){throw 'HDR output changed'}
+$rows=@(Import-Csv "$prefix.csv")
+if(@($rows|Where-Object{[int]$_.invalid -ne 0}).Count){throw 'Nonfinite HDR output'}
+$t=@($rows|Where-Object{[int]$_.frame -ge 5}|ForEach-Object{[double]::Parse($_.wall_ms,[Globalization.CultureInfo]::InvariantCulture)}|Sort-Object)
+if(!$t.Count){throw 'No hot samples'}
+$median=if($t.Count%2){$t[[int][Math]::Floor($t.Count/2)]}else{($t[$t.Count/2-1]+$t[$t.Count/2])/2}
+Write-Output "HDR name=$Name hot_median=$median finite=1 hash=$hash"

@@ -856,3 +856,15 @@ pattern1的C32、C64 block5、C512和ViT输出逐位相同；block6/9/15分别33
 --fused-mh-ffn独立控制；--tiled-mh-ffn为全通道重排参考，--tiled-mh-ffn-large为最终C256重排。HIP_FAST默认fused_mh_ffn/tiled_mh_ffn开启、tiled_ffn_min_c=256。合作输入默认开，HIP_FFN_COOP_INPUT=0保留首版实验。普通两步FFN仍可用。检查packed weights、byte middle与16-token组对齐，避免ABI误用。
 
 COMGR/gfx1201内核、离线runner、层比较与完整DLL均编译通过。最终DLL release/HIP/native-fused-mh-ffn.addon64，SHA256 03269b74ce1f102ad89cb6a724e3a18e7c432fc5ada140145cef0c6a053d681a；配套24模块在远端hip-backend/ffn-tiled-modules。日志release/HIP/ffn-fused-test.log、ffn-coop-test.log、ffn-tiled-test.log、ffn-layer.log、ffn-final-validation.log、ffn-selected-test.log、ffn-selected-history.log、ffn-selected-hdr.log。游戏安装未替换，仍68c8…。
+
+### 2026-09-15 18:24：C32局部同步、寄存器FFN及直接映射输入
+
+审计QKV阶段：scratch.raw每wave独占16×33float行，packed写区按part/行分离，循环内无跨wave读。HIP_C32_LOCAL_QKV_SYNC将循环内6次全组barrier换为release/acquire内存fence，循环结束仍全组同步后才跨wave读取K/V；其他别名/跨wave阶段保持原barrier。首轮43.6805→43.348ms，输出一致。此项是kernel内部同步，不是开启游戏D3D/HIP异步。
+
+HIP_C32_REGISTER_FFN把half FFN结果留h8寄存器用于末端残差，仅将量化的byte ff n8存共享数组给QKV，替代half共享数组和反复打包。基于local-sync基线43.388→43.077ms；未mapped的此变体LDS19712→17664字节、VGPR217、private spill0，寄存器增加，收益只按实测认定。
+
+新增--mapped-c32及c32_fast_ffn_attention_fused_half_mapped：融合核按原窗口偏移读取raster，执行相同零填充，连同标量残差输入也映射，C32()跳过hip_c32_pack及全图buffer。前置preblock本来是tile布局，保持原入口。要求half/crop快速链，普通入口保留。基于register版本43.230→41.4535ms。
+
+最终三项对本轮起点正常900 ABBA4轮各6次、排除cold：43.295→41.362ms（约4.46%），四轮SHA7b959143…一致；seed123/history=input900.rgba32f：44.6365→42.757ms，四轮SHA75b62d2f…一致。真实HDR独立40帧两次热中位41.454/41.533ms，最终均FEEA9EF3…；24帧每8帧重置history热中位41.550ms，最终22C171FC…，匹配既有相同重置测试。所有帧有限。validate-hdr.ps1统一执行此类验证。
+
+两宏默认1，0保留旧路径；HIP_FAST默认mapped_c32=1。内核和DLL编译通过：release/HIP/native-c32-mapped.addon64，SHA125511f0d3dc205ef57c62d7e427d949a1bd064298b373427735244bf911c9c9，24模块在远端c32-mapped-modules。日志release/HIP/c32-sync-test.log、c32-register-test.log、c32-mapped-test.log、c32-final.log、c32-final-history.log、c32-hdr-a/b/reset.log。游戏安装未动，仍68c8…。

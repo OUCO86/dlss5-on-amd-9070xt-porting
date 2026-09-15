@@ -191,3 +191,18 @@ Final900 ABBA45.384→43.340ms, identical RGB. Real HDR40-frame hot median43.527
 all finite, identical final HDR. The new DLL compiles but is not installed.
 Layer comparison accepts optional fused-ffn, fused-tiled or fused-selected after
 the pattern argument. Logs and intermediate variants are detailed in DevHistory.
+
+### C32 mapped input and wave-private QKV storage (2026-09-15)
+
+HIP_C32_LOCAL_QKV_SYNC defaults1: QKV's wave-owned16-row scratch uses memory
+fences within the loop; a group barrier remains before cross-wave attention.
+HIP_C32_REGISTER_FFN defaults1: retain half FFN residuals in registers and share
+only packed byte operands for QKV. Define either as0 for the previous path.
+
+--mapped-c32 reads raster input and padding directly in the fused C32 kernel,
+removing the separate pack/buffer. It requires half/crop fast mode and uses a
+new explicit mapped export. The preblock's already tiled input is unaffected.
+HIP_FAST selects mapped input by default. Rebuild host and C32 module together.
+Combined900 ABBA43.295→41.362ms, bitwise-equal RGB. Two real HDR40-frame replays
+and periodic history resets also matched their previous exact output hashes.
+This does not change D3D/HIP asynchronous submission settings or game installs.

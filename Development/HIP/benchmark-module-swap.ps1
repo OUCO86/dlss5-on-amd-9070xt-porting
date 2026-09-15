@@ -23,6 +23,8 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
  [switch]$CandidateFusedMhFfn,
  [switch]$CandidateTiledMhFfn,
  [switch]$CandidateTiledMhFfnLarge,
+ [switch]$BothSelectedMhFfn,
+ [switch]$CandidateMappedC32,
  [string]$BaselineModules='',
  [string]$CandidateModules='',
  [string]$Tag='module-swap-test',
@@ -57,6 +59,8 @@ foreach($round in 0..3){
  if($variant -eq 'candidate' -and $CandidateFusedMhFfn){$extra+='--fused-mh-ffn'}
  if($variant -eq 'candidate' -and $CandidateTiledMhFfn){$extra+='--tiled-mh-ffn'}
  if($variant -eq 'candidate' -and $CandidateTiledMhFfnLarge){$extra+='--tiled-mh-ffn-large'}
+ if($BothSelectedMhFfn){$extra+=@('--fused-mh-ffn','--tiled-mh-ffn-large')}
+ if($variant -eq 'candidate' -and $CandidateMappedC32){$extra+='--mapped-c32'}
  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
  if($LASTEXITCODE -ne 0){throw ($log -join "
 ")}
