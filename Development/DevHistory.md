@@ -1215,3 +1215,11 @@ compare-current-backends.ps1更新HIP为benchmark_mh_mapped.exe+mh-input-mapped-
 HLSL本轮26.872ms、C7C2F49D…一致。tick284568312–284575609窗口内adapter0、gfx activity>50%的8样本：核心1511–1849MHz，中位1807MHz；edge43–44°C，hotspot47–52°C。多个逻辑adapter不当独立GPU统计，ASIC power不支持不报0W。窗口包括初始化/收尾、样本少，且旧18.8ms无遥测，不能据此认定降频就是漂移根因。
 
 日志release/HIP/hlsl-adl-summary.log、hlsl-adl.log。工具编译/查询成功；未修改游戏或驱动设置。代码审计显示逐帧benchmark会完整读回、扫描HDR数据，可能造成GPU间歇负载，后续需要控制此条件才可判断频率影响。
+
+
+### 2026-09-15：确认读回节奏造成HLSL/HIP比较偏差
+benchmark_live_capture增加可选edges_only诊断模式，逐帧推理和历史更新不变，仅首尾读回；CSV明确checked与未检查空字段。validate-hdr支持该模式并输出sampled_finite/checked_frames，默认完整验证不接受缺帧。两后端新程序编译通过。
+
+同程序/同配置0/1/1/0：HLSL全读回26.577/26.588ms，首尾16.736/16.686ms；ADL活跃样本核心分别约1.79GHz和2.8–3.0GHz，负载65%和94–95%。HIP全读回28.454/27.166ms，首尾26.290/26.365ms；核心约2.74–2.81GHz和3.0GHz，负载78–84%和99%。后端内部四轮最终hash保持各自C7C2…/FEEA…；全读回全部有限，首尾仅2帧检查。未改变游戏或驱动设置。
+
+读回/CPU图像扫描位于原计时区间外，却改变负载间隔与GPU频率。这解释当前可复现的HLSL慢值，不能把先前26ms/26ms当HIP追平。较连续同条件当前HLSL约16.7ms、HIP26.3ms，仍差约9.6ms。历史18.8ms无同期频率，不能反推精确历史状态。详见Development/HIP/readback-cadence.md。性能测试以后采用一致节奏，完整图像正确性仍单独保留。
