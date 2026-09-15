@@ -1,0 +1,228 @@
+diff --git a/Development/HIP/benchmark-module-swap.ps1 b/Development/HIP/benchmark-module-swap.ps1
+index 768cb4b..164fb2e 100644
+--- a/Development/HIP/benchmark-module-swap.ps1
++++ b/Development/HIP/benchmark-module-swap.ps1
+@@ -19,6 +19,9 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
+  [switch]$CandidateCropC32,
+  [switch]$BothCropC32,
+  [switch]$CandidateFusedQkvNorm,
++ [switch]$BothFusedQkvNorm,
++ [switch]$CandidateMhTile32,
++ [string]$CandidateMhTile32Kernel='',
+  [string]$BaselineModules='',
+  [string]$CandidateModules='',
+  [string]$Tag='module-swap-test',
+@@ -49,7 +52,9 @@ foreach($round in 0..3){
+  if($BothCompactPipeline){$extra+=@('--fp8-deep','--fp8-middle','--half-c32')}
+  if($variant -eq 'candidate' -and $CandidateCropC32){$extra+='--crop-c32'}
+  if($BothCropC32){$extra+='--crop-c32'}
+- if($variant -eq 'candidate' -and $CandidateFusedQkvNorm){$extra+='--fused-qkv-norm'}
++ if($BothFusedQkvNorm -or ($variant -eq 'candidate' -and $CandidateFusedQkvNorm)){$extra+='--fused-qkv-norm'}
++ if($variant -eq 'candidate' -and $CandidateMhTile32){$extra+='--mh-tile32'}
++ if($variant -eq 'candidate' -and $CandidateMhTile32Kernel){$extra+=@('--mh-tile32-kernel',$CandidateMhTile32Kernel)}
+  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
+  if($LASTEXITCODE -ne 0){throw ($log -join "
+ ")}
+diff --git a/Development/HIP/c32_fused_ffn_attention.hip b/Development/HIP/c32_fused_ffn_attention.hip
+index 7cf0344..ef3c67c 100644
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -116,7 +116,13 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+  for(uint i=tid;i<32*132;i+=128){uint row=i/132,k=i%132;packed[64*36+i]=k<128?static_cast<unsigned char>(matrix_byte(fw,4608,row*128+k)):0;}
+  sync_window();f8 acc[2];acc[0]=f8{};acc[1]=f8{};
+  if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();acc[ci][e]=clampf(raw_input[(base+row)*32+c],-448.f,448.f)*fw[8704+c];}}
+- else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++){uint c=ci*16+rc();float remaining=fw[8704+c],piece=0;for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining-=piece;}
++ else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++){uint c=ci*16+rc();float piece;
++#if HIP_C32_SCALE_CACHE && defined(HIP_PREPACKED_WEIGHTS)
++   piece=fw[8736+part*32+c];
++#else
++   float remaining=fw[8704+c];piece=0;for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining-=piece;}
++#endif
++
+    for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,k==c?fp8(piece):0u);}acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
+   }}
+  for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
+@@ -124,10 +130,24 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+  }
+  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)ffn[(first+gr()*8+e)*34+ci*16+rc()]=(_Float16)Hrtz(acc[ci][e]);
+  sync_window();
++#if HIP_C32_CACHE_QKV
++ // The same FFN tile feeds all six Q/K/V column fragments. Keep its FP8
++ // operands in registers across barriers instead of repacking each time.
++ i2 cached_qkv[2]{};
++ for(uint kt=0;kt<2;kt++)for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put(cached_qkv[kt],e,float(ffn[(first+rc())*34+k]));}
++#endif
+  // A single raw QKV plane is reused after its norm has been packed separately.
+  for(uint part=0;part<3;part++){
+   for(uint col=0;col<32;col+=16){f8 acc{};
+-   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put(a,e,float(ffn[(first+rc())*34+k]));put_bits(b,e,matrix_byte(w,0,part*1024+(col+rc())*32+k));}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
++   for(uint kt=0;kt<2;kt++){i2 a{},b{};
++#if HIP_C32_CACHE_QKV
++    a=cached_qkv[kt];
++#endif
++    for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;
++#if !HIP_C32_CACHE_QKV
++     put(a,e,float(ffn[(first+rc())*34+k]));
++#endif
++     put_bits(b,e,matrix_byte(w,0,part*1024+(col+rc())*32+k));}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+    for(uint e=0;e<8;e++)scratch.raw[(first+gr()*8+e)*33+col+rc()]=acc[e];
+   }
+   sync_window();f8 sum{};
+diff --git a/Development/HIP/hip_reference_network.h b/Development/HIP/hip_reference_network.h
+index b0cb843..4693279 100644
+--- a/Development/HIP/hip_reference_network.h
++++ b/Development/HIP/hip_reference_network.h
+@@ -24,7 +24,7 @@ inline std::vector<float> ReadWeights(const std::string&path){std::ifstream test
+ struct Allocation {Api*api;void*ptr{};size_t bytes,capacity;bool owned=true;Allocation(Api&a,size_t n):api(&a),bytes(n),capacity(n){if(!n)throw std::runtime_error("zero HIP allocation");a.Check(a.hipMalloc(&ptr,n),"hipMalloc");}Allocation(Api&a,void*p,size_t n):api(&a),ptr(p),bytes(n),capacity(n),owned(false){}~Allocation(){if(ptr&&owned){api->hipDeviceSynchronize();api->hipFree(ptr);}}};
+ using Tensor=std::shared_ptr<Allocation>;
+ inline std::set<U> ParseSkipBlocks(const std::string&s){std::set<U>out;size_t p=0;while(p<s.size()){size_t q=s.find(',',p);if(q==std::string::npos)q=s.size();auto word=s.substr(p,q-p);size_t used=0;unsigned long b=std::stoul(word,&used);if(used!=word.size()||!((b>=5&&b<=30)||(b>=40&&b<=65)))throw std::runtime_error("unsupported skipped residual block");out.insert(U(b));p=q+1;}return out;}
+-struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7;bool fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false,packed_c32=false,fp8_normalized=false,fp8_ffn=false,fp8_av=false,fp8_deep=false,fp8_middle=false,half_c32=false,crop_c32=false,fused_qkv_norm=false,graph=false;};
++struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only,mh_tile32_kernel;unsigned runtime=7;bool fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false,packed_c32=false,fp8_normalized=false,fp8_ffn=false,fp8_av=false,fp8_deep=false,fp8_middle=false,half_c32=false,crop_c32=false,fused_qkv_norm=false,mh_tile32=false,graph=false;};
+ class Network {
+  Api api;Handle stream{};std::map<std::string,Handle>modules,functions;std::map<std::string,Tensor>weights;Options opt;
+  struct Timing{std::string name;Handle begin{},end{};};std::vector<Timing>timings;
+@@ -71,7 +71,7 @@ class Network {
+   const std::string key=name+"@c32fp8";auto it=weights.find(key);
+   if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);
+    if(v.size()!=WeightElements(name))throw std::runtime_error("packed C32 weight shape");
+-   if(attention)PackWeightRegions(v,{{0,4096}});else PackWeightRegions(v,{{512,4096},{4608,4096}});
++   if(attention)PackWeightRegions(v,{{0,4096}});else{PackWeightRegions(v,{{512,4096},{4608,4096}});AppendC32ScalePieces(v);}
+    it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;
+   }return P(it->second);
+  }
+@@ -110,7 +110,7 @@ class Network {
+     std::string shape=kernel;if(shape.size()>4&&shape.substr(shape.size()-4)=="_fp8")shape.resize(shape.size()-4);
+     bool project=shape=="mh_attention_project_fast_matrix"||shape=="mh_attention_project_fast_scalar";
+     U c=project?integer(std::get<sizeof...(A)-2>(tuple)):integer(std::get<sizeof...(A)-1>(tuple));U cols=c*(shape=="mh_ffn_expand_fast"?4:(shape=="mh_qkv_fast"||shape=="mh_qkv_normalize_fused")?3:1);
+-    if(!cols)throw std::runtime_error("MH fast channel ABI");groups=((count/cols+63)/64)*((cols+63)/64);threads=512;
++    if(!cols)throw std::runtime_error("MH fast channel ABI");bool small=opt.mh_tile32||(!opt.mh_tile32_kernel.empty()&&kernel==opt.mh_tile32_kernel);U rows=small?32:64;groups=((count/cols+rows-1)/rows)*((cols+63)/64);threads=rows*8;if(small)kernel+="_m32";
+    }
+   }
+   if(module=="c32_fused"||module=="c32_fused_ffn"||module=="mh_fused"){groups=count;threads=128;}
+@@ -174,7 +174,7 @@ class Network {
+  static U Shift(U block){static constexpr U s[]={0,3,1,2,0,3,1,2,0,3,1,2,0,3,1,2,1,2,0,3,1,2,0,3,1,2,0,3,1,2};if(block<40||block>69)throw std::runtime_error("decoder shift");return s[block-40];}
+ public:
+  Network(const Network&)=delete;Network&operator=(const Network&)=delete;
+- explicit Network(Options o):api(o.runtime),opt(std::move(o)),W(opt.width),H(opt.height){if(opt.fused_qkv_norm&&!opt.fp8_normalized)throw std::runtime_error("fused QKV requires byte normalized pipeline");if(opt.crop_c32&&!opt.half_c32)throw std::runtime_error("fused C32 crop requires half raw");if(opt.half_c32&&(!opt.fast_c32||!opt.fused_ffn))throw std::runtime_error("half C32 requires fused fast pipeline");if(opt.fp8_middle&&!opt.fp8_ffn)throw std::runtime_error("byte middle requires byte FFN pipeline");if(opt.fp8_deep&&!opt.fast_deep)throw std::runtime_error("byte deep requires fast deep pipeline");if((opt.fp8_ffn||opt.fp8_av)&&(!opt.fast_mh||!opt.mh_wave||(opt.fp8_av&&!opt.fp8_normalized)))throw std::runtime_error("byte intermediates require compatible MH pipeline");if(opt.fp8_normalized&&(!opt.fast_mh||!opt.mh_wave||!opt.fused_mh))throw std::runtime_error("FP8 normalized requires fast MH wave/fused pipeline");if(opt.post_shift>3)throw std::runtime_error("post shift must be 0..3");if(!((W==512&&H==512)||(W==1920&&H==1152)||(W==1280&&H==768)||(W==1600&&H==1024)))throw std::runtime_error("unsupported processing geometry");api.Check(api.hipInit(0),"hipInit");api.Check(api.hipSetDevice(0),"device");api.Check(api.hipStreamCreate(&stream),"stream");try{const char*names[][2]={{"c32","c32_prefix_reference.hsaco"},{"mh","multihead-reference.hsaco"},{"deep","deep_reference.hsaco"},{"boundary","boundary_reference.hsaco"}};for(auto&v:names){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}if(opt.wmma){const char*wm[][2]={{"c32_wmma","c32_wmma.hsaco"},{"mh_wmma","multihead-wmma.hsaco"},{"deep_wmma","deep_wmma.hsaco"}};for(auto&v:wm){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}}if(opt.fused_ffn){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+(opt.packed_c32?"/c32_fused_ffn_attention-packed.hsaco":"/c32_fused_ffn_attention.hsaco")).c_str()),"fused FFN attention module");modules["c32_fused_ffn"]=m;}
++ explicit Network(Options o):api(o.runtime),opt(std::move(o)),W(opt.width),H(opt.height){if((opt.mh_tile32||!opt.mh_tile32_kernel.empty())&&(!opt.fast_mh||!opt.mh_wave))throw std::runtime_error("32-row tiles require padded MH path");if(opt.fused_qkv_norm&&!opt.fp8_normalized)throw std::runtime_error("fused QKV requires byte normalized pipeline");if(opt.crop_c32&&!opt.half_c32)throw std::runtime_error("fused C32 crop requires half raw");if(opt.half_c32&&(!opt.fast_c32||!opt.fused_ffn))throw std::runtime_error("half C32 requires fused fast pipeline");if(opt.fp8_middle&&!opt.fp8_ffn)throw std::runtime_error("byte middle requires byte FFN pipeline");if(opt.fp8_deep&&!opt.fast_deep)throw std::runtime_error("byte deep requires fast deep pipeline");if((opt.fp8_ffn||opt.fp8_av)&&(!opt.fast_mh||!opt.mh_wave||(opt.fp8_av&&!opt.fp8_normalized)))throw std::runtime_error("byte intermediates require compatible MH pipeline");if(opt.fp8_normalized&&(!opt.fast_mh||!opt.mh_wave||!opt.fused_mh))throw std::runtime_error("FP8 normalized requires fast MH wave/fused pipeline");if(opt.post_shift>3)throw std::runtime_error("post shift must be 0..3");if(!((W==512&&H==512)||(W==1920&&H==1152)||(W==1280&&H==768)||(W==1600&&H==1024)))throw std::runtime_error("unsupported processing geometry");api.Check(api.hipInit(0),"hipInit");api.Check(api.hipSetDevice(0),"device");api.Check(api.hipStreamCreate(&stream),"stream");try{const char*names[][2]={{"c32","c32_prefix_reference.hsaco"},{"mh","multihead-reference.hsaco"},{"deep","deep_reference.hsaco"},{"boundary","boundary_reference.hsaco"}};for(auto&v:names){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}if(opt.wmma){const char*wm[][2]={{"c32_wmma","c32_wmma.hsaco"},{"mh_wmma","multihead-wmma.hsaco"},{"deep_wmma","deep_wmma.hsaco"}};for(auto&v:wm){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}}if(opt.fused_ffn){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+(opt.packed_c32?"/c32_fused_ffn_attention-packed.hsaco":"/c32_fused_ffn_attention.hsaco")).c_str()),"fused FFN attention module");modules["c32_fused_ffn"]=m;}
+ if(opt.fused_mh){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/multihead_fused_attention.hsaco").c_str()),"fused MH attention module");modules["mh_fused"]=m;}
+ if(opt.fast_deep){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+(opt.packed_weights?"/deep_fast-packed.hsaco":"/deep_fast.hsaco")).c_str()),"deep fast module");modules["deep_fast"]=m;}
+ if(opt.fast_mh){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+(opt.packed_weights?(opt.mh_wave?"/multihead-fast-padded-wave-packed.hsaco":"/multihead-fast-packed.hsaco"):(opt.mh_wave?"/multihead-fast-padded-wave.hsaco":"/multihead-fast.hsaco"))).c_str()),"MH fast module");modules["mh_fast"]=m;}
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 4d68f66..57f3f3d 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -80,14 +80,14 @@ DEV float Hrtz(float x){uint h;float out;asm("v_cvt_pkrtz_f16_f32 %0, %1, %1" :
+ //64x64 output tile,16 waves. Each thread stages one packed4-byte A row word
+ // and one B column word; each packed operand is reused by four waves.
+ DEV uint pack4(float a,float b,float c,float d){uint lo=uint(__builtin_amdgcn_cvt_pk_fp8_f32(a,b,0,false));uint hi=uint(__builtin_amdgcn_cvt_pk_fp8_f32(c,d,0,false));return (lo&65535u)|((hi&65535u)<<16);}
+-template<bool ByteInput=false,bool ByteOutput=false,bool Normalize=false>
++template<bool ByteInput=false,bool ByteOutput=false,bool Normalize=false,uint TileRows=64>
+ DEV void fast_dense(const float* input,const float* feature,const float* weights,float* output,
+  uint M,uint N,uint K,uint matrix_offset,uint skip_offset,uint epilogue,uint width=0,uint valid_width=0,uint valid_height=0,uint matrix_residual=0){
+- __attribute__((shared)) uint sa[576];
++ __attribute__((shared)) uint sa[TileRows*9];
+  __attribute__((shared)) uint sb[576];
+  uint block=__builtin_amdgcn_workgroup_id_x(),nt=(N+63)/64;
+- if(!nt||block>=((M+63)/64)*nt)return;
+- uint mr=block/nt*64,nc=block%nt*64,t=__builtin_amdgcn_workitem_id_x(),wave=t/32,l=t%32,rc=l&15,group=l>>4;
++ if(!nt||block>=((M+TileRows-1)/TileRows)*nt)return;
++ uint mr=block/nt*TileRows,nc=block%nt*64,t=__builtin_amdgcn_workitem_id_x(),wave=t/32,l=t%32,rc=l&15,group=l>>4;
+  uint wm=wave/4,wn=wave%4,first=mr+wm*16,col=nc+wn*16;
+  f8 accum{};
+  #pragma unroll
+@@ -111,17 +111,14 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+   uint row=t/8,word=t%8,k=chunk*32+word*4,p=mr+row,n=nc+row;
+   float a0=0,a1=0,a2=0,a3=0,b0=0,b1=0,b2=0,b3=0;
+   if constexpr(!ByteInput){if(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height))){uint off=p*K+k;a0=input[off];a1=input[off+1];a2=input[off+2];a3=input[off+3];}}
+-  #ifndef HIP_PREPACKED_WEIGHTS
+-  if(n<N){uint off=matrix_offset+n*K+k;b0=weights[off];b1=weights[off+1];b2=weights[off+2];b3=weights[off+3];}
+-#endif
+   if constexpr(ByteInput){sa[row*9+word]=(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height)))?reinterpret_cast<const uint*>(input)[(p*K+k)/4]:0u;}else sa[row*9+word]=pack4(a0,a1,a2,a3);
++  for(uint bt=t;bt<512;bt+=TileRows*8){uint br=bt/8,bw=bt%8,bk=chunk*32+bw*4,bn=nc+br;
+ #ifdef HIP_PREPACKED_WEIGHTS
+-  // Matrix bytes start at the original float-region offset; nonmatrix fields stay f32.
+-  const uint* packed_weights=reinterpret_cast<const uint*>(weights);
+-  sb[row*9+word]=n<N?packed_weights[matrix_offset+(n*K+k)/4]:0u;
++   const uint*pw=reinterpret_cast<const uint*>(weights);sb[br*9+bw]=bn<N?pw[matrix_offset+(bn*K+bk)/4]:0u;
+ #else
+-  sb[row*9+word]=pack4(b0,b1,b2,b3);
++   float b0=0,b1=0,b2=0,b3=0;if(bn<N){uint off=matrix_offset+bn*K+bk;b0=weights[off];b1=weights[off+1];b2=weights[off+2];b3=weights[off+3];}sb[br*9+bw]=pack4(b0,b1,b2,b3);
+ #endif
++  }
+   __builtin_amdgcn_s_barrier();
+   #pragma unroll
+   for(uint half=0;half<2;half++){
+@@ -135,11 +132,11 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+   // Production fast path: keep accumulator live across every K16/K32.
+  }
+  if constexpr(Normalize){
+-  __attribute__((shared)) float tile_qkv[64*64];
++  __attribute__((shared)) float tile_qkv[TileRows*64];
+   for(uint e=0;e<8;e++)tile_qkv[(wm*16+group*8+e)*64+wn*16+rc]=accum[e];
+   __builtin_amdgcn_s_barrier();
+   uint channels=N/3,heads=channels/32,scale=4*channels*channels+heads*4096;
+-  for(uint row0=wave/2;row0<64;row0+=8){
++  for(uint row0=wave/2;row0<TileRows;row0+=TileRows/8){
+    uint p=mr+row0,n=nc+(wave%2)*32+l;
+    if(p>=M||n>=N)continue;
+    uint part=n/channels,head=(n%channels)/32;
+@@ -281,3 +278,21 @@ TILE void mh_ffn_project_fast_fp8(const float* middle,const float* feature,const
+ 
+ // Full FP32 QKV accumulator is normalized on chip, preserving sequential sums.
+ TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tokens,uint channels){if(valid_attn(channels))fast_dense<false,false,true>(in,in,w,out,tokens,3*channels,channels,0,~0u,2);}
++
++//32-row matrix tiles: same per-output K order, fewer cooperating waves.
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_expand_fast_m32(const float* input,const float* weights,float* hidden,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,false,false,32>(input,input,weights,hidden,tokens,4*channels,channels,0,~0u,1);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_contract_fast_m32(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,false,false,32>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,5);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_project_fast_m32(const float* middle,const float* feature,const float* weights,float* output,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,false,false,32>(middle,feature,weights,output,tokens,channels,channels,8*channels*channels,9*channels*channels,4);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_qkv_fast_m32(const float* input,const float* weights,float* qkv,uint tokens,uint channels){if(valid_attn(channels))fast_dense<false,false,false,32>(input,input,weights,qkv,tokens,3*channels,channels,0,~0u,2);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_attention_project_fast_scalar_m32(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<false,false,false,32>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_contract_fast_pre_m32(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,false,false,32>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,2);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_contract_fast_rtz_m32(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,false,false,32>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,5);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_contract_fast_rne_m32(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,false,false,32>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,0);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_attention_project_fast_matrix_m32(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<false,false,false,32>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,1);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_expand_fast_fp8_m32(const float* input,const float* weights,float* hidden,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,true,false,32>(input,input,weights,hidden,tokens,4*channels,channels,0,~0u,1);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_contract_fast_fp8_m32(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,false,false,32>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,5);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_attention_project_fast_scalar_fp8_m32(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false,false,32>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_attention_project_fast_matrix_fp8_m32(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false,false,32>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,1);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_contract_fast_fp8_out_m32(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,true,false,32>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,5);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_project_fast_fp8_m32(const float* middle,const float* feature,const float* weights,float* output,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,false,false,32>(middle,feature,weights,output,tokens,channels,channels,8*channels*channels,9*channels*channels,4);}
++KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_qkv_normalize_fused_m32(const float*in,const float*w,float*out,uint tokens,uint channels){if(valid_attn(channels))fast_dense<false,false,true,32>(in,in,w,out,tokens,3*channels,channels,0,~0u,2);}
+diff --git a/Development/HIP/packed_weights.h b/Development/HIP/packed_weights.h
+index a202f8f..7c21b76 100644
+--- a/Development/HIP/packed_weights.h
++++ b/Development/HIP/packed_weights.h
+@@ -16,6 +16,19 @@ inline uint8_t ExactWeightFp8(float value){
+  if(exponent<1||exponent>15||(a&0xfffffu)||(exponent==15&&mantissa==7))throw std::runtime_error("matrix weight not exact finite FP8");
+  return uint8_t(sign|(uint8_t(exponent)<<3)|mantissa);
+ }
++// Match C32's three-component decomposition, including subnormal q<=7.
++inline float C32ScalePiece(float v){
++ uint32_t b;std::memcpy(&b,&v,4);uint32_t a=b&0x7fffffffu,sign=b&0x80000000u;
++ if(a>=0x7f800000u)throw std::runtime_error("nonfinite C32 scale");
++ uint32_t out;
++ if(a<0x3c800000u){float m;std::memcpy(&m,&a,4);float x=m*512.f;uint32_t q=uint32_t(x);float r=x-float(q);q+=uint32_t(r>.5f||(r==.5f&&(q&1)));if(q>7)q=7;float f=float(q)/512.f;std::memcpy(&out,&f,4);}
++ else{out=a>=0x43e00000u?0x43e00000u:(a+0x7ffffu+((a>>20)&1u))&0xfff00000u;if(out>0x43e00000u)out=0x43e00000u;}
++ out|=sign;float f;std::memcpy(&f,&out,4);return f;
++}
++inline void AppendC32ScalePieces(std::vector<float>&v){
++ if(v.size()!=8736)throw std::runtime_error("C32 scale source shape");v.resize(8832);
++ for(unsigned c=0;c<32;c++){float remain=v[8704+c];for(unsigned part=0;part<3;part++){float piece=C32ScalePiece(remain);v[8736+part*32+c]=piece;remain-=piece;}}
++}
+ // Preserve float-region offsets for scales/bias and separate matrix regions.
+ // Each matrix becomes row-major FP8 at its original starting byte address.
+ inline void PackWeightRegions(std::vector<float>&values,const std::vector<std::pair<size_t,size_t>>&regions){
+diff --git a/Development/HIP/reference_network.cpp b/Development/HIP/reference_network.cpp
+index ed33aa3..2a9491a 100644
+--- a/Development/HIP/reference_network.cpp
++++ b/Development/HIP/reference_network.cpp
+@@ -6,7 +6,7 @@ using namespace hip_reference;
+ int main(int argc,char**argv){try{
+  if(argc<6){std::fprintf(stderr,"Usage: reference_network.exe ASSETS MODULES INPUT_RGBA_F32 NOISE_F32 OUTPUT_RGB_F32 [--720|--900|--1080] [--wmma] [--wave] [--tiled] [--fast-c32] [--fast-mh] [--fast-deep] [--fast-prefix] [--fused-c32] [--pooled] [--packed-weights] [--profile] [--repeat N] [--seed N] [--post-shift 0..3] [--dump DIR] [--history RGBA_F32] [--packed-c32] [--fp8-normalized] [--fp8-ffn] [--fp8-av] [--fp8-deep] [--fp8-middle] [--half-c32] [--crop-c32] [--fused-qkv-norm] [--runtime 6|7]\nDefault processing grid: 512x512. --1080: 1920x1152. INPUT/history contain the full processing grid, RGBA floats. OUTPUT is RGB floats. Scalar validation graph: not a FPS benchmark.\n");return 2;}
+  Options o;unsigned repeats=1;bool post_override=false;o.assets=argv[1];o.modules=argv[2];std::string hist;
+- for(int i=6;i<argc;i++){std::string a=argv[i];if(a=="--fused-qkv-norm"){o.fused_qkv_norm=true;}else if(a=="--crop-c32"){o.crop_c32=true;}else if(a=="--half-c32"){o.half_c32=true;}else if(a=="--fp8-middle"){o.fp8_middle=true;}else if(a=="--fp8-deep"){o.fp8_deep=true;}else if(a=="--fp8-ffn"){o.fp8_ffn=true;}else if(a=="--fp8-av"){o.fp8_av=true;}else if(a=="--fp8-normalized"){o.fp8_normalized=true;}else if(a=="--packed-c32"){o.packed_c32=true;}else if(a=="--wall-profile"){o.wall_profile=true;}else if(a=="--packed-weights"){o.packed_weights=o.fast_mh=true;}else if(a=="--fused-ffn"){o.fast_c32=o.fused_ffn=true;}else if(a=="--fused-mh"){o.fast_mh=o.fused_mh=true;}else if(a=="--mh-wave"){o.fast_mh=o.mh_wave=true;}else if(a=="--fused-c32"){o.fast_c32=o.fused_c32=true;}else if(a=="--fast-mh"){o.fast_mh=true;}else if(a=="--fast-deep"){o.fast_deep=true;o.fast_vit=true;}else if(a=="--fast-prefix"){o.fast_prefix=true;}else if(a=="--fast-c32"){o.fast_c32=true;}else if(a=="--tiled"){o.tiled=true;}else if(a=="--wave"){o.wave=true;}else if(a=="--profile"){o.profile=true;}else if(a=="--pooled"){o.pooled=true;}else if(a=="--720"||a=="--900"){o.width=a=="--720"?1280:1600;o.height=a=="--720"?768:1024;o.fast_vit=true;if(!post_override)o.post_shift=3;}else if(a=="--wmma"){o.wmma=true;}else if(a=="--1080"){o.width=1920;o.height=1152;if(!post_override)o.post_shift=3;}else if((a=="--skip-blocks"||a=="--dump-only"||a=="--repeat"||a=="--post-shift"||a=="--seed"||a=="--dump"||a=="--history"||a=="--runtime")&&i+1<argc){std::string v=argv[++i];if(a=="--skip-blocks"){o.skip_blocks=ParseSkipBlocks(v);}else if(a=="--dump-only"){o.dump_only=v;}else if(a=="--repeat"){repeats=std::stoul(v);if(!repeats||repeats>100)throw std::runtime_error("repeat must be 1..100");}else if(a=="--post-shift"){auto n=std::stoul(v);if(n>3)throw std::runtime_error("post shift must be 0..3");o.post_shift=U(n);post_override=true;}else if(a=="--seed")o.seed=U(std::stoul(v));else if(a=="--dump")o.dump_dir=v;else if(a=="--history")hist=v;else{o.runtime=std::stoul(v);if(o.runtime!=6&&o.runtime!=7)throw std::runtime_error("runtime must be 6 or 7");}}else throw std::runtime_error("unknown/incomplete option: "+a);}
++ for(int i=6;i<argc;i++){std::string a=argv[i];if(a=="--mh-tile32-kernel"&&i+1<argc){o.mh_tile32_kernel=argv[++i];}else if(a=="--mh-tile32"){o.mh_tile32=true;}else if(a=="--fused-qkv-norm"){o.fused_qkv_norm=true;}else if(a=="--crop-c32"){o.crop_c32=true;}else if(a=="--half-c32"){o.half_c32=true;}else if(a=="--fp8-middle"){o.fp8_middle=true;}else if(a=="--fp8-deep"){o.fp8_deep=true;}else if(a=="--fp8-ffn"){o.fp8_ffn=true;}else if(a=="--fp8-av"){o.fp8_av=true;}else if(a=="--fp8-normalized"){o.fp8_normalized=true;}else if(a=="--packed-c32"){o.packed_c32=true;}else if(a=="--wall-profile"){o.wall_profile=true;}else if(a=="--packed-weights"){o.packed_weights=o.fast_mh=true;}else if(a=="--fused-ffn"){o.fast_c32=o.fused_ffn=true;}else if(a=="--fused-mh"){o.fast_mh=o.fused_mh=true;}else if(a=="--mh-wave"){o.fast_mh=o.mh_wave=true;}else if(a=="--fused-c32"){o.fast_c32=o.fused_c32=true;}else if(a=="--fast-mh"){o.fast_mh=true;}else if(a=="--fast-deep"){o.fast_deep=true;o.fast_vit=true;}else if(a=="--fast-prefix"){o.fast_prefix=true;}else if(a=="--fast-c32"){o.fast_c32=true;}else if(a=="--tiled"){o.tiled=true;}else if(a=="--wave"){o.wave=true;}else if(a=="--profile"){o.profile=true;}else if(a=="--pooled"){o.pooled=true;}else if(a=="--720"||a=="--900"){o.width=a=="--720"?1280:1600;o.height=a=="--720"?768:1024;o.fast_vit=true;if(!post_override)o.post_shift=3;}else if(a=="--wmma"){o.wmma=true;}else if(a=="--1080"){o.width=1920;o.height=1152;if(!post_override)o.post_shift=3;}else if((a=="--skip-blocks"||a=="--dump-only"||a=="--repeat"||a=="--post-shift"||a=="--seed"||a=="--dump"||a=="--history"||a=="--runtime")&&i+1<argc){std::string v=argv[++i];if(a=="--skip-blocks"){o.skip_blocks=ParseSkipBlocks(v);}else if(a=="--dump-only"){o.dump_only=v;}else if(a=="--repeat"){repeats=std::stoul(v);if(!repeats||repeats>100)throw std::runtime_error("repeat must be 1..100");}else if(a=="--post-shift"){auto n=std::stoul(v);if(n>3)throw std::runtime_error("post shift must be 0..3");o.post_shift=U(n);post_override=true;}else if(a=="--seed")o.seed=U(std::stoul(v));else if(a=="--dump")o.dump_dir=v;else if(a=="--history")hist=v;else{o.runtime=std::stoul(v);if(o.runtime!=6&&o.runtime!=7)throw std::runtime_error("runtime must be 6 or 7");}}else throw std::runtime_error("unknown/incomplete option: "+a);}
+  auto load=[](const std::string&p){auto b=ReadBytes(p);if(b.size()%4)throw std::runtime_error("f32 alignment "+p);std::vector<float>f(b.size()/4);std::memcpy(f.data(),b.data(),b.size());return f;};
+  auto input=load(argv[3]),noise=load(argv[4]),history=hist.empty()?std::vector<float>{}:load(hist);Network network(o);network.SetProgress([](const std::string&s){std::printf("stage %s\n",s.c_str());std::fflush(stdout);});auto start=std::chrono::steady_clock::now();auto out=network.Infer(input,noise,hist.empty()?nullptr:&history);auto elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();std::printf("iteration=0 wall_seconds=%.6f\n",elapsed);for(unsigned i=1;i<repeats;i++){start=std::chrono::steady_clock::now();out=network.Infer(input,noise,hist.empty()?nullptr:&history);elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();std::printf("iteration=%u wall_seconds=%.6f\n",i,elapsed);}std::ofstream f(argv[5],std::ios::binary);if(!f.write(reinterpret_cast<const char*>(out.data()),out.size()*4))throw std::runtime_error("output write failed");std::printf("reference complete extent=%ux%u floats=%zu wall_seconds=%.3f (includes allocations, uploads and synchronization)\n",o.width,o.height,out.size(),elapsed);network.PrintMemory();return 0;
+  }catch(const std::exception&e){std::fprintf(stderr,"reference FAILED: %s\n",e.what());return 1;}}

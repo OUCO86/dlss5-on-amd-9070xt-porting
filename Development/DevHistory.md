@@ -826,3 +826,9 @@ Zero明确要求部署。确认SB-Win64-Shipping未运行后，用deploy-stellar
 COMGR/gfx1201及完整HIP DLL编译通过。900正常离线ABBA4轮各6次、去cold、每方案10hot：47.868→45.3685ms（约5.22%），四轮最终RGB SHA7b959143…一致。seed123/history=input900.rgba32f对照49.3665→46.890ms，四轮SHA75b62d2f…一致。真实1296×720 HDR完整Frame40帧，热中位45.317ms，全部有限，最终SHA FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58与前版逐位一致。日志release/HIP/latest-profile.log、qkv-fused.log、qkv-history.log、qkv-hdr.log。
 
 新DLL release/HIP/native-fused-qkv.addon64，SHA256 24b54e08d204469befe052c91bccb67e87125095ea3d1f1140a390b5e0987f1a。配套24模块在远端hip-backend/qkv-modules；MH padded模块新增导出，必须配套重建。游戏安装仍68c8…，未部署本轮。
+
+### 2026-09-15 17:00：C32缓存及MH分块实验未采用
+
+完成8组正常900 ABBA，每组四进程各6次、排除cold，每方案10hot；全部最终RGB SHA7b959143…逐位一致。C32 QKV输入寄存器缓存45.255→45.2555ms；全MH32行256线程tile45.568→46.129ms。单内核32行：QKV+norm45.4285→45.527，FFN expand45.337→45.728，contract45.4835→46.131，FFN project45.4655→45.476，attention matrix project45.534→45.3835（幅度小，不认定稳定收益）。C32残差scale三分量初始化预计算45.2945→45.346ms。
+
+各候选COMGR/gfx1201编译通过、主机runner重编通过。没有发现值得替换默认的稳定加速，实验实现已从默认源码撤回；补丁和完整对照表留存Development/HIP/experiments/c32-cache-and-mh-tile32.patch及同名.md，补丁基于e847b44。实验日志release/HIP/c32-cache-test.log、tile32-test.log、tile32-k0..k4.log、scale-test.log。正式候选仍24b54e08…/qkv-modules约45.37ms，游戏安装仍68c8…，本轮未替换DLL/内核。
