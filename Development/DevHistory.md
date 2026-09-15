@@ -1395,3 +1395,9 @@ RunGraph实验允许借用最终输出buffer，EnqueueRaw用非owned Allocation�
 新增实验projection_wave4<C>：普通C64/128/256投影每wave16×64、共用byte AV输入，保留三段标量残差、K16顺序、crop和post epilogue；C512保持旧路径。32线程版本连续40帧ABBA：基线24.747/24.792ms，候选25.289/25.302ms，更慢。随后将4个独立wave放进128线程组、虚拟bid=group*4+wave，所有运算保持，ABBA基线24.818/24.731ms、候选25.388/25.400ms，也更慢。
 
 两组最终FEEA9EF3…均匹配、首尾有限，未进一步全帧/reset，生产源码恢复。两版本的host dispatch不同，须匹配补丁：experiments/mh-projection-wave4.patch（32线程、count/1024）或mh-projection-wavepack.patch（128线程、ceil(count/4096)）。对应test-mh-projection-wave4.ps1/test-mh-projection-wavepack.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。日志release/HIP/mh-projection-wave4-build/test.log及mh-projection-wavepack-build/test.log。当前游戏和固定候选不变。
+
+
+### 2026-09-16：MH投影lane-major权重实验不采用
+在单wave四输出投影上，只重排C64/128/256 attention权重的projection区域（3*C*C），按[N16][K32][kt16][lane32][byte8]存放；每lane一次load8且跨lane连续。QKV/偏置/尺度不动，C512保持旧布局，独立cache key。CPU纯byte置换与kernel索引配套，不是此前通用[K][N] tile。
+
+程序与COMGR内核编译通过，连续40帧ABBA：基线24.830/24.732ms，候选25.240/25.277ms，最终FEEA9EF3…一致、首尾有限；仍比现有合作LDS投影慢，未进一步全帧/reset，不默认，生产源码恢复。补丁experiments/mh-projection-lanes.patch、test-mh-projection-lanes.ps1；需配套host权重重排及32线程实验入口，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1。日志release/HIP/mh-projection-lanes-build/test.log。游戏未变。
