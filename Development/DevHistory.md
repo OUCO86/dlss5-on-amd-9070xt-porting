@@ -1829,3 +1829,9 @@ COMGR编译通过；连续40帧ABBA基线19.469/19.490ms，候选19.985/19.980ms
 COMGR编译通过；连续40帧ABBA基线19.505/19.551ms，候选19.335/19.335ms，最终FEEA9EF3…匹配、首尾有限。12组（C64/128/256×映射开关×两种输入）FFN float逐位及QKV逐byte全部一致，无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检20.488/20.511ms不当连续计时。
 
 固定24模块ffn-qkv-round-byte-release-modules，MH packed模块SHAD6360593220F499E7CAC0F9317F209CB1255A8A7624EE6AF2AA58A67CAB39661。仅内核改动，DLL沿用c8842686…；本轮未部署，游戏仍vit-qkv-compact-release-modules。脚本test-ffn-qkv-round-byte.ps1及validate-ffn-qkv-round-byte*.ps1，复用test_ffn_qkv.exe；日志release/HIP/ffn-qkv-round-byte-test.log、ffn-qkv-round-byte-validation.log。
+
+
+### 2026-09-16：部署FFN-QKV量化往返优化并复核差距
+部署脚本确认游戏退出，安装ffn-qkv-round-byte-release-modules全部24模块并逐hash通过，DLL沿用c8842686a683443962619055745d43a4daf22026f68864705e5d6f0f8df06554，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-ffn-qkv-round-byte。新版实际游戏FPS仍待反馈。
+
+current比较/profile脚本更新固定模块。连续40帧edges-only ABBA：HLSL16.796/16.806ms，HIP19.359/19.360ms，各自golden匹配、首尾有限；差距约2.56ms，目标尚未达到。日志release/HIP/backend-round-byte-current.log。本轮部署与复核，无额外内核提速。
