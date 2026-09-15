@@ -1857,3 +1857,11 @@ COMGR编译通过；连续40帧ABBA基线19.340/19.337ms，候选19.860/19.822ms
 连续40帧ABBA基线19.289/19.330ms，候选19.481/19.509ms，最终FEEA9EF3…匹配、首尾有限。单独C256也更慢，未扩大全帧/reset，源码恢复，游戏保持c8842686…+ffn-qkv-round-byte-release-modules。
 
 补丁experiments/c256-exact-feature.patch、test-c256-exact-feature.ps1，编译HIP_ISA_HALF=1，目标multihead_fused_attention.hsaco，复用benchmark_vit_qkv_compact.exe。日志release/HIP/c256-exact-feature-test.log。此结果排除仅其他通道造成整体退化的解释，但不证明具体硬件根因。
+
+
+### 2026-09-16：C32展开相邻输出成对计算收益不明显，暂不采用
+当前直接读取FFN权重的C32展开阶段，每次计算相邻两片16列，复用同一K16输入片段，保持每片累加、激活/FP8舍入、隐藏层布局及后续收缩不变。与旧隐藏层分半立即收缩实验不同，不移动收缩顺序或其累加器生命周期。
+
+COMGR编译通过；连续40帧ABBA基线19.325/19.365ms，候选19.300/19.328ms，最终FEEA9EF3…一致、首尾有限。约0.03ms差异，未扩大全帧/reset，不纳入生产，源码恢复。游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
+
+补丁experiments/c32-expand-pair.patch、test-c32-expand-pair.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块c32_fused_ffn_attention-packed.hsaco。日志release/HIP/c32-expand-pair-test.log。

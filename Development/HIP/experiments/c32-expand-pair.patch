@@ -1,0 +1,17 @@
+diff --git a/Development/HIP/c32_fused_ffn_attention.hip b/Development/HIP/c32_fused_ffn_attention.hip
+index 02deab7..0549944 100644
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -161,9 +161,9 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+  for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k])):0;}
+ #endif
+  sync_window();
+- for(uint col=0;col<128;col+=16){f8 sum{};
+-  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=matrix8(fw+512,(col+rc())*32+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
+-  for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
++ for(uint col=0;col<128;col+=32){f8 sum[2]{};
++  for(uint kt=0;kt<2;kt++){uint k=kt*16+gr()*8;i2 a=load8(packed+(first+rc())*36+k);for(uint j=0;j<2;j++){i2 b=matrix8(fw+512,(col+j*16+rc())*32+k);sum[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum[j]);}}
++  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=sum[j][e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+j*16+rc()]=static_cast<unsigned char>(fp8(v*p));}
+  }
+  sync_window();
+  f8 acc[2];acc[0]=f8{};acc[1]=f8{};
