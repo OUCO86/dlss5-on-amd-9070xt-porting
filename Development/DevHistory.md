@@ -1057,3 +1057,9 @@ V转置候选在载入时将V写为[channel][token]、行跨度68，保留Q/K布
 另独立试encoded_F直接返回FP8 byte，代替fp8(F(acc))的转换/还原/再转换；显式保留输入正负零归正零、带符号非有限/超范围饱和到448，普通值用原转换指令。正常900 ABBA同条件31.185→31.0765ms，四轮RGB一致；差距约0.1ms，不足认定稳定收益，未默认、未进行历史/HDR或全域转换证明。生产源码已恢复。补丁experiments/mh-direct-fbyte.patch、test-mh-direct-fbyte.ps1；编译定义HIP_ISA_HALF=1、HIP_MH_DIRECT_FBYTE=1。
 
 两候选COMGR/gfx1201编译通过；日志release/HIP/mh-transpose-v-build/test.log、mh-direct-fbyte-build/test.log。最优固定候选仍mh-input-dword-release-modules+a7b7521b DLL；游戏未变，仍5ab7d7d3…+C32 inputDWORD，用户900P26～27FPS。
+
+
+### 2026-09-15：部署约31ms整合候选到《剑星》
+部署脚本确认游戏退出后安装native-post-merge.addon64（SHAa7b7521b1ade857a9867327499a77a6ed12beb0b66ce8dbe5e67011d1a923b07）及mh-input-dword-release-modules全部24个HSACO，逐hash验证通过。再次读取确认900P、HIP_FAST1、ASYNC_SUBMIT1，attention模块3628F07C…匹配。含C32 raw-chain/pre-main8/postmerge融合、MH row-sum及DWORD输入搬运，不含V转置、直接F-byte或此前其他未采纳实验。
+
+旧5ab7d7d3… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-mh-input-dword；用户900P26～27FPS属于该旧版。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-mh-input-dword（游戏须退出）。本次未启动游戏，实机新FPS和画面待验证；离线约31ms不等于新游戏FPS。
