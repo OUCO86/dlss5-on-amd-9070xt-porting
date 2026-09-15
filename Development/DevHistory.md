@@ -1897,3 +1897,11 @@ COMGR/benchmark编译通过；连续40帧ABBA基线19.318/19.390ms，候选19.36
 COMGR与专用benchmark编译通过；连续40帧ABBA基线19.330/19.368ms，候选19.374/19.337ms，最终FEEA9EF3…一致、首尾有限。无稳定收益，未扩大全帧/reset，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
 
 补丁experiments/post-head-rgb.patch、test-post-head-rgb.ps1；配套benchmark_post_head_rgb.exe，内核按HIP_ISA_HALF=1拼接c32_fast_attention.hip+boundary_fast.hip，目标boundary-fast.hsaco。日志release/HIP/post-head-rgb-test.log。
+
+
+### 2026-09-16：重新检查HIP event计时可靠性
+新增check_event_timing.cpp：HIP7 runtime实际报告70260201，同一stream固定vit_pack_input、1/8/64/256次重复各5轮，输入零/输出先填255，末尾检查全输出为零。20组event时间非负、self event均0、输出正确。单次event约0.011–0.017ms但CPU完成等待约0.046–0.297ms，说明两者度量不同，不可混称纯计算耗时。
+
+随后完整网络--profile复现PROFILE INVALID，两轮中有负值/非有限区间，输出RGB golden仍匹配。再加--wall-profile逐核drain/同步，首轮仍出现INVALID，第二轮数值正常（TOTAL23.152340ms），不能据此宣布整网event可靠。两个网络脚本显式检测INVALID并返回失败，未将失败计时用于优化结论。保留整体wall-time ABBA为性能判断依据。
+
+工具check-event-timing.ps1、check-network-event-profile.ps1、check-network-event-serialized.ps1；编译探针：MinGW C++17/O2/static，include hip_api.h。日志release/HIP/event-timing-current.log、network-event-profile-current.log、network-event-serialized-current.log。本轮诊断，无生产代码/部署变化、无新增提速。
