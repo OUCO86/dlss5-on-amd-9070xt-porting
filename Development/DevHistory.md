@@ -960,3 +960,13 @@ COMGR/gfx1201编译通过。当前完整快速链+identity-shift正常900 ABBA4�
 COMGR/gfx1201编译通过。正常900P ABBA4轮各6次、去cold中位36.1015→35.2145ms（约2.457%），seed123/history37.4245→36.583ms（约2.249%）；每组四轮最终RGB分别保持7b959143…／75b62d2f…。真实HDR异步40帧34.869ms/FEEA9EF3…、24帧每8帧reset34.746ms/22C171FC…，均全有限；HDR为正确性回归，不单独计算速度增幅。
 
 新packed C32模块SHA2A885047BC050B06BD7188A66B7A7CE72AFEF77C45C40F003C1694E97E942DCD，24模块固定在远端hip-backend/c32-direct8-release-modules；test-c32-direct8.ps1只覆盖独立实验目录。配套主机DLL仍native-identity-shift.addon64/5ab7d7d3…，不需改DLL代码。未部署，游戏仍8568acff…异步版（用户报告24FPS）。日志release/HIP/c32-direct8-build/test/history/hdr/reset.log。编译输入定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_DIRECT_WEIGHT8=1，其余沿用源码默认。
+
+
+### 2026-09-15：C32输入DWORD写入；LDS整组读取仍关闭
+先复查旧HIP_C32_LDS_VECTOR实验，在当前DWORD权重+direct8布局重新ABBA：35.465→35.422ms，输出一致但无明确收益，仍关闭。test-c32-lds.ps1保留复现，旧65ms阶段结果不代替本次测量。
+
+另独立实现HIP_C32_INPUT_DWORD：输入逐值fp8转换后四个byte合并，以一次memcpy4写入原64×36 LDS布局；每行末尾四byte仍写零，mapped坐标和padding规则不变。默认1，设0回旧逐byte写法。没有开启LDS_VECTOR。
+
+正常900 ABBA四轮各6次去cold：35.2785→33.9735ms，约3.699%；seed123/history36.516→35.4325ms，约2.967%。各组四轮输出分别全匹配7b959143…/75b62d2f…。HDR异步40帧32.984ms/FEEA9EF3…，24帧每8帧reset33.740ms/22C171FC…，全有限。HDR为正确性回归，无同期ABBA速度结论。
+
+COMGR/gfx1201编译通过，packed C32模块SHAC3CF4A4D0C597F9302F69F417A360297F988F196B10A328A7EDAC952AE98561C；24模块固定在hip-backend/c32-input-dword-release-modules，DLL仍native-identity-shift.addon64/5ab7d7d3…。未部署，游戏仍8568acff…、用户24FPS。日志release/HIP/c32-lds-build/test.log，c32-input-dword-build/test/history/hdr/reset.log。编译input候选定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_INPUT_DWORD=1；test-c32-input-dword.ps1以固定direct8候选为基线。

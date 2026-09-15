@@ -1,5 +1,8 @@
 // Production C32 FAST4 attention precision, separate from exact reference.
 // All kernels flat grid ceil(work_items/256), block32; token count divisible64.
+#ifndef HIP_C32_INPUT_DWORD
+#define HIP_C32_INPUT_DWORD 1
+#endif
 #ifndef HIP_C32_DIRECT_WEIGHT8
 #define HIP_C32_DIRECT_WEIGHT8 1
 #endif
@@ -138,7 +141,11 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
 #endif
  if(residual_mode!=0&&residual_mode!=3)return;
  // Input64x36 and expand weights128x36 fill the norm scratch temporarily.
+#if HIP_C32_INPUT_DWORD
+ for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input(raw_input,window,row,k+e,sourcew,sourceh,sx,sy):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
+#else
  for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input(raw_input,window,row,k,sourcew,sourceh,sx,sy):raw_input[(base+row)*32+k])):0;}
+#endif
 #if HIP_C32_WEIGHT_DWORD && defined(HIP_PREPACKED_WEIGHTS)
  for(uint i=tid;i<128*9;i+=128){uint row=i/9,k=(i%9)*4;uint word=0;if(k<32)__builtin_memcpy(&word,reinterpret_cast<const unsigned char*>(fw+512)+row*32+k,4);__builtin_memcpy(packed+64*36+i*4,&word,4);}
 #else
