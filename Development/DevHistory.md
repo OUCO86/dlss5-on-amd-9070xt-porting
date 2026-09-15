@@ -1675,3 +1675,11 @@ current比较/profile脚本切换固定C128融合模块和benchmark_c128_attn_pr
 连续40帧ABBA相对当前四头并行基线21.107/21.110ms，候选21.701/21.692ms，最终FEEA9EF3…一致、首尾有限。明显更慢，未扩大全帧/reset，不采用，生产源码恢复。游戏仍ae66d4c8…+c128-attn-project-release-modules。
 
 补丁experiments/c128-batch-unroll.patch包含完整分批host/kernel变化；脚本test-c128-batch-unroll.ps1复用benchmark_c128_batched_heads.exe（256线程host），编译内核HIP_ISA_HALF=1，模块multihead_fused_attention.hsaco。日志release/HIP/c128-batch-unroll-test.log。
+
+
+### 2026-09-16：C128四头并行复用指数空间取得约0.13ms收益
+保持512线程四head并行，Q/K改为直接全局读取，LDS仅保留V；概率先编码到每线程8个uint，整组同步后写入已失效ex，每head概率64×68bytes。AV两片先存寄存器，整组确认所有概率读取完成后，才覆盖all_ex为全通道AV，再同步投影。保留原矩阵/归约/舍入顺序，避免指数→概率→跨head AV三次生命周期重叠。
+
+COMGR资源LDS61440→43008bytes（60→42KiB），VGPR仍118，SGPR30，private/spill0。连续40帧ABBA基线21.065/21.087ms，候选20.937/20.960ms，各最终FEEA9EF3…匹配、首尾有限。72组C128逐位对照全部一致无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…，seed123/history75b62d2f…匹配。全检20.850/20.942ms不当额外连续收益。
+
+固定24模块c128-reuse-ex-release-modules，multihead_fused_attention.hsaco SHA1AE47F2EAB4843A531EC72966AE4B1F61315D59858A604FAFA1A5E582ADDF503；仅内核变化，配套DLL沿用ae66d4c8…，本轮未部署。游戏仍c128-attn-project-release-modules。脚本test-c128-reuse-ex.ps1、validate-c128-reuse-ex.ps1、validate-c128-reuse-ex-history.ps1，复用已编译test_c128_attn_project.exe；日志release/HIP/c128-reuse-ex-test.log及c128-reuse-ex-validation.log。

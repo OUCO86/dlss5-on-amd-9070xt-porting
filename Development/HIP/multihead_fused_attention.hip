@@ -198,29 +198,31 @@ void c128_attention_project(const unsigned char*normalized,const float*w,const f
  uint windows=(width/8)*(height/8),win=bid();if(width%8||height%8||win>=windows)return;
  uint alltid=__builtin_amdgcn_workitem_id_x(),head=alltid/128,tid=alltid%128,wave=tid/32,first=wave*16;
  __attribute__((shared)) _Float16 all_ex[4*64*66];
- __attribute__((shared)) unsigned char all_packed[4*3*64*36];
- _Float16*ex=all_ex+head*64*66;unsigned char*packed=all_packed+head*3*64*36;
+ __attribute__((shared)) unsigned char all_packed[4*64*36];
+ _Float16*ex=all_ex+head*64*66;unsigned char*packed=all_packed+head*64*36;
  unsigned char*avbytes=reinterpret_cast<unsigned char*>(all_ex);
- // 6912-byte packed Q/K/V. No global intermediate writes.
-#if HIP_MH_INPUT_DWORD
- for(uint i=tid;i<3*64*8;i+=128){uint part=i/(64*8),tok=(i/8)%64,c=(i%8)*4,p=raster(win,tok,width),word;__builtin_memcpy(&word,normalized+(p*3+part)*channels+head*32+c,4);__builtin_memcpy(packed+(part*64+tok)*36+c,&word,4);}
-#else
- for(uint i=tid;i<3*64*32;i+=128){uint part=i/(64*32),tok=(i/32)%64,c=i%32,p=raster(win,tok,width);packed[(part*64+tok)*36+c]=normalized[(p*3+part)*channels+head*32+c];}
-#endif
+ for(uint i=tid;i<64*8;i+=128){uint tok=i/8,c=(i%8)*4,p=raster(win,tok,width),word;__builtin_memcpy(&word,normalized+(p*3+2)*channels+head*32+c,4);__builtin_memcpy(packed+tok*36+c,&word,4);}
  sync_window();
  for(uint key=0;key<64;key+=16){f8 acc{};
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,packed[(64+key+rc())*36+k]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint qp=raster(win,first+rc(),width),kp=raster(win,key+rc(),width),off=kt*16+gr()*8;__builtin_memcpy(&a,normalized+qp*3*channels+head*32+off,8);__builtin_memcpy(&b,normalized+(kp*3+1)*channels+head*32+off,8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4*channels*channels+head*4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
  }
  sync_window();
  // MH production partial0 sums keys0..15,32..47; partial1 sums16..31,48..63.
  // Keep this distinct from C32 FAST4's sequential64-key accumulator.
  f8 sums[2];for(uint side=0;side<2;side++){f8 sum{};for(uint half=0;half<2;half++){h8 a{},ones{};for(uint e=0;e<8;e++){uint k=side*16+half*32+gr()*8+e;a[e]=ex[(first+rc())*66+k];ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,ones,sum);}sums[side]=sum;}
- // Q/K are dead; probability64x68 occupies4352 of their4608 bytes. V starts4608.
- for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,k=key+rc();float inv=1.f/(sums[0][e]+sums[1][e]);packed[row*68+k]=static_cast<unsigned char>(fp8(float(ex[row*66+k])*inv));}
+ uint pv[8]{};
+ #pragma unroll
+ for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,k=key+rc();float inv=1.f/(sums[0][e]+sums[1][e]);pv[e]|=fp8(float(ex[row*66+k])*inv)<<(key/16*8);}
  sync_window();
- for(uint col=0;col<32;col+=16){f8 acc{};for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*68+k]);put_bits(b,e,packed[(128+k)*36+col+rc()]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);avbytes[(first+gr()*8+e)*132+head*32+col+rc()]=static_cast<unsigned char>(fp8(F(acc[e])));}}
-
+ unsigned char*prob=reinterpret_cast<unsigned char*>(ex);
+ #pragma unroll
+ for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++)prob[(first+gr()*8+e)*68+key+rc()]=static_cast<unsigned char>(pv[e]>>(key/16*8));
+ sync_window();
+ f8 av[2]{};
+ for(uint col=0;col<32;col+=16){f8 acc{};for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,prob[(first+rc())*68+k]);put_bits(b,e,packed[k*36+col+rc()]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}av[col/16]=acc;}
+ sync_window();
+ for(uint col=0;col<32;col+=16)for(uint e=0;e<8;e++)avbytes[(first+gr()*8+e)*132+head*32+col+rc()]=static_cast<unsigned char>(fp8(F(av[col/16][e])));
  sync_window();
  f8 result[2]{};
  for(uint j=0;j<2;j++){uint col=head*32+j*16+rc();float remain=w[4*128*128+4*4096+4+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*128+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
