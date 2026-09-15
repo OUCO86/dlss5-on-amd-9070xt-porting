@@ -930,3 +930,9 @@ NativeTemporalFeed增加最多8组纹理/SRV heap引用快取，命中切换不�
 test-motion-cache.ps1五项正确性测试通过（颜色、颜色+motion、变内容、颜色淘汰、颜色+motion同时淘汰），全部12帧匹配原同步411DF44C…/43712DDE…。8轮ABBA对比颜色快取版与双快取版，颜色+motion轮换每轮10热帧平均耗时的中位37.87255→37.60930ms，约0.70%降低。所有hash一致，离线小幅收益，不是实机FPS证明。
 
 完整DLL编译通过：release/HIP/native-motion-cache.addon64，SHA7358aedb9a3be1d1bdae0acbfac06488ebda05cf717970ba5a90a303d1bd9d00，配套vit-layout-modules不变。未部署，游戏保持用户约24FPS的8568acff…异步修复版。日志release/HIP/motion-cache.log。
+
+
+### 2026-09-15：刷新内核诊断与无位移复制消除实验
+重新编译当前reference_current.exe（远端旧reference_network.exe不支持最新参数），profile-current.ps1以全部当前快速选项及vit-layout-modules执行900P逐核等待诊断。最终RGB保持7b959143…。热轮C32融合mapped9次合计9.013ms，非mapped前块1次2.993ms；MH QKV归一化6.729ms、shift pack4.228ms、crop3.234ms。逐核等待包含提交等待开销，改变调度，不能当正常39ms帧的组成百分比。旧latest-profile.log含已移除hip_c32_pack，不再用于当前热点判断。
+
+新增实验开关--elide-identity-shift：Body中仅当sx=sy=0且工作宽高等于输入宽高时，pack直接引用input、crop直接引用attended，免去两次恒等复制，保留shared_ptr生命周期；默认关闭，尚未接入HIP_FAST。test-identity-shift.ps1正常900P ABBA4轮各6次，去cold各10样本，中位39.4005→39.2290ms；四轮最终RGB均7b959143…一致。日志release/HIP/current-profile.log和identity-shift.log。尚未完成其他seed/history及完整HDR验证，未构建/部署此实验DLL。
