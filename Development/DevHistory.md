@@ -1427,3 +1427,9 @@ inspect-weight-sparsity.ps1只读统计200个实际矩阵。FFN收缩总体零�
 HIP_FAST默认grouped_mh_contract=true，DLSS5_HIP_GROUPED_CONTRACT=0/1覆盖，reference CLI --grouped-mh-contract；旧入口保留。内核、runner、完整DLL编译通过：release/HIP/native-grouped-contract.addon64 SHAce90a942507482e559f523372e2fee91f84f9e9e3c004e473bebf8969d96ffd2；MH packed模块SHAE239DC3A1B4C5B9D9E2C2D3075FC7ED01832EED9E9E0E0A3AB58B7D96637EB7C；24模块固定mh-grouped-contract-release-modules。未部署，游戏仍c4a25659…+prefix-direct-input。
 
 工具：inspect-weight-sparsity.ps1、test_grouped_contract_guard.cpp、test-mh-grouped-contract.ps1、validate-grouped-contract.ps1、validate-grouped-history.ps1；日志release/HIP/weight-sparsity.csv、mh-grouped-contract-build/test.log、grouped-contract-validation.log。编译MH定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-16：部署已验证MH分组收缩候选
+部署脚本确认游戏退出，安装native-grouped-contract.addon64（SHAce90a942507482e559f523372e2fee91f84f9e9e3c004e473bebf8969d96ffd2）及mh-grouped-contract-release-modules全部24个HSACO，逐hash校验通过。再次核验900P/HIP_FAST1/ASYNC_SUBMIT1，MH模块E239DC3A…匹配，未设置覆盖默认的GROUPED_CONTRACT字段。保持原画质配置，使用载入时零结构验证。
+
+旧c4a25659… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-grouped-contract，回退用部署脚本-Restore -BackupName before-grouped-contract（须退出游戏）。未启动游戏或验证新FPS；约23.8ms是离线连续负载。当前游戏已更新为ce90a942…+分组收缩模块，目标仍未达到HLSL水平。
