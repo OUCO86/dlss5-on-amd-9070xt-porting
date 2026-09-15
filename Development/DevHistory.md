@@ -1443,3 +1443,9 @@ HIP_FAST默认grouped_mh_contract=true，DLSS5_HIP_GROUPED_CONTRACT=0/1覆盖，
 候选DLL release/HIP/native-ffn-qkv.addon64已生成，SHA256=801cfc5c86458a31fd4365b6ded71b7f208ba6398ef4629fc23d3a92f069bb68；固定24模块ffn-qkv-release-modules，MH模块SHA256=D4C9A849DD9A17DB00DE6608F6AC256F77558A5F1E6E93A84D48CD837A58BDC5。此融合候选尚未部署，游戏仍为ce90a942…分组收缩版本。
 
 用户最新实测反馈：900P现在30FPS（此前26–27FPS）；历史HLSL为1080P约37FPS。此为用户游戏观测，不将离线22.95ms换算为实际游戏FPS，也不把30FPS归到尚未部署的新融合候选。
+
+
+### 2026-09-16：部署FFN/QKV融合候选并刷新profile
+部署前脚本确认《剑星》退出，安装801cfc5c… DLL及ffn-qkv-release-modules共24模块，安装hash逐项通过。保持AsyncSubmit=1，旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-ffn-qkv。新游戏FPS尚未测；用户30FPS反馈属于部署前版本。
+
+profile-current.ps1改用固定融合模块并显式启用grouped-mh-contract/ffn-qkv/max-c256，运行成功，最终RGB7b959143…匹配。日志release/HIP/profile-ffn-qkv-current.log。逐核串行计时仍含等待，不作为连续GPU耗时比例；剩余独立mh_qkv_normalize_fused共13次、mh_shift_pack13次，对应C512路径仍待分析。
