@@ -22,3 +22,6 @@ KERNEL void c32_finish_crop_half(const float*raw,float*main,float*down,uint ww,u
   down[((y/2)*(ww/2)+x/2)*32+c]=F(Hrtz(Hrtz(top+bottom)*.25f));
  }}
 }
+
+KERNEL void c32_finish_fast_half_main8(const float*raw,float*main,float*down,uint w,uint h){uint i=bf_index();if(i>=w*h*32)return;uint p=i/32,c=i%32,x=p%w,y=p/w;if(main)reinterpret_cast<unsigned char*>(main)[i]=static_cast<unsigned char>(fp8(F(bf_half_read(raw,bf_tile(x,y,w)*32+c))));if(down&&!(x&1)&&!(y&1)){float top=Hrtz(bf_half_read(raw,bf_tile(x,y,w)*32+c)+bf_half_read(raw,bf_tile(x+1,y,w)*32+c)),bottom=Hrtz(bf_half_read(raw,bf_tile(x,y+1,w)*32+c)+bf_half_read(raw,bf_tile(x+1,y+1,w)*32+c));down[((y/2)*(w/2)+x/2)*32+c]=F(Hrtz(Hrtz(top+bottom)*.25f));}}
+KERNEL void hip_post_merge_fast_skip8(const float*low,const float*skip,const float*weights,float*out,uint w,uint h){uint i=bf_index();if(i>=w*h*32)return;uint p=i/32,c=i%32,q=(p/w/2)*(w/2)+(p%w)/2;out[i]=Hrtz(Hrtz(low[q*32+c]*weights[c])+__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[i]),0)*weights[32+c]);}

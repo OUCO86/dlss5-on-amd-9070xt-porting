@@ -1009,3 +1009,11 @@ COMGR/gfx1201模块及主机runner编译通过。正常900 ABBA4轮各6次去col
 正常900P ABBA四轮各6次去cold34.080→33.5075ms，seed123/history35.742→34.9245ms。每组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧33.554ms/FEEA9EF3…，24帧每8帧reset33.262ms/22C171FC…，全有限。节省约0.6–0.8ms，不能据此解释HLSL18.8ms与HIP33ms的主要差距。
 
 内核、runner和完整DLL编译通过。候选release/HIP/native-c32-chain.addon64 SHAd8fb00dc9599c7c38cd18dab8b772d424ac8314934f79a48650751df9b545dae，packed C32模块SHA07182D2DC2FA5CC6B8DD734CDEF7FFD69F0144530261FF0E74C51FA85D0C3992；24模块固定c32-chain-release-modules。未部署，游戏仍5ab7d7d3…+inputDWORD，用户900P26～27FPS。脚本test-c32-chain.ps1，日志release/HIP/c32-chain-build/test/history/hdr/reset.log。编译C32模块定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：前置块高分辨率跳接main8
+新增c32_finish_fast_half_main8，前置block0的main先执行原F量化，再存E4M3 byte，downsample保留原计算；hip_post_merge_fast_skip8读byte还原到float后执行原乘法和Hrtz。未改变精度，尤其保留F对零/饱和的语义。900P内部1600×1024×32的跳接从200MiB float降到50MiB byte（逻辑缓冲减少150MiB，不等于驱动实测占用下降）。--pre-main8默认参考runner关闭，HIP_FAST开启并记日志；需要fast/half且禁用stage observer/dump，避免将byte当f32诊断。
+
+正常900P ABBA4轮各6次去cold：33.515→33.139ms；seed123/history35.2505→34.655ms。每组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧33.849ms/FEEA9EF3…，24帧每8帧reset31.875ms/22C171FC…，均全有限；HDR仅正确性回归，不与异轮数字拼接成速度曲线。
+
+COMGR内核、runner和完整DLL编译通过：release/HIP/native-pre-main8.addon64 SHAc8eb1c7ac56049492710698a88cbffb4f1d6a5a4436dc6cf78580c0a082583ac；boundary-fast模块SHA9C369C1B488D0FFD80FCF31CDE22FEED4BAEF2090F1A81380501B5EA10323DB0；24模块固定pre-main8-release-modules（包含raw-chain C32）。未部署，游戏仍5ab7d7d3…+inputDWORD，用户900P26～27FPS。脚本test-pre-main8.ps1，日志release/HIP/pre-main8-build/test/history/hdr/reset.log。编译boundary时前置HIP_ISA_HALF=1，拼接c32_fast_attention.hip及boundary_fast.hip。
