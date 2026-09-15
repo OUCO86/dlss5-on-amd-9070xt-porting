@@ -1643,3 +1643,13 @@ COMGR与benchmark编译通过；连续40帧ABBA基线21.899/21.892ms，候选21.
 当前比较/profile脚本统一更新模块与benchmark_c64_attn_project.exe，compare_layers_current.exe重新编译上传以匹配融合host路径。连续40帧edges-only ABBA：HLSL16.792/16.783ms，HIP21.309/21.335ms，各自最终golden匹配、首尾有限；当前差距约4.54ms，未达目标。日志release/HIP/backend-c64-fused-current.log。
 
 COMGR资源元数据c64_attention_project：LDS30720bytes、VGPR94、SGPR30、private segment0、spill0。仅资源证据，不直接推断GPU利用率。
+
+
+### 2026-09-16：C128四head注意力投影融合通过
+新增c128_attention_project，512线程处理8×8窗口四个head，AV复用ex为64×132 byte，再进行128通道投影；保留原概率/三段残差/累加顺序及crop/post。C64融合保持，host在packed+fused byte路径增加C128分派。COMGR资源LDS61440bytes、VGPR118、SGPR30、private/spill0。
+
+连续40帧ABBA：首轮基线21.317ms，候选21.119/21.115ms，完整日志release/HIP/c128-attn-project-test.log；所有最终FEEA9EF3…匹配、首尾有限。全40帧及24帧每8帧reset全有限，最终分别FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检计时20.684/21.059ms读回节奏不同，不作为连续性能。
+
+12个C128块9–14/56–61 × post0/3/4 × 有无crop共72组融合前后逐float位一致，无非法值。日志release/HIP/c128-attn-project-validation.log。完整DLL编译成功：release/HIP/native-c128-attn-project.addon64 SHAae66d4c8e3730424c41a0a935fb9668465547aa1d15b848d4712209eb0d681b6；固定24模块c128-attn-project-release-modules，MH attention模块SHA1B307FB5DC7036E396ECBCCCA5A978B435B6A79479DA302CD5F16CE4F967523E。
+
+本轮未部署，游戏仍C64融合2d8d1db1…+c64-attn-project-release-modules。约0.2ms收益保留，目标尚未达到HLSL水平。
