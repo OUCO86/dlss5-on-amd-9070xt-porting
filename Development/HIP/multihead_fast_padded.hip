@@ -80,7 +80,7 @@ DEV float Hrtz(float x){uint h;float out;asm("v_cvt_pkrtz_f16_f32 %0, %1, %1" : 
 //64x64 output tile,16 waves. Each thread stages one packed4-byte A row word
 // and one B column word; each packed operand is reused by four waves.
 DEV uint pack4(float a,float b,float c,float d){uint lo=uint(__builtin_amdgcn_cvt_pk_fp8_f32(a,b,0,false));uint hi=uint(__builtin_amdgcn_cvt_pk_fp8_f32(c,d,0,false));return (lo&65535u)|((hi&65535u)<<16);}
-template<bool ByteInput=false,bool ByteOutput=false>
+template<bool ByteInput=false,bool ByteOutput=false,bool Normalize=false>
 DEV void fast_dense(const float* input,const float* feature,const float* weights,float* output,
  uint M,uint N,uint K,uint matrix_offset,uint skip_offset,uint epilogue,uint width=0,uint valid_width=0,uint valid_height=0,uint matrix_residual=0){
  __attribute__((shared)) uint sa[576];
@@ -133,6 +133,25 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
   // All sixteen waves finish reading before any writer reuses this K32 tile.
   __builtin_amdgcn_s_barrier();
   // Production fast path: keep accumulator live across every K16/K32.
+ }
+ if constexpr(Normalize){
+  __attribute__((shared)) float tile_qkv[64*64];
+  for(uint e=0;e<8;e++)tile_qkv[(wm*16+group*8+e)*64+wn*16+rc]=accum[e];
+  __builtin_amdgcn_s_barrier();
+  uint channels=N/3,heads=channels/32,scale=4*channels*channels+heads*4096;
+  for(uint row0=wave/2;row0<64;row0+=8){
+   uint p=mr+row0,n=nc+(wave%2)*32+l;
+   if(p>=M||n>=N)continue;
+   uint part=n/channels,head=(n%channels)/32;
+   float v=tile_qkv[row0*64+(wave%2)*32+l],inv=1.f;
+   if(part<2){float sq=v*v,ss=0.f;
+    #pragma unroll
+    for(uint j=0;j<32;j++)ss+=value(__builtin_amdgcn_readlane(bits(sq),j));
+    inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?weights[scale+head]:1.f);
+   }
+   reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(q8(F(v*inv)));
+  }
+  return;
  }
  #pragma unroll
  for(uint e=0;e<8;e++){uint p=first+group*8+e,n=col+rc;if(p>=M||n>=N)continue;float a=accum[e],v;
@@ -259,3 +278,6 @@ TILE void mh_attention_project_fast_matrix_fp8(const float* av,const float* feat
 TILE void mh_ffn_contract_fast_fp8_out(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,true>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,5);}
 
 TILE void mh_ffn_project_fast_fp8(const float* middle,const float* feature,const float* weights,float* output,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,false>(middle,feature,weights,output,tokens,channels,channels,8*channels*channels,9*channels*channels,4);}
+
+// Full FP32 QKV accumulator is normalized on chip, preserving sequential sums.
+TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tokens,uint channels){if(valid_attn(channels))fast_dense<false,false,true>(in,in,w,out,tokens,3*channels,channels,0,~0u,2);}

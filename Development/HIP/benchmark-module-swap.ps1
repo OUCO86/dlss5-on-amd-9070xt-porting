@@ -17,6 +17,8 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
  [switch]$CandidateHalfC32,
  [switch]$BothCompactPipeline,
  [switch]$CandidateCropC32,
+ [switch]$BothCropC32,
+ [switch]$CandidateFusedQkvNorm,
  [string]$BaselineModules='',
  [string]$CandidateModules='',
  [string]$Tag='module-swap-test',
@@ -46,6 +48,8 @@ foreach($round in 0..3){
  if($variant -eq 'candidate' -and $CandidateHalfC32){$extra+='--half-c32'}
  if($BothCompactPipeline){$extra+=@('--fp8-deep','--fp8-middle','--half-c32')}
  if($variant -eq 'candidate' -and $CandidateCropC32){$extra+='--crop-c32'}
+ if($BothCropC32){$extra+='--crop-c32'}
+ if($variant -eq 'candidate' -and $CandidateFusedQkvNorm){$extra+='--fused-qkv-norm'}
  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
  if($LASTEXITCODE -ne 0){throw ($log -join "
 ")}

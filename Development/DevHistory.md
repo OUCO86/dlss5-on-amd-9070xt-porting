@@ -818,3 +818,11 @@ Zero明确要求部署。确认SB-Win64-Shipping未运行后，用deploy-stellar
 完整Frame基准新增HLSL比较构建DLSS5_COMPARE_HLSL，使用已有preview环境的进程级experimental开关。发现旧计时只Flush外层submission，async时未等Frame内部提交，HLSL异步0.488ms为无效CPU提交时间。修复为Frame后在同一queue排空提交并等其fence，再停止计时。固定真实HDR40帧、去前5：HLSL同步29.379ms、异步26.975ms，最终hash彼此一致；当时HIP同步49.761、Graph49.706，最终hash彼此一致。此条件不能套用旧16.7ms数字；HIP与HLSL之间仍有既有输出差异。compare-frame-backends.ps1可复测。
 
 最终四项完整HDR重放40帧：热中位48.476ms，全部有限，最终SHA FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58，与本轮改动前相同。含cold均值70.900ms不作稳态性能。最终HIP DLL编译通过：release/HIP/native-packed-pipeline.addon64，SHA9453575db8b7103382a4bb5d771cd1265976798f9b60f6521ac8cd625bc5a2fe；配套24模块在远端hip-backend/crop-modules。游戏安装仍68c8…/edge-modules，未覆盖。
+
+### 2026-09-15 16:52：MH QKV投影与归一化融合
+
+最新串行热点诊断筛出MH QKV与normalize，分别约5.2/5.9ms、各49次调用（含同步开销，不作正常帧占比）。新增fast_dense Normalize模板与mh_qkv_normalize_fused导出：64×64 FP32矩阵结果暂存共享内存，wave按原32通道readlane顺序求平方和，保留scale/rsqrt/F规则，直接写normalized FP8字节。省掉global raw QKV张量及独立normalize启动。独立--fused-qkv-norm要求fp8_normalized，原路径保留；HIP_FAST默认启用，启动日志增加字段。
+
+COMGR/gfx1201及完整HIP DLL编译通过。900正常离线ABBA4轮各6次、去cold、每方案10hot：47.868→45.3685ms（约5.22%），四轮最终RGB SHA7b959143…一致。seed123/history=input900.rgba32f对照49.3665→46.890ms，四轮SHA75b62d2f…一致。真实1296×720 HDR完整Frame40帧，热中位45.317ms，全部有限，最终SHA FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58与前版逐位一致。日志release/HIP/latest-profile.log、qkv-fused.log、qkv-history.log、qkv-hdr.log。
+
+新DLL release/HIP/native-fused-qkv.addon64，SHA256 24b54e08d204469befe052c91bccb67e87125095ea3d1f1140a390b5e0987f1a。配套24模块在远端hip-backend/qkv-modules；MH padded模块新增导出，必须配套重建。游戏安装仍68c8…，未部署本轮。

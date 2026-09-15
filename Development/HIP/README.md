@@ -159,3 +159,15 @@ missed asynchronous Frame work; earlier async CPU-only timings are invalid.
 compare-frame-backends.ps1 uses matching HDR/frame conditions. Its current
 HLSL async result is26.975ms, not the older fixture's16.7ms. HIP/HLSL output
 parity remains unresolved; within-backend comparisons are bitwise checked.
+
+### Fused MH QKV projection and normalization (2026-09-15)
+
+--fused-qkv-norm requires --fp8-normalized. It retains the full FP32 projection
+result in a shared64×64 tile, performs the original sequential32-channel norm,
+and writes FP8 normalized output directly. Raw QKV no longer crosses global
+memory on this path. HIP_FAST enables it; rebuild the MH padded module with
+mh_qkv_normalize_fused and the host together. Old exports remain available.
+
+900 ABBA47.868→45.3685ms with identical RGB. Real HDR40-frame replay hot median
+45.317ms, all finite and final raw HDR identical to the earlier HIP output.
+No installed game files were changed by this optimization.
