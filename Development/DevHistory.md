@@ -1389,3 +1389,9 @@ RunGraph实验允许借用最终输出buffer，EnqueueRaw用非owned Allocation�
 测试程序编译通过，连续40帧ABBA：基线24.804/24.782ms，候选24.716/24.763ms，最终FEEA9EF3…一致、首尾有限。收益约0.02–0.09ms，未进一步全帧/排队/reset，不默认，生产源码恢复。不能把该差值直接当纯copy耗时，因为分配与访存也改变。
 
 补丁experiments/direct-output.patch，test-direct-output.ps1（应用补丁编译benchmark_direct_output.exe，DLSS5_HIP_DIRECT_OUTPUT=0/1），模块沿用prefix-direct-input-release-modules。日志release/HIP/direct-output-test.log。游戏仍c4a25659…+prefix-direct-input，未改。本轮通过异步文字问题请求用户回报当前实机FPS和画面情况，离线工作不依赖该答复。
+
+
+### 2026-09-16：MH投影单wave四输出及wave打包均不采用
+新增实验projection_wave4<C>：普通C64/128/256投影每wave16×64、共用byte AV输入，保留三段标量残差、K16顺序、crop和post epilogue；C512保持旧路径。32线程版本连续40帧ABBA：基线24.747/24.792ms，候选25.289/25.302ms，更慢。随后将4个独立wave放进128线程组、虚拟bid=group*4+wave，所有运算保持，ABBA基线24.818/24.731ms、候选25.388/25.400ms，也更慢。
+
+两组最终FEEA9EF3…均匹配、首尾有限，未进一步全帧/reset，生产源码恢复。两版本的host dispatch不同，须匹配补丁：experiments/mh-projection-wave4.patch（32线程、count/1024）或mh-projection-wavepack.patch（128线程、ceil(count/4096)）。对应test-mh-projection-wave4.ps1/test-mh-projection-wavepack.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。日志release/HIP/mh-projection-wave4-build/test.log及mh-projection-wavepack-build/test.log。当前游戏和固定候选不变。
