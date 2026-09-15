@@ -1569,3 +1569,11 @@ COMGR编译通过；连续40帧ABBA基线21.969/21.881ms、候选22.055/22.064ms
 COMGR及benchmark编译通过，连续40帧ABBA基线21.886/21.945ms，候选21.925/21.834ms；最终FEEA9EF3…一致、首尾有限。无稳定可见优势，不纳入生产，未扩大全帧/reset，源码恢复。相对上一轮现场打包两操作数不再明显慢，但不同轮次不能直接当精确收益。
 
 补丁experiments/split-mix-packed.patch、test-split-mix-packed.ps1，需配套编译benchmark_split_mix_packed.exe和HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核split-mix-packed.hsaco，目标deep_fast-packed.hsaco；日志release/HIP/split-mix-packed-test.log。游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。
+
+
+### 2026-09-16：当前直接权重版C32与整网基线复核
+四个current脚本（backends/c32/mh/profile）统一指向c32-global-ffn-release-modules，避免继续使用旧ViT融合模块。当前C32 mode2逐层：block70 HIP1.358750/1.358900ms、HLSL1.086200/1.104750ms；block1 HIP0.412750/0.332300、HLSL0.333650/0.272550；block4 HIP0.411350/0.337200、HLSL0.369350/0.276800。三个输出逐位一致，无非法值。block70仍为stage本体，不是postmerge整条路径；单层重复测量有时钟/调度波动，不将各差值直接相加。
+
+同条件连续40帧edges-only ABBA：HLSL16.800/16.789ms，HIP21.898/21.927ms，各自最终C7C2F49D…/FEEA9EF3…匹配、首尾有限。当前整帧差距约5.1ms，目标未达成。本轮复核已有收益，无新内核改动或部署。
+
+日志release/HIP/compare-c32-global-current.log、backend-c32-global-current.log。已异步请求用户下次试玩反馈900P实际FPS及画面异常，离线工作不依赖回复。
