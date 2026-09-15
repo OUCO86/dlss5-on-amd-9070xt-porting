@@ -742,3 +742,13 @@ Zero明确要求安装试用。先确认SB-Win64-Shipping退出。新增`DLSS5_H
 Zero反馈init failed。实机日志显示HIP7/fast/packed和所有frame对象已创建成功，第一次render在`bridge input device mismatch`被拒，device removed reason=0。桥接InputContract错误使用owner==device指针相等；ReShade包装设备与原始资源设备的接口地址可不同。改为项目既有NativeSameDevice（经已验证unwrap接口取IUnknown身份），保留真正不同设备拒绝，未降为仅比较adapter LUID。
 
 MinGW重编通过，native/proxy双向同一性、不同设备/错误/null拒绝及引用计数平衡测试通过。修正版DLL SHA256 `0202b4dc4ff94bb0a80300b3488b2b6e7ae942d0e4a58021c941d5924be40bba`，已暂存hip-backend/stellarblade-hip/dlss5-hip-identity-fix.addon64。诊断时游戏PID23984运行，先只暂存候选；复查确认游戏已退出后直接部署，安装hash已核。旧HIP DLL另存before-identity-fix.addon64，原900P HLSL回退副本72F87A97…保持可用。待Zero重开游戏实机复测；内核和模型参数未改。
+
+### 2026-09-15：《剑星》HIP连续帧发黑：同步提交临时修复
+
+Zero留游戏PID4132在装备菜单，实机截图确认人物变成黑色轮廓、背景异常。暂停游戏私有continuous-every-frame标记后原游戏画面恢复。F6模拟按键未见toggle日志，不算有效旁路测试。
+
+通过临时改变窗口宽度16像素触发资源重建，并恢复原1280×720窗口，取得1296×720 RGBA16F真实输入/输出（request900001）。带读回等待、temporal=0的首帧人物正常，输入全部有限，最大34.53125；但temporal=0连续快路径仍发黑，排除“只关历史即可修复”的初始判断。随后保留temporal-history，游戏私有flags改DLSS5_TEST_ASYNC_SUBMIT=0，连续输出恢复正常；超过4700帧后再次截图人物仍正常，日志约68.6–68.9ms/帧，HUD约15FPS。证明同步提交可规避当前菜单发黑，尚未定位异步路径具体缺失的等待或资源生命周期；截图不能替代动态场景闪烁验收。
+
+当前游戏继续运行：continuous和temporal均开启、async=0、DEBUG_DUMPS为空、窗口恢复原尺寸，无手动request。安装DLL仍0202b4dc…，内核/全局flags/驱动未改。部署脚本明确覆盖继承的async=1，防止下一次部署复现。此项为配置修复，无DLL重编。原flags副本留在游戏私有root的native-game-flags.before-capture。
+
+新增capture-live-menu.ps1用于可逆窗口尺寸对照；benchmark_live_capture.cpp及说明提供真实HDR冻结输入的完整Frame回放，MinGW编译通过，未执行GPU回放（实机同步对照已经找到可用规避）。后续恢复异步前需验证连续输入与跨D3D12/HIP同步，原离线测试每轮上传/读回的CPU等待会掩盖这类问题。

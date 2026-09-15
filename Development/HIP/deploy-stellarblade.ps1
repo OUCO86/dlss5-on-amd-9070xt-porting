@@ -60,7 +60,10 @@ try{
  New-Item -ItemType Junction -Path (Join-Path $localRoot 'native-game-tiled-assets') -Value $sourceAssets | Out-Null
  foreach($m in $moduleManifest){Copy-Item (Join-Path $moduleSource $m.name) (Join-Path $localRoot ('HIP\'+$m.name))}
  Copy-Item (Join-Path $moduleSource 'deployment-modules.json') (Join-Path $localRoot 'HIP\deployment-modules.json')
- $flags=@(Get-Content (Join-Path $lab 'native-game-flags.txt') | Where-Object {$_ -notmatch '^DLSS5_HIP_(FAST|MODULES)='})
+ $flags=@(Get-Content (Join-Path $lab 'native-game-flags.txt') | Where-Object {$_ -notmatch '^DLSS5_HIP_(FAST|MODULES)=' -and $_ -notmatch '^DLSS5_TEST_ASYNC_SUBMIT='})
+ # Live HIP/D3D12 deferred submissions corrupt the menu image after the first
+ # frame. Keep CPU fence waits until the cross-API ordering issue is resolved.
+ $flags+='DLSS5_TEST_ASYNC_SUBMIT=0'
  $flags+='DLSS5_HIP_FAST=1';$flags+='DLSS5_HIP_MODULES='+(Join-Path $localRoot 'HIP')
  [IO.File]::WriteAllText((Join-Path $localRoot 'native-game-flags.txt'),($flags -join "`n")+"`n",$utf8)
  foreach($marker in @('continuous-every-frame.txt','temporal-history.txt')){[IO.File]::WriteAllText((Join-Path $localRoot $marker),"1`n",$utf8)}
