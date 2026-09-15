@@ -1079,3 +1079,11 @@ COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold31.12
 试用union复用矩阵sa/sb与归一化tile/inverse（两段使用之间已有全组barrier），非Normalize实例仍只分配矩阵空间。编译后的QKV LDS降到17152byte，VGPR47、SGPR14、private0。正常900 ABBA4轮各6次去cold31.1555→31.2715ms，四轮RGB7b959143…一致，但无收益；已恢复生产源码，未跑历史/HDR、未默认。补丁experiments/mh-shared-workspace.patch，test-mh-shared-workspace.ps1（先应用补丁编译，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_SHARED_WORKSPACE=1）。日志release/HIP/mh-shared-workspace-build/test.log。
 
 当前安装及固定候选仍a7b7521b…+mh-input-dword-release-modules。此次未部署或修改游戏配置。
+
+
+### 2026-09-15：当前快速路径HIP Graph复测
+benchmark-graph-frame.ps1参数化Runner/Modules/ConfigFile/ExpectedHash，增加每轮前后游戏进程检查和graph replay确认证据。新增参数时最初将[string]Flags与局部$flags冲突（PowerShell大小写不敏感），数组被串成一行；首轮固定参考hash检查失败，未使用该轮数据，已改名ConfigFile修复。游戏文件未动。
+
+使用benchmark_merge.exe、mh-input-dword-release-modules、rebind-async-flags做graph0/1/1/0，完整HDR40帧、temporal1、去前5，各方案70热样本：graph0中位30.0715ms，graph1 29.838ms，约0.78%。两个graph轮次均builds1/replays38，四轮最终FEEA9EF3…一致，全有限。没有只开flag却未重放；当前路径收益依旧小，默认和游戏graph保持0，未继续reset或实机Graph测试。
+
+日志release/HIP/graph-current.log，远端graph-current/timings.csv及分轮log。约0.23ms离线收益不能解释HLSL18.8ms vs HIP约30ms主要差距，不据此认定所有调度开销为零。当前游戏仍a7b7521b…+mh-input-dword，尚无新实机FPS反馈。
