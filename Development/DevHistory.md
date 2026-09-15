@@ -1473,3 +1473,11 @@ COMGR与benchmark编译通过；同新模块、连续40帧ABBA：基线22.906/22
 部署脚本确认游戏退出，安装native-vit-qkv-fused.addon64（SHA13d4dc10e6507eb05120b056a6710498e4922a53e699dd6878be2674614ae821）和vit-qkv-fused-release-modules全部24模块，逐hash校验通过。AsyncSubmit保持1，旧版本备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-qkv-fused。新实机FPS未测。
 
 profile-current.ps1改为固定ViT融合模块并显式传--vit-qkv-fused，运行通过，最终RGB7b959143…匹配。日志release/HIP/profile-vit-qkv-current.log。注意日志包含两轮，不能混排后当单轮汇总；串行逐核计时包括等待，只用于定位。MH attention及crop投影仍居前。
+
+
+### 2026-09-16：MH AV双输出共用概率读取实验不采用
+在mh_attention_fused_fp8_out最后AV阶段，将两次16输出通道循环改为两组累加器共同遍历K16，复用概率矩阵操作数读取，各自K16累加顺序、输出F、布局及同步保持。COMGR编译通过。
+
+连续40帧ABBA：固定ViT融合基线22.792/22.812ms，候选22.862/22.831ms；最终FEEA9EF3…匹配、首尾有限。未见收益，未做额外全帧/reset，生产源码恢复，游戏仍13d4dc10… ViT融合版。该结果不能单独归因为寄存器压力，需要ISA/资源证据。
+
+实验补丁experiments/mh-av-pair.patch、test-mh-av-pair.ps1，编译multihead_fused_attention.hip定义HIP_ISA_HALF=1为mh-av-pair.hsaco，再放到独立目录的multihead_fused_attention.hsaco。使用benchmark_vit_qkv_fused.exe及vit-qkv-validation-flags.txt，日志release/HIP/mh-av-pair-test.log。
