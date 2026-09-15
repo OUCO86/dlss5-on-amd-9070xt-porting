@@ -1063,3 +1063,11 @@ V转置候选在载入时将V写为[channel][token]、行跨度68，保留Q/K布
 部署脚本确认游戏退出后安装native-post-merge.addon64（SHAa7b7521b1ade857a9867327499a77a6ed12beb0b66ce8dbe5e67011d1a923b07）及mh-input-dword-release-modules全部24个HSACO，逐hash验证通过。再次读取确认900P、HIP_FAST1、ASYNC_SUBMIT1，attention模块3628F07C…匹配。含C32 raw-chain/pre-main8/postmerge融合、MH row-sum及DWORD输入搬运，不含V转置、直接F-byte或此前其他未采纳实验。
 
 旧5ab7d7d3… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-mh-input-dword；用户900P26～27FPS属于该旧版。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-mh-input-dword（游戏须退出）。本次未启动游戏，实机新FPS和画面待验证；离线约31ms不等于新游戏FPS。
+
+
+### 2026-09-15：QKV分块权重合作装载实验撤回
+PackedMhWeight仅对QKV矩阵区域做TilePackedMatrix [N16][K32][K][N]纯byte重排，独立cache key和mh_qkv_normalize_fused_tiled入口；尺度/偏置/输出投影区域不动。512线程连续读取tile的DWORD，再按行/k分散写回原LDS布局，WMMA与row-sum不变。--tiled-qkv只在候选启用。
+
+COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold31.129→31.4705ms更慢；四轮最终RGB7b959143…一致。未进行历史/HDR，生产源码已恢复，未加入已部署版本或固定候选。推测全域连续读取收益被LDS散写/指令成本抵消，未做ISA级归因证明。
+
+补丁Development/HIP/experiments/mh-qkv-tiled.patch，test-mh-qkv-tiled.ps1（先应用补丁构建实验runner和模块），编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1；日志release/HIP/mh-qkv-tiled-build/test.log。游戏本轮确认退出，当前安装仍a7b7521b…+mh-input-dword，等待实机反馈。远端reference_current.exe含实验开关但默认关闭；源码已撤回。
