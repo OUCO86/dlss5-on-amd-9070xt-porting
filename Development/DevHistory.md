@@ -990,3 +990,12 @@ COMGR/gfx1201模块及主机runner编译通过。正常900 ABBA4轮各6次去col
 用户确认继续部署。脚本重新确认游戏退出，安装native-identity-shift.addon64（SHA5ab7d7d37d5b8fdbf8248031cf073e389df8c358e262cddf096718b1113bc225）和c32-input-dword-release-modules全部24个HSACO，逐hash核验通过；再次核验packed C32为C3CF4A4D0C597F9302F69F417A360297F988F196B10A328A7EDAC952AE98561C。保留900P、HIP_FAST=1、ASYNC_SUBMIT=1和原history/continuous配置。
 
 包含颜色/motion不可变绑定快取、identity-shift及C32 DWORD权重/直接8byte权重/输入DWORD写入。不包含已撤回的输出LDS整组读取、独立QKV预打包；LDS_VECTOR仍关闭。旧用户24FPS的8568acff… DLL、模块、配置及标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c32-input-dword，可用部署脚本-Restore -BackupName before-c32-input-dword回退（须游戏退出）。实际新FPS与画面待试玩，不能把离线34ms等同游戏FPS。此前被打断的部署回合只检查，实际文件替换发生在本次。
+
+
+### 2026-09-15 21:25：用户实机26～27FPS，分辨率差异保留
+用户实测当前5ab7d7d3… DLL+c32-input-dword模块约26～27FPS，并明确再次指出这是900P；之前HLSL约37FPS对应1080P。不能把两者描述为同工作量追平。新反馈已归档，目标仍有显著差距。
+
+### 2026-09-15：当前HLSL/HIP同条件完整流水线对照
+编译当前benchmark_hlsl_current.exe（DLSS5_COMPARE_HLSL），与已编译benchmark_identity.exe的当前HIP模块做HLSL/HIP/HIP/HLSL四进程对照。输入同一1296×720真实HDR、内部900P、同rebind-async-flags、history开启、异步提交、每进程40帧去前5帧。各轮热中位HLSL18.840、HIP33.896、HIP32.814、HLSL18.821ms；每后端各自最终hash稳定（HLSL C7C2F49D…，HIP FEEA9EF3…），全有限。两后端输出不逐位相同，不把此计时当数值等价验证；此测试是推理流水线隔离对照，不替代用户900P/1080P游戏实测。
+
+源码审计确认HLSL在native_actual_network70.h与native_decoder_tail69.h用ChainFromRaw+SetSkipFinish，让相邻C32阶段直接读上阶段raw tile；native_c32_stage.h用input mode3传递前后位移。HIP C32()当前每阶段仍运行finish/crop并生成float main，然后下阶段再映射读取。此外HLSL preblock main8/block4 skip8/block69 main8路径已存在，HIP仍多处float。未据此断言这些差异解释全部15ms。测试脚本compare-current-backends.ps1，日志release/HIP/compare-current-backends.log。
