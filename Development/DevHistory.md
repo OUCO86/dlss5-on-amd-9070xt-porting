@@ -1835,3 +1835,11 @@ COMGR编译通过；连续40帧ABBA基线19.505/19.551ms，候选19.335/19.335ms
 部署脚本确认游戏退出，安装ffn-qkv-round-byte-release-modules全部24模块并逐hash通过，DLL沿用c8842686a683443962619055745d43a4daf22026f68864705e5d6f0f8df06554，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-ffn-qkv-round-byte。新版实际游戏FPS仍待反馈。
 
 current比较/profile脚本更新固定模块。连续40帧edges-only ABBA：HLSL16.796/16.806ms，HIP19.359/19.360ms，各自golden匹配、首尾有限；差距约2.56ms，目标尚未达到。日志release/HIP/backend-round-byte-current.log。本轮部署与复核，无额外内核提速。
+
+
+### 2026-09-16：融合投影直接读取FP8精确float残差更慢，撤回
+核对当前FFN第三投影输出经F或q8_fused_round后decode，当前生产feature为精确FP8 float。实验仅将C64/128/256融合attention-project的残差x从decode(fp8(feature))改为直接feature读取，保留三段分解及FMA顺序；C512不动。不能把该前提推广到任意float输入接口。
+
+COMGR编译通过；连续40帧ABBA基线19.340/19.337ms，候选19.860/19.822ms，最终FEEA9EF3…一致、首尾有限。明显更慢，未扩大全帧/reset，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。未进一步确认变慢的指令/调度根因，不把少源代码操作等同快。
+
+补丁experiments/mh-exact-feature.patch、test-mh-exact-feature.ps1，编译HIP_ISA_HALF=1，复用benchmark_vit_qkv_compact.exe，目标multihead_fused_attention.hsaco。日志release/HIP/mh-exact-feature-test.log。
