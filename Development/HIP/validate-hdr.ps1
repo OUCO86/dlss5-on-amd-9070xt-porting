@@ -1,9 +1,9 @@
-param([string]$Modules='c32-mapped-modules',[string]$Name='hdr-validation',[string]$Flags='compare-hip-sync-flags.txt',
+param([string]$Runner='benchmark_live_capture.exe',[string]$Modules='c32-mapped-modules',[string]$Name='hdr-validation',[string]$Flags='compare-hip-sync-flags.txt',
  [ValidateRange(1,10000)][int]$Frames=40,[int]$ResetEvery=0,[string]$ExpectedHash='')
 $ErrorActionPreference='Stop'
 if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game running'}
 $r='D:\DLSSNR-Lab\hip-backend';$prefix=Join-Path $r $Name
-& "$r\benchmark_live_capture.exe" "$r\..\network-720p\DLSS5-AMD\native-game-tiled-assets" (Join-Path $r $Flags) "$r\live-menu-before.f16" $prefix $Frames 1 (Join-Path $r $Modules) $ResetEvery > "$prefix.log"
+& (Join-Path $r $Runner) "$r\..\network-720p\DLSS5-AMD\native-game-tiled-assets" (Join-Path $r $Flags) "$r\live-menu-before.f16" $prefix $Frames 1 (Join-Path $r $Modules) $ResetEvery > "$prefix.log"
 if($LASTEXITCODE){throw 'HDR benchmark failed'}
 $hash=(Get-FileHash "$prefix.f16").Hash
 if($ExpectedHash -and $hash -ne $ExpectedHash){throw 'HDR output changed'}

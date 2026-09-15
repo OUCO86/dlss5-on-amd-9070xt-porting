@@ -936,3 +936,9 @@ test-motion-cache.ps1五项正确性测试通过（颜色、颜色+motion、变�
 重新编译当前reference_current.exe（远端旧reference_network.exe不支持最新参数），profile-current.ps1以全部当前快速选项及vit-layout-modules执行900P逐核等待诊断。最终RGB保持7b959143…。热轮C32融合mapped9次合计9.013ms，非mapped前块1次2.993ms；MH QKV归一化6.729ms、shift pack4.228ms、crop3.234ms。逐核等待包含提交等待开销，改变调度，不能当正常39ms帧的组成百分比。旧latest-profile.log含已移除hip_c32_pack，不再用于当前热点判断。
 
 新增实验开关--elide-identity-shift：Body中仅当sx=sy=0且工作宽高等于输入宽高时，pack直接引用input、crop直接引用attended，免去两次恒等复制，保留shared_ptr生命周期；默认关闭，尚未接入HIP_FAST。test-identity-shift.ps1正常900P ABBA4轮各6次，去cold各10样本，中位39.4005→39.2290ms；四轮最终RGB均7b959143…一致。日志release/HIP/current-profile.log和identity-shift.log。尚未完成其他seed/history及完整HDR验证，未构建/部署此实验DLL。
+
+
+### 2026-09-15：恒等shift复制消除完成历史与HDR验证
+--elide-identity-shift在seed123/history=input900.rgba32f的ABBA四轮各6次，排除cold后中位40.779→40.367ms，四轮最终RGB均75b62d2f…一致。完整真实HDR异步40帧热中位39.625ms，最终FEEA9EF3…；24帧每8帧重置历史38.606ms，最终22C171FC…；均全有限。HDR这里是正确性回归，没有同期旧版ABBA，不宣称HDR速度增幅。
+
+已纳入HIP_FAST，启动日志增加elide_identity_shift状态。test-identity-shift.ps1支持seed/history/预期hash，validate-hdr.ps1支持指定runner以隔离实验二进制。完整DLL编译通过：release/HIP/native-identity-shift.addon64，SHA5ab7d7d37d5b8fdbf8248031cf073e389df8c358e262cddf096718b1113bc225，含颜色及motion快取，沿用vit-layout-modules。未部署，游戏仍8568acff…异步版（用户24FPS）。日志release/HIP/identity-history.log、identity-hdr.log、identity-reset.log。
