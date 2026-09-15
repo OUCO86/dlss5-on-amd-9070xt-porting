@@ -878,3 +878,7 @@ HIP_C32_REGISTER_FFN把half FFN结果留h8寄存器用于末端残差，仅将�
 最终ViT两项正常900 ABBA四轮各6次、排除cold，各方案10hot：41.3815→39.925ms（约3.52%），四轮RGB SHA7b959143…一致；seed123/history=input900.rgba32f：42.7345→41.4075ms，四轮SHA75b62d2f…一致。真实HDR40帧热中位40.300ms，最终FEEA9EF3…；24帧每8帧重置历史热中位39.172ms，最终22C171FC…，都匹配旧hash且全有限。均为离线/冻结帧数据，不是实测游戏FPS。
 
 --vit-blocked和--vit-contract-blocked独立控制、HIP_FAST默认开启；--vit-split-k保留实验，默认关闭。旧内核入口保留。主机runner、COMGR/gfx1201模块和完整DLL编译通过。最终DLL release/HIP/native-c32-vit-blocked.addon64，SHA4c0620a559a6a1ca6d633f5dcfb8b3b241d2a56116b7bee714917256859278f0；24模块在远端hip-backend/vit-contract-modules。日志release/HIP/vit-splitk-test.log、vit-blocked-test.log、vit-contract-serial.log、vit-contract-parallel.log、vit-final.log、vit-final-history.log、vit-final-hdr.log、vit-final-reset.log。游戏安装未动，仍68c8…。
+
+### 2026-09-15 19:09：部署C32/ViT约40ms候选到《剑星》
+
+Zero接受继续部署并优化。确认游戏退出后安装native-c32-vit-blocked.addon64（SHA4c0620a5…）和vit-contract-modules的24个HSACO，逐hash校验通过。旧68c8… DLL/模块/flags/候选标记备份before-c32-vit-blocked。保留900P、continuous/history和同步提交。更新脚本参数化候选/模块/备份/预期hash，回退也恢复候选标记。驱动/全局lab flags未改；待实际试玩。
