@@ -1537,3 +1537,11 @@ COMGR编译通过；连续40帧ABBA：基线21.939/21.940ms、候选21.900/21.91
 COMGR编译通过；连续40帧ABBA基线21.888/21.943ms，候选22.739/22.787ms，最终FEEA9EF3…一致、首尾有限。明显更慢，不采用，未扩大全帧/reset，生产源码恢复。half_chain汇编资源基线VGPR190、候选180；二者SGPR46、LDS15360、private/spill0，因此不能把慢归因于VGPR增长或spill，尽管累加器生存区间发生变化。
 
 补丁experiments/c32-half-hidden.patch、test-c32-half-hidden.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-half-hidden-test.log。游戏仍已部署c32-global-ffn-release-modules+13d4dc10… DLL，离线约21.9ms。
+
+
+### 2026-09-16：C32 raw-chain固定模式入口无收益
+核对生产C32 prev路径固定传mode3/raw1；新增独立half_chain3入口把这两个值以常量传入融合body，host仅该调用换入口，旧通用入口保留。COMGR与专用benchmark编译通过。
+
+连续40帧ABBA：基线21.905/21.892ms，候选21.938/21.861ms，最终FEEA9EF3…一致、首尾有限；没有稳定收益，未扩大全帧/reset，不采用，生产源码恢复。游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。
+
+补丁experiments/c32-chain3.patch、test-c32-chain3.ps1；应用补丁编译benchmark_c32_chain3.exe及HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核c32-chain3.hsaco，host与新增入口配套。日志release/HIP/c32-chain3-test.log。

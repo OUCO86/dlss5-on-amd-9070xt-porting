@@ -1,0 +1,24 @@
+diff --git a/Development/HIP/c32_fused_ffn_attention.hip b/Development/HIP/c32_fused_ffn_attention.hip
+index 02deab7..7da79e4 100644
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -252,3 +252,6 @@ void c32_fast_ffn_attention_fused_half_chain(const float*in,const float*fw,const
+ 
+ KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+ void c32_post_merge_fused_half(const float*low,const float*skip,const float*scales,const float*fw,const float*w,float*out,uint windows,uint width,uint height,uint sx,uint sy){c32_fused_body<true,true,false,true>(low,fw,w,out,windows,0,1,width,height,sx,sy,0,0,0,skip,scales);}
++
++KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
++void c32_fast_ffn_attention_fused_half_chain3(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true>(in,fw,w,out,windows,3,1,width,height,sx,sy,prevw,prevsx,prevsy);}
+diff --git a/Development/HIP/hip_reference_network.h b/Development/HIP/hip_reference_network.h
+index ba7c098..6258053 100644
+--- a/Development/HIP/hip_reference_network.h
++++ b/Development/HIP/hip_reference_network.h
+@@ -179,7 +179,7 @@ class Network {
+  C32Result C32Chain(Tensor input,const C32Result*prev,U w,U h,U shift,const std::string&fw,const std::string&aw,bool finish,bool down){
+   U sx=(shift&1)?4:0,sy=(shift&2)?4:0,ww=w+2*sx,hh=h+2*sy,n=ww*hh,windows=n/64;
+   auto raw=New(size_t(n)*16);
+-  if(prev)Run("c32_fused_ffn","c32_fast_ffn_attention_fused_half_chain",windows,P(prev->raw),PackedC32Weight(fw,false),PackedC32Weight(aw,true),P(raw),windows,U(3),U(1),w,h,sx,sy,prev->workw,prev->sx,prev->sy);
++  if(prev)Run("c32_fused_ffn","c32_fast_ffn_attention_fused_half_chain3",windows,P(prev->raw),PackedC32Weight(fw,false),PackedC32Weight(aw,true),P(raw),windows,U(3),U(1),w,h,sx,sy,prev->workw,prev->sx,prev->sy);
+   else Run("c32_fused_ffn","c32_fast_ffn_attention_fused_half_mapped",windows,P(input),PackedC32Weight(fw,false),PackedC32Weight(aw,true),P(raw),windows,U(0),U(1),w,h,sx,sy);
+   auto main=finish?New(size_t(w)*h*32):Tensor{},pooled=down?New(size_t(n/4)*32):Tensor{};
+   if(main||pooled)Run("boundary_fast","c32_finish_crop_half",size_t(n)*32,P(raw),P(main),P(pooled),ww,hh,w,h,sx,sy);
