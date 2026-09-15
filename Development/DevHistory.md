@@ -1805,3 +1805,11 @@ Vit按实际路径只获取所需QKV缓存，packed fused不再先创建原float
 核对工作树为c77d6c6且干净；部署脚本确认游戏退出，安装native-vit-qkv-compact.addon64（SHAc8842686a683443962619055745d43a4daf22026f68864705e5d6f0f8df06554）和vit-qkv-compact-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-qkv-compact。实际游戏新FPS仍待反馈。
 
 current比较/profile脚本更新固定模块和benchmark_vit_qkv_compact.exe，compare_layers_current.exe重新编译上传。连续40帧edges-only ABBA：HLSL16.761/16.796ms，HIP19.521/19.531ms，各自golden匹配、首尾有限；差距约2.75ms，仍未达到目标。日志release/HIP/backend-vit-compact-current.log。本轮完成已验证144MiB显存优化的部署，不另称新增帧率收益。
+
+
+### 2026-09-16：当前C256 FFN-QKV非tiled权重布局更慢，撤回
+新增C256非tiled g128_qkv及mapped入口，使用mh_ffn_qkv_body<256,false,…>，生产实验阈值256→512使仅C256从tiled回到连续DWORD权重，其他通道/分组收缩/QKV融合保持。首次运行被原selected-pipeline阈值检查拒绝，尚未推理；实验guard仅补充min512+ffn_qkv+max256组合后重新编译测试。
+
+COMGR/benchmark编译通过。有效连续40帧ABBA基线19.501/19.566ms，候选20.514/20.521ms，最终FEEA9EF3…一致、首尾有限。明显更慢，未扩大全帧/reset，生产源码与guard恢复，游戏仍c8842686…+vit-qkv-compact-release-modules。
+
+补丁experiments/c256-ffn-linear.patch、test-c256-ffn-linear.ps1，需配套benchmark_c256_ffn_linear.exe与HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块multihead-fast-padded-wave-packed.hsaco；日志release/HIP/c256-ffn-linear-test.log（初始化拒绝）及c256-ffn-linear-compatible-test.log（有效ABBA）。
