@@ -1667,3 +1667,11 @@ current比较/profile脚本切换固定C128融合模块和benchmark_c128_attn_pr
 资源LDS61440→39168bytes，VGPR118→151，private segment0→160bytes，metadata VGPR/SGPR spill count仍0，不能把private segment直接等同寄存器溢出计数。连续40帧ABBA基线21.092/21.109ms，候选21.399/21.324ms，最终FEEA9EF3…匹配、首尾有限。更慢，不采用，未扩大全帧/reset，源码恢复，游戏仍ae66d4c8…+c128-attn-project-release-modules。
 
 补丁experiments/c128-batched-heads.patch、test-c128-batched-heads.ps1；需配套256线程host编译benchmark_c128_batched_heads.exe及HIP_ISA_HALF=1内核，目标multihead_fused_attention.hsaco。日志release/HIP/c128-batched-heads-test.log。
+
+
+### 2026-09-16：C128分批投影循环展开消除private segment但更慢
+在上轮两头分批候选基础上对投影四片结果的j循环显式unroll，COMGR编译通过。c128_attention_project的private segment160→0bytes，VGPR151→180，LDS仍39168，spill metadata仍0；说明循环表达影响累加器存放，但不能据此预判性能。
+
+连续40帧ABBA相对当前四头并行基线21.107/21.110ms，候选21.701/21.692ms，最终FEEA9EF3…一致、首尾有限。明显更慢，未扩大全帧/reset，不采用，生产源码恢复。游戏仍ae66d4c8…+c128-attn-project-release-modules。
+
+补丁experiments/c128-batch-unroll.patch包含完整分批host/kernel变化；脚本test-c128-batch-unroll.ps1复用benchmark_c128_batched_heads.exe（256线程host），编译内核HIP_ISA_HALF=1，模块multihead_fused_attention.hsaco。日志release/HIP/c128-batch-unroll-test.log。
