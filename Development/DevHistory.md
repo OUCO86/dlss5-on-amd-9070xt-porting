@@ -970,3 +970,9 @@ COMGR/gfx1201编译通过。正常900P ABBA4轮各6次、去cold中位36.1015→
 正常900 ABBA四轮各6次去cold：35.2785→33.9735ms，约3.699%；seed123/history36.516→35.4325ms，约2.967%。各组四轮输出分别全匹配7b959143…/75b62d2f…。HDR异步40帧32.984ms/FEEA9EF3…，24帧每8帧reset33.740ms/22C171FC…，全有限。HDR为正确性回归，无同期ABBA速度结论。
 
 COMGR/gfx1201编译通过，packed C32模块SHAC3CF4A4D0C597F9302F69F417A360297F988F196B10A328A7EDAC952AE98561C；24模块固定在hip-backend/c32-input-dword-release-modules，DLL仍native-identity-shift.addon64/5ab7d7d3…。未部署，游戏仍8568acff…、用户24FPS。日志release/HIP/c32-lds-build/test.log，c32-input-dword-build/test/history/hdr/reset.log。编译input候选定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_INPUT_DWORD=1；test-c32-input-dword.ps1以固定direct8候选为基线。
+
+
+### 2026-09-15：C32输出投影LDS整组读取撤回，刷新热点
+仅将输出投影a操作数从逐byte put_bits改成memcpy8，宏HIP_C32_OUTPUT_READ8控制。COMGR编译及正常900 ABBA4轮输出hash全部通过，但热中位34.0665→34.243ms略慢，已从生产源码撤回。补丁归档Development/HIP/experiments/c32-output-read8.patch，测试脚本test-c32-output8.ps1保留（需先应用补丁编译候选，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_OUTPUT_READ8=1）。没有用此变体更新固定候选。
+
+profile-current.ps1更新为c32-input-dword-release-modules并开启identity-shift。热轮逐核等待诊断：mapped C32 9次6.061ms；MH QKV归一化49次7.454ms、融合attention49次4.507ms、matrix投影36次3.515ms、shift pack44次3.286ms/crop45次2.744ms。输出保持7b959143…。逐核等待含调度开销，不当正常帧组成比例；identity-shift确实把原pack49/crop50各减少5次。日志release/HIP/c32-output8-build/test.log和profile-after-c32.log。游戏与固定候选均未改变。
