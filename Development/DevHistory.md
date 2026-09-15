@@ -1721,3 +1721,13 @@ current比较/profile脚本更新固定模块与benchmark_c256_attn_project.exe�
 COMGR和专用benchmark编译通过，资源LDS54528bytes、VGPR230、SGPR40、private/spill0。连续40帧ABBA基线20.514/20.532ms，候选21.047/21.036ms，最终FEEA9EF3…一致、首尾有限。更慢，不采用，未扩大全帧/reset，生产源码恢复，游戏仍57b8ab45…+c256-attn-project-release-modules。
 
 补丁experiments/c512-attn-project.patch、test-c512-attn-project.ps1；配套benchmark_c512_attn_project.exe及HIP_ISA_HALF=1内核，模块multihead_fused_attention.hsaco。日志release/HIP/c512-attn-project-test.log。
+
+
+### 2026-09-16：C512 FFN FP8预打包有速度收益但出现逐位反例，暂不采用
+实验新增PackedSplitFfnWeight缓存，分别精确打包ffwd展开/收缩区域262144/393216起各131072个元素，旧float缓存仍供mix使用。split_ffn_fused_fp8直接读取byte权重/隐藏层，用FP8 WMMA替代F16 WMMA，保持K16顺序与激活/舍入。首轮因组偏移仍按float推进而golden失败，修正g*16384→g*4096后重新编译测量；初次失败不计性能。
+
+修正版连续40帧ABBA首轮基线20.509ms，候选20.094/20.148ms，最终FEEA9EF3…匹配、首尾有限（末轮基线见日志）。全40帧及24帧每8帧reset均有限且最终golden匹配，seed123/history也匹配。但16个C512块×零/一般FP8/更宽有限FP8混合符号输入共48组中，block46 pattern2出现10个float位差，其余47组一致、均有限。block46在生产默认跳过，但此反例使任意有限FP8输入逐位等价的主张不成立，不能仅凭真实帧fixture通过交付。
+
+因此源码恢复，不部署此候选。反例保留在test_split_ffn_fp8.cpp（需应用experiments/split-ffn-fp8.patch后编译）。验证脚本validate-split-ffn-fp8*.ps1会因该反例失败，不能写成全部通过。临时DLL release/HIP/native-split-ffn-fp8.addon64 SHA0f67e72dccc9e3be4348997184ed08074ad88577f98541fc5d9375b1ade754bb仅为未接受实验产物。
+
+日志release/HIP/split-ffn-fp8-test.log（错误布局）、split-ffn-fp8-fixed-test.log（修正版ABBA）、split-ffn-fp8-validation.log（反例）。游戏仍57b8ab45…+c256-attn-project-release-modules，未改。
