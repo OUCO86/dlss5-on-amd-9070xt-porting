@@ -67,7 +67,7 @@ struct LayerBenchmark {
 }
 int main(int argc,char**argv){try{
  if(argc!=5&&argc!=6&&argc!=7&&argc!=8)throw std::runtime_error("usage: compare_layers.exe ASSETS FLAGS MODULES OUTPUT.csv [pattern] [fused-ffn]");
- if(argc==8&&std::string(argv[7])!="mh-only"&&std::string(argv[7])!="c32-only")throw std::runtime_error("unknown layer filter");
+ if(argc==8&&std::string(argv[7])!="mh-only"&&std::string(argv[7])!="c32-only"&&std::string(argv[7])!="c64-only")throw std::runtime_error("unknown layer filter");
  unsigned pattern=argc>=6?std::stoul(argv[5]):0;if(pattern>1)throw std::runtime_error("pattern must be0 or1");
  if(argc>=7&&(std::string(argv[6])!="fused-ffn"&&std::string(argv[6])!="fused-tiled"&&std::string(argv[6])!="fused-selected"))throw std::runtime_error("unknown layer option");load_flags(argv[2]);const unsigned repeats=20;
  const IID experimental={0x76f5573e,0xf13a,0x40f5,{0xb2,0x97,0x81,0xce,0x9e,0x18,0x93,0x3f}};
@@ -79,12 +79,12 @@ int main(int argc,char**argv){try{
  auto readback=[&](ID3D12Resource*r,size_t count,unsigned format){size_t bytes=count*format;auto*rb=buffer(d,bytes,D3D12_HEAP_TYPE_READBACK);sub.Submit([&](ID3D12GraphicsCommandList*l){transition(l,r,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_COPY_SOURCE);l->CopyBufferRegion(rb,0,r,0,bytes);transition(l,r,D3D12_RESOURCE_STATE_COPY_SOURCE,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);});void*p;D3D12_RANGE range{0,bytes};ck(rb->Map(0,&range,&p));std::vector<float>v(count);for(size_t i=0;i<count;i++)v[i]=format==1?((static_cast<unsigned char*>(p)[i]&127)==127?std::nanf(""):fp8(static_cast<unsigned char*>(p)[i])):format==2?hip_reference::Half(static_cast<uint16_t*>(p)[i]):static_cast<float*>(p)[i];rb->Unmap(0,nullptr);rb->Release();return v;};
  std::ofstream phases(std::string(argv[4])+".hip-phases.csv");phases<<"block,C,mode,kernel,batch_wall_ms_per_call,calls\n";std::ofstream csv(argv[4]);if(!csv)throw std::runtime_error("CSV open");csv<<"block,C,W,H,shift,mode,round,backend,wall_ms,gpu_ms,bitdiff,invalid,maxabs\n";
  struct Case{unsigned b,c,w,h,shift;};
- for(auto item:{Case{70,32,1600,1024,3},Case{1,32,800,512,0},Case{4,32,800,512,2},Case{5,64,400,256,0},Case{6,64,400,256,3},Case{9,128,200,128,0},Case{15,256,100,64,0},Case{23,512,50,32,0},Case{31,1024,20,20,0}}){
-  auto b=item.b,C=item.c,W=item.w,H=item.h,shift=item.shift;if(argc==8&&((std::string(argv[7])=="mh-only"&&(C==32||C==1024))||(std::string(argv[7])=="c32-only"&&C!=32)))continue;size_t count=size_t(W)*H*C;
+ for(auto item:{Case{70,32,1600,1024,3},Case{1,32,800,512,0},Case{4,32,800,512,2},Case{5,64,400,256,0},Case{6,64,400,256,3},Case{62,64,400,256,0},Case{63,64,400,256,3},Case{64,64,400,256,1},Case{65,64,400,256,2},Case{9,128,200,128,0},Case{15,256,100,64,0},Case{23,512,50,32,0},Case{31,1024,20,20,0}}){
+  auto b=item.b,C=item.c,W=item.w,H=item.h,shift=item.shift;if(argc==8&&((std::string(argv[7])=="mh-only"&&(C==32||C==1024))||(std::string(argv[7])=="c32-only"&&C!=32)||(std::string(argv[7])=="c64-only"&&C!=64)))continue;size_t count=size_t(W)*H*C;
   std::string stem=b==70?"post70":"block"+std::to_string(b);
   auto fw=hip_reference::ReadWeights(std::string(argv[1])+"/"+stem+(C==1024?"-expand.f32":C==512?"-ffwd.f32":"-ffn.f32")),aw=hip_reference::ReadWeights(std::string(argv[1])+"/"+stem+(C==1024?"-qkv.f32":"-attention.f32"));
   std::vector<float>input(count);for(size_t i=0;i<count;i++)input[i]=pattern&&C==32?float(int((i*73+19)%2048)-1024)/512.f:fp8(unsigned((i*(pattern?53:37)+i/31+11)%(pattern?96:80))|((i%3==0)?128:0));
-  auto*src=upload(input);ID3D12Resource*rawsrc=nullptr;
+  auto*src=upload(input);ID3D12Resource*rawsrc=nullptr;ID3D12Resource*mhsrc=src;const bool decoder64=b>=63&&b<=65;if(decoder64){std::vector<float>packed_input(count/4);auto*bytes=reinterpret_cast<unsigned char*>(packed_input.data());for(size_t i=0;i<count;i++)bytes[i]=exact8(input[i]);mhsrc=upload(packed_input);}
   std::vector<float>bytes;if(C==32){bytes.resize(count/2);auto*half=reinterpret_cast<uint16_t*>(bytes.data());for(unsigned y=0;y<H;y++)for(unsigned x=0;x<W;x++)for(unsigned c=0;c<32;c++){size_t from=(size_t(y)*W+x)*32+c,to=((size_t(y/8)*(W/8)+x/8)*64+(y%8)*8+x%8)*32+c;uint32_t bits;memcpy(&bits,&input[from],4);uint32_t a=bits&0x7fffffffu;half[to]=uint16_t((bits>>16)&0x8000u)|(a?uint16_t((a>>13)-0x1c000u):0);}rawsrc=upload(bytes);}
 
   hip_reference::Options o;o.assets=argv[1];o.modules=argv[3];o.width=1600;o.height=1024;o.post_shift=3;
@@ -100,7 +100,7 @@ int main(int argc,char**argv){try{
    if(C==32){c32=std::make_unique<NativeC32Stage>();c32->Create(d,mode==2?rawsrc:src,W,H,shift,fw,aw,wide(argv[1]),true,mode!=0);if(mode==1)c32->MapFromRaster(src);if(mode==2)HlslLayerBenchmark::Raw(*c32,rawsrc);HlslLayerBenchmark::Describe(*c32);c32->SetSkipFinish(true);c32->SetCropNeeded(false);out=c32->RawWork();format=c32->HalfStream()?2:4;record=[&](ID3D12GraphicsCommandList*l){c32->Record(l);};}
    else if(C==1024){vit=std::make_unique<NativeVitBlock>();vit->Create(d,src,W*H,fw,hip_reference::ReadWeights(std::string(argv[1])+"/"+stem+"-contract.f32"),aw,hip_reference::ReadWeights(std::string(argv[1])+"/"+stem+"-projection.f32"),wide(argv[1]));HlslLayerBenchmark::Describe(*vit);out=vit->Output();format=4;record=[&](ID3D12GraphicsCommandList*l){vit->Record(l);};}
    else if(C==512){workspace.Create(d,size_t((W+15)&~7u)*((H+15)&~7u)*C);split=std::make_unique<NativeSplitWindow>();split->Create(d,src,W,H,shift,fw,hip_reference::ReadWeights(std::string(argv[1])+"/"+stem+"-ffwd-projection.f32"),aw,wide(argv[1]),false,&workspace,2);out=split->Output();format=1;record=[&](ID3D12GraphicsCommandList*l){split->Record(l);};}
-   else{workspace.Create(d,size_t((W+15)&~7u)*((H+15)&~7u)*C);mh=std::make_unique<NativeC64Shift>();mh->Create(d,src,W,H,shift,fw,aw,wide(argv[1]),false,C,false,&workspace,false,true,false);HlslLayerBenchmark::Describe(*mh);out=mh->Output();format=1;record=[&](ID3D12GraphicsCommandList*l){mh->Record(l);};}
+   else{workspace.Create(d,size_t((W+15)&~7u)*((H+15)&~7u)*C);mh=std::make_unique<NativeC64Shift>();mh->Create(d,mhsrc,W,H,shift,fw,aw,wide(argv[1]),false,C,false,&workspace,decoder64,b!=65,false);HlslLayerBenchmark::Describe(*mh);out=mh->Output();format=b==65?4:1;record=[&](ID3D12GraphicsCommandList*l){mh->Record(l);};}
    NativeResidentFlush();sub.Submit(record);auto expected=readback(out,output_count,format);auto diff=compare(expected,actual);
    printf("CHECK block=%u C=%u mode=%u format=%u bitdiff=%zu invalid=%zu maxabs=%.9g\n",b,C,mode,format,diff.bits,diff.invalid,diff.maxabs);fflush(stdout);if(diff.invalid)throw std::runtime_error("nonfinite layer output");
    NativeNetworkTimestamps timer;timer.Create(d);
@@ -112,7 +112,7 @@ int main(int argc,char**argv){try{
    }
    timer.Reset();sub.Submit([&](ID3D12GraphicsCommandList*l){timer.Mark(l,"detail_begin");if(c32)c32->Record(l,&timer,"c32");else if(mh)mh->Record(l,&timer);else if(split)split->Record(l,&timer);else for(unsigned stage=0;stage<5;stage++){vit->RecordStage(l,stage);timer.Mark(l,"vit_stage"+std::to_string(stage));}timer.Mark(l,"detail_end");timer.Resolve(l);});printf("DETAIL block=%u mode=%u backend=HLSL\n",b,mode);timer.Report(sub.TimestampFrequency());hip_reference::LayerBenchmark::Profile(net,mode==2?hi_raw:hi,W,H,C,b,shift,mode,actual,phases);
   }
-  net.Synchronize();ho.reset();hi.reset();hi_raw.reset();src->Release();if(rawsrc)rawsrc->Release();
+  net.Synchronize();ho.reset();hi.reset();hi_raw.reset();if(mhsrc!=src)mhsrc->Release();src->Release();if(rawsrc)rawsrc->Release();
  }
  q->Release();d->Release();return 0;
 }catch(const std::exception&e){fprintf(stderr,"FAILED: %s\n",e.what());return 1;}}

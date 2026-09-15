@@ -1599,3 +1599,13 @@ HIP前后完整基线21.904/21.955ms；绕过C64/C128/C256/C512后分别18.840/1
 HLSL C512绕过被已有布局检查拒绝：skip block23 input/output layouts differ。未绕过该检查，脚本显式标记不支持该组；第一次运行在此终止，随后仅补测baseline-after并通过。不能将缺失项当0。
 
 以两端基线均值粗估：C64组HIP差约3.09ms/HLSL约1.61ms，C128约2.41/1.95ms，C256约2.62/2.44ms。绕过会改变后续数据、缓存与调度，不能简单加总或当纯核耗时；但C64是后续重点。日志release/HIP/mh-ablation-current.log、mh-ablation-hlsl-current.log。
+
+
+### 2026-09-16：补C64解码层并纠正比较工具格式
+compare_layers.cpp新增62–65（400×256，shift0/3/1/2）和c64-only过滤，compare-current-c64.ps1运行当前固定模块。首次统一f32输入/FP8输出测得block65大量差异；核对native_decoder_tail69.h发现实际63–65接FP8输入、65输出float。工具改为给63–65上传精确FP8输入，65按float读出，不改任何生产推理代码。
+
+修正后block63/65逐位一致；block62 bitdiff198/maxabs0.5、64 bitdiff159/maxabs0.25，均无非有限值。62仍使用明确的raster f32样本；未声称覆盖实际up62可选f16接口。旧block65差异不作为算法错误证据。
+
+单层ABBA wall：62 HIP0.321350/0.313300ms，HLSL0.328150/0.291700；63 HIP0.387800/0.386350，HLSL0.322800/0.283100；64 HIP0.372900/0.367700，HLSL0.319350/0.279400；65 HIP0.375150/0.369000，HLSL0.346350/0.300100。HLSL首次/末次仍有时钟或调度变化，不能把整网绕过差额与逐层值直接相加。
+
+编译/运行通过，日志release/HIP/compare-c64-decoder-current.log（格式未修正）及compare-c64-decoder-formats.log（修正后）。本轮定位与工具修正，无新增性能收益、无游戏部署。
