@@ -1143,3 +1143,9 @@ COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold29.93
 正常900 ABBA4轮各6次去cold29.1565→28.780ms；seed123/history30.786→30.1375ms。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧29.311ms/FEEA9EF3…，24帧每8帧reset27.353ms/22C171FC…，全有限。HDR为正确性回归，不与异轮数字直接比较速度。
 
 内核、runner、完整DLL编译通过：release/HIP/native-split-project.addon64 SHA13c7cd1273b2fc2d6eb37e1766246005e635fbcb91d3c7a4c5a57a6eb3a34fcd；deep_fast-packed模块SHACFF00D26D3E2D59CF0CE24A023BFFC265E77BF74FE8DD8BF5784C2DD8779EA0C；24模块固定split-project-blocked-release-modules。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-split-project-blocked.ps1，日志release/HIP/split-project-blocked-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：部署约28.8ms FFN/split整合候选
+部署脚本确认游戏退出，安装native-split-project.addon64（SHA13c7cd1273b2fc2d6eb37e1766246005e635fbcb91d3c7a4c5a57a6eb3a34fcd）及split-project-blocked-release-modules的24个HSACO，逐hash验证通过。再次确认900P/HIP_FAST1/ASYNC_SUBMIT1、deep_fast-packed为CFF00D26…匹配。包含QKV通道特化、普通MH第三投影融合、C512分组FFN融合及mix/projection分块；不含已拒绝byte接口、K64等实验。
+
+旧a7b7521b… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-split-project。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-split-project（游戏须退出）。未启动游戏，新版实际FPS尚未验证，离线28.8ms不等于游戏帧率。用户最后明确实测仍为更早5ab7版900P26～27FPS；不要把此数字归到a7b或新13c7版本。
