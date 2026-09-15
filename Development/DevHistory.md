@@ -1239,3 +1239,13 @@ COMGR/gfx1201模块编译通过，multihead-fast-padded-wave-packed SHA124250005
 COMGR/gfx1201编译通过。连续负载EdgesOnly=1、40帧ABBA：基线26.127/26.129ms，候选26.053/26.045ms；四轮最终FEEA9EF3…匹配，首尾检查有限。收益约0.08ms，未进一步做全域转换证明、全帧/history-reset验证，生产源码已恢复，未默认。补丁experiments/dense-direct-fbyte.patch，test-dense-direct-fbyte.ps1（需应用补丁编译，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_DENSE_DIRECT_FBYTE=1）；日志release/HIP/dense-direct-fbyte-build/test.log。
 
 最优固定候选仍ffn-input-pack4-release-modules+b4e46e15 DLL，游戏仍b4e46e15+mh-input-mapped，本轮未部署。
+
+
+### 2026-09-15：修正过时的层级基准，定位前置路径差异
+compare_layers的mh-only现要求fused-selected并启用当前普通FFN第三投影融合、MH crop/mapped和split优化，模块更新至ffn-input-pack4-release-modules。新增c32-only；HIP mode0保持显式pack，mode1真正调用mapped入口，mode2从与HLSL相同的half raw tile输入调用chain入口，而非此前所有模式都额外pack。Profile也使用对应输入和入口。测试工具编译通过，游戏/推理源码未变。
+
+当前MH批次wall两轮中位（HLSL/HIP ms）：C64块5 0.3121/0.3257；移位块6 0.3213/0.3903；C128块9 0.2304/0.2501；C256块15 0.2020/0.2173；C512块23 0.1393/0.2182。全有限，既有跨后端数值差异保留。C32高分辨率块70 mode1 1.0619/1.4210ms，mode2 1.0660/1.6221ms；块1 mode1 0.2832/0.3793ms、块4 mode1 0.2847/0.3839ms。该组C32测试mode0/1/2的输出比较通过，无非有限；详情见日志，不推广到所有输入等价。
+
+这些隔离批次的预热/工作集/时钟条件仍不同于整网，不直接按层数求和解释约9.6ms差距。此前旧工具额外pack/未启用融合的HIP时间不再用于当前归因。
+
+源码确认HLSL NativePreblockRuntime有DLSS5_INLINE_PREFIX映射mode5，HIP仍独立dlss5_prefix_fast_features+project并物化两幅float图。下一步值得对照该前置路径，不再只盯普通MH的小差距。脚本compare-current-mh.ps1、compare-current-c32.ps1；日志release/HIP/mh-current-latest.log、c32-current-latest.log。
