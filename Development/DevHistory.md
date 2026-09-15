@@ -1731,3 +1731,15 @@ COMGR和专用benchmark编译通过，资源LDS54528bytes、VGPR230、SGPR40、p
 因此源码恢复，不部署此候选。反例保留在test_split_ffn_fp8.cpp（需应用experiments/split-ffn-fp8.patch后编译）。验证脚本validate-split-ffn-fp8*.ps1会因该反例失败，不能写成全部通过。临时DLL release/HIP/native-split-ffn-fp8.addon64 SHA0f67e72dccc9e3be4348997184ed08074ad88577f98541fc5d9375b1ade754bb仅为未接受实验产物。
 
 日志release/HIP/split-ffn-fp8-test.log（错误布局）、split-ffn-fp8-fixed-test.log（修正版ABBA）、split-ffn-fp8-validation.log（反例）。游戏仍57b8ab45…+c256-attn-project-release-modules，未改。
+
+
+### 2026-09-16：定位FP8反例到展开，保留F16展开+FP8收缩取得约0.21ms
+阶段隔离使用同一精确打包权重，控制组两阶段F16（权重从FP8解码）48组全一致；只换展开为FP8复现block46 pattern2的10个差值；只换收缩为FP8则48组全一致。日志release/HIP/split-stage-isolation.log。未进一步声称差异的硬件内部根因。
+
+最终split_ffn_fused_fp8保留原dot16展开与原始float展开权重，只预打包393216起131072个收缩权重，直接用byte hidden和FP8收缩WMMA。PackedSplitFfnWeight使用独立@split-contract-fp8 key，精确编码检查；非packed沿用旧kernel。激活、Hrtz及输出F保持，未增加跳块或改变分辨率。
+
+连续40帧ABBA基线20.519/20.533ms，候选20.311/20.316ms，最终FEEA9EF3…匹配、首尾有限。48组（含block46大幅度反例）全部逐位一致，无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检20.499/20.670ms不当连续计时。
+
+完整DLL release/HIP/native-split-contract-fp8.addon64 SHA872ac9cf127375cec5c9398cb0c75365f16185204587c07800e7c750975086d0；固定24模块split-contract-fp8-release-modules，deep_fast-packed模块SHA2B88724479BBFA5F89B124319AAE9D373349C33D1AA6B8ACA92BC807A1713497。尚未部署，游戏仍57b8ab45…+c256-attn-project-release-modules。
+
+最终脚本test-split-contract-fp8.ps1及validate-split-contract-fp8*.ps1，复用重新编译的benchmark_split_ffn_fp8.exe/test_split_ffn_fp8.exe；日志release/HIP/split-contract-fp8-test.log、split-contract-fp8-validation.log。阶段隔离补丁experiments/split-ffn-stage-isolation.patch基于2364bb5前的生产源码，需匹配该补丁的host/test重新编译，并以HIP_SPLIT_EXPAND_FP8/HIP_SPLIT_CONTRACT_FP8的00/10/01组合生成split-stage-control/expand/contract.hip供isolate-split-ffn-stages.ps1使用；不能混用当前仅打包收缩的测试exe。

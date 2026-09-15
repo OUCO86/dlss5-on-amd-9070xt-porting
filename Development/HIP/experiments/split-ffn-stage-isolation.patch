@@ -1,0 +1,61 @@
+diff --git a/Development/HIP/deep_fast.hip b/Development/HIP/deep_fast.hip
+index b3a3f9b..bc31768 100644
+--- a/Development/HIP/deep_fast.hip
++++ b/Development/HIP/deep_fast.hip
+@@ -271,3 +271,26 @@ WAVE void vit_qkv_project_normalize_fused(const float*in,const float*w,float*out
+  }
+  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){float scale=part==0?5.65625f*w[3145728+row/32]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=F(v);}
+ }
++
++KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
++void split_ffn_fused_fp8(const float*in,const float*w,float*out,uint tokens){
++ uint block=bid(),first=(block/8)*16,g=block%8,tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32;
++ if(first>=tokens)return;
++ __attribute__((shared)) unsigned char hidden[16*260];
++ f8 expanded[4]{};
++ const uint*pw=reinterpret_cast<const uint*>(w);
++#if HIP_SPLIT_EXPAND_FP8
++ for(uint j=0;j<4;j++)for(uint k=0;k<64;k+=16){i2 a{};for(uint e=0;e<8;e++)pack(a,e,in[(first+rc())*512+g*64+k+gr()*8+e]);uint off=262144+g*4096+((wave*64+j*16+rc())*64+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};expanded[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,expanded[j]);}
++#else
++ for(uint j=0;j<4;j++)for(uint k=0;k<64;k+=16){h8 a{},b{};for(uint e=0;e<8;e++){uint kk=k+gr()*8+e;a[e]=(_Float16)in[(first+rc())*512+g*64+kk];b[e]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(w+262144)[g*16384+(wave*64+j*16+rc())*64+kk]),0);}expanded[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,expanded[j]);}
++#endif
++ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){float v=Hrtz(expanded[j][e]),gate=clampf(v,-4.f,4.f),poly=gate*(absf(gate)*(-.055908203125f)+.447265625f)+.89453125f;hidden[(gr()*8+e)*260+wave*64+j*16+rc()]=byte_F(v*poly);}
++ __builtin_amdgcn_s_barrier();
++ f8 result{};
++#if HIP_SPLIT_CONTRACT_FP8
++ for(uint k=0;k<256;k+=16){i2 a{};__builtin_memcpy(&a,hidden+rc()*260+k+gr()*8,8);uint off=393216+g*4096+((wave*16+rc())*256+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
++#else
++ for(uint k=0;k<256;k+=16){h8 a{},b{};for(uint e=0;e<8;e++){uint kk=k+gr()*8+e;a[e]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(hidden[rc()*260+kk]),0);b[e]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(w+393216)[g*16384+(wave*16+rc())*256+kk]),0);}result=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,result);}
++#endif
++ for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+g*64+wave*16+rc()]=F(Hrtz(result[e]));
++}
+diff --git a/Development/HIP/hip_reference_network.h b/Development/HIP/hip_reference_network.h
+index 23cfc53..c61ee39 100644
+--- a/Development/HIP/hip_reference_network.h
++++ b/Development/HIP/hip_reference_network.h
+@@ -86,6 +86,7 @@ class Network {
+    it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;
+   }return P(it->second);
+  }
++ void* PackedSplitFfnWeight(const std::string&name){const auto key=name+"@split-ffn-fp8";auto it=weights.find(key);if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);if(v.size()!=WeightElements(name))throw std::runtime_error("split FFN weight shape");PackWeightRegions(v,{{262144,131072},{393216,131072}});it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;}return P(it->second);}
+  void* PackedDeepWeight(const std::string&name,size_t matrix_elements){
+   if(!opt.packed_weights||!opt.fast_deep)return Weight(name);
+   const std::string key=name+"@fp8";auto it=weights.find(key);if(it==weights.end()){
+@@ -119,7 +120,7 @@ class Network {
+    if(kernel.rfind("vit_expand_blocked_fp8",0)==0||kernel.rfind("vit_contract_blocked_fp8",0)==0||kernel.rfind("vit_contract_parts_blocked_fp8",0)==0)groups=count/1024;
+    if(kernel=="vit_qkv_project_blocked"||kernel=="vit_qkv_project_normalize_fused")groups=count/512;
+    if(kernel=="split_mix_blocked"||kernel=="split_projection_blocked")groups=count/1024;
+-   if(kernel=="split_ffn_fused"){threads=128;groups=count/1024;}
++   if(kernel=="split_ffn_fused"||kernel=="split_ffn_fused_fp8"){threads=128;groups=count/1024;}
+    if(kernel=="vit_contract_combine"||kernel=="vit_pack_input")threads=256;
+    if(kernel=="vit_qkv_normalize")count=Count(size_t(count)*32);
+    if(kernel=="vit_attention_inverse_fast")count=Count(size_t(count)*16);
+@@ -203,7 +204,7 @@ class Network {
+  }
+  Tensor Attention(Tensor input,U w,U h,U c,const std::string&aw,bool raw,bool rounded_output=false){if(opt.fast_mh)return AttentionFast(input,w,h,c,aw,raw,rounded_output);U n=w*h,windows=n/64,heads=c/32;auto qkv=New(size_t(n)*3*c),qk=New(size_t(n)*2*c);Run("mh","mh_qkv",size_t(n)*3*c,P(input),Weight(aw),P(qkv),n,c);Run("mh","mh_normalize",size_t(n)*heads,P(qkv),Weight(aw),P(qk),n,c);auto ex=New(size_t(windows)*heads*4096),prob=New(size_t(windows)*heads*4096);Run("mh","mh_scores_exp",size_t(windows)*heads*4096,P(qk),Weight(aw),P(ex),w,h,c);qk.reset();Run("mh","mh_probabilities",size_t(windows)*heads*64,P(ex),P(prob),windows,c);ex.reset();auto av=New(size_t(n)*c);Run("mh","mh_attention_av",size_t(n)*c,P(prob),P(qkv),P(av),w,h,c);prob.reset();qkv.reset();auto out=New(size_t(n)*c);Run("mh","mh_attention_project",size_t(n)*c,P(av),P(input),Weight(aw),P(out),n,c,U(raw));return out;}
+  Tensor Body(Tensor input,U w,U h,U c,U shift,U block,bool raw){if(opt.skip_blocks.count(block)){Stage("block"+std::to_string(block),input);return input;}U sx=(shift&1)?4:0,sy=(shift&2)?4:0,ww=(w+sx+7)&~7u,hh=(h+sy+7)&~7u,n=ww*hh;const bool identity=opt.elide_identity_shift&&!sx&&!sy&&ww==w&&hh==h;bool mapped=opt.mh_input_mapped&&c!=512&&!identity;auto packed=(identity||mapped)?input:New(size_t(n)*c);if(!identity&&!mapped)Run("mh","mh_shift_pack",size_t(n)*c,P(input),P(packed),w,h,ww,hh,sx,sy,c,U(0));Tensor ffn=New(size_t(n)*c);Tensor producer_norm=(opt.ffn_qkv&&c<=opt.ffn_qkv_max_c&&c!=512)?New(size_t(n)*3*c/4):Tensor{};
+- if(c==512){auto mixed=New(size_t(n)*512),hidden=opt.split_ffn_fused?Tensor{}:New(size_t(n)*(opt.fp8_deep?512:2048)),contract=New(size_t(n)*512);auto fw=Weight(Block(block,"ffwd"));Run("deep",opt.split_mix_blocked?"split_mix_blocked":"split_mix",size_t(n)*512,P(packed),fw,P(mixed),n);if(opt.split_ffn_fused){Run("deep","split_ffn_fused",size_t(n)*512,P(mixed),fw,P(contract),n);mixed.reset();}else{Run("deep",opt.fp8_deep?"split_expand_fp8":"split_expand",size_t(n)*2048,P(mixed),fw,P(hidden),n);mixed.reset();Run("deep",opt.fp8_deep?"split_contract_fp8":"split_contract",size_t(n)*512,P(hidden),fw,P(contract),n);}hidden.reset();Run("deep",opt.split_project_blocked?"split_projection_blocked":"split_projection",size_t(n)*512,P(contract),PackedDeepWeight(Block(block,"ffwd-projection"),262144),P(packed),P(ffn),n);}
++ if(c==512){auto mixed=New(size_t(n)*512),hidden=opt.split_ffn_fused?Tensor{}:New(size_t(n)*(opt.fp8_deep?512:2048)),contract=New(size_t(n)*512);auto fw=Weight(Block(block,"ffwd"));Run("deep",opt.split_mix_blocked?"split_mix_blocked":"split_mix",size_t(n)*512,P(packed),fw,P(mixed),n);if(opt.split_ffn_fused){Run("deep",opt.packed_weights?"split_ffn_fused_fp8":"split_ffn_fused",size_t(n)*512,P(mixed),opt.packed_weights?PackedSplitFfnWeight(Block(block,"ffwd")):fw,P(contract),n);mixed.reset();}else{Run("deep",opt.fp8_deep?"split_expand_fp8":"split_expand",size_t(n)*2048,P(mixed),fw,P(hidden),n);mixed.reset();Run("deep",opt.fp8_deep?"split_contract_fp8":"split_contract",size_t(n)*512,P(hidden),fw,P(contract),n);}hidden.reset();Run("deep",opt.split_project_blocked?"split_projection_blocked":"split_projection",size_t(n)*512,P(contract),PackedDeepWeight(Block(block,"ffwd-projection"),262144),P(packed),P(ffn),n);}
+  else{auto hidden=opt.fused_mh_ffn?Tensor{}:New(size_t(n)*c*(opt.fp8_ffn?1:4)),middle=opt.fused_ffn_project?Tensor{}:New(size_t(n)*c/(opt.fp8_middle?4:1));auto fw=opt.fast_mh?PackedFusedMhWeight(Block(block,"ffn"),c):Weight(Block(block,"ffn"));if(opt.fused_mh_ffn){auto name="mh_ffn_fused_c"+std::to_string(c)+(opt.tiled_mh_ffn&&c>=opt.tiled_ffn_min_c?"_tiled":"")+(opt.fused_ffn_project?"_project":"")+(mapped?"_mapped":"")+(opt.grouped_mh_contract?"_g128":"")+(producer_norm?"_qkv":"");if(producer_norm)Run("mh_fast",name.c_str(),size_t(n)*c,P(packed),fw,PackedMhWeight(Block(block,"attention"),c,true),P(ffn),P(producer_norm),n,w,h,ww,sx,sy);else if(mapped)Run("mh_fast",name.c_str(),size_t(n)*c,P(packed),fw,P(ffn),n,w,h,ww,sx,sy);else Run("mh_fast",name.c_str(),size_t(n)*c,P(packed),fw,P(opt.fused_ffn_project?ffn:middle),n);}else{Run(opt.fast_mh?"mh_fast":"mh",opt.fp8_ffn?"mh_ffn_expand_fast_fp8":opt.fast_mh?"mh_ffn_expand_fast":"mh_ffn_expand",size_t(n)*c*4,P(packed),fw,P(hidden),n,c);Run(opt.fast_mh?"mh_fast":"mh",opt.fp8_middle?"mh_ffn_contract_fast_fp8_out":opt.fp8_ffn?"mh_ffn_contract_fast_fp8":opt.fast_mh?"mh_ffn_contract_fast":"mh_ffn_contract",size_t(n)*c,P(hidden),fw,P(middle),n,c);hidden.reset();}if(!opt.fused_ffn_project)Run(opt.fast_mh?"mh_fast":"mh",opt.fp8_middle?"mh_ffn_project_fast_fp8":opt.fast_mh?"mh_ffn_project_fast":"mh_ffn_project",size_t(n)*c,P(middle),P(packed),fw,P(ffn),n,c);}packed.reset();bool crop=opt.mh_project_crop&&!identity;auto attended=(crop||producer_norm)?AttentionFast(ffn,ww,hh,c,Block(block,"attention"),raw,block==48||block==55||block==61||block==65,crop?w:0,crop?h:0,sx,sy,producer_norm):Attention(ffn,ww,hh,c,Block(block,"attention"),raw,block==48||block==55||block==61||block==65);auto out=(identity||crop)?attended:New(size_t(w)*h*c);if(!identity&&!crop)Run("mh","mh_shift_crop",size_t(w)*h*c,P(attended),P(out),w,h,ww,sx,sy,c);Stage("block"+std::to_string(block),out);return out;}
+  Tensor Down(Tensor raw,U w,U h,U c,const std::string&file,bool head=false){U ow=w/2,oh=h/2,vw=0,vh=0;if(head&&w==60&&h==36){ow=32;oh=20;vw=30;vh=18;}auto pooled=New(size_t(ow)*oh*c),out=New(size_t(ow)*oh*c*2);Run("mh","mh_pool",size_t(ow)*oh*c,P(raw),P(pooled),ow,oh,w,vw,vh,c);Run(opt.fast_mh?"mh_fast":"mh",opt.fast_mh?"mh_pool_project_production":"mh_pool_project",size_t(ow)*oh*c*2,P(pooled),Weight(file),P(out),ow,oh,vw,vh,c);return out;}
+  Tensor Gather(Tensor input,U n,bool inverse){auto it=gather_maps[inverse].find(n);if(it==gather_maps[inverse].end()){std::vector<U>map(size_t(n)*1024);for(U t=0;t<n;t++)for(U c=0;c<1024;c++){U raster=(t&~15u)|((t&1u)<<3)|((t&14u)>>1),ch=(c&~31u)|((c&1u)<<1)|((c&2u)>>1)|((c&4u)<<2)|((c&24u)>>1),to=t*1024+c,from=raster*1024+ch;if(inverse)map[from]=to;else map[to]=from;}it=gather_maps[inverse].emplace(n,Upload(map.data(),map.size()*4,true)).first;}auto out=New(size_t(n)*1024);Run("deep","vit_gather",size_t(n)*1024,P(input),P(it->second),P(out),n*1024);return out;}

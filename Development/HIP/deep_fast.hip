@@ -271,3 +271,19 @@ WAVE void vit_qkv_project_normalize_fused(const float*in,const float*w,float*out
  }
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){float scale=part==0?5.65625f*w[3145728+row/32]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=F(v);}
 }
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+// Keep expansion F16: the FP8 expansion probe differs on block46 wide-range input.
+void split_ffn_fused_fp8(const float*in,const float*w,float*out,uint tokens){
+ uint block=bid(),first=(block/8)*16,g=block%8,tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32;
+ if(first>=tokens)return;
+ __attribute__((shared)) unsigned char hidden[16*260];
+ f8 expanded[4]{};
+ for(uint j=0;j<4;j++)expanded[j]=dot16(in,w,first,wave*64+j*16,512,64,g*64,262144+g*16384,expanded[j]);
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){float v=Hrtz(expanded[j][e]),gate=clampf(v,-4.f,4.f),poly=gate*(absf(gate)*(-.055908203125f)+.447265625f)+.89453125f;hidden[(gr()*8+e)*260+wave*64+j*16+rc()]=byte_F(v*poly);}
+ __builtin_amdgcn_s_barrier();
+ f8 result{};
+ const uint*pw=reinterpret_cast<const uint*>(w);
+ for(uint k=0;k<256;k+=16){i2 a{};__builtin_memcpy(&a,hidden+rc()*260+k+gr()*8,8);uint off=393216+g*4096+((wave*16+rc())*256+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
+ for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+g*64+wave*16+rc()]=F(Hrtz(result[e]));
+}
