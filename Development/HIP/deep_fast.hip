@@ -51,7 +51,7 @@ using h8=_Float16 __attribute__((ext_vector_type(8)));
 using i2=int __attribute__((ext_vector_type(2)));
 #define WAVE KERNEL __attribute__((amdgpu_flat_work_group_size(32,32)))
 DEV uint rc(){return __builtin_amdgcn_workitem_id_x()&15u;}
-DEV uint gr(){return __builtin_amdgcn_workitem_id_x()>>4;}
+DEV uint gr(){return (__builtin_amdgcn_workitem_id_x()>>4)&1u;}
 DEV uint bid(){return __builtin_amdgcn_workgroup_id_x();}
 DEV void pack(i2&x,uint e,float v){uint b=uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(v,-448.f,448.f),0.f,0,false))&255;x[e/4]=int(uint(x[e/4])|(b<<(8*(e%4))));}
 template<bool ByteInput=false>
@@ -219,3 +219,17 @@ WAVE void vit_expand_blocked_fp8_tiled_bytein(const float*in,const float*w,float
 
 WAVE void vit_contract_blocked_fp8_tiled(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,true>(in,w,skip,out,tokens);}
 WAVE void vit_contract_parts_blocked_fp8_tiled(const float*in,const float*w,float*out,uint tokens){vit_contract_blocked_body<true,true>(in,w,nullptr,out,tokens);}
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+void split_ffn_fused(const float*in,const float*w,float*out,uint tokens){
+ uint block=bid(),first=(block/8)*16,g=block%8,tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32;
+ if(first>=tokens)return;
+ __attribute__((shared)) unsigned char hidden[16*260];
+ f8 expanded[4]{};
+ for(uint j=0;j<4;j++)expanded[j]=dot16(in,w,first,wave*64+j*16,512,64,g*64,262144+g*16384,expanded[j]);
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){float v=Hrtz(expanded[j][e]),gate=clampf(v,-4.f,4.f),poly=gate*(absf(gate)*(-.055908203125f)+.447265625f)+.89453125f;hidden[(gr()*8+e)*260+wave*64+j*16+rc()]=byte_F(v*poly);}
+ __builtin_amdgcn_s_barrier();
+ f8 result{};
+ for(uint k=0;k<256;k+=16){h8 a{},b{};for(uint e=0;e<8;e++){uint kk=k+gr()*8+e;a[e]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(hidden[rc()*260+kk]),0);b[e]=(_Float16)w[393216+g*16384+(wave*16+rc())*256+kk];}result=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,result);}
+ for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+g*64+wave*16+rc()]=F(Hrtz(result[e]));
+}

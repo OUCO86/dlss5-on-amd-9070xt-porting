@@ -1119,3 +1119,11 @@ COMGR模块、runner和完整DLL编译通过：release/HIP/native-ffn-project.ad
 COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold29.934→29.9425ms，四轮RGB7b959143…一致。减少中间逻辑数据量但没有速度收益，未进一步跑历史/HDR或默认启用；生产源码恢复。补丁experiments/mh-ffn-byte.patch、test-mh-ffn-byte.ps1（应用补丁后构建runner和MH模块，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1）。日志release/HIP/mh-ffn-byte-build/test.log。
 
 最优固定候选仍native-ffn-project.addon64/2934f795…+mh-ffn-project-release-modules，游戏仍a7b7521b…+mh-input-dword，未部署新实验。这个结果与此前独立预打包慢不同：新增调度已消掉，但本布局下仍无净速度收益，不能据此认定所有byte接口都无效。
+
+
+### 2026-09-15：C512 split分组FFN展缩融合
+新增split_ffn_fused：每组16token×64channel、4wave计算256维展开并将原Hrtz+激活+FP8结果留在LDS，再按原K16 FP16 WMMA顺序收缩，输出F(Hrtz)。split_mix和split_projection保持，省去13个展开/收缩之间的全局hidden与一次调度。--split-ffn-fused独立开关，要求fast_deep/fp8_deep，HIP_FAST默认启用并记日志。
+
+初版复用单wave gr()辅助函数导致多wave索引错误，首轮hash检查拦截；修正为(workitem_id>>4)&1，仅将gr明确限制为wave内半组，原32线程核行为相同。失败轮不计性能。修正后正常900 ABBA4轮各6次去cold29.924→29.509ms，seed123/history31.4555→30.8895ms；各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧28.902ms/FEEA9EF3…，24帧每8帧reset29.561ms/22C171FC…，全有限。HDR非同期ABBA，无独立速度增幅结论。
+
+内核、runner和完整DLL编译通过：release/HIP/native-split-ffn.addon64 SHA1d9470bc2bb8919a6c3af1cc1dafb97611287ef46bc1c69631484ce92ed33f4c；deep_fast-packed模块SHABC15C323B19D4FDD574C73D8D885D7C3D8328BAF6593AD11C32DE9F774EAD255；24模块固定split-ffn-release-modules，含普通MH第三投影融合。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-split-ffn.ps1，日志release/HIP/split-ffn-build/test/history/hdr/reset.log，编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
