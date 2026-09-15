@@ -1813,3 +1813,11 @@ current比较/profile脚本更新固定模块和benchmark_vit_qkv_compact.exe，
 COMGR/benchmark编译通过。有效连续40帧ABBA基线19.501/19.566ms，候选20.514/20.521ms，最终FEEA9EF3…一致、首尾有限。明显更慢，未扩大全帧/reset，生产源码与guard恢复，游戏仍c8842686…+vit-qkv-compact-release-modules。
 
 补丁experiments/c256-ffn-linear.patch、test-c256-ffn-linear.ps1，需配套benchmark_c256_ffn_linear.exe与HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块multihead-fast-padded-wave-packed.hsaco；日志release/HIP/c256-ffn-linear-test.log（初始化拒绝）及c256-ffn-linear-compatible-test.log（有效ABBA）。
+
+
+### 2026-09-16：C256 tiled权重DWORD读取+wave交换更慢，撤回
+保持现有tiled矩阵布局，只替换mh_ffn_qkv_body的Tiled展开/收缩B操作数读取：各lane读相邻4列的两DWORD，再用ds_bpermute在半wave内转置成原8字节片段，保持各lane列/K顺序及全部矩阵/舍入。无需host布局变化。
+
+COMGR编译通过；连续40帧ABBA基线19.469/19.490ms，候选19.985/19.980ms，最终FEEA9EF3…一致、首尾有限。更慢，未扩大全帧/reset，生产源码恢复，游戏仍c8842686…+vit-qkv-compact-release-modules。
+
+补丁experiments/c256-tile-shuffle.patch、test-c256-tile-shuffle.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，复用benchmark_vit_qkv_compact.exe，模块multihead-fast-padded-wave-packed.hsaco。日志release/HIP/c256-tile-shuffle-test.log。
