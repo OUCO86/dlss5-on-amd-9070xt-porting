@@ -1199,3 +1199,11 @@ compare-current-backends.ps1更新HIP为benchmark_mh_mapped.exe+mh-input-mapped-
 再用更早benchmark_live_hlsl.exe、相同配置和输入复核：26.719ms，hash仍C7C2F49D…。远端compare-hlsl-async-flags.txt与rebind-async-flags.txt逐行Compare-Object无差异。因此新/旧HLSL测试程序都出现当前慢值，未定位根因；可能仍需检查驱动运行状态/频率/资源驻留或其他共享环境因素，不能把猜测当结论。进程检查未见游戏运行；未终止其他进程或更改驱动/全局设置。
 
 日志release/HIP/compare-after-mapped.log和hlsl-old-binary-check.log。当前测得两后端接近只限当下条件，不证明重现历史HLSL18.8ms，也不证明HIP900P或1080P游戏帧率已追平。目标保持未完成。游戏仍b4e46e15…+mh-input-mapped，本轮未部署或修改配置。
+
+
+### 2026-09-15：分离HLSL命令列表内/间时间
+新增仅DLSS5_BENCH_LIST_TIMING编译的NativeActualNetwork70诊断，每个网络命令列表两端插时间戳，末尾resolve/Flush，输出列表内区间、列表间空档、CPU记录/提交与wall时间；未定义宏不启用计时。默认batch2共6列表，诊断限制128个时间戳。此额外Flush可能改变后处理重叠，不作为优化。
+
+40帧去前5，35热样本中位：in-list25.83108ms、gaps0.06636ms、CPU record/submit0.543ms、network wall26.373ms。完整HDR热中位27.001ms，最终C7C2F49D…匹配HLSL参考，全有限。当前HLSL慢值主要处于GPU列表执行区间，不是CPU记录或列表间空档，但区间含GPU等待/抢占，尚未定位频率、驱动或shader路径原因。
+
+诊断exe编译通过，说明Development/HIP/hlsl-list-timing.md，日志release/HIP/hlsl-lists-summary.log、hlsl-lists.log（后者UTF-16）。游戏未修改，历史HLSL18.8ms尚未重现，目标未判完成。

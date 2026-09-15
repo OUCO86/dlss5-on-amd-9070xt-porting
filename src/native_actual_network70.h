@@ -25,6 +25,9 @@ class NativeActualNetwork70 {
  UINT batch_submits{}; // 0 = one list per chunk, 1 = per ViT layer / 3 decoder stages, 2 = 4 ViT layers / half the decoder per list
  ID3D12Device*device{};bool ready{},failed{},temporal_bound{};
  NativeNetworkTimestamps timestamps;bool profile{};
+#ifdef DLSS5_BENCH_LIST_TIMING
+ NativeNetworkTimestamps list_timings;bool list_timer_ready{};unsigned list_frame{};
+#endif
  // DLSS5_TEST_ISOLATE=<kind>[:index[:part]][,...] (test only): after the frame is read back, re-record one stage isolate_repeat times
  // between two timestamps; total/repeat is the stage's real GPU cost without top-of-pipe timestamp attribution. Output is garbage afterwards.
  std::string isolate;UINT isolate_repeat{200};NativeNetworkTimestamps isolate_timestamps;
@@ -88,7 +91,14 @@ public:
   if(temporal_enabled&&!temporal_bound)throw std::runtime_error("network temporal RGB not bound");
   try{
    timestamps.Reset();
-   submit.Submit([&](ID3D12GraphicsCommandList*c){
+#ifdef DLSS5_BENCH_LIST_TIMING
+   if(!list_timer_ready){list_timings.Create(device);list_timer_ready=true;}
+   list_timings.Reset();unsigned list_count=0;const auto list_start=std::chrono::steady_clock::now();
+   auto record_list=[&](auto record){submit.Submit([&](ID3D12GraphicsCommandList*c){list_timings.Mark(c,"begin");record(c);list_timings.Mark(c,"end");});++list_count;};
+#else
+   auto record_list=[&](auto record){submit.Submit(record);};
+#endif
+   record_list([&](ID3D12GraphicsCommandList*c){
     timestamps.Mark(c,"start");pre.Record(c,seed,false,temporal_enabled,profile?&timestamps:nullptr,"preblock_detail");timestamps.Mark(c,"preblock");
     for(UINT i=0;i<4;i++){c32[i].Record(c,profile&&i==0?&timestamps:nullptr);if(profile)timestamps.Mark(c,"enc_c32_"+std::to_string(i));}ds4.Record(c);timestamps.Mark(c,"encoder1_4");
     auto run=[&](auto&layer,UINT block,NativeNetworkTimestamps*t){if(NativeSkipBlock(block))NativeSkipCopy(c,layer.Input(),layer.Output(),block);else layer.Record(c,t);};
@@ -101,12 +111,20 @@ public:
    // (~100 lists/frame -> ~25); the in-list barriers already order the dispatches. CPU recording overhead, not GPU time.
    const bool batch=batch_submits>0;const UINT vit_per_list=batch_submits>=2?4u:1u,decoder_per_list=batch_submits>=2?(decoder.StageCount()+1)/2:3u;
    auto record_vit=[&](ID3D12GraphicsCommandList*c,UINT b){auto&layer=vit[b];for(UINT stage=0;stage<5;stage++)for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++){layer.RecordStageChunk(c,stage,chunk);if(chunk+1==layer.StageChunks(stage))timestamps.Mark(c,"vit"+std::to_string(31+b)+"_stage"+std::to_string(stage));}};
-   if(batch)for(UINT b0=0;b0<8;b0+=vit_per_list)submit.Submit([&](ID3D12GraphicsCommandList*c){for(UINT b=b0;b<b0+vit_per_list;b++){if(NativeSkipBlock(31+b))NativeSkipCopy(c,vit[b].Input(),vit[b].Output(),31+b);else record_vit(c,b);}});
+   if(batch)for(UINT b0=0;b0<8;b0+=vit_per_list)record_list([&](ID3D12GraphicsCommandList*c){for(UINT b=b0;b<b0+vit_per_list;b++){if(NativeSkipBlock(31+b))NativeSkipCopy(c,vit[b].Input(),vit[b].Output(),31+b);else record_vit(c,b);}});
    else for(UINT b=0;b<8;b++){auto&layer=vit[b];
-    for(UINT stage=0;stage<5;stage++)for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++)submit.Submit([&](ID3D12GraphicsCommandList*c){layer.RecordStageChunk(c,stage,chunk);if(chunk+1==layer.StageChunks(stage))timestamps.Mark(c,"vit"+std::to_string(31+b)+"_stage"+std::to_string(stage));});}
-   if(batch){const UINT n=decoder.StageCount();for(UINT s0=0;s0<n;s0+=decoder_per_list)submit.Submit([&](ID3D12GraphicsCommandList*c){for(UINT stage=s0;stage<std::min(n,s0+decoder_per_list);stage++){if(stage==12)timestamps.Mark(c,"decoder_tail_begin");decoder.RecordStage(c,stage,profile?&timestamps:nullptr);timestamps.Mark(c,"decoder_stage"+std::to_string(stage));}});}
-   else for(UINT stage=0;stage<decoder.StageCount();stage++)submit.Submit([&](ID3D12GraphicsCommandList*c){if(stage==12)timestamps.Mark(c,"decoder_tail_begin");decoder.RecordStage(c,stage,profile?&timestamps:nullptr);timestamps.Mark(c,"decoder_stage"+std::to_string(stage));});
-   submit.Submit([&](ID3D12GraphicsCommandList*c){post.Record(c,profile?&timestamps:nullptr);timestamps.Mark(c,"post70");timestamps.Resolve(c);});
+    for(UINT stage=0;stage<5;stage++)for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++)record_list([&](ID3D12GraphicsCommandList*c){layer.RecordStageChunk(c,stage,chunk);if(chunk+1==layer.StageChunks(stage))timestamps.Mark(c,"vit"+std::to_string(31+b)+"_stage"+std::to_string(stage));});}
+   if(batch){const UINT n=decoder.StageCount();for(UINT s0=0;s0<n;s0+=decoder_per_list)record_list([&](ID3D12GraphicsCommandList*c){for(UINT stage=s0;stage<std::min(n,s0+decoder_per_list);stage++){if(stage==12)timestamps.Mark(c,"decoder_tail_begin");decoder.RecordStage(c,stage,profile?&timestamps:nullptr);timestamps.Mark(c,"decoder_stage"+std::to_string(stage));}});}
+   else for(UINT stage=0;stage<decoder.StageCount();stage++)record_list([&](ID3D12GraphicsCommandList*c){if(stage==12)timestamps.Mark(c,"decoder_tail_begin");decoder.RecordStage(c,stage,profile?&timestamps:nullptr);timestamps.Mark(c,"decoder_stage"+std::to_string(stage));});
+   record_list([&](ID3D12GraphicsCommandList*c){post.Record(c,profile?&timestamps:nullptr);timestamps.Mark(c,"post70");timestamps.Resolve(c);});
+#ifdef DLSS5_BENCH_LIST_TIMING
+   const double record_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-list_start).count();
+   submit.Submit([&](ID3D12GraphicsCommandList*c){list_timings.Resolve(c);});submit.Flush();
+   std::vector<double>iv;if(!list_timings.Intervals(submit.TimestampFrequency(),iv)||iv.size()!=2*list_count-1)throw std::runtime_error("invalid list timing");
+   double active=0,gaps=0;for(size_t i=0;i<iv.size();i++){if(i%2)gaps+=iv[i];else active+=iv[i];}
+   printf("LIST_TIMING frame=%u lists=%u in_list_ms=%.6f gaps_ms=%.6f record_submit_ms=%.6f wall_ms=%.6f\n",list_frame++,list_count,active,gaps,record_ms,std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-list_start).count());
+   fflush(stdout);
+#endif
    if(profile){submit.Flush();timestamps.Report(submit.TimestampFrequency());}
   }catch(...){failed=true;throw;}
  }
