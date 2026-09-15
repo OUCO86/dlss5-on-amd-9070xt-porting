@@ -1553,3 +1553,11 @@ COMGR编译通过；连续40帧ABBA基线21.888/21.943ms，候选22.739/22.787ms
 COMGR编译通过；连续40帧ABBA基线21.969/21.881ms、候选22.055/22.064ms，最终FEEA9EF3…一致、首尾有限。更慢，不采用，未扩大全帧/reset，生产源码恢复，游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。C32直接权重收益不能泛化到当前MH投影。
 
 补丁experiments/mh-direct-b.patch、test-mh-direct-b.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，候选multihead-fast-padded-wave-packed.hsaco；日志release/HIP/mh-direct-b-test.log。
+
+
+### 2026-09-16：C512 mix FP8指令探测不采用
+读取真实block23-ffwd.f32，mix262144/expand131072/contract131072个float逐值检查均可由有限E4M3精确表示。仅此block的权重检查，未证明所有C512输入/层都适用。
+
+实验只将split_mix_blocked的F16操作数改为现场pack FP8后用FP8 WMMA，仍读取float权重与float输入、K16顺序不变。COMGR编译通过。连续40帧ABBA基线21.904/21.893ms，候选22.059/22.083ms，最终FEEA9EF3…一致、首尾有限；更慢，未扩大全帧/reset/所有权重检查，生产源码恢复，游戏不变。
+
+补丁experiments/split-mix-fp8.patch、test-split-mix-fp8.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块deep_fast-packed.hsaco，日志release/HIP/split-mix-fp8-test.log。该结果包含现场操作数打包成本，不能代表预打包权重/byte输入布局的性能。
