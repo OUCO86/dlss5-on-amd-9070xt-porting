@@ -8,6 +8,9 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
  [switch]$CandidatePackedC32,
  [switch]$BothPackedC32,
  [switch]$CandidateFp8Normalized,
+ [switch]$BothFp8Normalized,
+ [switch]$CandidateFp8Ffn,
+ [switch]$CandidateFp8Av,
  [string]$BaselineModules='',
  [string]$CandidateModules='',
  [string]$Tag='module-swap-test',
@@ -29,7 +32,8 @@ foreach($round in 0..3){
  }else{Copy-Item (Join-Path $Root $source) (Join-Path $modules $Module) -Force}
  $output=Join-Path $work "$round-$variant.f32"
  $extra=@();if($HistoryFile){$extra+=@('--history',$HistoryFile)};if($BothPackedC32 -or ($CandidatePackedC32 -and $variant -eq 'candidate')){$extra+='--packed-c32'}
- if($CandidateFp8Normalized -and $variant -eq 'candidate'){$extra+='--fp8-normalized'}
+ if($BothFp8Normalized -or ($CandidateFp8Normalized -and $variant -eq 'candidate')){$extra+='--fp8-normalized'}
+ if($variant -eq 'candidate'){if($CandidateFp8Ffn){$extra+='--fp8-ffn'};if($CandidateFp8Av){$extra+='--fp8-av'}}
  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
  if($LASTEXITCODE -ne 0){throw ($log -join "
 ")}

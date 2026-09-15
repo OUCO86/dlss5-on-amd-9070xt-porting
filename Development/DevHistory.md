@@ -788,3 +788,11 @@ HIP DLL编译通过，release/HIP/native-conversion-packed.addon64 SHA256 888fe4
 两模块COMGR/gfx1201编译成功。正常900离线ABBA四轮各6次、排除cold，各方案10hot：基线58.8955ms、byte55.3815ms，约5.97%减少；四轮最终SHA256均7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d。seed123加显式history=input900.rgba32f对照60.177→56.7405ms，四轮SHA均75b62d2f36b6861b1536ec06b087c3ddb8850f4cdf810e734e16e2bc0223c3f8。这组history fixture的hash与之前无history相同，仅作路径一致性测试，不宣称动态游戏时序验收。日志release/HIP/byte-normalized.log、byte-normalized-history.log。
 
 HIP_FAST默认启用fp8_normalized，日志加状态字段。无需增加模块数，但必须重编含新导出的multihead-fast-padded-wave-packed与multihead_fused_attention。完整HIP DLL编译通过：release/HIP/native-byte-normalized.addon64，SHA256 9026e1ce4428c5ec95e7731dc44ddc8407646e42299a53fa021347fbb5f8cd46。候选模块在远端hip-backend/byte-modules；安装中的DLL与模块未替换。
+
+### 2026-09-15 16:11：MH前馈隐藏层及AV输出字节化
+
+按Zero指定完成两条边。MH C64/128/256 FFN expand输出FP8字节，contract直接以DWORD装入共享矩阵，省掉float搬运和再次量化。MH C64/128/256/512融合attention输出FP8字节，scalar/matrix projection直接读取；残差feature、raw QKV、累加器与最终投影输出保持原精度。fast_dense以ByteInput/ByteOutput模板编译不同ABI，旧导出保留。--fp8-ffn与--fp8-av独立控制，初始化检查所需fast MH/wave/normalized组合。HIP_FAST默认启用两者，日志增加字段。C512 split与ViT前馈为另一套内核，本轮未修改。
+
+COMGR/gfx1201两个模块编译通过。900正常离线ABBA四轮各6次排除cold，每方案10hot，最终输出逐位一致：FFN单独55.2365→51.6275ms；AV单独55.2625→55.1255ms（幅度小，不确认稳定单项加速）；合并55.379→51.231ms（约7.49%）。四轮SHA均7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d。seed123、history=input900.rgba32f合并对照56.850→52.627ms，四轮SHA均75b62d2f36b6861b1536ec06b087c3ddb8850f4cdf810e734e16e2bc0223c3f8。该history fixture最终hash同既有无history，不替代动态时序验证。两条张量有效存储均减为1/4，但池常驻仍1910.1MiB/195 allocations，未宣称总显存下降。
+
+日志release/HIP/edge-ffn.log、edge-av.log、edge-combined.log、edge-history.log；测试目录远端hip-backend/edge-modules和edge-*。完整HIP DLL编译通过：release/HIP/native-fp8-edges.addon64，SHA256 68c8ba0ca6293660bdab99a66c6eac71576133846dfcef0c700bb8818decd107。需配套含新导出的MH padded/attention模块，仍24模块。游戏安装未替换。

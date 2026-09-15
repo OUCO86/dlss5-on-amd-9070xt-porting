@@ -80,6 +80,7 @@ DEV float Hrtz(float x){uint h;float out;asm("v_cvt_pkrtz_f16_f32 %0, %1, %1" : 
 //64x64 output tile,16 waves. Each thread stages one packed4-byte A row word
 // and one B column word; each packed operand is reused by four waves.
 DEV uint pack4(float a,float b,float c,float d){uint lo=uint(__builtin_amdgcn_cvt_pk_fp8_f32(a,b,0,false));uint hi=uint(__builtin_amdgcn_cvt_pk_fp8_f32(c,d,0,false));return (lo&65535u)|((hi&65535u)<<16);}
+template<bool ByteInput=false,bool ByteOutput=false>
 DEV void fast_dense(const float* input,const float* feature,const float* weights,float* output,
  uint M,uint N,uint K,uint matrix_offset,uint skip_offset,uint epilogue,uint width=0,uint valid_width=0,uint valid_height=0,uint matrix_residual=0){
  __attribute__((shared)) uint sa[576];
@@ -109,11 +110,11 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
  for(uint chunk=0;chunk<K/32;chunk++){
   uint row=t/8,word=t%8,k=chunk*32+word*4,p=mr+row,n=nc+row;
   float a0=0,a1=0,a2=0,a3=0,b0=0,b1=0,b2=0,b3=0;
-  if(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height))){uint off=p*K+k;a0=input[off];a1=input[off+1];a2=input[off+2];a3=input[off+3];}
+  if constexpr(!ByteInput){if(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height))){uint off=p*K+k;a0=input[off];a1=input[off+1];a2=input[off+2];a3=input[off+3];}}
   #ifndef HIP_PREPACKED_WEIGHTS
   if(n<N){uint off=matrix_offset+n*K+k;b0=weights[off];b1=weights[off+1];b2=weights[off+2];b3=weights[off+3];}
 #endif
-  sa[row*9+word]=pack4(a0,a1,a2,a3);
+  if constexpr(ByteInput){sa[row*9+word]=(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height)))?reinterpret_cast<const uint*>(input)[(p*K+k)/4]:0u;}else sa[row*9+word]=pack4(a0,a1,a2,a3);
 #ifdef HIP_PREPACKED_WEIGHTS
   // Matrix bytes start at the original float-region offset; nonmatrix fields stay f32.
   const uint* packed_weights=reinterpret_cast<const uint*>(weights);
@@ -137,7 +138,8 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
  for(uint e=0;e<8;e++){uint p=first+group*8+e,n=col+rc;if(p>=M||n>=N)continue;float a=accum[e],v;
   if(epilogue==1){float gate=clampf(a,-4.f,4.f),q=absf(gate)*(-.055908203125f)+.447265625f,poly=gate*q+.89453125f;v=F(a*poly);}
   else v=epilogue==2?a:epilogue==3?Hrtz(a):epilogue==4?F(a):epilogue==5?F(Hrtz(a)):F(H(a));
-  output[p*N+n]=(valid_width&&(p%width>=valid_width||p/width>=valid_height))?0.f:v;
+  v=(valid_width&&(p%width>=valid_width||p/width>=valid_height))?0.f:v;
+  if constexpr(ByteOutput)reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(q8(v));else output[p*N+n]=v;
  }
 }
 // Final build contract: fused FP8act overwritten without HW_QUANTIZE:
@@ -245,3 +247,11 @@ void mh_qkv_normalize_fast_wave_fp8(const float* qkv,const float* weights,unsign
   normalized[offset]=static_cast<unsigned char>(q8(F(v*inv)));
  }
 }
+
+TILE void mh_ffn_expand_fast_fp8(const float* input,const float* weights,float* hidden,uint tokens,uint channels){if(valid_c(channels))fast_dense<false,true>(input,input,weights,hidden,tokens,4*channels,channels,0,~0u,1);}
+
+TILE void mh_ffn_contract_fast_fp8(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,false>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,5);}
+
+TILE void mh_attention_project_fast_scalar_fp8(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post);}
+
+TILE void mh_attention_project_fast_matrix_fp8(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,1);}

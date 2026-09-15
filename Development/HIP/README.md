@@ -118,3 +118,18 @@ HIP_FAST enables this path. Rebuild both multihead-fast-padded-wave-packed and
 multihead_fused_attention: an older 24-module set lacks the new exports.
 900 offline ABBA: 58.8955→55.3815ms with identical final RGB; explicit history
 fixture: 60.177→56.7405ms, also identical. These are not game FPS measurements.
+
+### Byte FFN hidden and attention output (2026-09-15)
+
+--fp8-ffn selects byte expand output and byte-input contract for MH C64/128/256.
+--fp8-av selects byte AV output and byte-input scalar/matrix projection for
+MH C64/128/256/512. These require the compatible wave/fused pipeline; AV also
+requires --fp8-normalized. HIP_FAST enables both. Rebuild the MH padded and
+fused-attention modules together with the host; old exports remain available.
+The byte pointers in dense kernel ABI retain pointer width but must never be
+passed to float-consuming exports. Residual features and accumulators stay float.
+
+900 ABBA combined: 55.379→51.231ms, identical RGB. FFN alone saves about3.6ms;
+AV alone saves only0.14ms, not a confirmed standalone speedup. Pool ownership
+remains1910.1MiB despite the smaller logical tensors. C512 split and ViT FFN
+are separate kernels and are not covered by --fp8-ffn in this revision.

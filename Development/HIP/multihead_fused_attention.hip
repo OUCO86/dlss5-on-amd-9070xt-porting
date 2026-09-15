@@ -118,3 +118,28 @@ void mh_attention_fused_fp8(const unsigned char*normalized,const float*w,float*o
  sync_window();
  for(uint col=0;col<32;col+=16){f8 acc{};for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*68+k]);put_bits(b,e,packed[(128+k)*36+col+rc()]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);out[p*channels+head*32+col+rc()]=F(acc[e]);}}
 }
+
+// Byte output paired with byte-input projection.
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+void mh_attention_fused_fp8_out(const unsigned char*normalized,const float*w,unsigned char*out,uint width,uint height,uint channels){
+ uint heads=channels/32,windows=(width/8)*(height/8),wh=bid();
+ if((channels!=64&&channels!=128&&channels!=256&&channels!=512)||width%8||height%8||wh>=windows*heads)return;
+ uint win=wh/heads,head=wh%heads,tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=wave*16;
+ __attribute__((shared)) _Float16 ex[64*66];
+ __attribute__((shared)) unsigned char packed[3*64*36];
+ // 6912-byte packed Q/K/V. No global intermediate writes.
+ for(uint i=tid;i<3*64*32;i+=128){uint part=i/(64*32),tok=(i/32)%64,c=i%32,p=raster(win,tok,width);packed[(part*64+tok)*36+c]=normalized[(p*3+part)*channels+head*32+c];}
+ sync_window();
+ for(uint key=0;key<64;key+=16){f8 acc{};
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,packed[(64+key+rc())*36+k]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+  for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4*channels*channels+head*4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
+ }
+ sync_window();
+ // MH production partial0 sums keys0..15,32..47; partial1 sums16..31,48..63.
+ // Keep this distinct from C32 FAST4's sequential64-key accumulator.
+ f8 sums[2];for(uint side=0;side<2;side++){f8 sum{};for(uint half=0;half<2;half++){h8 a{},ones{};for(uint e=0;e<8;e++){uint k=side*16+half*32+gr()*8+e;a[e]=ex[(first+rc())*66+k];ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,ones,sum);}sums[side]=sum;}
+ // Q/K are dead; probability64x68 occupies4352 of their4608 bytes. V starts4608.
+ for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,k=key+rc();float inv=1.f/(sums[0][e]+sums[1][e]);packed[row*68+k]=static_cast<unsigned char>(fp8(float(ex[row*66+k])*inv));}
+ sync_window();
+ for(uint col=0;col<32;col+=16){f8 acc{};for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*68+k]);put_bits(b,e,packed[(128+k)*36+col+rc()]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);out[p*channels+head*32+col+rc()]=static_cast<unsigned char>(fp8(F(acc[e])));}}
+}
