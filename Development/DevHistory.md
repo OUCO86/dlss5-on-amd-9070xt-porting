@@ -942,3 +942,13 @@ test-motion-cache.ps1五项正确性测试通过（颜色、颜色+motion、变�
 --elide-identity-shift在seed123/history=input900.rgba32f的ABBA四轮各6次，排除cold后中位40.779→40.367ms，四轮最终RGB均75b62d2f…一致。完整真实HDR异步40帧热中位39.625ms，最终FEEA9EF3…；24帧每8帧重置历史38.606ms，最终22C171FC…；均全有限。HDR这里是正确性回归，没有同期旧版ABBA，不宣称HDR速度增幅。
 
 已纳入HIP_FAST，启动日志增加elide_identity_shift状态。test-identity-shift.ps1支持seed/history/预期hash，validate-hdr.ps1支持指定runner以隔离实验二进制。完整DLL编译通过：release/HIP/native-identity-shift.addon64，SHA5ab7d7d37d5b8fdbf8248031cf073e389df8c358e262cddf096718b1113bc225，含颜色及motion快取，沿用vit-layout-modules。未部署，游戏仍8568acff…异步版（用户24FPS）。日志release/HIP/identity-history.log、identity-hdr.log、identity-reset.log。
+
+
+### 2026-09-15：C32 FFN权重DWORD合作装载
+C32融合核的FFN expand128×32和contract32×128权重从每线程逐byte复制改为每次4byte memcpy装入LDS。输入、padding、矩阵字节顺序、WMMA和捨入保持不变；仅packed weights路径生效。HIP_C32_WEIGHT_DWORD默认1，设0保留旧实现。没有复用此前失败的QKV寄存器缓存。
+
+COMGR/gfx1201编译通过。当前完整快速链+identity-shift正常900 ABBA4轮各6次、排除cold：39.0205→35.941ms，约7.892%；seed123/history同条件40.355→37.334ms，约7.486%。每组四轮最终RGB分别全匹配7b959143…/75b62d2f…。真实HDR异步40帧35.179ms、最终FEEA9EF3…，24帧每8帧reset34.733ms、最终22C171FC…，均全有限；HDR未做同期ABBA，不据此单独计算收益。
+
+主机DLL不变，使用已编译release/HIP/native-identity-shift.addon64（SHA5ab7d7d3…）；新packed C32 HSACO SHAD2E66FE7D94EBD67622DE37230C9B44DEC71C5E51EE248131FF3AA6C58D91F74。24模块固化于远端hip-backend/c32-dword-release-modules，实验脚本使用另一个c32-dword-modules目录，避免ABBA结束恢复baseline后污染候选。没有部署，游戏仍8568acff…异步版，用户24FPS。
+
+测试脚本test-c32-dword.ps1；本轮编译输入是在c32_fused_ffn_attention.hip前定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_WEIGHT_DWORD=1，调用D:\DLSSNR-Lab\rtc_compile.exe OUTPUT SOURCE comgr。日志release/HIP/c32-dword-build/test/history/hdr/reset.log。
