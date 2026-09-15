@@ -999,3 +999,13 @@ COMGR/gfx1201模块及主机runner编译通过。正常900 ABBA4轮各6次去col
 编译当前benchmark_hlsl_current.exe（DLSS5_COMPARE_HLSL），与已编译benchmark_identity.exe的当前HIP模块做HLSL/HIP/HIP/HLSL四进程对照。输入同一1296×720真实HDR、内部900P、同rebind-async-flags、history开启、异步提交、每进程40帧去前5帧。各轮热中位HLSL18.840、HIP33.896、HIP32.814、HLSL18.821ms；每后端各自最终hash稳定（HLSL C7C2F49D…，HIP FEEA9EF3…），全有限。两后端输出不逐位相同，不把此计时当数值等价验证；此测试是推理流水线隔离对照，不替代用户900P/1080P游戏实测。
 
 源码审计确认HLSL在native_actual_network70.h与native_decoder_tail69.h用ChainFromRaw+SetSkipFinish，让相邻C32阶段直接读上阶段raw tile；native_c32_stage.h用input mode3传递前后位移。HIP C32()当前每阶段仍运行finish/crop并生成float main，然后下阶段再映射读取。此外HLSL preblock main8/block4 skip8/block69 main8路径已存在，HIP仍多处float。未据此断言这些差异解释全部15ms。测试脚本compare-current-backends.ps1，日志release/HIP/compare-current-backends.log。
+
+
+### 2026-09-15：HIP C32 raw-chain接通并验证
+新增half_chain入口及RawMapped模板：当前窗口映射到逻辑raster坐标，先检查边界，再加前阶段sx/sy定位其half raw tile，读取时执行原finish的F量化。输入pack与残差读取共用此映射，不能直接用未量化raw。block1/66首块仍mode0 raster输入，后续2–4/67–69为mode3 raw输入；两条链各跳过前3块main finish/crop，末块block4的main/down和block69的main保留。保留前阶段raw的shared_ptr直到下阶段提交，内存池沿同stream有序复用。
+
+--raw-chain独立控制，要求fused_ffn/half/mapped/crop配置；stage observer/dump与raw-chain明确不兼容，避免把raw tile冒充raster输出。默认参考runner仍关闭，HIP_FAST开启并记录日志；旧路径保留。
+
+正常900P ABBA四轮各6次去cold34.080→33.5075ms，seed123/history35.742→34.9245ms。每组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧33.554ms/FEEA9EF3…，24帧每8帧reset33.262ms/22C171FC…，全有限。节省约0.6–0.8ms，不能据此解释HLSL18.8ms与HIP33ms的主要差距。
+
+内核、runner和完整DLL编译通过。候选release/HIP/native-c32-chain.addon64 SHAd8fb00dc9599c7c38cd18dab8b772d424ac8314934f79a48650751df9b545dae，packed C32模块SHA07182D2DC2FA5CC6B8DD734CDEF7FFD69F0144530261FF0E74C51FA85D0C3992；24模块固定c32-chain-release-modules。未部署，游戏仍5ab7d7d3…+inputDWORD，用户900P26～27FPS。脚本test-c32-chain.ps1，日志release/HIP/c32-chain-build/test/history/hdr/reset.log。编译C32模块定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
