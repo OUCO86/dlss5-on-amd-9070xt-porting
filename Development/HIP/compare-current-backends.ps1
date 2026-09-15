@@ -1,8 +1,13 @@
+param([ValidateSet(0,1)][int]$EdgesOnly=1,[ValidateSet(40)][int]$Frames=40,[string]$Tag='backend-current')
 $ErrorActionPreference='Stop'
 $r='D:\DLSSNR-Lab\hip-backend'
+$lines=@(Get-Content "$r\rebind-async-flags.txt"|Where-Object{$_ -notmatch '^DLSS5_HIP_PREFIX_FUSED='})
+$lines+='DLSS5_HIP_PREFIX_FUSED=1';$lines|Set-Content "$r\$Tag-flags.txt"
 foreach($i in 0..3){
  if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game running'}
- $exe=if($i -in @(0,3)){'benchmark_hlsl_current.exe'}else{'benchmark_mh_mapped.exe'}
- & "$r\validate-hdr.ps1" -Runner $exe -Modules mh-input-mapped-release-modules -Name "backend-current-$i" -Flags rebind-async-flags.txt
+ $hlsl=$i -in @(0,3)
+ $exe=if($hlsl){'benchmark_hlsl_edges.exe'}else{'benchmark_prefix_fused.exe'}
+ $expected=if($hlsl){'C7C2F49D3F637F7EA50E3236510677E06574067CC707CE03275EDF4609CAF30B'}else{'FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58'}
+ & "$r\validate-hdr.ps1" -Runner $exe -Modules mh-scalar-diagonal-release-modules -Name "$Tag-$i" -Flags "$Tag-flags.txt" -Frames $Frames -EdgesOnly $EdgesOnly -ExpectedHash $expected
  if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game started'}
 }

@@ -1343,3 +1343,11 @@ probe、host及内核编译通过。multihead-fast-padded-wave-packed模块SHA06
 连续40帧ABBA：基线24.822/24.850ms，候选24.740/24.771ms，最终FEEA9EF3…匹配、首尾有限；收益约0.08ms，未进一步全帧/reset，不采用，生产源码已恢复。补丁experiments/mh-project-special.patch，test-mh-project-special.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_MH_PROJECT_SPECIAL=1。日志release/HIP/mh-project-special-build/test.log。
 
 另核对尺寸来源：HLSL NativeActualNetwork70与HIP NativeHipNetwork均取NativeCurrentNetworkGeometry的processing_width/height，900P均1600×1024；有效区1600×900不等于工作区。未发现顶层工作尺寸不一致，不能靠降低HIP工作尺寸假称实现性能对齐。当前游戏及固定候选仍3894351c…+mh-scalar-diagonal-release-modules。
+
+
+### 2026-09-15：最新两后端连续负载基准
+compare-current-backends.ps1改用benchmark_hlsl_edges.exe/benchmark_prefix_fused.exe、最新已部署mh-scalar-diagonal-release-modules、明确PREFIX_FUSED=1，并为各后端校验自身参考hash。固定40帧（已有golden对应帧数），首尾检查、去前5。最初试80帧误套40帧golden被hash检查拦截，该轮不作性能结论，脚本已限制40帧。
+
+HLSL/HIP/HIP/HLSL四轮热中位16.743/24.826/24.907/16.775ms，后端内部最终分别匹配C7C2F49D…/FEEA9EF3…，首尾有限。当前同条件差距约8.1ms，目标仍未达成；不将首尾检查称为全帧验证。日志release/HIP/backend-scalar-current.log。
+
+桥接代码审计：D3D12Bridge用DEFAULT shared资源和HIP外部内存映射，输入/历史由GPU CopyBufferRegion复制到共享缓冲、输出由共享缓冲返回D3D，围绕HIP Enqueue使用外部信号量；未见每帧神经网络通过CPU读回整图再上传。尚未独立测桥接copy/cache代价，不能据此称桥接开销为零。游戏未改。
