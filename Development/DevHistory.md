@@ -1185,3 +1185,9 @@ fast_dense新增Crop模板，仅改变最终有效区写地址，工作区矩阵
 新增split_mix_blocked_mapped及split_projection_blocked_mapped，前者矩阵输入、后者残差均按原shift_pack的workgrid→raster规则映射，越界0；中间mix/FFN/contract保持工作区布局和计算。--split-input-mapped开关候选启用，正常900 ABBA4轮各6次去cold28.038→27.963ms，仅约0.075ms差距，四轮RGB7b959143…一致。无明确速度收益，未继续历史/HDR、未默认；生产源码恢复。
 
 内核和runner编译通过。补丁experiments/split-input-mapped.patch，test-split-input-mapped.ps1（应用补丁后编译runner/deep模块，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1）；日志release/HIP/split-input-mapped-build/test.log。保留固定候选native-mh-mapped.addon64/b4e46e15…+mh-input-mapped-release-modules，游戏仍13c7cd12…+split-project-blocked，用户900P30FPS。本轮未部署。
+
+
+### 2026-09-15：部署MH输入映射/输出裁剪整合候选
+部署脚本确认游戏退出，安装native-mh-mapped.addon64（SHAb4e46e159746caafe4877e5128af2bb1b5098d89950882ed7a4f750f3ef3a4e0）及mh-input-mapped-release-modules全部24个HSACO，逐hash验证通过。再次确认900P/HIP_FAST1/ASYNC_SUBMIT1、MH packed模块899CDB45…匹配。包含ViT QKV两输出、MH投影crop及普通MH输入映射；不含已归档的C512映射。
+
+旧13c7cd12… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-mh-mapped，用户900P30FPS属于此旧版。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-mh-mapped（游戏须退出）。本轮未启动游戏或验证新FPS；离线约27.8ms不等于游戏FPS。当前新安装的画面和性能待试玩。
