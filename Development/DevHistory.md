@@ -1713,3 +1713,11 @@ current比较/profile脚本统一更新固定模块。profile运行通过，最�
 部署脚本确认游戏退出，安装native-c256-attn-project.addon64（SHA57b8ab453ffc21bde177d080d382ff1c47eee0a5fe085bf973b552f7a8d1b182）和c256-attn-project-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c256-attn-project。新版游戏FPS仍待用户实测。
 
 current比较/profile脚本更新固定模块与benchmark_c256_attn_project.exe，compare_layers_current.exe重新编译上传。连续40帧edges-only ABBA：HLSL16.774/16.789ms，HIP20.502/20.527ms，各自最终golden匹配、首尾有限；差距约3.73ms，尚未达到目标。日志release/HIP/backend-c256-fused-current.log。本轮完成部署和基线复核，无额外内核优化。
+
+
+### 2026-09-16：C512两头八批注意力投影融合更慢，撤回
+新增独立c512_attention_project候选，256线程、两head一批共八批，独立全AV64×516bytes跨批保存。投影按两片一对、共八对覆盖各线程组负责的256列；C512残差保持原Hrtz(feature*scale)标量初始化，不套用普通MH三段分解。post保持C512原语义。
+
+COMGR和专用benchmark编译通过，资源LDS54528bytes、VGPR230、SGPR40、private/spill0。连续40帧ABBA基线20.514/20.532ms，候选21.047/21.036ms，最终FEEA9EF3…一致、首尾有限。更慢，不采用，未扩大全帧/reset，生产源码恢复，游戏仍57b8ab45…+c256-attn-project-release-modules。
+
+补丁experiments/c512-attn-project.patch、test-c512-attn-project.ps1；配套benchmark_c512_attn_project.exe及HIP_ISA_HALF=1内核，模块multihead_fused_attention.hsaco。日志release/HIP/c512-attn-project-test.log。
