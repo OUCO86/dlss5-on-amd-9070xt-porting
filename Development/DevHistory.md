@@ -1095,3 +1095,11 @@ mh_qkv_normalize_fused对64/128/256/512通道分支传递编译期常量N/K给fa
 正常900 ABBA4轮各6次去cold31.073→30.785ms；seed123/history32.4475→32.0865ms。两组四轮RGB分别保持7b959143…/75b62d2f…。HDR异步40帧29.660ms/FEEA9EF3…，24帧每8帧reset29.431ms/22C171FC…，均全有限；HDR为回归，无同期ABBA速度结论。
 
 模块编译通过，multihead-fast-padded-wave-packed SHA FEBEF48CAF49ACA87E4A88D06F664F2B183CFD9CCDB1AA5972FFF8824F6EBD61；24模块固定mh-qkv-special-release-modules，配套DLL仍a7b7521b…无需变更。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-mh-qkv-special.ps1，日志release/HIP/mh-qkv-special-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_SPECIALIZE=1。
+
+
+### 2026-09-15：QKV K64装载分块实验撤回
+在已通道特化的QKV上把K32分块扩大到K64：每次合作装载两倍A/B，LDS行stride9改17，四次K16 WMMA维持原累加顺序，全组barrier次数减半。仅Normalize实例扩大，其他dense入口保持K32。
+
+COMGR/gfx1201编译通过，正常900 ABBA4轮各6次去cold30.7635→30.9125ms略慢，四轮RGB7b959143…一致。编译后QKV LDS25856byte（旧21760）、VGPR69（旧45）、private0。资源使用增加与耗时变化同时出现，但未独立证明单一因果。未继续历史/HDR，生产源码已恢复，维持K32默认。
+
+补丁experiments/mh-qkv-k64.patch，test-mh-qkv-k64.ps1，编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_K64=1；日志release/HIP/mh-qkv-k64-build/test.log。最优固定候选仍mh-qkv-special-release-modules+a7b7521b DLL，当前游戏仍mh-input-dword模块，未部署本实验。
