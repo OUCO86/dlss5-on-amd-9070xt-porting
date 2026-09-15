@@ -1163,3 +1163,11 @@ Zero反馈已部署13c7cd12… DLL+split-project-blocked模块在《剑星》900
 改为单wave16×32两输出共用A，FP16 K16乘加顺序、part分离输出保持。入口仍命名vit_qkv_project_blocked，--vit-qkv-blocked明确对应最终两输出；host groups=count/512。正常900 ABBA4轮各6次去cold28.9295→28.6415ms，seed123/history30.215→30.074ms，收益较小；各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧29.648ms/FEEA9EF3…，24帧每8帧reset28.691ms/22C171FC…，全有限。HDR非同期ABBA，不计算异轮收益。
 
 内核、runner和完整DLL编译通过，HIP_FAST默认两输出并記日志：release/HIP/native-vit-qkv.addon64 SHAd498ff836fecd3576e58964f8a703553ec4fee99c877a9494bf0a58712802989；deep_fast-packed模块SHA804DAB0C81E4CA09FCCAFEF7AD41DEEF3C635107DAA4CF472979371268BD3230；24模块固定vit-qkv-pair-release-modules。未部署，游戏仍13c7cd12…+split-project-blocked，用户900P30FPS。脚本test-vit-qkv-pair.ps1，日志release/HIP/vit-qkv-blocked-build/test.log及vit-qkv-pair-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：MH输出投影融合shift crop
+fast_dense新增Crop模板，仅改变最终有效区写地址，工作区矩阵乘加与归一化保持。mh_attention_crop同时支持普通MH的matrix residual和C512的scalar residual；C512/rounded/raw对应epilogue保持。Body对非identity块直接调用带crop几何的AttentionFast，输出只分配逻辑w×h×c，省去44次独立mh_shift_crop和工作区attended缓冲；block4 down裁剪保持。--mh-project-crop独立，要求fast_mh/fp8_av，HIP_FAST默认启用并记日志。
+
+正常900 ABBA4轮各6次去cold28.791→28.3495ms，seed123/history30.285→30.0065ms。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧28.648ms/FEEA9EF3…，24帧每8帧reset28.188ms/22C171FC…，全有限；HDR非同期ABBA，不据此计算异轮收益。
+
+内核、runner及完整DLL编译通过：release/HIP/native-mh-crop.addon64 SHA111e8c4033e7d7f33c0792dac467307cccf2898b1d39a0054d866f0f379366d7；multihead-fast-padded-wave-packed模块SHAA118C4678D217DB25482E11D194350137890202B8399570C290EEDFEB21CBDAC；24模块固定mh-project-crop-release-modules。未部署，游戏仍13c7cd12…+split-project-blocked（用户900P30FPS）。脚本test-mh-project-crop.ps1，日志release/HIP/mh-project-crop-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。

@@ -86,9 +86,9 @@ DEV float Hrtz(float x){uint h;float out;asm("v_cvt_pkrtz_f16_f32 %0, %1, %1" : 
 //64x64 output tile,16 waves. Each thread stages one packed4-byte A row word
 // and one B column word; each packed operand is reused by four waves.
 DEV uint pack4(float a,float b,float c,float d){uint lo=uint(__builtin_amdgcn_cvt_pk_fp8_f32(a,b,0,false));uint hi=uint(__builtin_amdgcn_cvt_pk_fp8_f32(c,d,0,false));return (lo&65535u)|((hi&65535u)<<16);}
-template<bool ByteInput=false,bool ByteOutput=false,bool Normalize=false>
+template<bool ByteInput=false,bool ByteOutput=false,bool Normalize=false,bool Crop=false>
 DEV void fast_dense(const float* input,const float* feature,const float* weights,float* output,
- uint M,uint N,uint K,uint matrix_offset,uint skip_offset,uint epilogue,uint width=0,uint valid_width=0,uint valid_height=0,uint matrix_residual=0){
+ uint M,uint N,uint K,uint matrix_offset,uint skip_offset,uint epilogue,uint width=0,uint valid_width=0,uint valid_height=0,uint matrix_residual=0,uint cropw=0,uint croph=0,uint workw=0,uint sx=0,uint sy=0){
  __attribute__((shared)) uint sa[576];
  __attribute__((shared)) uint sb[576];
  uint block=__builtin_amdgcn_workgroup_id_x(),nt=(N+63)/64;
@@ -182,7 +182,9 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
   if(epilogue==1){float gate=clampf(a,-4.f,4.f),q=absf(gate)*(-.055908203125f)+.447265625f,poly=gate*q+.89453125f;v=F(a*poly);}
   else v=epilogue==2?a:epilogue==3?Hrtz(a):epilogue==4?F(a):epilogue==5?F(Hrtz(a)):F(H(a));
   v=(valid_width&&(p%width>=valid_width||p/width>=valid_height))?0.f:v;
-  if constexpr(ByteOutput)reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(q8(v));else output[p*N+n]=v;
+  uint dest=p*N+n;
+  if constexpr(Crop){uint x=p%workw,y=p/workw;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*N+n;}
+  if constexpr(ByteOutput)reinterpret_cast<unsigned char*>(output)[dest]=static_cast<unsigned char>(q8(v));else output[dest]=v;
  }
 }
 // Final build contract: fused FP8act overwritten without HW_QUANTIZE:
@@ -374,3 +376,5 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) void mh_ffn_fused_c64_project(const float*in,const float*w,unsigned char*out,uint tokens){mh_ffn_fused_body<64,false,true>(in,w,out,tokens);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c128_project(const float*in,const float*w,unsigned char*out,uint tokens){mh_ffn_fused_body<128,false,true>(in,w,out,tokens);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project(const float*in,const float*w,unsigned char*out,uint tokens){mh_ffn_fused_body<256,true,true>(in,w,out,tokens);}
+
+TILE void mh_attention_crop(const float*av,const float*feature,const float*weights,float*output,uint tokens,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy,uint channels){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false,false,true>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,channels==512?0:1,cropw,croph,workw,sx,sy);}
