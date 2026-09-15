@@ -1381,3 +1381,11 @@ profile-current.ps1更新为prefix-direct-input-release-modules及全部当前�
 另试QKV保持64×64输出区、256线程/8wave，每wave16×32两输出，共用A，K16顺序与row-sum不变。它不是早期M32 tile方案。首版四个C模板各分配一份LDS，COMGR报87040>65536；改由入口统一分配sa/sb/tile/inverse并传给模板后编译通过。未使用编译失败后的不完整基准。
 
 连续40帧ABBA：基线24.737/24.708ms，候选24.974/24.931ms，最终FEEA9EF3…一致、首尾有限；更慢，不采用，生产源码恢复。补丁experiments/qkv-pair-group.patch、test-qkv-pair-group.ps1，需配套256线程host配置与实验模块；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_PAIR_GROUP=1。日志release/HIP/qkv-pair-group-build/test.log。游戏仍c4a25659…+prefix-direct-input，未改。
+
+
+### 2026-09-16：HIP head直接写共享输出实验暂不采用
+RunGraph实验允许借用最终输出buffer，EnqueueRaw用非owned Allocation包装rgb_output，head直接写入并省去末尾hipMemcpyAsync；检查输出与输入/history虚拟地址区间不重叠，外部信号量及D3D转态不变。默认reference调用仍自分配输出。
+
+测试程序编译通过，连续40帧ABBA：基线24.804/24.782ms，候选24.716/24.763ms，最终FEEA9EF3…一致、首尾有限。收益约0.02–0.09ms，未进一步全帧/排队/reset，不默认，生产源码恢复。不能把该差值直接当纯copy耗时，因为分配与访存也改变。
+
+补丁experiments/direct-output.patch，test-direct-output.ps1（应用补丁编译benchmark_direct_output.exe，DLSS5_HIP_DIRECT_OUTPUT=0/1），模块沿用prefix-direct-input-release-modules。日志release/HIP/direct-output-test.log。游戏仍c4a25659…+prefix-direct-input，未改。本轮通过异步文字问题请求用户回报当前实机FPS和画面情况，离线工作不依赖该答复。
