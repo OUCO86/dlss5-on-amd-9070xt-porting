@@ -20,6 +20,22 @@ namespace hip_reference { struct LayerBenchmark { static bool Check(Network&n){b
   n.api.Check(n.api.hipMemcpy(x.data(),n.P(a),x.size()*4,2),"read reference");n.api.Check(n.api.hipMemcpy(y.data(),n.P(b),y.size()*4,2),"read fused");
   size_t diff=0,bad=0;float maxabs=0;for(size_t i=0;i<x.size();i++){diff+=memcmp(&x[i],&y[i],4)!=0;bad+=!std::isfinite(x[i])||!std::isfinite(y[i]);maxabs=std::fmax(maxabs,std::fabs(x[i]-y[i]));}
   printf("tokens=%u pattern=%u bitdiff=%zu invalid=%zu maxabs=%.9g\n",tokens,pattern,diff,bad,maxabs);ok=ok&&!diff&&!bad;
+  /* byte QKV edge: real block31 QKV weights on a lattice contract input; the byte store must decode to the f32 store
+     bit for bit (sign of zero included), and the bytein attention must reproduce the f32-input fused attention. */
+  std::vector<float>c(size_t(tokens)*1024);for(size_t i=0;i<c.size();i++){unsigned code=pattern?unsigned((i*41+i/23+7)%96):unsigned((i*29+i/13+3)%80);if(i%5==0)code|=128;c[i]=fp8(code);}
+  auto cin=n.Upload(c.data(),c.size()*4);auto qw=n.PackedVitQkvWeight(n.Block(31,"qkv"));
+  auto nf=n.New(size_t(tokens)*3072),n8=n.New(size_t(tokens)*768),af=n.New(size_t(tokens)*1024),a8=n.New(size_t(tokens)*1024);
+  n.Run("deep","vit_qkv_project_normalize_fused_f16compact",size_t(tokens)*3072,n.P(cin),qw,n.P(nf),tokens);
+  n.Run("deep","vit_qkv_project_normalize_fused_f16compact_fp8",size_t(tokens)*3072,n.P(cin),qw,n.P(n8),tokens);
+  std::string fused=tokens<=256?"vit_attention_fused_256":tokens<=400?"vit_attention_fused_400":"vit_attention_fused_640";
+  n.Run("deep",fused.c_str(),size_t(tokens)*512,n.P(nf),n.P(af),tokens);
+  n.Run("deep",(fused+"_bytein").c_str(),size_t(tokens)*512,n.P(n8),n.P(a8),tokens);n.Synchronize();
+  std::vector<float>vf(size_t(tokens)*3072),oa(size_t(tokens)*1024),ob(oa.size());std::vector<unsigned char>v8(vf.size());
+  n.api.Check(n.api.hipMemcpy(vf.data(),n.P(nf),vf.size()*4,2),"read f32 qkv");n.api.Check(n.api.hipMemcpy(v8.data(),n.P(n8),v8.size(),2),"read byte qkv");
+  n.api.Check(n.api.hipMemcpy(oa.data(),n.P(af),oa.size()*4,2),"read f32 attention");n.api.Check(n.api.hipMemcpy(ob.data(),n.P(a8),ob.size()*4,2),"read byte attention");
+  size_t qdiff=0,qbad=0,adiff=0,abad=0;for(size_t i=0;i<vf.size();i++){float d=fp8(v8[i]);qdiff+=memcmp(&d,&vf[i],4)!=0;qbad+=!std::isfinite(vf[i]);}
+  for(size_t i=0;i<oa.size();i++){adiff+=memcmp(&oa[i],&ob[i],4)!=0;abad+=!std::isfinite(oa[i])||!std::isfinite(ob[i]);}
+  printf("tokens=%u pattern=%u qkv_bytediff=%zu qkv_invalid=%zu bytein_attention_bitdiff=%zu invalid=%zu\n",tokens,pattern,qdiff,qbad,adiff,abad);ok=ok&&!qdiff&&!qbad&&!adiff&&!abad;
  }
  return ok;}}; }
 int main(int argc,char**argv){try{
