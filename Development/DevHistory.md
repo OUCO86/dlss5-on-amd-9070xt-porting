@@ -907,3 +907,7 @@ RebindSourceAfterCompletion原来只持有CPU锁，在deferred提交尚未完成
 独立真实HDR40帧同步／异步热中位39.375／38.833ms，最终均FEEA9EF3…且全有限；短轮离线计时不作为稳定提速或游戏FPS结论。validate-hdr.ps1增加Flags参数。更正此前日志解释：游戏avg_ms_per_frame是处理帧间隔，包含游戏调度，不能当纯推理耗时。
 
 完整DLL编译通过：release/HIP/native-async-rebind.addon64，SHA256 8568acff121c6fab93b7b1f77d9df8c1c14549a6bee303a4e7ab35abd2bd09d7；配套沿用vit-layout-modules。未部署，游戏仍4c0620a5…及async=0。实机异步正确性、overlap性能未在本轮验证。复现说明见Development/HIP/rebind-lifetime.md，结果日志release/HIP/rebind-regression.log和rebind-hdr-sync/async.log。
+
+
+### 2026-09-15 20:26：部署异步重绑修复到《剑星》
+用户授权实机验证。部署脚本确认游戏退出后安装8568acff121c6fab93b7b1f77d9df8c1c14549a6bee303a4e7ab35abd2bd09d7 DLL及vit-layout-modules的24个HSACO，逐hash校验通过。游戏私有配置ASYNC_SUBMIT=1，NETWORK_HEIGHT=900、HIP_FAST=1，continuous/history保持。旧4c062… DLL、模块、配置和标记备份在D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-async-rebind。部署脚本新增AsyncSubmit参数，默认仍0；-Restore -BackupName before-async-rebind可恢复原同步安装。实际画面和FPS待用户启动游戏测试，本次没有启动游戏或宣称实机已通过。

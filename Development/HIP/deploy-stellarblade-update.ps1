@@ -1,4 +1,5 @@
 param([switch]$Restore,
+ [ValidateSet(0,1)][int]$AsyncSubmit=0,
  [string]$BackupName='before-c32-vit-blocked',
  [string]$CandidateName='native-c32-vit-blocked.addon64',
  [string]$ModulesName='vit-contract-modules',
@@ -47,10 +48,10 @@ try {
  if((Get-FileHash $target).Hash -ne $expected){throw 'Installed DLL mismatch'}
  $utf8=New-Object Text.UTF8Encoding($false)
  $flags=@(Get-Content "$root\native-game-flags.txt"|Where-Object{$_ -notmatch '^DLSS5_TEST_ASYNC_SUBMIT='})
- $flags+='DLSS5_TEST_ASYNC_SUBMIT=0'
+ $flags+="DLSS5_TEST_ASYNC_SUBMIT=$AsyncSubmit"
  [IO.File]::WriteAllText("$root\native-game-flags.txt",($flags -join "`n")+"`n",$utf8)
  foreach($name in @('continuous-every-frame.txt','temporal-history.txt')){[IO.File]::WriteAllText("$root\$name","1`n",$utf8)}
  $manifest|ConvertTo-Json -Depth 3|Set-Content "$root\HIP\deployment-modules.json"
- [IO.File]::WriteAllText("$root\HIP-CANDIDATE.txt","HIP7 fast900P / mapped C32 / fused MH FFN / blocked ViT`nDLL SHA256=$expected`nSynchronous submissions`n",$utf8)
+ [IO.File]::WriteAllText("$root\HIP-CANDIDATE.txt","HIP7 fast900P / mapped C32 / fused MH FFN / blocked ViT`nDLL SHA256=$expected`nASYNC_SUBMIT=$AsyncSubmit`n",$utf8)
  Write-Output "INSTALLED_SHA=$expected MODULES=$($files.Count) BACKUP=$backup"
 }catch{RestoreBackup;throw}
