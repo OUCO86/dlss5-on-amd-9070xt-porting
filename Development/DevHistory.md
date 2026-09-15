@@ -1505,3 +1505,11 @@ compare_layers.cpp的fused-selected过滤模式补上grouped_mh_contract/ffn_qkv
 C32 mode2 raw half-chain测试：block70 HIP1.729/1.714ms、HLSL1.087/1.117；block1 HIP0.463/0.402、HLSL0.316/0.266；block4 HIP0.552/0.418、HLSL0.390/0.267，三者输出逐位一致。block70这里测原始stage本体，不是实际postmerge融合完整路径。单层重复调度/时钟条件与整网不同，不能直接将差值相加归因6ms。
 
 日志release/HIP/backend-vit-current.log、compare-mh-fused-current.log、compare-c32-vit-current.log。生产游戏未更换。
+
+
+### 2026-09-16：C32 V结果直接FP8写出实验不采用
+在REGISTER_FFN路径单独处理QKV的V：两组16列结果保留寄存器，完成本wave全部FFN读取后直接写packed V，省去scratch.raw的写回与再读取；保留owned-row同步以及后续全window同步，避免FFN/V别名覆盖未读值。Q/K归一化及FP8/累加顺序不变。
+
+COMGR编译通过；连续40帧ABBA基线22.823/22.824ms、候选22.853/22.862ms，最终FEEA9EF3…一致、首尾有限。略慢，不采用，未扩大全帧/reset，生产源码恢复，游戏仍13d4dc10… ViT融合版。
+
+实验experiments/c32-direct-v.patch、test-c32-direct-v.ps1，编译c32_fused_ffn_attention.hip定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块为c32_fused_ffn_attention-packed.hsaco。日志release/HIP/c32-direct-v-test.log。

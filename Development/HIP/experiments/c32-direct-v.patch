@@ -1,0 +1,20 @@
+diff --git a/Development/HIP/c32_fused_ffn_attention.hip b/Development/HIP/c32_fused_ffn_attention.hip
+index 7088255..6cf2f52 100644
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -199,6 +199,15 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+  sync_window();
+  // A single raw QKV plane is reused after its norm has been packed separately.
+  for(uint part=0;part<3;part++){
++#if HIP_C32_REGISTER_FFN
++  if(part==2){
++   f8 v[2]{};
++   for(uint ci=0;ci<2;ci++)for(uint kt=0;kt<2;kt++){i2 a=load8(ffn8+(first+rc())*36+kt*16+gr()*8),b=matrix8(w,2048+(ci*16+rc())*32+kt*16+gr()*8);v[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,v[ci]);}
++   sync_owned_rows();
++   for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)packed[(128+first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(v[ci][e]));
++   sync_owned_rows();continue;
++  }
++#endif
+   for(uint col=0;col<32;col+=16){f8 acc{};
+    for(uint kt=0;kt<2;kt++){i2 a{},b{};
+ #if HIP_C32_REGISTER_FFN
