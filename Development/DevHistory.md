@@ -1545,3 +1545,11 @@ COMGR编译通过；连续40帧ABBA基线21.888/21.943ms，候选22.739/22.787ms
 连续40帧ABBA：基线21.905/21.892ms，候选21.938/21.861ms，最终FEEA9EF3…一致、首尾有限；没有稳定收益，未扩大全帧/reset，不采用，生产源码恢复。游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。
 
 补丁experiments/c32-chain3.patch、test-c32-chain3.ps1；应用补丁编译benchmark_c32_chain3.exe及HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核c32-chain3.hsaco，host与新增入口配套。日志release/HIP/c32-chain3-test.log。
+
+
+### 2026-09-16：MH crop投影直接权重读取不采用
+保留原64×64输出tile、512线程、共享A输入和K32分块，仅Crop+packed实例取消B权重LDS写入，WMMA直接读取对应两DWORD。与以前单wave多输出/全局lane-major布局实验不同，本轮不改工作组与矩阵布局。非Crop及非packed路径保持。
+
+COMGR编译通过；连续40帧ABBA基线21.969/21.881ms、候选22.055/22.064ms，最终FEEA9EF3…一致、首尾有限。更慢，不采用，未扩大全帧/reset，生产源码恢复，游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。C32直接权重收益不能泛化到当前MH投影。
+
+补丁experiments/mh-direct-b.patch、test-mh-direct-b.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，候选multihead-fast-padded-wave-packed.hsaco；日志release/HIP/mh-direct-b-test.log。
