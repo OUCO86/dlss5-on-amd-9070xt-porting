@@ -1843,3 +1843,9 @@ current比较/profile脚本更新固定模块。连续40帧edges-only ABBA：HLS
 COMGR编译通过；连续40帧ABBA基线19.340/19.337ms，候选19.860/19.822ms，最终FEEA9EF3…一致、首尾有限。明显更慢，未扩大全帧/reset，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。未进一步确认变慢的指令/调度根因，不把少源代码操作等同快。
 
 补丁experiments/mh-exact-feature.patch、test-mh-exact-feature.ps1，编译HIP_ISA_HALF=1，复用benchmark_vit_qkv_compact.exe，目标multihead_fused_attention.hsaco。日志release/HIP/mh-exact-feature-test.log。
+
+
+### 2026-09-16：直接残差读取退化的编译资源对照
+读取上轮候选与已验证attention融合基线COMGR汇编，C64 VGPR94→82/SGPR30→53，C128118→106/30→53，C256152→133/42→43；三者private/spill仍0。C64静态FP8编码102→81、解码54→33，v_dual_fmac_f32从38→3。减少转换/寄存器并不意味着更快，编译器同时改变指令安排。
+
+完整表experiments/mh-exact-feature-isa.md。以上是静态资源和指令数量，不是动态周期/占用率或因果证明；原版更快的结论仍来自上一轮ABBA。本轮无生产代码/游戏修改。
