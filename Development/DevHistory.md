@@ -1171,3 +1171,11 @@ fast_dense新增Crop模板，仅改变最终有效区写地址，工作区矩阵
 正常900 ABBA4轮各6次去cold28.791→28.3495ms，seed123/history30.285→30.0065ms。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧28.648ms/FEEA9EF3…，24帧每8帧reset28.188ms/22C171FC…，全有限；HDR非同期ABBA，不据此计算异轮收益。
 
 内核、runner及完整DLL编译通过：release/HIP/native-mh-crop.addon64 SHA111e8c4033e7d7f33c0792dac467307cccf2898b1d39a0054d866f0f379366d7；multihead-fast-padded-wave-packed模块SHAA118C4678D217DB25482E11D194350137890202B8399570C290EEDFEB21CBDAC；24模块固定mh-project-crop-release-modules。未部署，游戏仍13c7cd12…+split-project-blocked（用户900P30FPS）。脚本test-mh-project-crop.ps1，日志release/HIP/mh-project-crop-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：普通MH融合FFN直接映射输入
+新增ffn_input<C,Mapped>，按工作区token映射至原raster坐标，减sx/sy后越界返回0；合作输入装载、非合作fallback及第三投影残差均使用同一映射。C64/C128/C256的非identity块选择_project_mapped入口，不分配packed、不启动shift_pack；C512 split及identity路径保持。--mh-input-mapped独立开关，要求已融合第三投影的受支持配置；HIP_FAST默认启用并记日志。
+
+正常900 ABBA4轮各6次去cold28.8175→27.8315ms；seed123/history29.8155→29.5695ms，历史组收益较小。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧28.696ms/FEEA9EF3…，24帧每8帧reset27.046ms/22C171FC…，全有限。HDR为正确性回归，不以异轮耗时宣称稳定1ms收益。
+
+内核、runner及完整DLL编译通过：release/HIP/native-mh-mapped.addon64 SHAb4e46e159746caafe4877e5128af2bb1b5098d89950882ed7a4f750f3ef3a4e0；multihead-fast-padded-wave-packed模块SHA899CDB452D514DC5A7731EA39D26C9F7AD347CC3CFF2350DB1D2ADFF65180FD0；24模块固定mh-input-mapped-release-modules。未部署，游戏仍13c7cd12…+split-project-blocked（用户900P30FPS）。脚本test-mh-input-mapped.ps1，日志release/HIP/mh-input-mapped-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。

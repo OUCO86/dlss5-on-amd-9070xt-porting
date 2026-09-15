@@ -324,15 +324,16 @@ TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tok
 #endif
 // Fused MH FFN:16 tokens/group, C/16 waves, hidden FP8 stays in LDS.
 // External input is f32 carrying FP8 values; weights use existing packed regions.
-template<uint C,bool Tiled=false,bool Project=false>
-DEV void mh_ffn_fused_body(const float*in,const float*w,unsigned char*out,uint tokens){
+template<uint C,bool Mapped> DEV float ffn_input(const float*in,uint p,uint c,uint width,uint height,uint workw,uint sx,uint sy){if constexpr(Mapped){int x=int(p%workw)-int(sx),y=int(p/workw)-int(sy);return x>=0&&y>=0&&x<int(width)&&y<int(height)?in[(uint(y)*width+uint(x))*C+c]:0.f;}return in[p*C+c];}
+template<uint C,bool Tiled=false,bool Project=false,bool Mapped=false>
+DEV void mh_ffn_fused_body(const float*in,const float*w,unsigned char*out,uint tokens,uint width=0,uint height=0,uint workw=0,uint sx=0,uint sy=0){
  uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,l=tid%32,rc=l&15,group=l>>4;
  uint first=__builtin_amdgcn_workgroup_id_x()*16;
  if(first>=tokens)return;
  __attribute__((shared)) unsigned char hidden[16*(4*C+4)];
  const uint*pw=reinterpret_cast<const uint*>(w);
 #if HIP_FFN_COOP_INPUT
- for(uint i=tid;i<16*(C+4);i+=2*C){uint row=i/(C+4),k=i%(C+4);hidden[i]=k<C?static_cast<unsigned char>(q8(in[(first+row)*C+k])):0;}
+ for(uint i=tid;i<16*(C+4);i+=2*C){uint row=i/(C+4),k=i%(C+4);hidden[i]=k<C?static_cast<unsigned char>(q8(ffn_input<C,Mapped>(in,first+row,k,width,height,workw,sx,sy))):0;}
  __builtin_amdgcn_s_barrier();
 #endif
  f8 expand[4]{};
@@ -340,7 +341,7 @@ DEV void mh_ffn_fused_body(const float*in,const float*w,unsigned char*out,uint t
 #if HIP_FFN_COOP_INPUT
   __builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);
 #else
-  for(uint e=0;e<8;e++)pack(a,e,in[(first+rc)*C+k+group*8+e]);
+  for(uint e=0;e<8;e++)pack(a,e,ffn_input<C,Mapped>(in,first+rc,k+group*8+e,width,height,workw,sx,sy));
 #endif
   for(uint tile=0;tile<4;tile++){uint row=wave*64+tile*16+rc,offset=(row*C+k+group*8)/4;i2 b{};if constexpr(Tiled){const unsigned char*wb=reinterpret_cast<const unsigned char*>(w);uint off=((row/16)*(C/32)+k/32)*512+(k%32+group*8)*16+row%16;for(uint e=0;e<8;e++)b[e/4]=int(uint(b[e/4])|(uint(wb[off+e*16])<<(8*(e%4))));}else b={int(pw[offset]),int(pw[offset+1])};expand[tile]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,expand[tile]);}
  }
@@ -356,7 +357,7 @@ DEV void mh_ffn_fused_body(const float*in,const float*w,unsigned char*out,uint t
   __builtin_amdgcn_s_barrier();
   for(uint e=0;e<8;e++)hidden[(group*8+e)*(C+4)+wave*16+rc]=static_cast<unsigned char>(q8(F(Hrtz(accum[e]))));
   __builtin_amdgcn_s_barrier();
-  f8 result{};for(uint e=0;e<8;e++)result[e]=Hrtz(in[(first+group*8+e)*C+wave*16+rc]*w[9*C*C+wave*16+rc]);
+  f8 result{};for(uint e=0;e<8;e++)result[e]=Hrtz(ffn_input<C,Mapped>(in,first+group*8+e,wave*16+rc,width,height,workw,sx,sy)*w[9*C*C+wave*16+rc]);
   for(uint k=0;k<C;k+=16){i2 a,b;__builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);uint off=8*C*C+((wave*16+rc)*C+k+group*8)/4;b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
   for(uint e=0;e<8;e++)reinterpret_cast<float*>(out)[(first+group*8+e)*C+wave*16+rc]=F(result[e]);
  }else{
@@ -378,3 +379,7 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project(const float*in,const float*w,unsigned char*out,uint tokens){mh_ffn_fused_body<256,true,true>(in,w,out,tokens);}
 
 TILE void mh_attention_crop(const float*av,const float*feature,const float*weights,float*output,uint tokens,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy,uint channels){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false,false,true>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,channels==512?0:1,cropw,croph,workw,sx,sy);}
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) void mh_ffn_fused_c64_project_mapped(const float*in,const float*w,unsigned char*out,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_fused_body<64,false,true,true>(in,w,out,tokens,width,height,workw,sx,sy);}
+KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c128_project_mapped(const float*in,const float*w,unsigned char*out,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_fused_body<128,false,true,true>(in,w,out,tokens,width,height,workw,sx,sy);}
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project_mapped(const float*in,const float*w,unsigned char*out,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_fused_body<256,true,true,true>(in,w,out,tokens,width,height,workw,sx,sy);}
