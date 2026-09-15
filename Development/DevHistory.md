@@ -1149,3 +1149,9 @@ COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold29.93
 部署脚本确认游戏退出，安装native-split-project.addon64（SHA13c7cd1273b2fc2d6eb37e1766246005e635fbcb91d3c7a4c5a57a6eb3a34fcd）及split-project-blocked-release-modules的24个HSACO，逐hash验证通过。再次确认900P/HIP_FAST1/ASYNC_SUBMIT1、deep_fast-packed为CFF00D26…匹配。包含QKV通道特化、普通MH第三投影融合、C512分组FFN融合及mix/projection分块；不含已拒绝byte接口、K64等实验。
 
 旧a7b7521b… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-split-project。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-split-project（游戏须退出）。未启动游戏，新版实际FPS尚未验证，离线28.8ms不等于游戏帧率。用户最后明确实测仍为更早5ab7版900P26～27FPS；不要把此数字归到a7b或新13c7版本。
+
+
+### 2026-09-15 22:24：用户实测当前900P约30FPS
+Zero反馈已部署13c7cd12… DLL+split-project-blocked模块在《剑星》900P约30FPS。此前明确反馈：5ab7版900P26～27FPS、8568异步版约24FPS；HLSL历史基准是1080P约37FPS，不能描述成同分辨率追平。此为用户试玩观察，没有严格固定场景或逐项画面验收。
+
+当前profile脚本已更新为完整split-project快速选项，刷新诊断输出在release/HIP/profile-after-split.log，最终RGB匹配7b959143…。热轮QKV归一化累计5.040ms、MH attention3.168ms、matrix projection3.284ms、ViT QKV1.787ms；均为逐核等待诊断，不当正常帧百分比。用户反馈到达前只完成诊断，尚未开始下一内核改动。
