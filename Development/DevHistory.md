@@ -1967,3 +1967,25 @@ test_mh_byte_stream.cpp（C64/128/256×mapped×两pattern×post 4/0×crop）：�
 
 ViT结论：三刀共减约0.1ms/层，剩余对HLSL约0.06ms/层差距分布在expand（HIP 0.067对0.036）与qkv/project的float输入转换上，M4形状和权重布局都已证明不是expand的瓶颈，下一步要看expand核的ISA找真正的等待（可能是WMMA与load的交错/占用率）。
 完整DLL候选：release/HIP/native-vit-fused.addon64 SHA256 be4568d566e8c59dd8ad97ae13f1b84b5ee4a2f999d89834e22aa2e644ae85c0（HIP_FAST默认含三项ViT改动），配套模块集vit-expand-fm4-modules（24个）。未部署，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。部署时DLL与模块必须同换（新DLL按名字调用新入口）。
+
+### 2026-09-16 07:45：ViT全链字节流（contract→qkv→attention→project→下一块expand）逐位一致但无收益
+contract输出、attention输出、project输出都是F()格点值，所以整条ViT残差链可以按E4M3字节传递：vit_contract_blocked_fp8_bstream（skip字节读入、字节输出）、vit_qkv_project_normalize_fused_f16compact_fp8_bytein（两次dword load+8次cvt_f32_fp8解码为half）、vit_attention_fused_*_bytein_bout、vit_project_bytein_bout（dot8字节A操作数、字节skip，同时写float out和下一块expand直接消费的字节out8，block32–38不再跑vit_pack_input）。host选项vit_byte_stream（Vit()内vit_in8成员传递块间字节），env DLSS5_HIP_VIT_BYTE_STREAM、CLI --vit-byte-stream，默认关。
+
+test_vit_attn_fused.cpp新增四段对照：contract字节解码、QKV字节、attention字节解码、project float及打包字节，3种token×2种pattern全0差异。COMGR通过；连续40帧ABBA关19.268/19.239、开19.302/19.330，最终FEEA9EF3…一致——约+0.06ms更慢。和09-16 MH字节流同向：这些核不吃带宽，解码指令比省下的字节贵。脚本compile/test-vit-byte-stream.ps1，模块集vit-byte-stream-modules，日志release/HIP/vit-byte-stream-test.log。
+
+### 2026-09-16 07:50：ViT half流+QKV四列片段：N2更慢，N4在噪声内
+读HLSL native_wave_vit_qkv.hlsl（900p时400 token不是64倍数，HLSL走BLOCK_M=1）：其fused QKV A片段用pack16的half直接WaveMatrix load、零转换、BLOCK_N=4；HIP版每片段8次float标量读+8次cvt到half、两列。于是在字节流上加vit_half_stream：contract改写F16（vit_contract_blocked_fp8*_hstream），QKV每A片段一次16字节memcpy（vit_qkv_project_normalize_fused_f16compact_fp8_h16in，模板N=2/4：N4每wave 64列=两个头、两次平方和MMA，raw LDS 16×65），project的skip读half（vit_project_bytein_bout_hskip）。选项vit_half_stream/vit_qkv_n4，env DLSS5_HIP_VIT_HALF_STREAM/DLSS5_HIP_VIT_QKV_N4，CLI --vit-half-stream/--vit-qkv-n4，默认关。
+
+单元测试新增half段（contract半精度解码、h16in N2/N4字节、project float与字节）全0差异；COMGR通过。六轮ABBA（关/N2/N4/N4/N2/关）：关19.323/19.188，N2 19.455/19.525（+0.23更慢，出乎意料——去掉转换反而慢，未查根因），N4 19.230/19.180（−0.05，在本机±0.07噪声内），最终FEEA9EF3…全部一致。不采用。教训：ViT这几个核的瓶颈不是输入格式，"更少指令"不等于更快。脚本compile/test-vit-half-stream.ps1，模块集vit-half-stream-modules，日志release/HIP/vit-half-stream-test.log。
+
+### 2026-09-16 07:55：跳块法补齐ViT与C32链的帧内成本
+HIP侧补齐DLSS5_SKIP_BLOCKS：ParseSkipBlocks放开1–4/31–38/66–69；Vit()跳块=恒等（并清vit_in8）；raw chain的C32块跳过=保留上一块raw状态（链入口本来就吃任意前一块的shift几何），跳收尾块（4/69）只对上一块raw跑c32_finish_crop_half（SkipChainFinish），四块全跳报错。HLSL本来就支持ViT跳块（NativeSkipCopy），不支持raw链C32跳块。
+
+连续40帧edges-only：HLSL none 16.857、跳ViT 15.457 → **ViT家族1.40ms**；HIP none 19.145/19.160、跳ViT 17.359 → **1.79ms**，差0.39ms（不是隔离对照推的0.7——隔离对照的HLSL侧跑的是老变体）。HIP跳C32 2+3：18.486（0.66ms，0.33/块）；跳67+68：18.524（0.62ms，0.31/块）；HIP前后两条C32链8块约2.5ms，HLSL无对照。注意HLSL跳块是CopyBufferRegion真拷贝、HIP跳块零成本，HLSL家族成本被略微低估。脚本skip-family-diff2.ps1，日志release/HIP/skip-family-diff2.log（HLSL+HIP none）、skip-family-diff2-hip.log。
+
+当前差距账（19.15对16.86≈2.3ms）：C64家族0.7、ViT 0.39、C128 0.15、C256持平、launch间隙≈0.4、C32链/C512/其余未对照约0.6。
+
+### 2026-09-16 07:58：C64/C128 FFN-QKV核批量归一化（先算三段QKV再一次LDS归约）逐位一致但更慢
+读HIP mh_ffn_qkv_body与HLSL native_wave_qkv_normalize.hlsl：两边生产版都是每行32项顺序求和（HLSL的NATIVE_QKV_FAST2 MMA求和未编进生产cso），顺序决定逐位一致，不能改树形。HIP版每段各写raw、两道barrier、32线程串行求和；C64一块要4道barrier加两段串行。改法BatchNorm：先算Q/K/V三段累加器，两段raw一次写LDS（union raw加倍），2×16×(C/32)线程一道barrier后并行求各行和（每行顺序不变），再一道barrier写norm——每块少两道barrier、串行段减半。导出mh_ffn_fused_c{64,128}_project[_mapped]_g128_qkv_bn，C256不做（LDS会到38KB）。选项ffn_qkv_batched_norm，env DLSS5_HIP_FFN_QKV_BN，CLI --ffn-qkv-bn，默认关。
+
+test_ffn_qkv.cpp加bn对照，12组FFN逐位/QKV逐byte全0差异。ISA：C64 VGPR 55→95、LDS 5440→10816；C128 87→87、21568（原10816→21568）；private 0。ABBA关19.188/19.172、开19.314/19.275，最终FEEA9EF3…一致——**+0.11ms更慢**。VGPR/LDS都没到占用率门槛，慢在编译器对三段累加器同时存活的排布，没继续查。今天四次"按结构推理该更快"的改动（ViT字节流、half流N2、N4、QKV批量归一）全部不快或更慢：这批核的瓶颈不在barrier数、转换指令数或输入格式上，下一步不该再凭结构直觉改，要拿RGP抓HLSL与HIP同一核的真实指令占用/等待类型对照。脚本compile/test-ffn-qkv-bn.ps1，模块集ffn-qkv-bn-modules，日志release/HIP/ffn-qkv-bn-test.log。游戏与DLL未动。

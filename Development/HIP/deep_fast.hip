@@ -140,7 +140,7 @@ WAVE void vit_attention_inverse_fast(const float*ex,float*out,uint tokens){uint 
 // ByteInput: Q/K/V arrive as the E4M3 bytes vit_qkv_project_normalize_fused_f16compact_fp8 stores (byte_F of the same
 // F() values the f32 tensor holds, so pack() of the f32 value and the stored byte are identical): Q/K rows are one
 // 8-byte load per lane, V columns eight byte loads placed exactly as pack() places them.
-template<uint MAXT,bool ByteInput=false>
+template<uint MAXT,bool ByteInput=false,bool ByteOut=false>
 DEV void vit_attention_fused_body(const float*in,float*out,uint tokens){
  uint head=bid()%32,first=bid()/32*16;if(first>=tokens)return;
  __attribute__((shared)) unsigned char p8[16*(MAXT+16)];
@@ -164,8 +164,23 @@ DEV void vit_attention_fused_body(const float*in,float*out,uint tokens){
  for(uint k=0;k<tokens;k+=16){i2 x;__builtin_memcpy(&x,p8+rc()*S+k+gr()*8,8);
   for(uint c=0;c<2;c++){i2 y{};for(uint e=0;e<8;e++){uint key=k+gr()*8+e;if constexpr(ByteInput){uint b=in8[(2*tokens+key)*1024+head*32+c*16+rc()];y[e/4]=int(uint(y[e/4])|(b<<(8*(e%4))));}else pack(y,e,in[(2*tokens+key)*1024+head*32+c*16+rc()]);}acc[c]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,acc[c]);}
  }
- for(uint c=0;c<2;c++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*1024+head*32+c*16+rc()]=F(Hrtz(acc[c][e]*inv[e]));
+ for(uint c=0;c<2;c++)for(uint e=0;e<8;e++){if constexpr(ByteOut)reinterpret_cast<unsigned char*>(out)[(first+gr()*8+e)*1024+head*32+c*16+rc()]=byte_F(Hrtz(acc[c][e]*inv[e]));else out[(first+gr()*8+e)*1024+head*32+c*16+rc()]=F(Hrtz(acc[c][e]*inv[e]));}
 }
+// Byte-stream twins: byte Q/K/V in, attention output stored as its E4M3 byte for vit_project_bytein_bout.
+WAVE void vit_attention_fused_256_bytein_bout(const float*in,float*out,uint tokens){vit_attention_fused_body<256,true,true>(in,out,tokens);}
+WAVE void vit_attention_fused_400_bytein_bout(const float*in,float*out,uint tokens){vit_attention_fused_body<400,true,true>(in,out,tokens);}
+WAVE void vit_attention_fused_640_bytein_bout(const float*in,float*out,uint tokens){vit_attention_fused_body<640,true,true>(in,out,tokens);}
+// ViT projection on the byte stream: attention bytes as the A operand (dot8<ByteInput>), residual skip decoded from the
+// contract bytes, F(H(total)) stored as f32 (block output / final gather) and, when out8 is given, as the E4M3 byte
+// the next block's expand consumes directly (identical to what vit_pack_input would produce from the f32 value).
+template<bool HalfSkip>
+DEV void vit_project_bytein_bout_body(const float*in,const float*w,const float*skip,float*out,unsigned char*out8,uint tokens){
+ uint first=bid()/64*16,row=bid()%64*16;if(first>=tokens)return;f8 total{};const unsigned char*s8=reinterpret_cast<const unsigned char*>(skip);const _Float16*s16=reinterpret_cast<const _Float16*>(skip);
+ for(uint p=0;p<4;p++){f8 a{};if(!p)for(uint e=0;e<8;e++){uint i=(first+gr()*8+e)*1024+row+rc();float s;if constexpr(HalfSkip)s=(float)s16[i];else s=__builtin_amdgcn_cvt_f32_fp8(int(s8[i]),0);a[e]=H(s*w[1048576+row+rc()]);}a=dot8<true>(in,w,first,row,1024,p*256,(p+1)*256,a);for(uint e=0;e<8;e++)total[e]=p?total[e]+a[e]:a[e];}
+ for(uint e=0;e<8;e++){float v=F(H(total[e]));uint i=(first+gr()*8+e)*1024+row+rc();out[i]=v;if(out8)out8[i]=static_cast<unsigned char>(__builtin_amdgcn_cvt_pk_fp8_f32(v,0.f,0,false));}
+}
+WAVE void vit_project_bytein_bout(const float*in,const float*w,const float*skip,float*out,unsigned char*out8,uint tokens){vit_project_bytein_bout_body<false>(in,w,skip,out,out8,tokens);}
+WAVE void vit_project_bytein_bout_hskip(const float*in,const float*w,const float*skip,float*out,unsigned char*out8,uint tokens){vit_project_bytein_bout_body<true>(in,w,skip,out,out8,tokens);}
 WAVE void vit_attention_fused_256(const float*in,float*out,uint tokens){vit_attention_fused_body<256>(in,out,tokens);}
 WAVE void vit_attention_fused_400(const float*in,float*out,uint tokens){vit_attention_fused_body<400>(in,out,tokens);}
 WAVE void vit_attention_fused_640(const float*in,float*out,uint tokens){vit_attention_fused_body<640>(in,out,tokens);}
@@ -264,19 +279,28 @@ DEV void vit_expand_blocked_body_m(const float*in,const float*w,float*out,uint t
 WAVE void vit_expand_blocked_fp8_tiled_bytein_m4(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body_m<true,true,4>(in,w,out,tokens,inputs,outputs);}
 WAVE void vit_expand_blocked_fp8_frag_bytein_m4(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body_m<true,true,4,true>(in,w,out,tokens,inputs,outputs);}
 
-template<bool Partial,bool Tiled=false>
+// ByteStream: the block input arrives as the E4M3 bytes the previous vit_project_bytein_bout stored (or vit_pack_input
+// produced), the residual skip is decoded from them, and the F(H(total)) result is stored as its byte (byte_F: exact on
+// the F() lattice). Same MMA operands, accumulation order and rounding as the f32 body.
+template<bool Partial,bool Tiled=false,bool ByteStream=false,bool HalfOut=false>
 DEV void vit_contract_blocked_body(const float*in,const float*w,const float*skip,float*out,uint tokens){
  uint blocks=tokens,part0=Partial?bid()/blocks:0,local=Partial?bid()%blocks:bid(),first=local/16*16,col=local%16*64;
  if(first>=tokens||part0>=4)return;const uint*ip=reinterpret_cast<const uint*>(in),*wp=reinterpret_cast<const uint*>(w);f8 total[4]{};
- if constexpr(!Partial)for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint c=col+n*16+rc();total[n][e]=H(skip[(first+gr()*8+e)*1024+c]*w[4194304+c]);}
+ if constexpr(!Partial)for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint c=col+n*16+rc();float s;if constexpr(ByteStream)s=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[(first+gr()*8+e)*1024+c]),0);else s=skip[(first+gr()*8+e)*1024+c];total[n][e]=H(s*w[4194304+c]);}
  for(uint part=part0;part<(Partial?part0+1:4);part++){f8 acc[4]{};
   for(uint k=part*1024;k<(part+1)*1024;k+=16){uint off=((first+rc())*4096+k+gr()*8)/4;i2 a={int(ip[off]),int(ip[off+1])};
    for(uint n=0;n<4;n++){uint row=col+n*16+rc(),wo=(row*4096+k+gr()*8)/4;i2 b=vit_weight_fragment<Tiled>(w,row,4096,k);acc[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[n]);}
   }
   for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){if constexpr(Partial)out[(part*tokens+first+gr()*8+e)*1024+col+n*16+rc()]=acc[n][e];else total[n][e]+=acc[n][e];}
  }
- if constexpr(!Partial)for(uint n=0;n<4;n++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*1024+col+n*16+rc()]=F(H(total[n][e]));
+ if constexpr(!Partial)for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint i=(first+gr()*8+e)*1024+col+n*16+rc();if constexpr(HalfOut)reinterpret_cast<_Float16*>(out)[i]=(_Float16)F(H(total[n][e]));else if constexpr(ByteStream)reinterpret_cast<unsigned char*>(out)[i]=byte_F(H(total[n][e]));else out[i]=F(H(total[n][e]));}
 }
+WAVE void vit_contract_blocked_fp8_bstream(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,false,true>(in,w,skip,out,tokens);}
+// Half-stream contract: byte skip in, F(H(total)) stored as F16 (exact on the E4M3 lattice) so the QKV projection loads
+// its A fragments directly (vit_qkv_project_normalize_fused_f16compact_fp8_h16in*), the way the HLSL fused QKV does.
+WAVE void vit_contract_blocked_fp8_hstream(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,false,true,true>(in,w,skip,out,tokens);}
+WAVE void vit_contract_blocked_fp8_tiled_hstream(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,true,true,true>(in,w,skip,out,tokens);}
+WAVE void vit_contract_blocked_fp8_tiled_bstream(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,true,true>(in,w,skip,out,tokens);}
 WAVE void vit_contract_blocked_fp8(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false>(in,w,skip,out,tokens);}
 WAVE void vit_contract_parts_blocked_fp8(const float*in,const float*w,float*out,uint tokens){vit_contract_blocked_body<true>(in,w,nullptr,out,tokens);}
 
@@ -388,6 +412,42 @@ WAVE void vit_qkv_project_normalize_fused_f16compact_fp8(const float*in,const fl
  }
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){float scale=part==0?5.65625f*w[1572864+row/32]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=byte_F(v);}
 }
+// Byte-input twin: the contract output arrives as E4M3 bytes (vit_contract_blocked_fp8*_bstream); each A fragment is two
+// dword loads decoded to the same half values (E4M3 is exact in F16) the f32 kernel converts from.
+WAVE void vit_qkv_project_normalize_fused_f16compact_fp8_bytein(const float*in,const float*w,unsigned char*out,uint tokens){
+ uint perpart=(tokens/16)*32,part=bid()/perpart,local=bid()%perpart,first=local/32*16,row=local%32*32;if(part>=3)return;f8 acc[2]{};
+ const uint*ip=reinterpret_cast<const uint*>(in);
+ for(uint k=0;k<1024;k+=16){h8 a{};uint off=((first+rc())*1024+k+gr()*8)/4,w0=ip[off],w1=ip[off+1];
+  a[0]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w0),0);a[1]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w0),1);a[2]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w0),2);a[3]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w0),3);
+  a[4]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w1),0);a[5]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w1),1);a[6]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w1),2);a[7]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(w1),3);
+  for(uint j=0;j<2;j++){h8 b{};__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w)+part*1048576+(row+j*16+rc())*1024+k+gr()*8,16);acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
+ __attribute__((shared)) float raw[16*33];
+ f8 sum{};
+ if(part<2){
+  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++)raw[(gr()*8+e)*33+j*16+rc()]=acc[j][e];
+  __builtin_amdgcn_s_barrier();
+  for(uint k=0;k<32;k+=16){h8 x{},ones{};for(uint e=0;e<8;e++){float v=raw[rc()*33+k+gr()*8+e];x[e]=(_Float16)(v*v);ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,ones,sum);}
+ }
+ for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){float scale=part==0?5.65625f*w[1572864+row/32]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=byte_F(v);}
+}
+// Half-input QKV: the contract output arrives as F16 (vit_contract_blocked_fp8*_hstream); one 16-byte load per A
+// fragment, no conversion. N column fragments per wave (N=4: 64 columns = two heads, two square-sum MMAs). Same MMA
+// operands, accumulation order, normalization and byte store as the f32-input kernel.
+template<uint N>
+DEV void vit_qkv_h16in_body(const float*in,const float*w,unsigned char*out,uint tokens){
+ const uint cols=N*16,groups=1024/cols;uint perpart=(tokens/16)*groups,part=bid()/perpart,local=bid()%perpart,first=local/groups*16,row=local%groups*cols;if(part>=3)return;f8 acc[N]{};
+ for(uint k=0;k<1024;k+=16){h8 a{};__builtin_memcpy(&a,reinterpret_cast<const _Float16*>(in)+(first+rc())*1024+k+gr()*8,16);for(uint j=0;j<N;j++){h8 b{};__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w)+part*1048576+(row+j*16+rc())*1024+k+gr()*8,16);acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
+ __attribute__((shared)) float raw[16*(N*16+1)];
+ f8 sum[N/2]{};
+ if(part<2){
+  for(uint j=0;j<N;j++)for(uint e=0;e<8;e++)raw[(gr()*8+e)*(N*16+1)+j*16+rc()]=acc[j][e];
+  __builtin_amdgcn_s_barrier();
+  for(uint h=0;h<N/2;h++)for(uint k=0;k<32;k+=16){h8 x{},ones{};for(uint e=0;e<8;e++){float v=raw[rc()*(N*16+1)+h*32+k+gr()*8+e];x[e]=(_Float16)(v*v);ones[e]=(_Float16)1.f;}sum[h]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,ones,sum[h]);}
+ }
+ for(uint j=0;j<N;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){uint h=j/2;float scale=part==0?5.65625f*w[1572864+row/32+h]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[h][e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=byte_F(v);}
+}
+WAVE void vit_qkv_project_normalize_fused_f16compact_fp8_h16in(const float*in,const float*w,unsigned char*out,uint tokens){vit_qkv_h16in_body<2>(in,w,out,tokens);}
+WAVE void vit_qkv_project_normalize_fused_f16compact_fp8_h16in_n4(const float*in,const float*w,unsigned char*out,uint tokens){vit_qkv_h16in_body<4>(in,w,out,tokens);}
 WAVE void vit_qkv_project_normalize_fused_f16compact(const float*in,const float*w,float*out,uint tokens){
  uint perpart=(tokens/16)*32,part=bid()/perpart,local=bid()%perpart,first=local/32*16,row=local%32*32;if(part>=3)return;f8 acc[2]{};
  for(uint k=0;k<1024;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*1024+k+gr()*8+e];for(uint j=0;j<2;j++){h8 b{};__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w)+part*1048576+(row+j*16+rc())*1024+k+gr()*8,16);acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}

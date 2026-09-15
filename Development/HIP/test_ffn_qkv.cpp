@@ -12,11 +12,13 @@ struct LayerBenchmark {
   std::string stem="mh_ffn_fused_c"+std::to_string(c)+(c==256?"_tiled":"")+"_project"+(mapped?"_mapped":"")+"_g128";
   if(mapped)n.Run("mh_fast",stem.c_str(),size_t(tokens)*c,n.P(in),fw,n.P(fr),tokens,w,h,ww,sx,sy);else n.Run("mh_fast",stem.c_str(),size_t(tokens)*c,n.P(in),fw,n.P(fr),tokens);
   n.Run("mh_fast","mh_qkv_normalize_fused",size_t(tokens)*3*c,n.P(fr),aw,n.P(nr),tokens,c);
-  n.Run("mh_fast",(stem+"_qkv").c_str(),size_t(tokens)*c,n.P(in),fw,aw,n.P(fg),n.P(ng),tokens,w,h,ww,sx,sy);n.Synchronize();
+  n.Run("mh_fast",(stem+"_qkv").c_str(),size_t(tokens)*c,n.P(in),fw,aw,n.P(fg),n.P(ng),tokens,w,h,ww,sx,sy);
+  auto fb=n.New(size_t(tokens)*c),nb=n.New(size_t(tokens)*3*c/4);if(c<=128)n.Run("mh_fast",(stem+"_qkv_bn").c_str(),size_t(tokens)*c,n.P(in),fw,aw,n.P(fb),n.P(nb),tokens,w,h,ww,sx,sy);n.Synchronize();
   std::vector<float>a(size_t(tokens)*c),b(a.size());std::vector<unsigned char>x(size_t(tokens)*3*c),y(x.size());
   n.api.Check(n.api.hipMemcpy(a.data(),n.P(fr),a.size()*4,2),"FFN reference");n.api.Check(n.api.hipMemcpy(b.data(),n.P(fg),b.size()*4,2),"FFN fused");n.api.Check(n.api.hipMemcpy(x.data(),n.P(nr),x.size(),2),"QKV reference");n.api.Check(n.api.hipMemcpy(y.data(),n.P(ng),y.size(),2),"QKV fused");
   size_t fd=0,qd=0,bad=0;for(size_t i=0;i<a.size();i++){fd+=memcmp(&a[i],&b[i],4)!=0;bad+=!std::isfinite(a[i])||!std::isfinite(b[i]);}for(size_t i=0;i<x.size();i++){qd+=x[i]!=y[i];bad+=((x[i]&127)==127)||((y[i]&127)==127);}
-  printf("C=%u mapped=%u pattern=%u ffn_bitdiff=%zu qkv_bytediff=%zu invalid=%zu\n",c,mapped,pattern,fd,qd,bad);return !fd&&!qd&&!bad;
+  size_t bfd=0,bqd=0;if(c<=128){std::vector<float>bb(a.size());std::vector<unsigned char>yb(x.size());n.api.Check(n.api.hipMemcpy(bb.data(),n.P(fb),bb.size()*4,2),"FFN bn");n.api.Check(n.api.hipMemcpy(yb.data(),n.P(nb),yb.size(),2),"QKV bn");for(size_t i=0;i<a.size();i++)bfd+=memcmp(&a[i],&bb[i],4)!=0;for(size_t i=0;i<x.size();i++)bqd+=x[i]!=yb[i];}
+  printf("C=%u mapped=%u pattern=%u ffn_bitdiff=%zu qkv_bytediff=%zu invalid=%zu bn_ffn_bitdiff=%zu bn_qkv_bytediff=%zu\n",c,mapped,pattern,fd,qd,bad,bfd,bqd);return !fd&&!qd&&!bad&&!bfd&&!bqd;
  }
 };
 }

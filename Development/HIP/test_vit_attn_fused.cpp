@@ -54,6 +54,46 @@ namespace hip_reference { struct LayerBenchmark { static bool Check(Network&n){b
   std::vector<unsigned char>ef4(e1.size());n.api.Check(n.api.hipMemcpy(ef4.data(),n.P(hf4),ef4.size(),2),"read expand frag m4");
   size_t f4diff=0;for(size_t i=0;i<e1.size();i++)f4diff+=e1[i]!=ef4[i];
   printf("tokens=%u pattern=%u expand_frag_m4_bytediff=%zu\n",tokens,pattern,f4diff);ok=ok&&!f4diff;
+  /* byte stream: contract (byte skip in, byte out), QKV byte in, attention byte out, project byte in/out. Each stage is
+     compared with the f32-stream kernel fed the equivalent f32 tensor; decoded bytes must match the f32 bits. */
+  auto cw=n.PackedVitWeight(n.Block(31,"contract"),1024,4096,false);auto pw=n.PackedDeepWeight(n.Block(31,"projection"),1048576);
+  auto cf=n.New(size_t(tokens)*1024),c8=n.New(size_t(tokens)*256);
+  n.Run("deep","vit_contract_blocked_fp8",size_t(tokens)*1024,n.P(h1),cw,n.P(cin),n.P(cf),tokens,U(4096),U(1024));
+  n.Run("deep","vit_contract_blocked_fp8_bstream",size_t(tokens)*1024,n.P(h1),cw,n.P(packed),n.P(c8),tokens,U(4096),U(1024));
+  auto q8a=n.New(size_t(tokens)*768),q8b=n.New(size_t(tokens)*768);
+  n.Run("deep","vit_qkv_project_normalize_fused_f16compact_fp8",size_t(tokens)*3072,n.P(cf),qw,n.P(q8a),tokens);
+  n.Run("deep","vit_qkv_project_normalize_fused_f16compact_fp8_bytein",size_t(tokens)*3072,n.P(c8),qw,n.P(q8b),tokens);
+  auto avf=n.New(size_t(tokens)*1024),av8=n.New(size_t(tokens)*256);
+  n.Run("deep",(fused+"_bytein").c_str(),size_t(tokens)*512,n.P(q8a),n.P(avf),tokens);
+  n.Run("deep",(fused+"_bytein_bout").c_str(),size_t(tokens)*512,n.P(q8b),n.P(av8),tokens);
+  auto pf=n.New(size_t(tokens)*1024),pb=n.New(size_t(tokens)*1024),p8=n.New(size_t(tokens)*256),pk=n.New(size_t(tokens)*256);
+  n.Run("deep","vit_project",size_t(tokens)*1024,n.P(avf),pw,n.P(cf),n.P(pf),tokens,U(1024),U(1024));
+  n.Run("deep","vit_project_bytein_bout",size_t(tokens)*1024,n.P(av8),pw,n.P(c8),n.P(pb),n.P(p8),tokens);
+  n.Run("deep","vit_pack_input",size_t(tokens)*256,n.P(pf),n.P(pk),U(tokens*1024));n.Synchronize();
+  std::vector<float>xcf(size_t(tokens)*1024),xavf(xcf.size()),xpf(xcf.size()),xpb(xcf.size());std::vector<unsigned char>xc8(xcf.size()),xav8(xcf.size()),xp8(xcf.size()),xpk(xcf.size()),xq8a(size_t(tokens)*3072),xq8b(xq8a.size());
+  n.api.Check(n.api.hipMemcpy(xcf.data(),n.P(cf),xcf.size()*4,2),"read contract");n.api.Check(n.api.hipMemcpy(xc8.data(),n.P(c8),xc8.size(),2),"read contract bytes");
+  n.api.Check(n.api.hipMemcpy(xq8a.data(),n.P(q8a),xq8a.size(),2),"read qkv a");n.api.Check(n.api.hipMemcpy(xq8b.data(),n.P(q8b),xq8b.size(),2),"read qkv b");
+  n.api.Check(n.api.hipMemcpy(xavf.data(),n.P(avf),xavf.size()*4,2),"read av");n.api.Check(n.api.hipMemcpy(xav8.data(),n.P(av8),xav8.size(),2),"read av bytes");
+  n.api.Check(n.api.hipMemcpy(xpf.data(),n.P(pf),xpf.size()*4,2),"read project");n.api.Check(n.api.hipMemcpy(xpb.data(),n.P(pb),xpb.size()*4,2),"read project b");
+  n.api.Check(n.api.hipMemcpy(xp8.data(),n.P(p8),xp8.size(),2),"read project bytes");n.api.Check(n.api.hipMemcpy(xpk.data(),n.P(pk),xpk.size(),2),"read packed project");
+  size_t cdiff=0,qd=0,avd=0,pd=0,p8d=0,sbad=0;
+  for(size_t i=0;i<xcf.size();i++){float d=fp8(xc8[i]);cdiff+=memcmp(&d,&xcf[i],4)!=0;d=fp8(xav8[i]);avd+=memcmp(&d,&xavf[i],4)!=0;pd+=memcmp(&xpf[i],&xpb[i],4)!=0;p8d+=xp8[i]!=xpk[i];sbad+=!std::isfinite(xcf[i])||!std::isfinite(xavf[i])||!std::isfinite(xpf[i]);}
+  for(size_t i=0;i<xq8a.size();i++)qd+=xq8a[i]!=xq8b[i];
+  /* half stream: contract F16 out decoded must equal the f32 contract; half-input QKV (N2 and N4) must reproduce the
+     byte QKV; project with half skip must reproduce the f32 project and its packed bytes. */
+  auto ch=n.New(size_t(tokens)*512),q8c=n.New(size_t(tokens)*768),q8d=n.New(size_t(tokens)*768),ph=n.New(size_t(tokens)*1024),ph8=n.New(size_t(tokens)*256);
+  n.Run("deep","vit_contract_blocked_fp8_hstream",size_t(tokens)*1024,n.P(h1),cw,n.P(packed),n.P(ch),tokens,U(4096),U(1024));
+  n.Run("deep","vit_qkv_project_normalize_fused_f16compact_fp8_h16in",size_t(tokens)*3072,n.P(ch),qw,n.P(q8c),tokens);
+  n.Run("deep","vit_qkv_project_normalize_fused_f16compact_fp8_h16in_n4",size_t(tokens)*3072,n.P(ch),qw,n.P(q8d),tokens);
+  n.Run("deep","vit_project_bytein_bout_hskip",size_t(tokens)*1024,n.P(av8),pw,n.P(ch),n.P(ph),n.P(ph8),tokens);n.Synchronize();
+  std::vector<unsigned short>xch(size_t(tokens)*1024);std::vector<unsigned char>xq8c(xq8a.size()),xq8d(xq8a.size()),xph8(xcf.size());std::vector<float>xph(xcf.size());
+  n.api.Check(n.api.hipMemcpy(xch.data(),n.P(ch),xch.size()*2,2),"read half contract");n.api.Check(n.api.hipMemcpy(xq8c.data(),n.P(q8c),xq8c.size(),2),"read qkv c");n.api.Check(n.api.hipMemcpy(xq8d.data(),n.P(q8d),xq8d.size(),2),"read qkv d");
+  n.api.Check(n.api.hipMemcpy(xph.data(),n.P(ph),xph.size()*4,2),"read project h");n.api.Check(n.api.hipMemcpy(xph8.data(),n.P(ph8),xph8.size(),2),"read project h bytes");
+  size_t hcd=0,hq2=0,hq4=0,hpd=0,hp8=0;
+  for(size_t i=0;i<xcf.size();i++){unsigned h=xch[i];unsigned sgn=(h&0x8000u)<<16,ex=(h>>10)&31u,mn=h&1023u;float d;if(!ex)d=std::ldexp(float(mn),-24)*(sgn?-1.f:1.f);else{unsigned u=sgn|((ex+112u)<<23)|(mn<<13);memcpy(&d,&u,4);}if(!ex&&!mn){unsigned u=sgn;memcpy(&d,&u,4);}hcd+=memcmp(&d,&xcf[i],4)!=0;hpd+=memcmp(&xph[i],&xpf[i],4)!=0;hp8+=xph8[i]!=xpk[i];}
+  for(size_t i=0;i<xq8a.size();i++){hq2+=xq8c[i]!=xq8a[i];hq4+=xq8d[i]!=xq8a[i];}
+  printf("tokens=%u pattern=%u halfstream contract_diff=%zu qkv_h16_diff=%zu qkv_n4_diff=%zu project_diff=%zu project_bytediff=%zu\n",tokens,pattern,hcd,hq2,hq4,hpd,hp8);ok=ok&&!hcd&&!hq2&&!hq4&&!hpd&&!hp8;
+  printf("tokens=%u pattern=%u stream contract_diff=%zu qkv_diff=%zu attn_diff=%zu project_diff=%zu project_bytediff=%zu invalid=%zu\n",tokens,pattern,cdiff,qd,avd,pd,p8d,sbad);ok=ok&&!cdiff&&!qd&&!avd&&!pd&&!p8d&&!sbad;
  }
  return ok;}}; }
 int main(int argc,char**argv){try{
