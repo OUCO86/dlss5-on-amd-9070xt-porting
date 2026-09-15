@@ -136,6 +136,7 @@ class Network {
    }
   }
   if(module=="c32_fused"||module=="c32_fused_ffn"||module=="mh_fused"){groups=count;threads=128;}
+  if(kernel=="c64_attention_project"){groups=count;threads=256;}
   if(module=="prefix_fast"){threads=(kernel=="dlss5_prefix_fast_project"||kernel=="dlss5_prefix_fast_fused"||kernel=="dlss5_prefix_fast_fused_raster")?32:256;if(kernel=="dlss5_prefix_fast_fused"||kernel=="dlss5_prefix_fast_fused_raster")groups=count/512;}
   if(module=="c32_fast_ffn"){bool expand=kernel=="c32_ffn_expand_fast";U tokens=count/(expand?128:32);threads=expand?512:256;groups=((tokens+63)/64)*(expand?2:1);}
   if(module=="c32_fast_attention")threads=32;
@@ -190,6 +191,7 @@ class Network {
   if(!ready_norm){if(opt.fused_qkv_norm){Run("mh_fast","mh_qkv_normalize_fused",size_t(n)*3*c,P(input),weights,P(norm),n,c);}else{
   Run("mh_fast","mh_qkv_fast",size_t(n)*3*c,P(input),weights,P(qkv),n,c);
   Run("mh_fast",opt.fp8_normalized?"mh_qkv_normalize_fast_wave_fp8":opt.mh_wave?"mh_qkv_normalize_fast_wave":"mh_qkv_normalize_fast",size_t(n)*heads,P(qkv),weights,P(norm),n,c);qkv.reset();}}
+  if(c==64&&opt.packed_weights&&opt.fused_mh&&opt.fp8_av&&opt.fp8_normalized){auto out=New((cropw?size_t(cropw)*croph:size_t(n))*c);Run("mh_fused","c64_attention_project",windows,P(norm),weights,P(input),P(out),w,h,U(raw?3:rounded_output?0:4),cropw,croph,sx,sy);return out;}
   auto av=New(size_t(n)*c/(opt.fp8_av?4:1)),out=New((cropw?size_t(cropw)*croph:size_t(n))*c);if(opt.fused_mh){Run("mh_fused",opt.fp8_av?"mh_attention_fused_fp8_out":opt.fp8_normalized?"mh_attention_fused_fp8":"mh_attention_fused",size_t(windows)*heads,P(norm),weights,P(av),w,h,c);norm.reset();}else{
   auto ex=New(size_t(windows)*heads*4096),prob=New(size_t(windows)*heads*4096);
   Run("mh_fast","mh_scores_exp_fast",size_t(windows)*heads*4096,P(norm),weights,P(ex),w,h,c);

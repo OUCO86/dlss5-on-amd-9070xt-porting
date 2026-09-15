@@ -1625,3 +1625,13 @@ COMGR及专用benchmark编译通过；连续40帧ABBA基线21.898/21.953ms，候
 COMGR和专用benchmark编译通过；连续40帧ABBA基线21.875/21.911ms，候选21.876/21.822ms，最终FEEA9EF3…一致、首尾有限。仅约0.04ms差异，未扩大全帧/reset/Graph验证，不采用，源码恢复，游戏不变。
 
 补丁experiments/mh-residual-precompute.patch、test-mh-residual-precompute.ps1；配套benchmark_mh_residual_precompute.exe及HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块multihead-fast-padded-wave-packed.hsaco。日志release/HIP/mh-residual-precompute-test.log。
+
+
+### 2026-09-16：C64注意力与输出投影融合取得约0.55ms收益
+新增c64_attention_project，256线程每组处理一个8×8窗口的两个head。各head沿用原score/prob/AV操作，AV复用已失效的ex共享空间存64×68 byte；全组同步后进行跨64通道投影，保留三段标量残差、K16顺序、crop及post0/3/4。共享QKV/ex按head隔离，AV写入前已有整组同步，避免覆盖仍在读取的ex。host仅C64+packed+fused MH+byte norm/AV启用；其他路径沿用旧实现。
+
+COMGR与benchmark编译通过；连续40帧ABBA基线21.899/21.892ms，候选21.364/21.312ms，最终FEEA9EF3…匹配、首尾有限。全40帧及24帧每8帧reset全有限，最终分别FEEA9EF3…/22C171FC…；seed123/history输出75b62d2f…匹配。全检计时20.955/21.132ms因读回频率不同不作为连续性能。
+
+独立test_c64_attn_project覆盖8个真实C64权重块×post0/3/4×有无crop共48组，融合前后输出逐float位一致、无非法值。首次测试因mh_wave配置缺失在初始化即拒绝，补齐后实际全部通过；没有放宽比较。日志release/HIP/c64-attn-project-test.log、c64-attn-project-validation.log、c64-attn-project-intermediate.log。
+
+完整DLL release/HIP/native-c64-attn-project.addon64 SHA256=2d8d1db1c67de875bb2bbca1809aed6cc74ac57f2c024c3e2637e40d2f886ca8；固定24模块c64-attn-project-release-modules，multihead_fused_attention.hsaco SHA256=EEAC76C3B08EDFD273F7A27EC7675466E0F19E63CFA94D70709F1C7DE7B331D5。本轮未部署，游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。目标仍未达HLSL约16.8ms水平。
