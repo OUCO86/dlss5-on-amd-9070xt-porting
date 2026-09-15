@@ -1873,3 +1873,11 @@ COMGR编译通过；连续40帧ABBA基线19.325/19.365ms，候选19.300/19.328ms
 两个COMGR模块及专用benchmark编译通过；连续40帧ABBA基线19.330/19.371ms，候选19.379/19.280ms，最终FEEA9EF3…一致、首尾有限。无稳定收益，未扩大全帧/reset，不采用，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
 
 补丁experiments/c512-qkv-byte.patch、test-c512-qkv-byte.ps1；配套benchmark_c512_qkv_byte.exe，deep_fast.hip和multihead_fast_padded.hip各编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1为c512-qkv-byte-deep/mh.hsaco，分别替换独立实验目录deep_fast-packed与multihead-fast-padded-wave-packed模块。日志release/HIP/c512-qkv-byte-test.log。
+
+
+### 2026-09-16：刷新当前profile与逐层对照，调整后续重点
+当前ffn-qkv-round-byte-release-modules profile通过，最终RGB7b959143…匹配；owned1142.9MiB/205 allocations。串行逐核前列仍为C32 chain与C256 FFN-QKV，但计时包含等待，不能把累计名次直接当跨后端差距。
+
+重新运行当前MH同输入逐层对照：block9 C128 HIP0.150200/0.149200ms，对HLSL0.228050/0.207850；block15 C256 HIP0.140550/0.138000，对HLSL0.213450/0.192550；block23 C512 HIP0.205350/0.173400，对HLSL0.150650/0.133600。既有跨后端数值差异不变：block9/15 bitdiff496/129、maxabs2，block23逐位一致；所有测例无非法值。单层重复条件不能直接加总成全帧差距。
+
+日志release/HIP/profile-round-byte-current.log、compare-mh-round-byte-current.log。本轮刷新证据，无生产代码/部署变化，不声称新增提速。
