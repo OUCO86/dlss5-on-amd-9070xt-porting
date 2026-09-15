@@ -206,3 +206,17 @@ HIP_FAST selects mapped input by default. Rebuild host and C32 module together.
 Combined900 ABBA43.295→41.362ms, bitwise-equal RGB. Two real HDR40-frame replays
 and periodic history resets also matched their previous exact output hashes.
 This does not change D3D/HIP asynchronous submission settings or game installs.
+
+### ViT16x64 output blocks (2026-09-15)
+
+--vit-blocked makes one wave produce four adjacent16x16 expand fragments with
+shared A operands; --vit-contract-blocked does the same for the K4096 contract.
+Grid size is quartered. HIP_FAST enables both, retaining each fragment's K order,
+the ViT activation FMA and the original serial addition of four contract parts.
+Weights still use packed row layout. Rebuild host and deep module together.
+
+--vit-split-k records an optional four-part contract plus ordered combine.
+Both narrow and16x64 Split-K experiments preserved output but ran slower, so it
+stays off. Final900 ABBA41.3815→39.925ms; frozen HDR40-frame hot median40.300ms,
+all finite and exact final HDR unchanged. Periodic history resets also match.
+No game files were deployed by these changes.

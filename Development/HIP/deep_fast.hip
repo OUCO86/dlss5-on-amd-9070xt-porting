@@ -152,3 +152,43 @@ WAVE void vit_project_fp8(const float*in,const float*w,const float*skip,float*ou
 WAVE void split_expand_fp8(const float*in,const float*w,float*out,uint tokens){uint first=bid()/128*16,col=bid()%128*16,g=col/256,row=col%256;if(first>=tokens)return;f8 a{};a=dot16(in,w,first,row,512,64,g*64,262144+g*16384,a);for(uint e=0;e<8;e++){float v=Hrtz(a[e]),gate=clampf(v,-4.f,4.f),poly=gate*(absf(gate)*(-.055908203125f)+.447265625f)+.89453125f;reinterpret_cast<unsigned char*>(out)[(first+gr()*8+e)*2048+col+rc()]=byte_F(v*poly);}}
 
 WAVE void split_contract_fp8(const float*in,const float*w,float*out,uint tokens){uint first=bid()/32*16,col=bid()%32*16,g=col/64,row=col%64;if(first>=tokens)return;f8 a{};a=dot16<true>(in,w,first,row,2048,256,g*256,393216+g*16384,a);for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+col+rc()]=F(Hrtz(a[e]));}
+
+// Four independent K1024 partitions of the existing K4096 contract.
+WAVE void vit_contract_parts_fp8(const float*in,const float*w,float*out,uint tokens){
+ uint blocks=(tokens/16)*64,part=bid()/blocks,local=bid()%blocks,first=local/64*16,row=local%64*16;
+ if(part>=4)return;f8 a{};a=dot8<true>(in,w,first,row,4096,part*1024,(part+1)*1024,a);
+ for(uint e=0;e<8;e++)out[(part*tokens+first+gr()*8+e)*1024+row+rc()]=a[e];
+}
+KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
+void vit_contract_combine(const float*partial,const float*w,const float*skip,float*out,uint tokens){
+ uint i=bid()*256+__builtin_amdgcn_workitem_id_x(),count=tokens*1024;if(i>=count)return;
+ float total=H(skip[i]*w[4194304+i%1024]);
+ for(uint part=0;part<4;part++)total+=partial[part*count+i];
+ out[i]=F(H(total));
+}
+
+// One wave produces16x64, reusing A across four output-column fragments.
+WAVE void vit_expand_blocked_fp8(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){
+ uint tiles=outputs/64,first=bid()/tiles*16,col=bid()%tiles*64;if(first>=tokens)return;
+ const uint*pw=reinterpret_cast<const uint*>(w);f8 accum[4]{};
+ for(uint k=0;k<inputs;k+=16){i2 a{};for(uint e=0;e<8;e++)pack(a,e,in[(first+rc())*inputs+k+gr()*8+e]);
+  for(uint n=0;n<4;n++){uint row=col+n*16+rc(),offset=(row*inputs+k+gr()*8)/4;i2 b={int(pw[offset]),int(pw[offset+1])};accum[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum[n]);}
+ }
+ for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){float v=accum[n][e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);reinterpret_cast<unsigned char*>(out)[(first+gr()*8+e)*outputs+col+n*16+rc()]=byte_F(v*poly);}
+}
+
+template<bool Partial>
+DEV void vit_contract_blocked_body(const float*in,const float*w,const float*skip,float*out,uint tokens){
+ uint blocks=tokens,part0=Partial?bid()/blocks:0,local=Partial?bid()%blocks:bid(),first=local/16*16,col=local%16*64;
+ if(first>=tokens||part0>=4)return;const uint*ip=reinterpret_cast<const uint*>(in),*wp=reinterpret_cast<const uint*>(w);f8 total[4]{};
+ if constexpr(!Partial)for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint c=col+n*16+rc();total[n][e]=H(skip[(first+gr()*8+e)*1024+c]*w[4194304+c]);}
+ for(uint part=part0;part<(Partial?part0+1:4);part++){f8 acc[4]{};
+  for(uint k=part*1024;k<(part+1)*1024;k+=16){uint off=((first+rc())*4096+k+gr()*8)/4;i2 a={int(ip[off]),int(ip[off+1])};
+   for(uint n=0;n<4;n++){uint row=col+n*16+rc(),wo=(row*4096+k+gr()*8)/4;i2 b={int(wp[wo]),int(wp[wo+1])};acc[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[n]);}
+  }
+  for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){if constexpr(Partial)out[(part*tokens+first+gr()*8+e)*1024+col+n*16+rc()]=acc[n][e];else total[n][e]+=acc[n][e];}
+ }
+ if constexpr(!Partial)for(uint n=0;n<4;n++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*1024+col+n*16+rc()]=F(H(total[n][e]));
+}
+WAVE void vit_contract_blocked_fp8(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false>(in,w,skip,out,tokens);}
+WAVE void vit_contract_parts_blocked_fp8(const float*in,const float*w,float*out,uint tokens){vit_contract_blocked_body<true>(in,w,nullptr,out,tokens);}

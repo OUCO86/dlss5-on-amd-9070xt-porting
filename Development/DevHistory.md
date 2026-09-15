@@ -868,3 +868,13 @@ HIP_C32_REGISTER_FFN把half FFN结果留h8寄存器用于末端残差，仅将�
 最终三项对本轮起点正常900 ABBA4轮各6次、排除cold：43.295→41.362ms（约4.46%），四轮SHA7b959143…一致；seed123/history=input900.rgba32f：44.6365→42.757ms，四轮SHA75b62d2f…一致。真实HDR独立40帧两次热中位41.454/41.533ms，最终均FEEA9EF3…；24帧每8帧重置history热中位41.550ms，最终22C171FC…，匹配既有相同重置测试。所有帧有限。validate-hdr.ps1统一执行此类验证。
 
 两宏默认1，0保留旧路径；HIP_FAST默认mapped_c32=1。内核和DLL编译通过：release/HIP/native-c32-mapped.addon64，SHA125511f0d3dc205ef57c62d7e427d949a1bd064298b373427735244bf911c9c9，24模块在远端c32-mapped-modules。日志release/HIP/c32-sync-test.log、c32-register-test.log、c32-mapped-test.log、c32-final.log、c32-final-history.log、c32-hdr-a/b/reset.log。游戏安装未动，仍68c8…。
+
+### 2026-09-15：ViT四输出分块通过，Split-K实验保持关闭
+
+在已提交C32优化基线上继续对照HLSL的ViT组织。首先将4096维contract原四段K1024改为四组并行、独立combine按原p0→p3顺序加到H(skip*scale)，保留全部舍入与累加顺序。COMGR与整网逐值通过，但16×16小块Split-K 41.4745→42.8955ms更慢，未默认。
+
+依据native_wave_vit_blocked.hlsl改为单wave同时输出16×64、四acc共用输入，实际dispatch数为原1/4；不是早期pair实验中保留原grid让奇数块空返回。expand单项41.5155→40.754ms。contract同样四输出片段，原四K段串行时40.5465→39.983ms；配合Split-K时40.487→41.7755ms，仍慢。最终采用expand/contract分块，不启用Split-K，权重仍原packed行布局。
+
+最终ViT两项正常900 ABBA四轮各6次、排除cold，各方案10hot：41.3815→39.925ms（约3.52%），四轮RGB SHA7b959143…一致；seed123/history=input900.rgba32f：42.7345→41.4075ms，四轮SHA75b62d2f…一致。真实HDR40帧热中位40.300ms，最终FEEA9EF3…；24帧每8帧重置历史热中位39.172ms，最终22C171FC…，都匹配旧hash且全有限。均为离线/冻结帧数据，不是实测游戏FPS。
+
+--vit-blocked和--vit-contract-blocked独立控制、HIP_FAST默认开启；--vit-split-k保留实验，默认关闭。旧内核入口保留。主机runner、COMGR/gfx1201模块和完整DLL编译通过。最终DLL release/HIP/native-c32-vit-blocked.addon64，SHA4c0620a559a6a1ca6d633f5dcfb8b3b241d2a56116b7bee714917256859278f0；24模块在远端hip-backend/vit-contract-modules。日志release/HIP/vit-splitk-test.log、vit-blocked-test.log、vit-contract-serial.log、vit-contract-parallel.log、vit-final.log、vit-final-history.log、vit-final-hdr.log、vit-final-reset.log。游戏安装未动，仍68c8…。
