@@ -1223,3 +1223,11 @@ benchmark_live_capture增加可选edges_only诊断模式，逐帧推理和历史
 同程序/同配置0/1/1/0：HLSL全读回26.577/26.588ms，首尾16.736/16.686ms；ADL活跃样本核心分别约1.79GHz和2.8–3.0GHz，负载65%和94–95%。HIP全读回28.454/27.166ms，首尾26.290/26.365ms；核心约2.74–2.81GHz和3.0GHz，负载78–84%和99%。后端内部四轮最终hash保持各自C7C2…/FEEA…；全读回全部有限，首尾仅2帧检查。未改变游戏或驱动设置。
 
 读回/CPU图像扫描位于原计时区间外，却改变负载间隔与GPU频率。这解释当前可复现的HLSL慢值，不能把先前26ms/26ms当HIP追平。较连续同条件当前HLSL约16.7ms、HIP26.3ms，仍差约9.6ms。历史18.8ms无同期频率，不能反推精确历史状态。详见Development/HIP/readback-cadence.md。性能测试以后采用一致节奏，完整图像正确性仍单独保留。
+
+
+### 2026-09-15：融合MH FFN输入pack4，采用连续负载对照
+HIP_FFN_INPUT_PACK4默认1：合作输入以四个值调用原pack4量化并memcpy4写入共享区，替代四次q8/byte写入。映射与非映射输入共用，padding四byte为0，后续计算不改；0保留旧路径。
+
+用同一benchmark_hip_edges.exe、相同配置和输入做模块ABBA，每轮40帧、去前5，首尾检查：基线热中位26.363/26.382ms，候选26.129/26.182ms。四轮最终FEEA9EF3…匹配；首尾模式只验证2帧，不称全帧验证。随后候选独立40帧全读回和24帧每8帧reset均全有限，最终分别匹配FEEA9EF3…/22C171FC…。两次全检计时27.478/26.545ms仅记录，不与连续负载计时相减。未另跑seed123的整网ABBA。
+
+COMGR/gfx1201模块编译通过，multihead-fast-padded-wave-packed SHA12425000552D3B5AC34C98BB7E10156091D981D98B0D5722C151C2D973BD8F47；24模块固定ffn-input-pack4-release-modules，配套DLL仍native-mh-mapped.addon64/b4e46e15…无需修改。未部署，游戏仍b4e46e15…+mh-input-mapped模块。脚本test-ffn-input-pack4.ps1，日志release/HIP/ffn-input-pack4-build/test/full/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_FFN_INPUT_PACK4=1。

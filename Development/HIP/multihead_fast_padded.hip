@@ -1,3 +1,6 @@
+#ifndef HIP_FFN_INPUT_PACK4
+#define HIP_FFN_INPUT_PACK4 1
+#endif
 #ifndef HIP_QKV_SPECIALIZE
 #define HIP_QKV_SPECIALIZE 1
 #endif
@@ -333,7 +336,11 @@ DEV void mh_ffn_fused_body(const float*in,const float*w,unsigned char*out,uint t
  __attribute__((shared)) unsigned char hidden[16*(4*C+4)];
  const uint*pw=reinterpret_cast<const uint*>(w);
 #if HIP_FFN_COOP_INPUT
+#if HIP_FFN_INPUT_PACK4
+ for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C)word=pack4(ffn_input<C,Mapped>(in,first+row,k,width,height,workw,sx,sy),ffn_input<C,Mapped>(in,first+row,k+1,width,height,workw,sx,sy),ffn_input<C,Mapped>(in,first+row,k+2,width,height,workw,sx,sy),ffn_input<C,Mapped>(in,first+row,k+3,width,height,workw,sx,sy));__builtin_memcpy(hidden+i*4,&word,4);}
+#else
  for(uint i=tid;i<16*(C+4);i+=2*C){uint row=i/(C+4),k=i%(C+4);hidden[i]=k<C?static_cast<unsigned char>(q8(ffn_input<C,Mapped>(in,first+row,k,width,height,workw,sx,sy))):0;}
+#endif
  __builtin_amdgcn_s_barrier();
 #endif
  f8 expand[4]{};
