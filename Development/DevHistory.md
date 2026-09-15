@@ -1249,3 +1249,11 @@ compare_layers的mh-only现要求fused-selected并启用当前普通FFN第三投
 这些隔离批次的预热/工作集/时钟条件仍不同于整网，不直接按层数求和解释约9.6ms差距。此前旧工具额外pack/未启用融合的HIP时间不再用于当前归因。
 
 源码确认HLSL NativePreblockRuntime有DLSS5_INLINE_PREFIX映射mode5，HIP仍独立dlss5_prefix_fast_features+project并物化两幅float图。下一步值得对照该前置路径，不再只盯普通MH的小差距。脚本compare-current-mh.ps1、compare-current-c32.ps1；日志release/HIP/mh-current-latest.log、c32-current-latest.log。
+
+
+### 2026-09-15：前置特征生成与投影融合
+新增dlss5_prefix_fast_fused：每wave处理16token，前16lane按原PCG/高斯噪声、RGB及history公式生成16维特征，放入共享内存，再共同计算32维投影。保留原第二次零填充K16 WMMA及Hrtz输出，不改变量化顺序；省去32通道float features全图（900P逻辑200MiB）和一次独立kernel。prefix投影输出float仍保留，尚未与C32 body完全内联。
+
+连续负载40帧ABBA：基线26.171/26.160ms，融合25.359/25.372ms，约0.8ms收益。四轮最终FEEA9EF3…匹配，首尾抽样有限；随后40帧全检、24帧每8帧reset全有限，最终匹配FEEA9EF3…/22C171FC…。全检计时25.680/25.585ms仅记录，不与连续负载混算。
+
+HIP_FAST默认prefix_fused=true；DLSS5_HIP_PREFIX_FUSED=0/1可覆盖，reference runner增加--prefix-fused。内核、测试runner和完整DLL编译通过：release/HIP/native-prefix-fused.addon64 SHA3894351ccba9080524095cd5c87644806224c62f071250ead3c3e18526283f9b；prefix_fast模块SHAF9AF53C5B71F40142BA59CF291E1C91DCCD92EEEEC692D5280AA4610A20C8784；24模块固定prefix-fused-release-modules，含FFN input pack4。未部署，游戏仍b4e46e15…+mh-input-mapped。脚本test-prefix-fused.ps1，日志release/HIP/prefix-fused-build/test/full/reset.log。
