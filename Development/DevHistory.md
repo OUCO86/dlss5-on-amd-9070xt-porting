@@ -1799,3 +1799,9 @@ Vit按实际路径只获取所需QKV缓存，packed fused不再先创建原float
 完整DLL release/HIP/native-vit-qkv-compact.addon64 SHAc8842686a683443962619055745d43a4daf22026f68864705e5d6f0f8df06554；固定24模块vit-qkv-compact-release-modules，deep_fast-packed模块SHA73B5CBD3CD2214AE01030D390015F7045326F2A915367C4348D99ABA751699D9。作为显存优化保留，本轮未部署，游戏仍152c5bf8…+split-expand-halfweight-release-modules。
 
 脚本test-vit-qkv-compact.ps1、validate-vit-qkv-compact*.ps1、profile-vit-compact.ps1；test_vit_qkv_halfweight.cpp更新新布局入口。日志release/HIP/vit-qkv-compact-test.log、vit-qkv-compact-validation.log、vit-qkv-compact-profile.log。
+
+
+### 2026-09-16：部署ViT紧凑缓存并复核当前差距
+核对工作树为c77d6c6且干净；部署脚本确认游戏退出，安装native-vit-qkv-compact.addon64（SHAc8842686a683443962619055745d43a4daf22026f68864705e5d6f0f8df06554）和vit-qkv-compact-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-qkv-compact。实际游戏新FPS仍待反馈。
+
+current比较/profile脚本更新固定模块和benchmark_vit_qkv_compact.exe，compare_layers_current.exe重新编译上传。连续40帧edges-only ABBA：HLSL16.761/16.796ms，HIP19.521/19.531ms，各自golden匹配、首尾有限；差距约2.75ms，仍未达到目标。日志release/HIP/backend-vit-compact-current.log。本轮完成已验证144MiB显存优化的部署，不另称新增帧率收益。
