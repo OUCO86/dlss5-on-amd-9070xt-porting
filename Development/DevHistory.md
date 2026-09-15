@@ -1179,3 +1179,9 @@ fast_dense新增Crop模板，仅改变最终有效区写地址，工作区矩阵
 正常900 ABBA4轮各6次去cold28.8175→27.8315ms；seed123/history29.8155→29.5695ms，历史组收益较小。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧28.696ms/FEEA9EF3…，24帧每8帧reset27.046ms/22C171FC…，全有限。HDR为正确性回归，不以异轮耗时宣称稳定1ms收益。
 
 内核、runner及完整DLL编译通过：release/HIP/native-mh-mapped.addon64 SHAb4e46e159746caafe4877e5128af2bb1b5098d89950882ed7a4f750f3ef3a4e0；multihead-fast-padded-wave-packed模块SHA899CDB452D514DC5A7731EA39D26C9F7AD347CC3CFF2350DB1D2ADFF65180FD0；24模块固定mh-input-mapped-release-modules。未部署，游戏仍13c7cd12…+split-project-blocked（用户900P30FPS）。脚本test-mh-input-mapped.ps1，日志release/HIP/mh-input-mapped-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：C512输入/残差映射实验暂不采用
+新增split_mix_blocked_mapped及split_projection_blocked_mapped，前者矩阵输入、后者残差均按原shift_pack的workgrid→raster规则映射，越界0；中间mix/FFN/contract保持工作区布局和计算。--split-input-mapped开关候选启用，正常900 ABBA4轮各6次去cold28.038→27.963ms，仅约0.075ms差距，四轮RGB7b959143…一致。无明确速度收益，未继续历史/HDR、未默认；生产源码恢复。
+
+内核和runner编译通过。补丁experiments/split-input-mapped.patch，test-split-input-mapped.ps1（应用补丁后编译runner/deep模块，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1）；日志release/HIP/split-input-mapped-build/test.log。保留固定候选native-mh-mapped.addon64/b4e46e15…+mh-input-mapped-release-modules，游戏仍13c7cd12…+split-project-blocked，用户900P30FPS。本轮未部署。
