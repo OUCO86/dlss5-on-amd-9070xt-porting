@@ -1913,3 +1913,11 @@ COMGR与专用benchmark编译通过；连续40帧ABBA基线19.330/19.368ms，候
 连续40帧ABBA基线19.312/19.361ms，候选19.328/19.318ms，最终FEEA9EF3…一致、首尾有限。候选HSACO SHA4DA96B4F…与基线73B5CBD3…不同，未见稳定帧时间收益，未扩大全帧/reset，不采用，源码恢复，游戏不变。
 
 补丁experiments/split-expand-share.patch、test-split-expand-share.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，目标deep_fast-packed.hsaco。日志release/HIP/split-expand-share-test.log。
+
+
+### 2026-09-16：ViT attention三核融合为单核，约0.1ms收益（光之朱雀接手，闇GPT额度用尽）
+先修层对照工具：compare_layers.cpp新增all/vit-only过滤，并按src/native_hip_network.h的HIP_FAST补齐ViT生产选项（vit_blocked/vit_contract_blocked/vit_weight_mask=1/vit_pack_input/vit_qkv_blocked）——此前ViT层对照跑的是非blocked老路径（vit_expand_fp8/vit_project_fp8），数不作数。生产路径block31（400token）：HLSL 0.184–0.220ms，HIP 0.280ms；HIP批量分段expand 0.067/contract 0.047/qkv+norm 0.061/attention三核 0.077/project 0.059ms，对HLSL时间戳0.036/0.042/0.035/0.038/0.021。同一轮all过滤下C32/C64/C128/C256/C512各代表层HIP已持平或更快（C64 0.24–0.27对0.30–0.39，C128 0.159对0.343，C256 0.154对0.293，C512 0.205对0.244），2.5ms差距的可定位部分集中在ViT（每层约0.06–0.1ms×8）。
+
+实现vit_attention_fused_{256,400,640}：一wave=16query×1head遍历全部key，Q只打包一次，scores经同一exp位图，分母用f16 MMA对全一按key顺序K16逐tile累加（与vit_attention_inverse_fast同序），PV用pack(ex)对V的FP8 MMA一次算两个16列半段，尾部F(Hrtz(acc*inv))；不再写[query][head][key]f32 ex张量（900P每层20.5MB）。第一版按640上限在LDS存half表20.7KB：单元测试逐位一致、整图hash一致，但ABBA 19.343/19.295→19.977/19.979更慢（每WGP只放7个workgroup，占用率崩）。第二版P只存E4M3字节、16×16双缓冲half tile转置后逐tile累加分母、按token桶实例化（LDS 8.2/8.2/12KB）：连续40帧ABBA基线19.343/19.333ms，候选19.242/19.213ms；全40帧FEEA9EF3…、24帧每8帧reset 22C171FC…、seed123/history 75B62D2F…全部匹配。单元测试test_vit_attn_fused.cpp（240/400/640token×两种FP8格点pattern）对三核路径逐位一致。层对照fused 0.065ms对三核0.077，HLSL 0.037：仍差近一倍，剩余成本是K/V按float读（每lane每tile 8次4字节标量读+转换），HLSL读的是E4M3字节。
+
+状态：选项DLSS5_HIP_VIT_ATTN_FUSED=1 / reference --vit-attn-fused，默认关、未部署、未改DLL；候选模块vit-attn-fused-modules（deep_fast-packed SHA B840EDE755EAA102E4FB531BC672B60827FEE18C118A10BCA2C446B9664893D5，其余23模块沿用ffn-qkv-round-byte-release-modules）。是否默认待下一刀（ViT QKV字节输出+attention字节输入）合并后按合计收益定。脚本compile-vit-attn-fused.ps1、test-vit-attn-fused.ps1、validate-vit-attn-fused.ps1、compare-current-all.ps1、compare-current-vit.ps1、compare-vit-attn-fused.ps1（远端源码目录src-vit-attn-fused）；日志release/HIP/all-current-latest.log、vit-current-latest.log、vit-attn-latest.log、vit-attn-fused-{0..3,full,reset,history-check}.log。

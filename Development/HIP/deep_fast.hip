@@ -128,6 +128,44 @@ DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,s=(b>>16)&0x8000u;int e=i
 WAVE void vit_attention_scores_fast(const float*in,float*out,uint tokens){uint kt= tokens/16,key=(bid()%kt)*16,head=(bid()/kt)%32,first=bid()/(kt*32)*16;if(first>=tokens)return;f8 a{};for(uint k=0;k<32;k+=16){i2 x{},y{};for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(x,e,in[(first+rc())*1024+head*32+j]);pack(y,e,in[(tokens+key+rc())*1024+head*32+j]);}a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);}for(uint e=0;e<8;e++){float af=clampf(a[e]*from_half(0x2dbb)+1.708984375f,1.439453125f,1.9775390625f);uint hb=(bits(af)>>13)-0x1c000u;out[((first+gr()*8+e)*32+head)*tokens+key+rc()]=from_half(((hb<<4)+0x4000u)&65535u);}}
 // inverse SPECIAL work=T*32*16, not T*32. One wave handles16 queries for one head.
 WAVE void vit_attention_inverse_fast(const float*ex,float*out,uint tokens){uint head=bid()%32,first=bid()/32*16;if(first>=tokens)return;f8 a{};for(uint k=0;k<tokens;k+=16){h8 x{},ones{};for(uint e=0;e<8;e++){uint key=k+gr()*8+e;x[e]=(_Float16)ex[((first+rc())*32+head)*tokens+key];ones[e]=(_Float16)1.f;}a=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,ones,a);}if(rc()==0)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*32+head]=1.f/a[e];}
+// FUSED ViT attention (host option vit_attn_fused): one wave = 16 queries x one head over every key, bid = query tile*32 + head.
+// Same per-element operations, operand packing and MMA K order as vit_attention_scores_fast / vit_attention_inverse_fast /
+// vit_attention_av_fast: Q packed once, scores per16-key tile through the same exp bit map, the half bit pattern those
+// kernels exchange through the f32 ex tensor kept in LDS ([query16][key] uint16, exact: ex is an f32 copy of a half),
+// denominator = f16 MMA of the LDS rows against ones (K16 steps in key order), PV = FP8 MMA of pack(ex) against V for
+// both16-column halves of the head, epilogue F(Hrtz(acc*inv)). Requires tokens%16==0 and tokens<=640.
+// LDS per wave: P as E4M3 bytes [16][MAXT+16] plus a double-buffered16x16 half tile that transposes each score tile from
+// accumulator layout to the A-operand layout (keys along K) for the denominator MMA and the byte store. Three token
+// buckets keep the static LDS (and so the occupancy) matched to the geometry: 256 (8.2KB), 400 (8.2KB), 640 (12KB).
+template<uint MAXT>
+DEV void vit_attention_fused_body(const float*in,float*out,uint tokens){
+ uint head=bid()%32,first=bid()/32*16;if(first>=tokens)return;
+ __attribute__((shared)) unsigned char p8[16*(MAXT+16)];
+ __attribute__((shared)) unsigned short t16[2*16*24];
+ const uint S=tokens+16;
+ i2 q[2]{};for(uint k=0;k<32;k+=16)for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(q[k/16],e,in[(first+rc())*1024+head*32+j]);}
+ h8 ones{};for(uint e=0;e<8;e++)ones[e]=(_Float16)1.f;
+ f8 sum{};
+ for(uint key=0,tile=0;key<tokens;key+=16,tile^=1u){f8 a{};
+  for(uint k=0;k<32;k+=16){i2 y{};for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(y,e,in[(tokens+key+rc())*1024+head*32+j]);}a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(q[k/16],y,a);}
+  unsigned short*t=t16+tile*16*24;
+  for(uint e=0;e<8;e++){float af=clampf(a[e]*from_half(0x2dbb)+1.708984375f,1.439453125f,1.9775390625f);uint hb=(bits(af)>>13)-0x1c000u;t[(gr()*8+e)*24+rc()]=(unsigned short)(((hb<<4)+0x4000u)&65535u);}
+  __builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");
+  h8 x{};i2 xb{};for(uint e=0;e<8;e++){unsigned short u=t[rc()*24+gr()*8+e];union{unsigned short u;_Float16 h;}cv;cv.u=u;x[e]=cv.h;pack(xb,e,from_half(u));}
+  sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,ones,sum);
+  __builtin_memcpy(p8+rc()*S+key+gr()*8,&xb,8);
+ }
+ float inv[8];for(uint e=0;e<8;e++)inv[e]=1.f/sum[e];
+ __builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");
+ f8 acc[2]{};
+ for(uint k=0;k<tokens;k+=16){i2 x;__builtin_memcpy(&x,p8+rc()*S+k+gr()*8,8);
+  for(uint c=0;c<2;c++){i2 y{};for(uint e=0;e<8;e++){uint key=k+gr()*8+e;pack(y,e,in[(2*tokens+key)*1024+head*32+c*16+rc()]);}acc[c]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,acc[c]);}
+ }
+ for(uint c=0;c<2;c++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*1024+head*32+c*16+rc()]=F(Hrtz(acc[c][e]*inv[e]));
+}
+WAVE void vit_attention_fused_256(const float*in,float*out,uint tokens){vit_attention_fused_body<256>(in,out,tokens);}
+WAVE void vit_attention_fused_400(const float*in,float*out,uint tokens){vit_attention_fused_body<400>(in,out,tokens);}
+WAVE void vit_attention_fused_640(const float*in,float*out,uint tokens){vit_attention_fused_body<640>(in,out,tokens);}
 WAVE void vit_attention_av_fast(const float*in,const float*ex,const float*inv,float*out,uint tokens){uint first=bid()/64*16,head=(bid()%64)/2,col=(bid()%2)*16;if(first>=tokens)return;f8 a{};for(uint k=0;k<tokens;k+=16){i2 x{},y{};for(uint e=0;e<8;e++){uint key=k+gr()*8+e;pack(x,e,ex[((first+rc())*32+head)*tokens+key]);pack(y,e,in[(2*tokens+key)*1024+head*32+col+rc()]);}a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);}for(uint e=0;e<8;e++){uint q=first+gr()*8+e;out[q*1024+head*32+col+rc()]=F(Hrtz(a[e]*inv[q*32+head]));}}
 // Production decoder build leaves NATIVE_DECODER_HW_H=0: H is integer RNE.
 WAVE void decoder_project2x(const float*in,const float*w,const float*skip,float*out,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=iw*ih)return;uint parts=inputs==1024?4:1;f8 total{};for(uint p=0;p<parts;p++){f8 a{};for(uint k=p*(inputs/parts);k<(p+1)*(inputs/parts);k+=16){h8 x{},y{};for(uint e=0;e<8;e++){uint j=k+gr()*8+e;x[e]=(_Float16)in[(first+rc())*inputs+j];y[e]=(_Float16)w[(row+rc())*inputs+j];}a=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,y,a);}for(uint e=0;e<8;e++)total[e]=p?total[e]+a[e]:a[e];}for(uint e=0;e<8;e++){uint token=first+gr()*8+e;float t=H(total[e]);for(uint dy=0;dy<2;dy++)for(uint dx=0;dx<2;dx++){uint x=(token%iw)*2+dx,y=(token/iw)*2+dy;if(x>=ow||y>=oh)continue;uint i=(y*ow+x)*outputs+row+rc();float merged=H(t+F(skip[i])*w[inputs*outputs+row+rc()]);out[i]=outputs==32?merged:F(merged);}}}
