@@ -1367,3 +1367,9 @@ HIP_FAST默认开启，DLSS5_HIP_DIRECT_INPUT=0/1可覆盖，要求fast_prefix/p
 测试程序编译并运行成功，连续40帧ABBA：基线24.803/24.773ms，候选24.693/24.745ms，四轮最终FEEA9EF3…匹配、首尾有限。减少逻辑25MiB缓冲和每帧写入，但时间收益仅约0.03–0.11ms，未进一步全帧/reset或默认采用；生产源码恢复。
 
 补丁experiments/rgb-raster-only.patch，shader存experiments/native_game_rgb_raster_input.hlsl，test-rgb-raster-only.ps1复现；需应用补丁并将实验shader复制到测试资产目录。测试资产只新增该专用文件，没有覆盖旧shader；游戏旧DLL不会使用新文件。日志release/HIP/rgb-raster-only-test.log。最优未部署候选仍c4a25659…+prefix-direct-input-release-modules，游戏仍3894351c…+mh-scalar-diagonal模块。
+
+
+### 2026-09-16：部署HIP直接工作区输入候选
+部署脚本确认游戏退出，安装native-direct-input.addon64（SHAc4a256596c1cbfb540e3877db65bcb5d9897abd0ada6b7241525258a5d4e3f87）及prefix-direct-input-release-modules的24个HSACO，逐hash校验通过。维持900P/async1，采用已完成全帧、reset及轮换/淘汰排队验证的直接raster读取；不包含未采用的D3D raster-only边界实验。
+
+旧3894351c… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-direct-input；回退用部署脚本-Restore -BackupName before-direct-input（须游戏退出）。本轮未启动游戏或测新FPS，当前约24.7ms为离线连续负载。游戏现已更新为c4a25659…，不再是3894351c版本。
