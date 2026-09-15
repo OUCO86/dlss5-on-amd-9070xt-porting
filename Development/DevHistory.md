@@ -1743,3 +1743,9 @@ COMGR和专用benchmark编译通过，资源LDS54528bytes、VGPR230、SGPR40、p
 完整DLL release/HIP/native-split-contract-fp8.addon64 SHA872ac9cf127375cec5c9398cb0c75365f16185204587c07800e7c750975086d0；固定24模块split-contract-fp8-release-modules，deep_fast-packed模块SHA2B88724479BBFA5F89B124319AAE9D373349C33D1AA6B8ACA92BC807A1713497。尚未部署，游戏仍57b8ab45…+c256-attn-project-release-modules。
 
 最终脚本test-split-contract-fp8.ps1及validate-split-contract-fp8*.ps1，复用重新编译的benchmark_split_ffn_fp8.exe/test_split_ffn_fp8.exe；日志release/HIP/split-contract-fp8-test.log、split-contract-fp8-validation.log。阶段隔离补丁experiments/split-ffn-stage-isolation.patch基于2364bb5前的生产源码，需匹配该补丁的host/test重新编译，并以HIP_SPLIT_EXPAND_FP8/HIP_SPLIT_CONTRACT_FP8的00/10/01组合生成split-stage-control/expand/contract.hip供isolate-split-ffn-stages.ps1使用；不能混用当前仅打包收缩的测试exe。
+
+
+### 2026-09-16：部署F16展开+FP8收缩并刷新整网基线
+部署脚本确认游戏退出，安装native-split-contract-fp8.addon64（SHA872ac9cf127375cec5c9398cb0c75365f16185204587c07800e7c750975086d0）及split-contract-fp8-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-split-contract-fp8。新版实际游戏FPS尚无反馈。
+
+current比较/profile脚本更新固定模块和benchmark_split_ffn_fp8.exe（已重编译为仅收缩FP8），compare_layers_current.exe重新编译上传。连续40帧edges-only ABBA HLSL16.783/16.799ms，HIP20.341/20.355ms，各自golden匹配、首尾有限；当前差距约3.56ms，目标仍未完成。日志release/HIP/backend-split-contract-current.log。本轮是部署与复核，没有额外内核提速。
