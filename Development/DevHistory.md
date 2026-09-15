@@ -1111,3 +1111,11 @@ mh_ffn_fused_body新增Project模板分支：收缩完成后全组同步，将�
 正常900 ABBA4轮各6次去cold31.0285→29.842ms；seed123/history32.4015→31.313ms。每组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧30.132ms/FEEA9EF3…，24帧每8帧reset28.605ms/22C171FC…，全有限；HDR非同期ABBA，不将其与旧轮次硬比。
 
 COMGR模块、runner和完整DLL编译通过：release/HIP/native-ffn-project.addon64 SHA2934f7950ffab96539238afac0dfb9619f088952b22dade20d934af6d263d9ef；multihead-fast-padded-wave-packed模块SHAE778FAFF162C8F24CBD146E9FB3016EFCE075B322781C54913ABDF2C8F788FDB，24模块固定mh-ffn-project-release-modules。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-mh-ffn-project.ps1，日志release/HIP/mh-ffn-project-build/test/history/hdr/reset.log。编译MH模块定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：融合FFN到QKV的byte接口无速度收益，归档
+实验让C64/C128/C256融合FFN第三投影直接输出原F(result)的FP8 bytes；QKV使用ByteInput，attention矩阵残差分支从byte还原，包括matrix_residual的三段尺度路径。C512 split保留float。通过独立入口、缓存分配大小和--ffn-byte开关区分ABI，没有新增量化调度。
+
+COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold29.934→29.9425ms，四轮RGB7b959143…一致。减少中间逻辑数据量但没有速度收益，未进一步跑历史/HDR或默认启用；生产源码恢复。补丁experiments/mh-ffn-byte.patch、test-mh-ffn-byte.ps1（应用补丁后构建runner和MH模块，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1）。日志release/HIP/mh-ffn-byte-build/test.log。
+
+最优固定候选仍native-ffn-project.addon64/2934f795…+mh-ffn-project-release-modules，游戏仍a7b7521b…+mh-input-dword，未部署新实验。这个结果与此前独立预打包慢不同：新增调度已消掉，但本布局下仍无净速度收益，不能据此认定所有byte接口都无效。
