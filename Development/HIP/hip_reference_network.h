@@ -24,7 +24,7 @@ inline std::vector<float> ReadWeights(const std::string&path){std::ifstream test
 struct Allocation {Api*api;void*ptr{};size_t bytes,capacity;bool owned=true;Allocation(Api&a,size_t n):api(&a),bytes(n),capacity(n){if(!n)throw std::runtime_error("zero HIP allocation");a.Check(a.hipMalloc(&ptr,n),"hipMalloc");}Allocation(Api&a,void*p,size_t n):api(&a),ptr(p),bytes(n),capacity(n),owned(false){}~Allocation(){if(ptr&&owned){api->hipDeviceSynchronize();api->hipFree(ptr);}}};
 using Tensor=std::shared_ptr<Allocation>;
 inline std::set<U> ParseSkipBlocks(const std::string&s){std::set<U>out;size_t p=0;while(p<s.size()){size_t q=s.find(',',p);if(q==std::string::npos)q=s.size();auto word=s.substr(p,q-p);size_t used=0;unsigned long b=std::stoul(word,&used);if(used!=word.size()||!((b>=5&&b<=30)||(b>=40&&b<=65)))throw std::runtime_error("unsupported skipped residual block");out.insert(U(b));p=q+1;}return out;}
-struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7;bool fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false;};
+struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7;bool fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false,packed_c32=false;};
 class Network {
  Api api;Handle stream{};std::map<std::string,Handle>modules,functions;std::map<std::string,Tensor>weights;Options opt;
  struct Timing{std::string name;Handle begin{},end{};};std::vector<Timing>timings;
@@ -61,6 +61,15 @@ class Network {
   const std::string key=name+"@fp8";auto it=weights.find(key);
   if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);if(v.size()!=WeightElements(name))throw std::runtime_error("packed weight shape "+name);size_t cc=size_t(c)*c;
    if(attention)PackWeightRegions(v,{{0,3*cc},{3*cc,cc}});else PackWeightRegions(v,{{0,4*cc},{4*cc,4*cc},{8*cc,cc}});
+   it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;
+  }return P(it->second);
+ }
+ void* PackedC32Weight(const std::string&name,bool attention){
+  if(!opt.packed_c32)return Weight(name);
+  const std::string key=name+"@c32fp8";auto it=weights.find(key);
+  if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);
+   if(v.size()!=WeightElements(name))throw std::runtime_error("packed C32 weight shape");
+   if(attention)PackWeightRegions(v,{{0,4096}});else PackWeightRegions(v,{{512,4096},{4608,4096}});
    it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;
   }return P(it->second);
  }
@@ -117,7 +126,7 @@ class Network {
  struct C32Result{Tensor main,down,raw;U workw,workh,sx,sy;};
  C32Result C32Fast(Tensor input,U w,U h,const std::string&fw,const std::string&aw,bool need_main=true,bool need_down=true){
   U n=w*h,windows=n/64;bool diagonal=fw=="block2-ffn.f32"||fw=="block3-ffn.f32"||fw=="block4-ffn.f32"||fw=="block67-ffn.f32"||fw=="block68-ffn.f32"||fw=="block69-ffn.f32";
-  Tensor raw;if(opt.fused_ffn){raw=New(size_t(n)*32);Run("c32_fused_ffn","c32_fast_ffn_attention_fused",windows,P(input),Weight(fw),Weight(aw),P(raw),windows,U(diagonal?3:0),U(1));}else{
+  Tensor raw;if(opt.fused_ffn){raw=New(size_t(n)*32);Run("c32_fused_ffn","c32_fast_ffn_attention_fused",windows,P(input),PackedC32Weight(fw,false),PackedC32Weight(aw,true),P(raw),windows,U(diagonal?3:0),U(1));}else{
   auto hidden=New(size_t(n)*128),ffn=New(size_t(n)*32);
   Run("c32_fast_ffn","c32_ffn_expand_fast",size_t(n)*128,P(input),Weight(fw),P(hidden),n);
 
@@ -161,7 +170,7 @@ class Network {
  static U Shift(U block){static constexpr U s[]={0,3,1,2,0,3,1,2,0,3,1,2,0,3,1,2,1,2,0,3,1,2,0,3,1,2,0,3,1,2};if(block<40||block>69)throw std::runtime_error("decoder shift");return s[block-40];}
 public:
  Network(const Network&)=delete;Network&operator=(const Network&)=delete;
- explicit Network(Options o):api(o.runtime),opt(std::move(o)),W(opt.width),H(opt.height){if(opt.post_shift>3)throw std::runtime_error("post shift must be 0..3");if(!((W==512&&H==512)||(W==1920&&H==1152)||(W==1280&&H==768)||(W==1600&&H==1024)))throw std::runtime_error("unsupported processing geometry");api.Check(api.hipInit(0),"hipInit");api.Check(api.hipSetDevice(0),"device");api.Check(api.hipStreamCreate(&stream),"stream");try{const char*names[][2]={{"c32","c32_prefix_reference.hsaco"},{"mh","multihead-reference.hsaco"},{"deep","deep_reference.hsaco"},{"boundary","boundary_reference.hsaco"}};for(auto&v:names){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}if(opt.wmma){const char*wm[][2]={{"c32_wmma","c32_wmma.hsaco"},{"mh_wmma","multihead-wmma.hsaco"},{"deep_wmma","deep_wmma.hsaco"}};for(auto&v:wm){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}}if(opt.fused_ffn){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/c32_fused_ffn_attention.hsaco").c_str()),"fused FFN attention module");modules["c32_fused_ffn"]=m;}
+ explicit Network(Options o):api(o.runtime),opt(std::move(o)),W(opt.width),H(opt.height){if(opt.post_shift>3)throw std::runtime_error("post shift must be 0..3");if(!((W==512&&H==512)||(W==1920&&H==1152)||(W==1280&&H==768)||(W==1600&&H==1024)))throw std::runtime_error("unsupported processing geometry");api.Check(api.hipInit(0),"hipInit");api.Check(api.hipSetDevice(0),"device");api.Check(api.hipStreamCreate(&stream),"stream");try{const char*names[][2]={{"c32","c32_prefix_reference.hsaco"},{"mh","multihead-reference.hsaco"},{"deep","deep_reference.hsaco"},{"boundary","boundary_reference.hsaco"}};for(auto&v:names){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}if(opt.wmma){const char*wm[][2]={{"c32_wmma","c32_wmma.hsaco"},{"mh_wmma","multihead-wmma.hsaco"},{"deep_wmma","deep_wmma.hsaco"}};for(auto&v:wm){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/"+v[1]).c_str()),v[1]);modules[v[0]]=m;}}if(opt.fused_ffn){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+(opt.packed_c32?"/c32_fused_ffn_attention-packed.hsaco":"/c32_fused_ffn_attention.hsaco")).c_str()),"fused FFN attention module");modules["c32_fused_ffn"]=m;}
 if(opt.fused_mh){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+"/multihead_fused_attention.hsaco").c_str()),"fused MH attention module");modules["mh_fused"]=m;}
 if(opt.fast_deep){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+(opt.packed_weights?"/deep_fast-packed.hsaco":"/deep_fast.hsaco")).c_str()),"deep fast module");modules["deep_fast"]=m;}
 if(opt.fast_mh){Handle m{};api.Check(api.hipModuleLoad(&m,(opt.modules+(opt.packed_weights?(opt.mh_wave?"/multihead-fast-padded-wave-packed.hsaco":"/multihead-fast-packed.hsaco"):(opt.mh_wave?"/multihead-fast-padded-wave.hsaco":"/multihead-fast.hsaco"))).c_str()),"MH fast module");modules["mh_fast"]=m;}

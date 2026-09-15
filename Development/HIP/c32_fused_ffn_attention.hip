@@ -26,10 +26,24 @@ DEV float H(float x){uint h;float result;asm("v_cvt_f16_f32 %0, %1" : "=v"(h) : 
 #else
 DEV float H(float x){return from_half(half_bits(x));}
 #endif
+#ifndef HIP_NATIVE_FP8_F
+#define HIP_NATIVE_FP8_F 1
+#endif
+#if HIP_NATIVE_FP8_F
+DEV float F(float x){
+ uint b=bits(x),a=b&0x7fffffffu;
+ if(a==0)return 0.f;
+ // Preserve the existing signed saturation, including nonfinite inputs.
+ if(a>=0x43e00000u)return value((b&0x80000000u)|0x43e00000u);
+ int packed=__builtin_amdgcn_cvt_pk_fp8_f32(x,0.f,0,false);
+ return __builtin_amdgcn_cvt_f32_fp8(packed,0);
+}
+#else
 DEV float F(float x){uint b=bits(x),a=b&0x7fffffffu,s=b&0x80000000u;if(a==0)return 0.f;
  if(a>=0x43e00000u)return value(s|0x43e00000u); // finite E4M3 saturation, including overflow
  if(a<0x3c800000u){float scaled=absf(x)*512.f;uint q=uint(scaled);float r=scaled-float(q);q+=uint(r>.5f||(r==.5f&&(q&1u)));float f=float(q)/512.f;return s?-f:f;}
  uint r=(a+0x7ffffu+((a>>20)&1u))&0xfff00000u;return value(s|(r>0x43e00000u?0x43e00000u:r));}
+#endif
 
 using i2=int __attribute__((ext_vector_type(2)));
 using f8=float __attribute__((ext_vector_type(8)));
@@ -66,6 +80,13 @@ DEV float scale_piece(float v){float m=absf(v);if(m<.015625f){float x=m*512.f;ui
 // Packed attention: shared raw/exp scratch 8448 bytes + normalized/prob/AV bytes 6912.
 using ushort=unsigned short;
 DEV void put_bits(i2&v,uint e,uint b){v[e/4]=int(uint(v[e/4])|((b&255u)<<(8*(e%4))));}
+DEV uint matrix_byte(const float*w,uint start,uint index){
+#ifdef HIP_PREPACKED_WEIGHTS
+ return reinterpret_cast<const unsigned char*>(w+start)[index];
+#else
+ return fp8(w[start+index]);
+#endif
+}
 // Byte-preserving packed LDS reads; memcpy does not impose pointer alignment.
 DEV i2 load8(const unsigned char*p){
 #ifdef HIP_C32_LDS_VECTOR
@@ -84,7 +105,7 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
  if(residual_mode!=0&&residual_mode!=3)return;
  // Input64x36 and expand weights128x36 fill the norm scratch temporarily.
  for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(raw_input[(base+row)*32+k])):0;}
- for(uint i=tid;i<128*36;i+=128){uint row=i/36,k=i%36;packed[64*36+i]=k<32?static_cast<unsigned char>(fp8(fw[512+row*32+k])):0;}
+ for(uint i=tid;i<128*36;i+=128){uint row=i/36,k=i%36;packed[64*36+i]=k<32?static_cast<unsigned char>(matrix_byte(fw,512,row*32+k)):0;}
  sync_window();
  for(uint col=0;col<128;col+=16){f8 sum{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=load8(packed+64*36+(col+rc())*36+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
@@ -92,7 +113,7 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
  }
  sync_window();
  // Expand weights are dead; contract32x132 occupies 4224 of their former4608 bytes.
- for(uint i=tid;i<32*132;i+=128){uint row=i/132,k=i%132;packed[64*36+i]=k<128?static_cast<unsigned char>(fp8(fw[4608+row*128+k])):0;}
+ for(uint i=tid;i<32*132;i+=128){uint row=i/132,k=i%132;packed[64*36+i]=k<128?static_cast<unsigned char>(matrix_byte(fw,4608,row*128+k)):0;}
  sync_window();f8 acc[2];acc[0]=f8{};acc[1]=f8{};
  if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();acc[ci][e]=clampf(raw_input[(base+row)*32+c],-448.f,448.f)*fw[8704+c];}}
  else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++){uint c=ci*16+rc();float remaining=fw[8704+c],piece=0;for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining-=piece;}
@@ -106,7 +127,7 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
  // A single raw QKV plane is reused after its norm has been packed separately.
  for(uint part=0;part<3;part++){
   for(uint col=0;col<32;col+=16){f8 acc{};
-   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put(a,e,float(ffn[(first+rc())*34+k]));put(b,e,w[part*1024+(col+rc())*32+k]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put(a,e,float(ffn[(first+rc())*34+k]));put_bits(b,e,matrix_byte(w,0,part*1024+(col+rc())*32+k));}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
    for(uint e=0;e<8;e++)scratch.raw[(first+gr()*8+e)*33+col+rc()]=acc[e];
   }
   sync_window();f8 sum{};
@@ -134,7 +155,7 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)packed[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(av[ci][e]));
  sync_window();
  for(uint col=0;col<32;col+=16){f8 acc{};
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put(b,e,w[3072+(col+rc())*32+k]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,matrix_byte(w,0,3072+(col+rc())*32+k));}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float prod=float(ffn[(first+gr()*8+e)*34+col+rc()])*w[8193+col+rc()],v=Hrtz(acc[e]+prod);out[i]=raw_output?v:F(v);}
  }
 }

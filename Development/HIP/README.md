@@ -88,3 +88,19 @@ benchmark-module-swap.ps1 checks complete output hashes: seed0 65.260→61.0745m
 seed123 65.5015→61.2275ms, identical outputs in each comparison. These are offline
 wall timings. No installed module was replaced. HIP_C32_LDS_VECTOR remains an
 optional disabled experiment: it showed no whole-network gain.
+
+### Native FP8 conversion and C32 packed weights (2026-09-15)
+
+Fast kernels default HIP_NATIVE_FP8_F=1; deep/boundary also default
+HIP_NATIVE_RTZ=1. Define either as 0 for legacy conversion. The finite-domain
+FP8 comparison passes 1,186,626 boundary/random inputs. Saturation and input
+signed-zero normalization are explicitly preserved.
+
+The runner supports --packed-c32 for fused FFN/attention weights; HIP_FAST now
+selects it in the game adapter. A matching c32_fused_ffn_attention-packed.hsaco
+is required (24 modules in a complete build). Scales/bias remain float32 at the
+original offsets. Normal and packed modules must not be interchanged.
+
+Combined offline ABBA: 61.1815→58.990ms at seed123 with equal output hashes.
+The DLL compiles, but these changes have not been installed into the game.
+See DevHistory for separate conversion/packing measurements and limitations.

@@ -45,7 +45,7 @@ foreach($file in @('d3d12.dll','amd_fidelityfx_dx12.dll','native-submission-orde
 $sourceAssets=Join-Path $lab 'network-720p\DLSS5-AMD\native-game-tiled-assets'
 if(!(Test-Path (Join-Path $sourceAssets 'noise.f32'))){throw 'Existing game assets missing.'}
 $moduleManifest=Get-Content (Join-Path $moduleSource 'deployment-modules.json') -Raw | ConvertFrom-Json
-if($moduleManifest.Count -ne 23){throw 'Expected complete 23-module candidate set.'}
+if($moduleManifest.Count -ne 24){throw 'Expected complete 24-module candidate set.'}
 foreach($m in $moduleManifest){if((Get-FileHash (Join-Path $moduleSource $m.name)).Hash -ne $m.sha256){throw "Staged module mismatch: $($m.name)"}}
 New-Item -ItemType Directory $backup | Out-Null
 Copy-Item $target (Join-Path $backup 'native-submission-order.addon64')

@@ -29,6 +29,7 @@ if ($Fast) {
         @('boundary-fast', @('c32_fast_attention.hip', 'boundary_fast.hip')),
         @('c32_fused_attention', @('c32_fused_attention_packed.hip')),
         @('c32_fused_ffn_attention', @('c32_fused_ffn_attention.hip')),
+        @('c32_fused_ffn_attention-packed', @('c32_fused_ffn_attention.hip')),
         @('prefix_fast', @('prefix_fast.hip')),
         @('multihead-fast', @('multihead_fast.hip')),
         @('multihead-fast-padded-wave', @('multihead_fast_padded.hip')),

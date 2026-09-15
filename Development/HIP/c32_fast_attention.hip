@@ -26,10 +26,24 @@ DEV float H(float x){uint h;float result;asm("v_cvt_f16_f32 %0, %1" : "=v"(h) : 
 #else
 DEV float H(float x){return from_half(half_bits(x));}
 #endif
+#ifndef HIP_NATIVE_FP8_F
+#define HIP_NATIVE_FP8_F 1
+#endif
+#if HIP_NATIVE_FP8_F
+DEV float F(float x){
+ uint b=bits(x),a=b&0x7fffffffu;
+ if(a==0)return 0.f;
+ // Preserve the existing signed saturation, including nonfinite inputs.
+ if(a>=0x43e00000u)return value((b&0x80000000u)|0x43e00000u);
+ int packed=__builtin_amdgcn_cvt_pk_fp8_f32(x,0.f,0,false);
+ return __builtin_amdgcn_cvt_f32_fp8(packed,0);
+}
+#else
 DEV float F(float x){uint b=bits(x),a=b&0x7fffffffu,s=b&0x80000000u;if(a==0)return 0.f;
  if(a>=0x43e00000u)return value(s|0x43e00000u); // finite E4M3 saturation, including overflow
  if(a<0x3c800000u){float scaled=absf(x)*512.f;uint q=uint(scaled);float r=scaled-float(q);q+=uint(r>.5f||(r==.5f&&(q&1u)));float f=float(q)/512.f;return s?-f:f;}
  uint r=(a+0x7ffffu+((a>>20)&1u))&0xfff00000u;return value(s|(r>0x43e00000u?0x43e00000u:r));}
+#endif
 
 using i2=int __attribute__((ext_vector_type(2)));
 using f8=float __attribute__((ext_vector_type(8)));
@@ -39,6 +53,12 @@ DEV uint rc(){return __builtin_amdgcn_workitem_id_x()&15;}
 DEV uint gr(){return __builtin_amdgcn_workitem_id_x()>>4;}
 DEV uint bid(){return __builtin_amdgcn_workgroup_id_x();}
 // D3D explicit f32tof16 maps to RTZ here; matrix Cast<F16> remains RNE.
+#ifndef HIP_NATIVE_RTZ
+#define HIP_NATIVE_RTZ 1
+#endif
+#if HIP_NATIVE_RTZ
+DEV float Hrtz(float x){uint h;float r;asm("v_cvt_pkrtz_f16_f32 %0, %1, %1":"=v"(h):"v"(x));asm("v_cvt_f32_f16 %0, %1":"=v"(r):"v"(h));return r;}
+#else
 DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=int(a>>23)-127;
  if(a>=0x7f800000u)return from_half(sg|0x7c00u|((a&0x7fffffu)?0x200u:0u));
  if(e>15)return from_half(sg|0x7bffu);
@@ -46,6 +66,7 @@ DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=
  if(e<-14)return from_half(sg|(((a&0x7fffffu)|0x800000u)>>uint(-e-1)));
  return from_half(sg|((a>>13)-0x1c000u));
 }
+#endif
 DEV uint fp8(float f){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(f,-448.f,448.f),0.f,0,false))&255u;}
 DEV void put(i2&v,uint e,float x){v[e/4]=int(uint(v[e/4])|(fp8(x)<<(8*(e%4))));}
 // QKV output [part][tokens][32], raw F32 dot; V quantizes only in normalize.

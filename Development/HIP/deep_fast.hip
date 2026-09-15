@@ -27,10 +27,24 @@ DEV float H(float x){uint h;float result;asm("v_cvt_f16_f32 %0, %1" : "=v"(h) : 
 #else
 DEV float H(float x){return from_half(half_bits(x));}
 #endif
+#ifndef HIP_NATIVE_FP8_F
+#define HIP_NATIVE_FP8_F 1
+#endif
+#if HIP_NATIVE_FP8_F
+DEV float F(float x){
+ uint b=bits(x),a=b&0x7fffffffu;
+ if(a==0)return 0.f;
+ // Preserve the existing signed saturation, including nonfinite inputs.
+ if(a>=0x43e00000u)return value((b&0x80000000u)|0x43e00000u);
+ int packed=__builtin_amdgcn_cvt_pk_fp8_f32(x,0.f,0,false);
+ return __builtin_amdgcn_cvt_f32_fp8(packed,0);
+}
+#else
 DEV float F(float x){uint b=bits(x),a=b&0x7fffffffu,s=b&0x80000000u;if(a==0)return 0.f;
  if(a>=0x43e00000u)return value(s|0x43e00000u); // finite E4M3 saturation, including overflow
  if(a<0x3c800000u){float scaled=absf(x)*512.f;uint q=uint(scaled);float r=scaled-float(q);q+=uint(r>.5f||(r==.5f&&(q&1u)));float f=float(q)/512.f;return s?-f:f;}
  uint r=(a+0x7ffffu+((a>>20)&1u))&0xfff00000u;return value(s|(r>0x43e00000u?0x43e00000u:r));}
+#endif
 
 using f8=float __attribute__((ext_vector_type(8)));
 using h8=_Float16 __attribute__((ext_vector_type(8)));
@@ -100,7 +114,14 @@ WAVE void vit_qkv_normalize(const float*in,const float*w,float*out,uint tokens){
  for(uint e=0;e<8;e++){uint i=(part*tokens+first+gr()*8+e)*1024+row+rc();float a=in[i];if(part<2){float scale=part==0?5.65625f*w[3145728+head]:1.f;a*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[i]=F(a);}
 }
 // Explicit f32tof16 conversion in production attention is RTZ, unlike Matrix.Cast<F16>.
+#ifndef HIP_NATIVE_RTZ
+#define HIP_NATIVE_RTZ 1
+#endif
+#if HIP_NATIVE_RTZ
+DEV float Hrtz(float x){uint h;float r;asm("v_cvt_pkrtz_f16_f32 %0, %1, %1":"=v"(h):"v"(x));asm("v_cvt_f32_f16 %0, %1":"=v"(r):"v"(h));return r;}
+#else
 DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,s=(b>>16)&0x8000u;int e=int(a>>23)-127;if(a>=0x7f800000u)return from_half(s|0x7c00u|((a&0x7fffffu)?0x200u:0u));if(e>15)return from_half(s|0x7bffu);if(e<-24)return from_half(s);if(e<-14)return from_half(s|(((a&0x7fffffu)|0x800000u)>>uint(-e-1)));return from_half(s|((a>>13)-0x1c000u));}
+#endif
 // scores work=T*T*32; T%16=0; ex[query][head32][key].
 WAVE void vit_attention_scores_fast(const float*in,float*out,uint tokens){uint kt= tokens/16,key=(bid()%kt)*16,head=(bid()/kt)%32,first=bid()/(kt*32)*16;if(first>=tokens)return;f8 a{};for(uint k=0;k<32;k+=16){i2 x{},y{};for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(x,e,in[(first+rc())*1024+head*32+j]);pack(y,e,in[(tokens+key+rc())*1024+head*32+j]);}a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);}for(uint e=0;e<8;e++){float af=clampf(a[e]*from_half(0x2dbb)+1.708984375f,1.439453125f,1.9775390625f);uint hb=(bits(af)>>13)-0x1c000u;out[((first+gr()*8+e)*32+head)*tokens+key+rc()]=from_half(((hb<<4)+0x4000u)&65535u);}}
 // inverse SPECIAL work=T*32*16, not T*32. One wave handles16 queries for one head.

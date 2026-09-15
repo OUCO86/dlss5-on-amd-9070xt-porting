@@ -770,3 +770,13 @@ COMGR3/gfx1201 baseline与pair均编译成功；benchmark_expand_pair.cpp在toke
 C32融合Hrtz改用v_cvt_pkrtz_f16_f32后转回f32，保留软件路径HIP_C32_RTZ_ISA=0，默认1。COMGR/gfx1201编译成功，代码对象55640→37976字节；共享内存仍19712字节，VGPR166→183，实际收益来自减少指令而非寄存器下降。test_rtz.cpp+rtz_probe.hip覆盖所有有限half及邻接float、随机有限float共1186626个输入，half位差0。
 
 完整900 packed快图，独立模块目录、ABBA四进程各6次排除cold，每方案10hot：seed0中位65.260→61.0745ms（约6.41%），四轮RGB SHA均7b959143…；seed123中位65.5015→61.2275ms（约6.52%），四轮SHA均75b62d2f…。均为正常非profile离线墙钟，非游戏FPS。测试期间游戏退出；安装DLL/HSACO未更换。日志release/HIP/wall-profile.log、c32-vector-network.log、c32-rtz-network.log、c32-rtz-seed123-network.log、rtz-probe.log。benchmark-module-swap.ps1保存每轮日志并检查hash，失败立即停止。
+
+### 2026-09-15：原生FP8转换与C32权重预打包
+
+C32 attention/boundary、deep、MH fast/padded/fused、C32 fused的F(float)新增原生FP8往返，保持输入±0归+0、按符号饱和与有限小值规则；HIP_NATIVE_FP8_F默认1，0保留旧公式。deep与boundary的Hrtz也默认原生RTZ（HIP_NATIVE_RTZ=0回归）。fp8_conversion_probe.hip对比旧F与硬件F，test_fp8_conversion.cpp在half网格/相邻float及随机有限float共1186626输入上bitdiff0。
+
+六个候选模块COMGR/gfx1201编译通过；完整900 ABBA基线包含上轮C32 RTZ。仅转换改动：61.195→59.956ms，四轮SHA7b959143…一致。再加C32权重初始化预打包：60.002→58.9635ms，四轮SHA仍一致。FFN打包矩阵位于float offset512/4608各4096元素，attention前4096元素；scale/bias保持原位float。每个窗口不再重做权重量化。--packed-c32独立离线开关；HIP_FAST游戏入口启用，模块为c32_fused_ffn_attention-packed.hsaco，完整模块数24，构建/部署检查已同步。
+
+合并两项seed123对照：61.1815→58.990ms，四轮SHA75b62d2f…一致；显式传入input900.rgba32f作为history的对照62.516→60.1915ms，同样一致（这组fixture最终hash与无history相同，不据此宣称动态时序画质验收）。各ABBA四轮6次、去cold，每方案10hot；均离线墙钟，不是游戏FPS。尝试amdgpu_waves_per_eu(4)生成指令与原版完全相同，VGPR158、private0、LDS19712，不保留该提示。
+
+HIP DLL编译通过，release/HIP/native-conversion-packed.addon64 SHA256 888fe40b638f7ffbd8194a9e40ae6aa92fa32c21f01fec8a4597e32a69d2413e。游戏安装未替换。候选模块在远端hip-backend/conversion-modules；基线conversion-baseline含上一轮C32 RTZ。测试日志release/HIP/conversion-network.log、c32-packed-network.log、conversion-packed-seed123.log、conversion-packed-history.log、fp8-conversion-probe.log。
