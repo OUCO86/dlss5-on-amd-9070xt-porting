@@ -1289,3 +1289,11 @@ HIP_C32_PAIRED_INPUT候选把每四个输入值的4次单值FP8转换改为2次�
 连续40帧ABBA：基线25.445/25.392ms，候选25.412/25.435ms；最终FEEA9EF3…一致，首尾有限，计时无稳定收益。未做进一步全帧/reset测试，生产源码恢复。补丁experiments/c32-paired-input.patch，test-c32-paired-input.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_PAIRED_INPUT=1。日志release/HIP/c32-paired-input-build/test.log。
 
 当前游戏及固定候选仍3894351c…+prefix-fused-release-modules，本轮未部署。
+
+
+### 2026-09-15：C32 waves-per-EU提示未改变产物资源
+依据Clang官方amdgpu_waves_per_eu文档（https://clang.llvm.org/docs/AttributeReference.html#amdgpu-waves-per-eu），对C32的128线程入口试min3及min8提示；它是编译资源提示，不是运行时保证。两个COMGR候选编译通过，连续40帧ABBA最终FEEA9EF3…均匹配、首尾有限。
+
+min3：基线25.417/25.447ms，候选25.427/25.413ms；min8：基线25.428/25.436ms，候选25.449/25.521ms。未见收益。两候选实际资源都与当前一致：普通half VGPR207、mapped/chain214、post-merge193，LDS17664byte、private0；汇编报告Occupancy7。这是编译器估计，非实测运行中的wave数量。min8并未让实际资源降至新档位，不能据此认定提高真实occupancy一定无效。
+
+生产源码恢复。补丁experiments/c32-waves-hint.patch，test-c32-waves3.ps1/test-c32-waves8.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1及HIP_C32_MIN_WAVES=3或8。日志release/HIP/c32-waves3-build/test.log、c32-waves8-build/test.log。游戏未改，仍3894351c…+prefix-fused。
