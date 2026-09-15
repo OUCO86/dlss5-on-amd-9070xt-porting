@@ -1,0 +1,23 @@
+diff --git a/Development/HIP/boundary_fast.hip b/Development/HIP/boundary_fast.hip
+index 1e98f62..b56f50b 100644
+--- a/Development/HIP/boundary_fast.hip
++++ b/Development/HIP/boundary_fast.hip
+@@ -25,3 +25,5 @@ KERNEL void c32_finish_crop_half(const float*raw,float*main,float*down,uint ww,u
+ 
+ KERNEL void c32_finish_fast_half_main8(const float*raw,float*main,float*down,uint w,uint h){uint i=bf_index();if(i>=w*h*32)return;uint p=i/32,c=i%32,x=p%w,y=p/w;if(main)reinterpret_cast<unsigned char*>(main)[i]=static_cast<unsigned char>(fp8(F(bf_half_read(raw,bf_tile(x,y,w)*32+c))));if(down&&!(x&1)&&!(y&1)){float top=Hrtz(bf_half_read(raw,bf_tile(x,y,w)*32+c)+bf_half_read(raw,bf_tile(x+1,y,w)*32+c)),bottom=Hrtz(bf_half_read(raw,bf_tile(x,y+1,w)*32+c)+bf_half_read(raw,bf_tile(x+1,y+1,w)*32+c));down[((y/2)*(w/2)+x/2)*32+c]=F(Hrtz(Hrtz(top+bottom)*.25f));}}
+ KERNEL void hip_post_merge_fast_skip8(const float*low,const float*skip,const float*weights,float*out,uint w,uint h){uint i=bf_index();if(i>=w*h*32)return;uint p=i/32,c=i%32,q=(p/w/2)*(w/2)+(p%w)/2;out[i]=Hrtz(Hrtz(low[q*32+c]*weights[c])+__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[i]),0)*weights[32+c]);}
++
++KERNEL void hip_post_head_fast_half_rgb(const float*raw,const float*base,const float*weights,float*out,uint w,uint h,uint workw,uint sx,uint sy,float scale){uint p=bf_index();if(p>=w*h)return;uint fb=bf_tile(p%w+sx,p/w+sy,workw)*32;float a=0,b=0,c=0;for(uint j=0;j<32;j++){float v=bf_half_read(raw,fb+j);a+=v*weights[j];b+=v*weights[32+j];c+=v*weights[64+j];}float acc[3]={Hrtz(a),Hrtz(b),Hrtz(c)};for(uint row=0;row<3;row++){float centered=base[p*4+row]*.125f-.0625f,rgb=(acc[row]*scale+centered)*8.f+.5f;out[p*3+row]=clampf(rgb,0,1);}}
+diff --git a/Development/HIP/hip_reference_network.h b/Development/HIP/hip_reference_network.h
+index 72da5bb..e90be61 100644
+--- a/Development/HIP/hip_reference_network.h
++++ b/Development/HIP/hip_reference_network.h
+@@ -233,7 +233,7 @@ if(opt.fast_c32){const char*f[][2]={{"c32_fast_ffn","c32_fast.hsaco"},{"c32_fast
+  C32Result post{};
+  if(opt.post_merge_fold){U sx=(opt.post_shift&1)?4:0,sy=(opt.post_shift&2)?4:0,ww=W+2*sx,hh=H+2*sy,windows=ww*hh/64;auto raw=New(size_t(ww)*hh*16);Run("c32_fused_ffn","c32_post_merge_fused_half",windows,P(source),P(skip0),Weight("post70-scales.f32"),PackedC32Weight("post70-ffn.f32",false),PackedC32Weight("post70-attention.f32",true),P(raw),windows,W,H,sx,sy);post={Tensor{},Tensor{},raw,ww,hh,sx,sy};source.reset();skip0.reset();}
+  else{auto merged=New(size_t(W)*H*32);Run(opt.fast_c32?"boundary_fast":"boundary",opt.pre_main8?"hip_post_merge_fast_skip8":opt.fast_c32?"hip_post_merge_fast":"hip_post_merge",size_t(W)*H*32,P(source),P(skip0),Weight("post70-scales.f32"),P(merged),W,H);source.reset();skip0.reset();post=C32(merged,W,H,opt.post_shift,"post70-ffn.f32","post70-attention.f32");}
+- auto out=New(size_t(W)*H*3);Run(opt.fast_c32?"boundary_fast":"boundary",opt.half_c32?"hip_post_head_fast_half":opt.fast_c32?"hip_post_head_fast":"hip_post_head_exact",size_t(W)*H*3,P(post.raw),P(color),Weight("post70-head.f32"),P(out),W,H,post.workw,post.sx,post.sy,.03125f);Stage("block70",out);return out;}
++ auto out=New(size_t(W)*H*3);Run(opt.fast_c32?"boundary_fast":"boundary",opt.half_c32?"hip_post_head_fast_half_rgb":opt.fast_c32?"hip_post_head_fast":"hip_post_head_exact",size_t(W)*H*(opt.half_c32?1:3),P(post.raw),P(color),Weight("post70-head.f32"),P(out),W,H,post.workw,post.sx,post.sy,.03125f);Stage("block70",out);return out;}
+  std::vector<float> Infer(const std::vector<float>&rgba,const std::vector<float>&noise,const std::vector<float>*history=nullptr){
+   if(rgba.size()!=size_t(W)*H*4||noise.size()!=50331648||(history&&history->size()!=rgba.size()))throw std::runtime_error("network input sizes");
+   if(opt.graph){Synchronize();ClearGraph();graph_warmed=false;}auto color=Upload(rgba.data(),rgba.size()*4),noisegpu=opt.fast_prefix?Tensor{}:Upload(noise.data(),noise.size()*4),hist=history?Upload(history->data(),history->size()*4):Tensor{};

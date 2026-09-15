@@ -1889,3 +1889,11 @@ COMGR编译通过；连续40帧ABBA基线19.325/19.365ms，候选19.300/19.328ms
 COMGR/benchmark编译通过；连续40帧ABBA基线19.318/19.390ms，候选19.363/19.303ms，最终FEEA9EF3…一致、首尾有限。无稳定收益，未扩大全帧/reset，不采用，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
 
 补丁experiments/decoder-halfweight.patch、test-decoder-halfweight.ps1，配套benchmark_decoder_halfweight.exe和HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块deep_fast-packed.hsaco。日志release/HIP/decoder-halfweight-test.log。
+
+
+### 2026-09-16：post-head每线程RGB三通道计算无收益，撤回
+新增hip_post_head_fast_half_rgb，每线程负责一像素，读取32个half特征同时更新RGB三个累加器，保持各通道j0–31顺序、Hrtz、base合并与clamp；host半精度head工作量由W*H*3改为W*H，输出仍RGB float。
+
+COMGR与专用benchmark编译通过；连续40帧ABBA基线19.330/19.368ms，候选19.374/19.337ms，最终FEEA9EF3…一致、首尾有限。无稳定收益，未扩大全帧/reset，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
+
+补丁experiments/post-head-rgb.patch、test-post-head-rgb.ps1；配套benchmark_post_head_rgb.exe，内核按HIP_ISA_HALF=1拼接c32_fast_attention.hip+boundary_fast.hip，目标boundary-fast.hsaco。日志release/HIP/post-head-rgb-test.log。
