@@ -1017,3 +1017,11 @@ COMGR/gfx1201模块及主机runner编译通过。正常900 ABBA4轮各6次去col
 正常900P ABBA4轮各6次去cold：33.515→33.139ms；seed123/history35.2505→34.655ms。每组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧33.849ms/FEEA9EF3…，24帧每8帧reset31.875ms/22C171FC…，均全有限；HDR仅正确性回归，不与异轮数字拼接成速度曲线。
 
 COMGR内核、runner和完整DLL编译通过：release/HIP/native-pre-main8.addon64 SHAc8eb1c7ac56049492710698a88cbffb4f1d6a5a4436dc6cf78580c0a082583ac；boundary-fast模块SHA9C369C1B488D0FFD80FCF31CDE22FEED4BAEF2090F1A81380501B5EA10323DB0；24模块固定pre-main8-release-modules（包含raw-chain C32）。未部署，游戏仍5ab7d7d3…+inputDWORD，用户900P26～27FPS。脚本test-pre-main8.ps1，日志release/HIP/pre-main8-build/test/history/hdr/reset.log。编译boundary时前置HIP_ISA_HALF=1，拼接c32_fast_attention.hip及boundary_fast.hip。
+
+
+### 2026-09-15：post70输入融合末端merge
+新增c32_post_merge_fused_half入口，在mapped读取时从低分辨率float及高分辨率main8跳接直接计算Hrtz(Hrtz(low*scale)+skip*scale)，输入量化和标量残差都调用同一公式。先检查当前坐标边界再读两源，保留padding零值。去掉独立hip_post_merge及全分辨率merged float缓冲（900P逻辑200MiB）；增加读取时计算，实际收益按测量。--post-merge-fold独立开关，要求pre_main8+fused/half/mapped；HIP_FAST默认启用并记日志。
+
+正常900 ABBA4轮各6次去cold33.2485→32.855ms；seed123/history34.700→34.1255ms。每组四轮RGB分别保持7b959143…/75b62d2f…。完整HDR异步40帧33.300ms/FEEA9EF3…，24帧每8帧reset31.376ms/22C171FC…，均全有限；HDR非同期ABBA，不把异轮绝对值串成收益。
+
+COMGR内核、runner、完整DLL编译通过：release/HIP/native-post-merge.addon64 SHAa7b7521b1ade857a9867327499a77a6ed12beb0b66ce8dbe5e67011d1a923b07；packed C32模块SHA4023CEBB405CB724CA7A43CE1224ADC412387DB0AD30C88F1DC7B9638A097B06；24模块固定post-merge-fold-release-modules，含main8 boundary。未部署，游戏仍5ab7d7d3…+inputDWORD（用户900P26～27FPS）。脚本test-post-merge-fold.ps1，日志release/HIP/post-merge-fold-build/test/history/hdr/reset.log。编译C32定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。

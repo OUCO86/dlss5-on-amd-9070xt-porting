@@ -126,13 +126,14 @@ DEV i2 load8(const unsigned char*p){
  i2 result{};for(uint e=0;e<8;e++)put_bits(result,e,p[e]);return result;
 #endif
 }
-template<bool Raw=false>
-DEV float mapped_c32_input(const float*in,uint window,uint token,uint channel,uint width,uint height,uint sx,uint sy,uint prevw=0,uint prevsx=0,uint prevsy=0){uint ww=width+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);if(x<0||y<0||x>=int(width)||y>=int(height))return 0.f;
+template<bool Raw=false,bool Merge=false>
+DEV float mapped_c32_input(const float*in,uint window,uint token,uint channel,uint width,uint height,uint sx,uint sy,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr){uint ww=width+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);if(x<0||y<0||x>=int(width)||y>=int(height))return 0.f;
+ if constexpr(Merge){uint i=(uint(y)*width+uint(x))*32+channel,q=((uint(y)/2)*(width/2)+uint(x)/2)*32+channel;float high=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[i]),0);return Hrtz(Hrtz(in[q]*scales[channel])+high*scales[32+channel]);}
  if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;return F(float(reinterpret_cast<const _Float16*>(in)[(tile*64+token0)*32+channel]));}
  return in[(uint(y)*width+uint(x))*32+channel];}
 
-template<bool HalfOutput,bool Mapped=false,bool RawMapped=false>
-DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0){
+template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false>
+DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr){
  uint window=bid();if(window>=windows)return;uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=wave*16,base=window*64;
  union Scratch {float raw[64*33];_Float16 ex[64*66];unsigned char hidden[64*132];};
  __attribute__((shared)) Scratch scratch;
@@ -146,9 +147,9 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  if(residual_mode!=0&&residual_mode!=3)return;
  // Input64x36 and expand weights128x36 fill the norm scratch temporarily.
 #if HIP_C32_INPUT_DWORD
- for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
+ for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
 #else
- for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy):raw_input[(base+row)*32+k])):0;}
+ for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k])):0;}
 #endif
 #if HIP_C32_WEIGHT_DWORD && defined(HIP_PREPACKED_WEIGHTS)
  for(uint i=tid;i<128*9;i+=128){uint row=i/9,k=(i%9)*4;uint word=0;if(k<32)__builtin_memcpy(&word,reinterpret_cast<const unsigned char*>(fw+512)+row*32+k,4);__builtin_memcpy(packed+64*36+i*4,&word,4);}
@@ -168,7 +169,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  for(uint i=tid;i<32*132;i+=128){uint row=i/132,k=i%132;packed[64*36+i]=k<128?static_cast<unsigned char>(matrix_byte(fw,4608,row*128+k)):0;}
 #endif
  sync_window();f8 acc[2];acc[0]=f8{};acc[1]=f8{};
- if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();acc[ci][e]=clampf(Mapped?mapped_c32_input<RawMapped>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy):raw_input[(base+row)*32+c],-448.f,448.f)*fw[8704+c];}}
+ if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();acc[ci][e]=clampf(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c],-448.f,448.f)*fw[8704+c];}}
  else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++){uint c=ci*16+rc();float remaining=fw[8704+c],piece=0;for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining-=piece;}
    for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,k==c?fp8(piece):0u);}acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
   }}
@@ -246,3 +247,6 @@ void c32_fast_ffn_attention_fused_half_mapped(const float*in,const float*fw,cons
 
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
 void c32_fast_ffn_attention_fused_half_chain(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true>(in,fw,w,out,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy);}
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+void c32_post_merge_fused_half(const float*low,const float*skip,const float*scales,const float*fw,const float*w,float*out,uint windows,uint width,uint height,uint sx,uint sy){c32_fused_body<true,true,false,true>(low,fw,w,out,windows,0,1,width,height,sx,sy,0,0,0,skip,scales);}
