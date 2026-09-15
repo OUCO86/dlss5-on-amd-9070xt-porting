@@ -1305,3 +1305,9 @@ HIP_C32_ALIAS_FFN_V默认1，仅在REGISTER_FFN路径将ffn8映射到packed的V�
 COMGR产物LDS17664→15360byte；普通half VGPR207→190，mapped214→201，post-merge193→170，private均0。连续40帧ABBA：基线25.469/25.448ms，候选25.264/25.299ms，最终FEEA9EF3…匹配，首尾有限。随后40帧全检与24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…。全检25.207/25.419ms只记录，不与连续负载混算。
 
 内核编译通过，packed C32模块SHA4E333BCDAB6B11CC9BE2306C0CA9112414229548B5D8B06F2325635E85E7C48F；24模块固定c32-alias-ffn-release-modules，配套DLL仍native-prefix-fused.addon64/3894351c…无需修改。未部署，游戏仍3894351c…+prefix-fused模块。脚本test-c32-alias-ffn.ps1，日志release/HIP/c32-alias-ffn-build/test/full/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_ALIAS_FFN_V=1。
+
+
+### 2026-09-15：LDS复用后再次核验8-wave提示，仍无效果
+基于已验证c32-alias-ffn候选，给128线程入口增加amdgpu_waves_per_eu(8)。COMGR编译通过；资源仍为LDS15360、private0，普通half VGPR190、mapped/chain201、post-merge170，未改变配置。
+
+连续40帧ABBA：基线25.296/25.340ms，候选25.314/25.336ms，最终FEEA9EF3…一致且首尾有限，无收益。未进行全帧/reset，不采用；生产源码未加入该提示。补丁experiments/c32-alias-waves8.patch，test-c32-alias-waves8.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。日志release/HIP/c32-alias-waves8-build/test.log。固定候选仍c32-alias-ffn-release-modules+3894351c DLL，游戏仍prefix-fused模块。

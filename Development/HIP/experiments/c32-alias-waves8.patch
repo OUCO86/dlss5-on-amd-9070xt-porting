@@ -1,0 +1,24 @@
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -250,16 +250,16 @@
+  }
+ }
+ 
+-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
++KERNEL __attribute__((amdgpu_waves_per_eu(8))) __attribute__((amdgpu_flat_work_group_size(128,128)))
+ void c32_fast_ffn_attention_fused(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw){c32_fused_body<false>(in,fw,w,out,windows,mode,raw);}
+-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
++KERNEL __attribute__((amdgpu_waves_per_eu(8))) __attribute__((amdgpu_flat_work_group_size(128,128)))
+ void c32_fast_ffn_attention_fused_half(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw){c32_fused_body<true>(in,fw,w,out,windows,mode,raw);}
+ 
+-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
++KERNEL __attribute__((amdgpu_waves_per_eu(8))) __attribute__((amdgpu_flat_work_group_size(128,128)))
+ void c32_fast_ffn_attention_fused_half_mapped(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy){c32_fused_body<true,true>(in,fw,w,out,windows,mode,raw,width,height,sx,sy);}
+ 
+-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
++KERNEL __attribute__((amdgpu_waves_per_eu(8))) __attribute__((amdgpu_flat_work_group_size(128,128)))
+ void c32_fast_ffn_attention_fused_half_chain(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true>(in,fw,w,out,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy);}
+ 
+-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
++KERNEL __attribute__((amdgpu_waves_per_eu(8))) __attribute__((amdgpu_flat_work_group_size(128,128)))
+ void c32_post_merge_fused_half(const float*low,const float*skip,const float*scales,const float*fw,const float*w,float*out,uint windows,uint width,uint height,uint sx,uint sy){c32_fused_body<true,true,false,true>(low,fw,w,out,windows,0,1,width,height,sx,sy,0,0,0,skip,scales);}
