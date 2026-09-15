@@ -1155,3 +1155,11 @@ COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold29.93
 Zero反馈已部署13c7cd12… DLL+split-project-blocked模块在《剑星》900P约30FPS。此前明确反馈：5ab7版900P26～27FPS、8568异步版约24FPS；HLSL历史基准是1080P约37FPS，不能描述成同分辨率追平。此为用户试玩观察，没有严格固定场景或逐项画面验收。
 
 当前profile脚本已更新为完整split-project快速选项，刷新诊断输出在release/HIP/profile-after-split.log，最终RGB匹配7b959143…。热轮QKV归一化累计5.040ms、MH attention3.168ms、matrix projection3.284ms、ViT QKV1.787ms；均为逐核等待诊断，不当正常帧百分比。用户反馈到达前只完成诊断，尚未开始下一内核改动。
+
+
+### 2026-09-15：ViT QKV两输出分块，四输出不采用
+先试单wave16×64四输出，正常900 ABBA4轮去cold29.0145→29.1985ms略慢，四轮RGB一致，不采用；函数存experiments/vit-qkv-four.hip，需替换同名核及host groups=count/1024复现。
+
+改为单wave16×32两输出共用A，FP16 K16乘加顺序、part分离输出保持。入口仍命名vit_qkv_project_blocked，--vit-qkv-blocked明确对应最终两输出；host groups=count/512。正常900 ABBA4轮各6次去cold28.9295→28.6415ms，seed123/history30.215→30.074ms，收益较小；各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧29.648ms/FEEA9EF3…，24帧每8帧reset28.691ms/22C171FC…，全有限。HDR非同期ABBA，不计算异轮收益。
+
+内核、runner和完整DLL编译通过，HIP_FAST默认两输出并記日志：release/HIP/native-vit-qkv.addon64 SHAd498ff836fecd3576e58964f8a703553ec4fee99c877a9494bf0a58712802989；deep_fast-packed模块SHA804DAB0C81E4CA09FCCAFEF7AD41DEEF3C635107DAA4CF472979371268BD3230；24模块固定vit-qkv-pair-release-modules。未部署，游戏仍13c7cd12…+split-project-blocked，用户900P30FPS。脚本test-vit-qkv-pair.ps1，日志release/HIP/vit-qkv-blocked-build/test.log及vit-qkv-pair-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
