@@ -239,3 +239,16 @@ WAVE void split_mix_blocked(const float*in,const float*w,float*out,uint tokens){
  for(uint k=0;k<512;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*512+k+gr()*8+e];for(uint j=0;j<4;j++){h8 b{};for(uint e=0;e<8;e++)b[e]=(_Float16)w[(row+j*16+rc())*512+k+gr()*8+e];acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+row+j*16+rc()]=F(Hrtz(acc[j][e]));
 }
+
+WAVE void split_projection_blocked(const float*in,const float*w,const float*skip,float*out,uint tokens){
+ uint first=bid()/8*16,row=bid()%8*64;if(first>=tokens)return;f8 acc[4]{};
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)acc[j][e]=H(skip[(first+gr()*8+e)*512+row+j*16+rc()]*w[262144+row+j*16+rc()]);
+ for(uint k=0;k<512;k+=16){i2 a{};for(uint e=0;e<8;e++)pack(a,e,in[(first+rc())*512+k+gr()*8+e]);for(uint j=0;j<4;j++){i2 b{};
+#ifdef HIP_PREPACKED_WEIGHTS
+  const uint*pw=reinterpret_cast<const uint*>(w);uint off=((row+j*16+rc())*512+k+gr()*8)/4;b={int(pw[off]),int(pw[off+1])};
+#else
+  for(uint e=0;e<8;e++)pack(b,e,w[(row+j*16+rc())*512+k+gr()*8+e]);
+#endif
+  acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[j]);}}
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+row+j*16+rc()]=F(H(acc[j][e]));
+}

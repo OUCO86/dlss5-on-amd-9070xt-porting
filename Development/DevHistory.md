@@ -1135,3 +1135,11 @@ COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold29.93
 正常900 ABBA4轮各6次去cold29.5895→29.136ms，seed123/history30.922→30.5395ms。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧29.785ms/FEEA9EF3…，24帧每8帧reset27.787ms/22C171FC…，全有限；HDR非同期ABBA，不把异轮耗时拼接成收益。
 
 内核、runner和完整DLL编译通过：release/HIP/native-split-mix.addon64 SHA3b2c1d021b1c88c2934f3140b1ca02254abba70b7bb4aaa23160ee52ec6d955c；deep_fast-packed模块SHA5F6646A4102258D7874F587A9E456AB24B4B5D9B178308214DC1997537DBC544；24模块固定split-mix-blocked-release-modules。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-split-mix-blocked.ps1，日志release/HIP/split-mix-blocked-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：split投影四输出分块
+新增split_projection_blocked，单wave16×64、四acc共用A片段，K512保持K16 FP8 WMMA累加；残差初值H(skip*scale)、末端F(H(acc))保持RNE，不改成Hrtz。dispatch原1/4。--split-project-blocked独立，HIP_FAST默认启用并记日志。
+
+正常900 ABBA4轮各6次去cold29.1565→28.780ms；seed123/history30.786→30.1375ms。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧29.311ms/FEEA9EF3…，24帧每8帧reset27.353ms/22C171FC…，全有限。HDR为正确性回归，不与异轮数字直接比较速度。
+
+内核、runner、完整DLL编译通过：release/HIP/native-split-project.addon64 SHA13c7cd1273b2fc2d6eb37e1766246005e635fbcb91d3c7a4c5a57a6eb3a34fcd；deep_fast-packed模块SHACFF00D26D3E2D59CF0CE24A023BFFC265E77BF74FE8DD8BF5784C2DD8779EA0C；24模块固定split-project-blocked-release-modules。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-split-project-blocked.ps1，日志release/HIP/split-project-blocked-build/test/history/hdr/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
