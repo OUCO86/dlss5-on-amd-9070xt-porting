@@ -1617,3 +1617,11 @@ compare_layers.cpp新增62–65（400×256，shift0/3/1/2）和c64-only过滤，
 COMGR及专用benchmark编译通过；连续40帧ABBA基线21.898/21.953ms，候选22.075/22.054ms，最终FEEA9EF3…一致、首尾有限。仍更慢，不采用，未扩大全帧/reset，源码恢复，游戏不变。
 
 补丁experiments/c64-projection-wave4.patch、test-c64-projection-wave4.ps1，配套benchmark_c64_projection_wave4.exe与HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块multihead-fast-padded-wave-packed.hsaco；日志release/HIP/c64-projection-wave4-test.log。
+
+
+### 2026-09-16：MH残差三段尺度预计算实验暂不采用
+给packed attention缓存增加独立-residual3 key，验证原长度并在末尾追加3*C个float。加载后在同HIP stream运行mh_prepare_residual，逐通道沿原F/小尺度规则分解三段；matrix_residual投影每帧直接读这三段，乘加顺序不变。实验仅配套packed benchmark，未补齐非packed生产兼容，不直接交付。
+
+COMGR和专用benchmark编译通过；连续40帧ABBA基线21.875/21.911ms，候选21.876/21.822ms，最终FEEA9EF3…一致、首尾有限。仅约0.04ms差异，未扩大全帧/reset/Graph验证，不采用，源码恢复，游戏不变。
+
+补丁experiments/mh-residual-precompute.patch、test-mh-residual-precompute.ps1；配套benchmark_mh_residual_precompute.exe及HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块multihead-fast-padded-wave-packed.hsaco。日志release/HIP/mh-residual-precompute-test.log。

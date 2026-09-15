@@ -1,0 +1,53 @@
+diff --git a/Development/HIP/hip_reference_network.h b/Development/HIP/hip_reference_network.h
+index ba7c098..a6509e6 100644
+--- a/Development/HIP/hip_reference_network.h
++++ b/Development/HIP/hip_reference_network.h
+@@ -64,11 +64,13 @@ class Network {
+  void* Weight(const std::string&name){auto it=weights.find(name);if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);if(v.size()!=WeightElements(name))throw std::runtime_error("weight shape "+name+": "+std::to_string(v.size()));it=weights.emplace(name,Upload(v.data(),v.size()*4,true)).first;}return P(it->second);}
+  void* PackedMhWeight(const std::string&name,U c,bool attention){
+   if(!opt.packed_weights)return Weight(name);
+-  const std::string key=name+"@fp8"+((opt.grouped_mh_contract&&!attention)?"-g128":"");auto it=weights.find(key);
++  const std::string key=name+"@fp8"+(attention?"-residual3":"")+((opt.grouped_mh_contract&&!attention)?"-g128":"");auto it=weights.find(key);
+   if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);if(v.size()!=WeightElements(name))throw std::runtime_error("packed weight shape "+name);size_t cc=size_t(c)*c;
+    if(opt.grouped_mh_contract&&!attention)ValidateGroupedMhContract(v,c);
+    if(attention)PackWeightRegions(v,{{0,3*cc},{3*cc,cc}});else PackWeightRegions(v,{{0,4*cc},{4*cc,4*cc},{8*cc,cc}});
++   if(attention){size_t base=4*cc+(c/32)*4096+c/32+c;if(v.size()!=base)throw std::runtime_error("MH residual weight shape");v.resize(base+3*c);}
+    it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;
++   if(attention)Run("mh_fast","mh_prepare_residual",c,P(it->second),c);
+   }return P(it->second);
+  }
+  void* PackedFusedMhWeight(const std::string&name,U c){
+@@ -127,6 +129,7 @@ class Network {
+   if(module=="mh_fast"){
+    if(kernel.rfind("mh_ffn_fused_c",0)==0){U c=U(std::stoul(kernel.substr(14)));if((c!=64&&c!=128&&c!=256)||count%(c*16))throw std::runtime_error("fused FFN dispatch shape");threads=c*2;groups=count/(c*16);}
+    else if(kernel=="mh_qkv_normalize_fast"||kernel=="mh_qkv_normalize_fast_wave"||kernel=="mh_qkv_normalize_fast_wave_fp8"){threads=256;if(kernel!="mh_qkv_normalize_fast")count=Count(size_t(count)*32);}
++   else if(kernel=="mh_prepare_residual"){threads=64;groups=(count+63)/64;}
+    else if(kernel=="mh_scores_exp_fast"||kernel=="mh_probabilities_fast"||kernel=="mh_attention_av_fast"||kernel=="mh_pool_project_production")threads=32;
+    else {auto tuple=std::make_tuple(args...);auto integer=[](auto x)->U{if constexpr(std::is_integral_v<decltype(x)>)return U(x);else return 0;};
+     std::string shape=kernel;if(shape.size()>4&&shape.substr(shape.size()-4)=="_fp8")shape.resize(shape.size()-4);
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 0887aac..23d8778 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -105,12 +105,9 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+  #pragma unroll
+  for(uint e=0;e<8;e++){uint p=first+group*8+e,n=col+rc;if(p<M&&n<N&&skip_offset!=~0u&&!matrix_residual)accum[e]=Hrtz(feature[p*N+n]*weights[skip_offset+n]);}
+  if(matrix_residual){
+-  uint n=col+rc;float remain=n<N?weights[skip_offset+n]:0.f;
++  uint n=col+rc;
+   for(uint part=0;part<3;part++){
+-   float component;
+-   if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}
+-   else component=F(remain);
+-   remain-=component;
++   float component=n<N?weights[skip_offset+N+part*N+n]:0.f;
+ #if HIP_MH_SCALAR_DIAGONAL
+    for(uint e=0;e<8;e++){uint p=first+group*8+e;if(p<M&&n<N){float x=__builtin_amdgcn_cvt_f32_fp8(int(q8(feature[p*N+n])),0);for(uint half=0;half<2;half++)accum[e]=__builtin_fmaf(x,half==(n%32)/16?component:0.f,accum[e]);}}
+ #else
+@@ -476,3 +473,6 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c
+ KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c128_project_mapped_g128_qkv(const float*in,const float*w,const float*aw,unsigned char*out,unsigned char*norm,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_qkv_body<128,false,true,true,true>(in,w,out,tokens,width,height,workw,sx,sy,aw,norm);}
+ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project_g128_qkv(const float*in,const float*w,const float*aw,unsigned char*out,unsigned char*norm,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_qkv_body<256,true,true,false,true>(in,w,out,tokens,width,height,workw,sx,sy,aw,norm);}
+ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project_mapped_g128_qkv(const float*in,const float*w,const float*aw,unsigned char*out,unsigned char*norm,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_qkv_body<256,true,true,true,true>(in,w,out,tokens,width,height,workw,sx,sy,aw,norm);}
++
++KERNEL __attribute__((amdgpu_flat_work_group_size(64,64)))
++void mh_prepare_residual(float*w,uint C){uint n=__builtin_amdgcn_workgroup_id_x()*64+__builtin_amdgcn_workitem_id_x();if(n>=C)return;uint offset=4*C*C+(C/32)*4096+C/32;float remain=w[offset+n];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;w[offset+C+part*C+n]=component;}}
