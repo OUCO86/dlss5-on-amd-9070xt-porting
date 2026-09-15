@@ -1257,3 +1257,13 @@ compare_layers的mh-only现要求fused-selected并启用当前普通FFN第三投
 连续负载40帧ABBA：基线26.171/26.160ms，融合25.359/25.372ms，约0.8ms收益。四轮最终FEEA9EF3…匹配，首尾抽样有限；随后40帧全检、24帧每8帧reset全有限，最终匹配FEEA9EF3…/22C171FC…。全检计时25.680/25.585ms仅记录，不与连续负载混算。
 
 HIP_FAST默认prefix_fused=true；DLSS5_HIP_PREFIX_FUSED=0/1可覆盖，reference runner增加--prefix-fused。内核、测试runner和完整DLL编译通过：release/HIP/native-prefix-fused.addon64 SHA3894351ccba9080524095cd5c87644806224c62f071250ead3c3e18526283f9b；prefix_fast模块SHAF9AF53C5B71F40142BA59CF291E1C91DCCD92EEEEC692D5280AA4610A20C8784；24模块固定prefix-fused-release-modules，含FFN input pack4。未部署，游戏仍b4e46e15…+mh-input-mapped。脚本test-prefix-fused.ps1，日志release/HIP/prefix-fused-build/test/full/reset.log。
+
+
+### 2026-09-15：prefix完全内联C32的实验暂不采用
+实验c32_prefix_inline在128线程前置C32内生成原PCG/历史/RGB特征，复用scratch执行前置投影；保存投影Hrtz后的两组h8供标量残差使用，FP8副本写packed供FFN，省去prefix float中间图。使用独立prefix_rtz保留原prefix的软件截断语义；没有将残差错误替换成FP8值。
+
+内核和测试程序编译通过。连续负载40帧ABBA、仅首尾检查：基线25.432/25.481ms，候选25.354/25.367ms，最终FEEA9EF3…匹配。收益很小，且原型的非内联分支也把tiles/history释放延后到C32调用之后，此比较不能作为严格旧版生命周期不变的提速证明。未进一步全帧/reset验证，生产源码已恢复，不采用。
+
+同一COMGR产物中普通half C32 VGPR207、inline193，LDS均17664byte、private均0；并未出现预想的寄存器溢出，不能以寄存器压力作为无收益的已证原因。补丁experiments/prefix-inline.patch，test-prefix-inline.ps1；需应用补丁构建测试程序和C32模块，定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1。日志release/HIP/prefix-inline-build/test.log。
+
+保留最优固定候选native-prefix-fused.addon64/3894351c…+prefix-fused-release-modules，尚未部署。游戏仍b4e46e15…+mh-input-mapped。
