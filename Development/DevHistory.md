@@ -1281,3 +1281,11 @@ HIP_FAST默认prefix_fused=true；DLSS5_HIP_PREFIX_FUSED=0/1可覆盖，referenc
 同一连续负载40帧ABBA：基线25.392/25.389ms，候选25.370/25.383ms，四轮最终FEEA9EF3…匹配且首尾有限。收益约0.01ms，不作稳定提速；未另做全域转换或全帧/reset验证，生产源码已恢复。补丁experiments/prefix-rtz.patch，test-prefix-rtz.ps1；编译时定义HIP_PREFIX_RTZ_ISA=1，日志release/HIP/prefix-rtz-build/test.log。
 
 当前游戏及固定候选仍3894351c…+prefix-fused-release-modules，未改驱动/游戏配置。
+
+
+### 2026-09-15：C32成对输入量化无稳定收益，归档
+HIP_C32_PAIRED_INPUT候选把每四个输入值的4次单值FP8转换改为2次双值转换，仍先按原范围clamp、相同mapped/raw-chain/merge读取，DWORD写回布局不变。COMGR/gfx1201编译通过。
+
+连续40帧ABBA：基线25.445/25.392ms，候选25.412/25.435ms；最终FEEA9EF3…一致，首尾有限，计时无稳定收益。未做进一步全帧/reset测试，生产源码恢复。补丁experiments/c32-paired-input.patch，test-c32-paired-input.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_PAIRED_INPUT=1。日志release/HIP/c32-paired-input-build/test.log。
+
+当前游戏及固定候选仍3894351c…+prefix-fused-release-modules，本轮未部署。
