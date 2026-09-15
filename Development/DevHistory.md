@@ -1683,3 +1683,11 @@ current比较/profile脚本切换固定C128融合模块和benchmark_c128_attn_pr
 COMGR资源LDS61440→43008bytes（60→42KiB），VGPR仍118，SGPR30，private/spill0。连续40帧ABBA基线21.065/21.087ms，候选20.937/20.960ms，各最终FEEA9EF3…匹配、首尾有限。72组C128逐位对照全部一致无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…，seed123/history75b62d2f…匹配。全检20.850/20.942ms不当额外连续收益。
 
 固定24模块c128-reuse-ex-release-modules，multihead_fused_attention.hsaco SHA1AE47F2EAB4843A531EC72966AE4B1F61315D59858A604FAFA1A5E582ADDF503；仅内核变化，配套DLL沿用ae66d4c8…，本轮未部署。游戏仍c128-attn-project-release-modules。脚本test-c128-reuse-ex.ps1、validate-c128-reuse-ex.ps1、validate-c128-reuse-ex-history.ps1，复用已编译test_c128_attn_project.exe；日志release/HIP/c128-reuse-ex-test.log及c128-reuse-ex-validation.log。
+
+
+### 2026-09-16：部署C128复用版并完成C64复用验证
+部署脚本确认游戏退出，安装c128-reuse-ex-release-modules全部24模块并逐hash通过，DLL沿用ae66d4c8e3730424c41a0a935fb9668465547aa1d15b848d4712209eb0d681b6，AsyncSubmit保持1。旧版本备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c128-reuse-ex。current脚本更新此固定模块；整帧ABBA HLSL16.756/16.815ms，HIP20.923/20.946ms，各自golden匹配，日志release/HIP/backend-c128-reuse-current.log。
+
+随后独立C64候选沿用C128的Q/K直接读取、ex→prob→AV生命周期复用，保持两个head并行，LDS30720→21504bytes（30→21KiB），VGPR94/SGPR30不变、private/spill0。连续40帧ABBA基线20.946/20.951ms，候选20.792/20.774ms，最终FEEA9EF3…匹配、首尾有限。48组C64逐位对照全部一致无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检21.029/21.027ms读回节奏不同，不与连续计时混用。
+
+固定24模块c64-reuse-ex-release-modules，MH attention模块SHA233EC7A820DA34EF9CC5F1F7375EC916212DAC746F63A3A6E7D10FAE5C46A558，DLL仍可沿用ae66d4c8…。新C64复用候选尚未部署；游戏当前仅C128复用。脚本test-c64-reuse-ex.ps1、validate-c64-reuse-ex.ps1、validate-c64-reuse-ex-history.ps1，日志release/HIP/c64-reuse-ex-test.log及c64-reuse-ex-validation.log。
