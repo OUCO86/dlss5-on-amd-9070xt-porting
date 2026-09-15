@@ -1,0 +1,44 @@
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 348c3ef..f2eb326 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -309,7 +309,18 @@ TILE void mh_ffn_contract_fast_fp8(const float* hidden,const float* weights,floa
+ 
+ TILE void mh_attention_project_fast_scalar_fp8(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post);}
+ 
+-TILE void mh_attention_project_fast_matrix_fp8(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,1);}
++TILE void mh_attention_project_fast_matrix_fp8(const float* av,const float* feature,const float* weights,float* output,uint tokens,uint channels,uint post){
++#ifdef HIP_MH_PROJECT_SPECIAL
++ if(post!=0&&post!=3&&post!=4)return;switch(channels){
++ case 64:fast_dense<true,false>(av,feature,weights,output,tokens,64,64,3*64*64,4*64*64+(64/32)*4096+64/32,post==0?5:post,0,0,0,1);break;
++ case 128:fast_dense<true,false>(av,feature,weights,output,tokens,128,128,3*128*128,4*128*128+(128/32)*4096+128/32,post==0?5:post,0,0,0,1);break;
++ case 256:fast_dense<true,false>(av,feature,weights,output,tokens,256,256,3*256*256,4*256*256+(256/32)*4096+256/32,post==0?5:post,0,0,0,1);break;
++ default:if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,1);break;
++ }
++#else
++ if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,1);
++#endif
++}
+ 
+ TILE void mh_ffn_contract_fast_fp8_out(const float* hidden,const float* weights,float* middle,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,true>(hidden,hidden,weights,middle,tokens,channels,4*channels,4*channels*channels,~0u,5);}
+ 
+@@ -392,7 +403,18 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) void mh_ffn_fused_c
+ KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c128_project(const float*in,const float*w,unsigned char*out,uint tokens){mh_ffn_fused_body<128,false,true>(in,w,out,tokens);}
+ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project(const float*in,const float*w,unsigned char*out,uint tokens){mh_ffn_fused_body<256,true,true>(in,w,out,tokens);}
+ 
+-TILE void mh_attention_crop(const float*av,const float*feature,const float*weights,float*output,uint tokens,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy,uint channels){if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false,false,true>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,channels==512?0:1,cropw,croph,workw,sx,sy);}
++TILE void mh_attention_crop(const float*av,const float*feature,const float*weights,float*output,uint tokens,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy,uint channels){
++#ifdef HIP_MH_PROJECT_SPECIAL
++ if(post!=0&&post!=3&&post!=4)return;switch(channels){
++ case 64:fast_dense<true,false,false,true>(av,feature,weights,output,tokens,64,64,3*64*64,4*64*64+(64/32)*4096+64/32,post==0?5:post,0,0,0,64==512?0:1,cropw,croph,workw,sx,sy);break;
++ case 128:fast_dense<true,false,false,true>(av,feature,weights,output,tokens,128,128,3*128*128,4*128*128+(128/32)*4096+128/32,post==0?5:post,0,0,0,128==512?0:1,cropw,croph,workw,sx,sy);break;
++ case 256:fast_dense<true,false,false,true>(av,feature,weights,output,tokens,256,256,3*256*256,4*256*256+(256/32)*4096+256/32,post==0?5:post,0,0,0,256==512?0:1,cropw,croph,workw,sx,sy);break;
++ case 512:fast_dense<true,false,false,true>(av,feature,weights,output,tokens,512,512,3*512*512,4*512*512+(512/32)*4096+512/32,post==0?5:post,0,0,0,512==512?0:1,cropw,croph,workw,sx,sy);break;
++ }
++#else
++ if(valid_attn(channels)&&(post==0||post==3||post==4))fast_dense<true,false,false,true>(av,feature,weights,output,tokens,channels,channels,3*channels*channels,4*channels*channels+(channels/32)*4096+channels/32,post==0?5:post,0,0,0,channels==512?0:1,cropw,croph,workw,sx,sy);
++#endif
++}
+ 
+ KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) void mh_ffn_fused_c64_project_mapped(const float*in,const float*w,unsigned char*out,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_fused_body<64,false,true,true>(in,w,out,tokens,width,height,workw,sx,sy);}
+ KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c128_project_mapped(const float*in,const float*w,unsigned char*out,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_fused_body<128,false,true,true>(in,w,out,tokens,width,height,workw,sx,sy);}

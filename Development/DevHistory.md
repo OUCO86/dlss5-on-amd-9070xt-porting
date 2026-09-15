@@ -1335,3 +1335,11 @@ probe、host及内核编译通过。multihead-fast-padded-wave-packed模块SHA06
 部署脚本确认游戏退出，安装已编译native-prefix-fused.addon64（3894351ccba9080524095cd5c87644806224c62f071250ead3c3e18526283f9b）和mh-scalar-diagonal-release-modules的24个HSACO，逐hash校验通过。DLL与上版相同，内核增加C32 FFN/V暂存复用及MH同序标量残差，不包含未采用的C32标量残差或occupancy提示。维持900P/async1。
 
 旧DLL/模块/flags/标记完整备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-mh-scalar-diagonal；回退使用部署脚本-Restore -BackupName before-mh-scalar-diagonal（游戏须退出）。当前候选连续负载约24.85–24.90ms，新实机FPS待验证，未宣称追平HLSL。游戏当前模块已更新，不再是原prefix-fused模块集合。
+
+
+### 2026-09-15：MH投影通道特化收益过小，归档
+在同序标量残差基线上，分别对matrix FP8投影及crop投影按64/128/256/512通道传入编译期常量，保留各通道的matrix/scalar残差及post epilogue；普通matrix入口的C512 fallback不改。COMGR/gfx1201编译通过。
+
+连续40帧ABBA：基线24.822/24.850ms，候选24.740/24.771ms，最终FEEA9EF3…匹配、首尾有限；收益约0.08ms，未进一步全帧/reset，不采用，生产源码已恢复。补丁experiments/mh-project-special.patch，test-mh-project-special.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_MH_PROJECT_SPECIAL=1。日志release/HIP/mh-project-special-build/test.log。
+
+另核对尺寸来源：HLSL NativeActualNetwork70与HIP NativeHipNetwork均取NativeCurrentNetworkGeometry的processing_width/height，900P均1600×1024；有效区1600×900不等于工作区。未发现顶层工作尺寸不一致，不能靠降低HIP工作尺寸假称实现性能对齐。当前游戏及固定候选仍3894351c…+mh-scalar-diagonal-release-modules。
