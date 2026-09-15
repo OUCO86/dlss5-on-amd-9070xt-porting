@@ -1,0 +1,54 @@
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 0887aac..de0851a 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -95,8 +95,9 @@ DEV uint pack4(float a,float b,float c,float d){uint lo=uint(__builtin_amdgcn_cv
+ template<bool ByteInput=false,bool ByteOutput=false,bool Normalize=false,bool Crop=false>
+ DEV void fast_dense(const float* input,const float* feature,const float* weights,float* output,
+  uint M,uint N,uint K,uint matrix_offset,uint skip_offset,uint epilogue,uint width=0,uint valid_width=0,uint valid_height=0,uint matrix_residual=0,uint cropw=0,uint croph=0,uint workw=0,uint sx=0,uint sy=0){
+- __attribute__((shared)) uint sa[576];
+- __attribute__((shared)) uint sb[576];
++ constexpr uint KS=Crop?64:32,STRIDE=KS/4+1;
++ __attribute__((shared)) uint sa[64*STRIDE];
++ __attribute__((shared)) uint sb[64*STRIDE];
+  uint block=__builtin_amdgcn_workgroup_id_x(),nt=(N+63)/64;
+  if(!nt||block>=((M+63)/64)*nt)return;
+  uint mr=block/nt*64,nc=block%nt*64,t=__builtin_amdgcn_workitem_id_x(),wave=t/32,l=t%32,rc=l&15,group=l>>4;
+@@ -123,27 +124,29 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+ #endif
+   }
+  }
+- for(uint chunk=0;chunk<K/32;chunk++){
+-  uint row=t/8,word=t%8,k=chunk*32+word*4,p=mr+row,n=nc+row;
++ for(uint chunk=0;chunk<K/KS;chunk++){
++  for(uint load=t;load<64*(KS/4);load+=512){
++  uint row=load/(KS/4),word=load%(KS/4),k=chunk*KS+word*4,p=mr+row,n=nc+row;
+   float a0=0,a1=0,a2=0,a3=0,b0=0,b1=0,b2=0,b3=0;
+   if constexpr(!ByteInput){if(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height))){uint off=p*K+k;a0=input[off];a1=input[off+1];a2=input[off+2];a3=input[off+3];}}
+   #ifndef HIP_PREPACKED_WEIGHTS
+   if(n<N){uint off=matrix_offset+n*K+k;b0=weights[off];b1=weights[off+1];b2=weights[off+2];b3=weights[off+3];}
+ #endif
+-  if constexpr(ByteInput){sa[row*9+word]=(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height)))?reinterpret_cast<const uint*>(input)[(p*K+k)/4]:0u;}else sa[row*9+word]=pack4(a0,a1,a2,a3);
++  if constexpr(ByteInput){sa[row*STRIDE+word]=(p<M&&(!valid_width||(p%width<valid_width&&p/width<valid_height)))?reinterpret_cast<const uint*>(input)[(p*K+k)/4]:0u;}else sa[row*STRIDE+word]=pack4(a0,a1,a2,a3);
+ #ifdef HIP_PREPACKED_WEIGHTS
+   // Matrix bytes start at the original float-region offset; nonmatrix fields stay f32.
+   const uint* packed_weights=reinterpret_cast<const uint*>(weights);
+-  sb[row*9+word]=n<N?packed_weights[matrix_offset+(n*K+k)/4]:0u;
++  sb[row*STRIDE+word]=n<N?packed_weights[matrix_offset+(n*K+k)/4]:0u;
+ #else
+-  sb[row*9+word]=pack4(b0,b1,b2,b3);
++  sb[row*STRIDE+word]=pack4(b0,b1,b2,b3);
+ #endif
++  }
+   __builtin_amdgcn_s_barrier();
+   #pragma unroll
+-  for(uint half=0;half<2;half++){
++  for(uint half=0;half<KS/16;half++){
+    uint word0=half*4+group*2;
+-   i2 a={int(sa[(wm*16+rc)*9+word0]),int(sa[(wm*16+rc)*9+word0+1])};
+-   i2 b={int(sb[(wn*16+rc)*9+word0]),int(sb[(wn*16+rc)*9+word0+1])};
++   i2 a={int(sa[(wm*16+rc)*STRIDE+word0]),int(sa[(wm*16+rc)*STRIDE+word0+1])};
++   i2 b={int(sb[(wn*16+rc)*STRIDE+word0]),int(sb[(wn*16+rc)*STRIDE+word0+1])};
+    accum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum);
+   }
+   // All sixteen waves finish reading before any writer reuses this K32 tile.

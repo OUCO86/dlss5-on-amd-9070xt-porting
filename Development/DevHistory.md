@@ -1487,3 +1487,11 @@ profile-current.ps1改为固定ViT融合模块并显式传--vit-qkv-fused，运�
 重新以HIP_ISA_HALF=1编译当前MH源码，并读取上轮候选.s，逐函数比较mh_attention_fused_fp8_out。当前VGPR103、候选104，SGPR均20、LDS均15360、private segment与spill均0。两版静态LDS读写、WMMA及barrier指令数量相同；其中ds_load_u8均64、ds_load_2addr_b32均20。不能把源码共用读取当实际减少加载，也不能用VGPR差1单独归因负优化。
 
 可审阅表Development/HIP/experiments/mh-av-pair-isa.md。本轮未改推理内核/游戏。回查历史V转置已测无收益，避免重复。
+
+
+### 2026-09-16：MH crop投影K64分块实验不采用
+回查通道特化已做过，未重复。仅fast_dense的Crop实例由K32扩大到K64，合作装载两轮DWORD、LDS stride9→17，同步次数减半，四次K16 WMMA保持累加顺序；普通QKV/其他dense保持K32。与旧Normalize K64实验不同，此实例不含归一化临时LDS。
+
+COMGR编译通过；mh_attention_crop资源：LDS8704 bytes、VGPR43、SGPR34、private segment0、spill0。连续40帧ABBA：基线22.799/22.820ms，候选22.823/22.802ms，最终FEEA9EF3…匹配、首尾有限。未见收益，未扩大全帧/reset验证，生产源码恢复，游戏仍13d4dc10… ViT融合版。
+
+补丁experiments/mh-crop-k64.patch、test-mh-crop-k64.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块名multihead-fast-padded-wave-packed.hsaco。日志release/HIP/mh-crop-k64-test.log。
