@@ -20,6 +20,7 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_DIRECT_INPUT")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("direct input must be 0 or 1");o.direct_prefix_input=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_GROUPED_CONTRACT")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("grouped contract flag");o.grouped_mh_contract=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_ATTN_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT attention fused flag");o.vit_attn_fused=!strcmp(v,"1");}
+  if(const char*v=std::getenv("DLSS5_HIP_MH_BYTE_STREAM")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("MH byte stream flag");o.mh_byte_stream=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_QKV_FP8")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT byte QKV flag");o.vit_qkv_fp8=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_QKV_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT QKV fused flag");o.vit_qkv_fused=!strcmp(v,"1");}
   o.ffn_qkv=fast&&o.grouped_mh_contract;

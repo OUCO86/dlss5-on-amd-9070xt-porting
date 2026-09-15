@@ -1927,3 +1927,33 @@ COMGR与专用benchmark编译通过；连续40帧ABBA基线19.330/19.368ms，候
 新增vit_qkv_project_normalize_fused_f16compact_fp8（投影/归一化与f16compact逐字相同，F()结果经byte_F存E4M3字节，norm张量900P每层4.9MB→1.2MB）和vit_attention_fused_{256,400,640}_bytein（Q/K每lane一次8字节load，V八次单字节load按pack()同样位置拼装）。单元测试扩展：真实block31 QKV权重+FP8格点contract输入，字节解码对f32存储逐位一致（含零的符号），bytein attention对f32输入融合核逐位一致，240/400/640×两pattern全过。连续40帧ABBA基线（vit-attn-fused-modules+ATTN_FUSED=1）19.304/19.286ms，候选19.268/19.245ms，最终FEEA9EF3…一致、首尾有限——K/V按float读不是主要成本。选项DLSS5_HIP_VIT_QKV_FP8 / --vit-qkv-fp8（要求vit_qkv_fused+packed_weights+vit_attn_fused），默认关、未部署；模块vit-qkv-fp8-modules（deep_fast-packed SHA CC666072011136853A76D57A080F65E7B03E9ED2B6F0DE5997C61CB9EC6D286E）。脚本compile/test/validate-vit-qkv-fp8.ps1；日志release/HIP/vit-qkv-fp8-{0..3}.log。全帧/reset/history三道验证待与后续改动合并后一起跑。
 
 判断：ViT各段对HLSL的单层差距（0.06–0.1ms×8）和其他层的持平/反超加起来凑不出整帧2.45ms，剩余差距应主要在launch之间——HIP每帧259次launch，昨夜event探针里近乎空核的event时间已达11–17µs。下一步先用一workgroup空核连发直接量每次launch的GPU侧间隙，再决定是继续抠核还是做launch级合并。
+
+
+### 2026-09-16：launch间隙探针与HIP event计时——launch不是主因，event不可用
+check_launch_gap.cpp：一workgroup的vit_pack_input在同一stream连发，wall到stream完成：1次0.030ms（含提交往返），16次0.061，64次0.142，259次0.382，1024次1.216ms——稳态每次launch约1.2–1.5µs，每帧259次launch的纯间隙约0.4ms，不构成2.45ms差距的主体。日志release/HIP/launch-gap-current.log。
+
+hip_d3d12_bridge.h加DLSS5_HIP_SPAN_PROBE=1诊断：输入semaphore等待之后、输出signal之前各记一hipEvent，并计Enqueue的CPU耗时（hip_api.h补hipEventSynchronize）。40帧结果：CPU Enqueue中位0.36ms/帧（259次launch每次约1.4µs，CPU不是瓶颈），但GPU event跨度中位0.023ms、最小−0.51、最大18.5——与昨夜PROFILE INVALID同一现象，这套HIP7+预览驱动上event时间戳不可信，不用于任何结论。探针默认关，不影响生产路径。日志release/HIP/span-probe.log。
+
+结合bridge-isolation（桥接约0.13ms）：19.3ms就是HIP流上核串行执行的时间，差距在核的帧内行为，不在提交、桥接或launch间隙。
+
+
+### 2026-09-16：跳块差分——各MH家族的帧内真实成本，隔离对照看不见DRAM/MALL效应
+skip-family-diff.ps1：同一flags（含ATTN_FUSED/QKV_FP8）下用DLSS5_SKIP_BLOCKS跳掉整个通道家族（identity），两后端各跑连续40帧edges-only，none减去跳后即该家族帧内成本（输出非网络输出，只作计时）：
+
+| 家族 | HLSL帧 | HIP帧 | HLSL成本 | HIP成本 |
+|---|---|---|---|---|
+| none（42,43,46） | 16.768 | 19.205 | – | – |
+| C64 8块 | 15.204 | 16.932 | 1.56 | 2.27 |
+| C128 12块 | 14.884 | 17.179 | 1.88 | 2.03 |
+| C256 16块 | 14.412 | 16.908 | 2.36 | 2.30 |
+| C512 16块 | HLSL跳块不支持 | 16.894 | – | 2.31 |
+
+C64家族HIP帧内每块0.284ms，HLSL约0.195（HLSL跳块含一次copy，略低估）；而逐层对照里HIP C64 0.24–0.27反比HLSL 0.30–0.39快——隔离对照20次重复同一层，52MB工作集留在64MB Infinity Cache/L2里，且HLSL对照跑的是f32进出的链首链尾变体而非帧内fp8_stream链中变体，两边都不代表帧内。**结论：差距的可定位部分 = C64家族约0.7ms（核形状，见下条否定存储格式）+ ViT约0.7ms（8×0.09）+ C32链/其余约0.6ms（估算：HIP其余10.3ms对HLSL约8.7ms，按HLSL C512≈HIP假设）**，没有单一大头。日志release/HIP/skip-{hlsl,hip}-*.log。mh-all一组HIP端失败（跳掉全部MH块后流水线不支持），不影响结论。
+
+
+### 2026-09-16：MH残差流E4M3字节化——逐位一致但更慢0.1ms，不采用
+按HLSL fp8_stream设计（链首f32输入、链尾f32输出、链内块间字节）实现：mh_ffn_qkv_body加ByteIn/ByteFeature模板（ffn_input8解码后走原f32代码；特征输出直接存q8_fused_round的字节，原路径存的就是该字节的解码值），c64/c128/c256_attention_project模板化ByteFeature/ByteOut（特征按字节解码，原路径是f32再编码再解码；块输出F()格点值存字节，post==3链尾保持f32），Run()的attention_project线程数改前缀匹配。host：Body(byte_in,byte_out)按链位置选核，AttentionFast(feature_byte,out_byte)，选项mh_byte_stream / DLSS5_HIP_MH_BYTE_STREAM / --mh-byte-stream，要求ffn_qkv(256)+fused_ffn_project+mapped+crop，禁止跳C64/128/256块。
+
+test_mh_byte_stream.cpp（C64/128/256×mapped×两pattern×post 4/0×crop）：特征字节解码对f32逐位一致、bytein对f32输入一致、QKV字节一致、project_fb对f32逐位一致、byteout解码逐位一致，48组全过。连续40帧ABBA基线（vit-qkv-fp8-modules，MH_BYTE_STREAM=0）19.272/19.165ms，候选19.375/19.336ms，最终FEEA9EF3…一致——**慢约0.1ms**。与09-15"融合FFN到QKV的byte接口无速度收益"同向：MH块不是带宽绑着的，把f32换字节省下的DRAM流量换不来时间，HLSL C64帧内更快在核形状不在存储格式。代码作为可选路径保留（默认关、未部署、未改DLL默认），模块mh-byte-stream-modules（padded SHA 1806C9D9…、attention SHA B096BB2C…）；脚本compile/test/validate-mh-byte-stream.ps1；日志release/HIP/mh-byte-stream-{0..3}.log。未跑全帧/reset/history三道（不采用）。
+
+今天汇总（光之朱雀，06:00起）：ViT attention融合（−0.11）+ ViT QKV字节（−0.04）逐位一致、三道验证过、默认关未部署；MH字节流null；launch/桥接/CPU排除；差距分解见上。剩余可做：① C64家族核形状对照HLSL native_c64 fp8_stream变体（约0.7ms空间）；② ViT expand BLOCK_M=4共享B tile、qkv/project半精度输入（约0.7ms）；③ C32链帧内成本先用跳块法量（HIP C32不支持skip，需加）；④ Graph在当前19ms基线上重测（09-15测的0.45ms是51ms时代的CPU侧收益，现占比更大）。
