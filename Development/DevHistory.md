@@ -1821,3 +1821,11 @@ COMGR/benchmark编译通过。有效连续40帧ABBA基线19.501/19.566ms，候�
 COMGR编译通过；连续40帧ABBA基线19.469/19.490ms，候选19.985/19.980ms，最终FEEA9EF3…一致、首尾有限。更慢，未扩大全帧/reset，生产源码恢复，游戏仍c8842686…+vit-qkv-compact-release-modules。
 
 补丁experiments/c256-tile-shuffle.patch、test-c256-tile-shuffle.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，复用benchmark_vit_qkv_compact.exe，模块multihead-fast-padded-wave-packed.hsaco。日志release/HIP/c256-tile-shuffle-test.log。
+
+
+### 2026-09-16：MH FFN-QKV合并重复FP8往返取得约0.19ms收益
+新增q8_fused_round，直接返回q8(F(x))的字节结果，保留原零规范化与按符号饱和规则。仅mh_ffn_qkv_body中的隐藏层、收缩、归一化写byte合并编码/解码往返；FFN第三投影同时需要float残差和byte QKV输入，先编码一次再解码出float，两者共享字节结果。矩阵指令、累加顺序、尺度与布局不变。
+
+COMGR编译通过；连续40帧ABBA基线19.505/19.551ms，候选19.335/19.335ms，最终FEEA9EF3…匹配、首尾有限。12组（C64/128/256×映射开关×两种输入）FFN float逐位及QKV逐byte全部一致，无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检20.488/20.511ms不当连续计时。
+
+固定24模块ffn-qkv-round-byte-release-modules，MH packed模块SHAD6360593220F499E7CAC0F9317F209CB1255A8A7624EE6AF2AA58A67CAB39661。仅内核改动，DLL沿用c8842686…；本轮未部署，游戏仍vit-qkv-compact-release-modules。脚本test-ffn-qkv-round-byte.ps1及validate-ffn-qkv-round-byte*.ps1，复用test_ffn_qkv.exe；日志release/HIP/ffn-qkv-round-byte-test.log、ffn-qkv-round-byte-validation.log。
