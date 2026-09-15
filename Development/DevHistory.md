@@ -1589,3 +1589,13 @@ COMGR编译通过；连续40帧ABBA基线21.924/21.949ms，候选21.914/21.878ms
 输入DWORD打包由四次fp8(value,0)改为两次cvt_pk_fp8(value0,value1)，保留每值clamp、mapped读取与字节顺序；不合并上轮单次cast实验。COMGR编译通过，连续40帧ABBA基线21.883/21.950ms、候选21.875/21.927ms，最终FEEA9EF3…一致、首尾有限。无明显收益，未进一步全帧/reset，源码恢复，游戏不变。
 
 补丁experiments/c32-input-pair.patch、test-c32-input-pair.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-input-pair-test.log。此结果不等价于已证明动态指令数量变化；只表明本次源代码改写未带来明显全帧改善。
+
+
+### 2026-09-16：整网MH分组绕过诊断定位C64
+新增measure-mh-ablation.ps1，只在独立flags/benchmark临时绕过残差块，生产配置不变。C64=5–8/62–65，C128=9–14/56–61，C256=15–22/48–55，C512=23–30/40–47；保留原42/43/46跳块。绕过改变网络输出，结果不可当画质保持的优化或实际FPS提升。
+
+HIP前后完整基线21.904/21.955ms；绕过C64/C128/C256/C512后分别18.840/19.515/19.305/19.185ms。HLSL前后基线16.754/16.795ms；绕过C64/C128/C256后15.165/14.820/14.339ms。两边完整基线各自golden匹配，所有成功测例首尾有限；绕过输出hash变化属预期，不做跨后端一致性声明。
+
+HLSL C512绕过被已有布局检查拒绝：skip block23 input/output layouts differ。未绕过该检查，脚本显式标记不支持该组；第一次运行在此终止，随后仅补测baseline-after并通过。不能将缺失项当0。
+
+以两端基线均值粗估：C64组HIP差约3.09ms/HLSL约1.61ms，C128约2.41/1.95ms，C256约2.62/2.44ms。绕过会改变后续数据、缓存与调度，不能简单加总或当纯核耗时；但C64是后续重点。日志release/HIP/mh-ablation-current.log、mh-ablation-hlsl-current.log。
