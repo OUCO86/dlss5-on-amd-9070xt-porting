@@ -984,3 +984,9 @@ profile-current.ps1更新为c32-input-dword-release-modules并开启identity-shi
 COMGR/gfx1201模块及主机runner编译通过。正常900 ABBA4轮各6次去cold，全通道33.891→34.2605ms更慢；仅C>=256时33.963→34.1615ms也更慢。两组四轮最终RGB全匹配7b959143…。没有明确收益，生产源码与默认配置已恢复，未进一步跑历史/HDR，不把正确输出当提速证明。
 
 实验补丁Development/HIP/experiments/mh-qkv-prepack.patch，脚本test-mh-prepack.ps1（需先应用补丁构建runner和multihead-fast-padded-wave-packed候选；MinChannels默认0，另测256）。实验模块mh-prepack.hsaco由multihead_fast_padded.hip前置HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1生成。日志release/HIP/mh-prepack-build/test.log、mh-prepack-large-test.log。远端reference_current.exe暂为带实验开关runner，但默认关闭；生产源码已撤回。最优固定候选仍c32-input-dword-release-modules+5ab7d7d3 DLL，游戏仍8568acff…异步版，未部署。
+
+
+### 2026-09-15 21:19：部署约34ms候选到《剑星》
+用户确认继续部署。脚本重新确认游戏退出，安装native-identity-shift.addon64（SHA5ab7d7d37d5b8fdbf8248031cf073e389df8c358e262cddf096718b1113bc225）和c32-input-dword-release-modules全部24个HSACO，逐hash核验通过；再次核验packed C32为C3CF4A4D0C597F9302F69F417A360297F988F196B10A328A7EDAC952AE98561C。保留900P、HIP_FAST=1、ASYNC_SUBMIT=1和原history/continuous配置。
+
+包含颜色/motion不可变绑定快取、identity-shift及C32 DWORD权重/直接8byte权重/输入DWORD写入。不包含已撤回的输出LDS整组读取、独立QKV预打包；LDS_VECTOR仍关闭。旧用户24FPS的8568acff… DLL、模块、配置及标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c32-input-dword，可用部署脚本-Restore -BackupName before-c32-input-dword回退（须游戏退出）。实际新FPS与画面待试玩，不能把离线34ms等同游戏FPS。此前被打断的部署回合只检查，实际文件替换发生在本次。
