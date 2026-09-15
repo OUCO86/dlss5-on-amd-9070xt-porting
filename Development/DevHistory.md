@@ -882,3 +882,17 @@ HIP_C32_REGISTER_FFN把half FFN结果留h8寄存器用于末端残差，仅将�
 ### 2026-09-15 19:09：部署C32/ViT约40ms候选到《剑星》
 
 Zero接受继续部署并优化。确认游戏退出后安装native-c32-vit-blocked.addon64（SHA4c0620a5…）和vit-contract-modules的24个HSACO，逐hash校验通过。旧68c8… DLL/模块/flags/候选标记备份before-c32-vit-blocked。保留900P、continuous/history和同步提交。更新脚本参数化候选/模块/备份/预期hash，回退也恢复候选标记。驱动/全局lab flags未改；待实际试玩。
+
+### 2026-09-15 19:15：用户实机反馈
+
+Zero实测新版900P约17FPS，回忆之前HLSL在游戏1080P设置约37FPS。当前PID26192启动日志确认最新4c062…功能组合、内部processing1600×1024，末批滤镜耗时43.9–51.6ms。旧HLSL备份flags也写NETWORK_HEIGHT=900，但尚未确认是否对应37FPS那次；不把游戏设置分辨率自动等同模型内部计算分辨率。用户报告原样保留，性能差距仍显著。随后确认游戏已退出，再继续离线测试。
+
+### 2026-09-15：ViT展开权重重排与输入预打包
+
+增加独立vit_weight_mask（bit0展开、bit1收缩）与vit_pack_input。展开/收缩权重以既有TilePackedMatrix做[N16][K32][K][N]纯byte重排，显式_tiled入口和独立cache键区分；scale位置不变。展开输入先用配对硬件转换打包FP8，再由_bytein入口直接读DWORD，保持原饱和和捨入。输入临时缓冲在展开后释放回池，残差原float输入保留。
+
+正常900 ABBA四轮各6次、去cold：仅展开重排40.0255→39.649ms；仅收缩重排40.1465→40.447ms（更慢）；同时重排40.0885→40.0825ms（无明确收益）；仅输入打包39.9615→39.6115ms。最终只选展开重排+输入打包：40.108→39.563ms（约1.36%），seed123/history41.3445→40.724ms。每组四轮最终RGB hash分别保持7b959143…/75b62d2f…，没有数值变化。
+
+完整HDR40帧热中位39.768ms，最终FEEA9EF3…；24帧每8帧历史重置39.514ms，最终22C171FC…，均匹配之前hash且全有限。原生runner/内核/完整DLL编译通过。HIP_FAST默认mask1、pack_input=1，收缩重排保持关闭。小幅离线收益不等于用户17FPS已追上旧37FPS。
+
+候选DLL release/HIP/native-vit-layout.addon64，SHAf0460eb0b00ade0ab26c8d430b3f7203a6be08374321ce0a357c94806a9ee8ff，24模块在远端vit-layout-modules；尚未部署，游戏保持本轮已安装4c0620a5…约40ms版。日志release/HIP/vit-layout-expand/contract/both.log、vit-pack-input.log、vit-layout-combined.log、vit-layout-combined-history.log、vit-layout-hdr.log、vit-layout-reset.log。基准脚本新增轮次结束时的游戏进程检查，若游戏启动则丢弃受干扰计时。

@@ -220,3 +220,17 @@ Both narrow and16x64 Split-K experiments preserved output but ran slower, so it
 stays off. Final900 ABBA41.3815→39.925ms; frozen HDR40-frame hot median40.300ms,
 all finite and exact final HDR unchanged. Periodic history resets also match.
 No game files were deployed by these changes.
+
+### ViT weight layout and prepacked expand input (2026-09-15)
+
+--vit-weight-mask0..3 selects byte-tiled expand(bit0)/contract(bit1) weights;
+use --vit-weight-mask 1 for the accepted variant. --vit-pack-input quantizes
+expand input once into FP8 words. Explicit _tiled/_bytein exports distinguish
+layout contracts. Both require the blocked byte pipeline. HIP_FAST defaults
+mask1 and packed input; contract weight tiling showed no benefit and stays off.
+
+900 ABBA40.108→39.563ms, seed/history41.3445→40.724ms, exact output preserved.
+Real HDR and periodic history reset hashes also match. The latest candidate
+is not installed: Stellar Blade currently uses the earlier4c0620a5 build.
+The user's reported game result is900P17FPS versus earlier HLSL1080P37FPS;
+these offline improvements do not establish that the practical gap is closed.

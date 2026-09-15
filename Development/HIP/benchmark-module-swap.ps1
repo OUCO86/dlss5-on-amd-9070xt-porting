@@ -30,6 +30,9 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
  [switch]$CandidateVitBlocked,
  [switch]$BothVitBlocked,
  [switch]$CandidateVitContractBlocked,
+ [switch]$BothVitContractBlocked,
+ [int]$CandidateVitWeightMask=0,
+ [switch]$CandidateVitPackInput,
  [string]$BaselineModules='',
  [string]$CandidateModules='',
  [string]$Tag='module-swap-test',
@@ -68,8 +71,11 @@ foreach($round in 0..3){
  if($BothMappedC32 -or ($variant -eq 'candidate' -and $CandidateMappedC32)){$extra+='--mapped-c32'}
  if($variant -eq 'candidate' -and $CandidateVitSplitK){$extra+='--vit-split-k'}
  if($BothVitBlocked -or ($variant -eq 'candidate' -and $CandidateVitBlocked)){$extra+='--vit-blocked'}
- if($variant -eq 'candidate' -and $CandidateVitContractBlocked){$extra+='--vit-contract-blocked'}
+ if($BothVitContractBlocked -or ($variant -eq 'candidate' -and $CandidateVitContractBlocked)){$extra+='--vit-contract-blocked'}
+ if($variant -eq 'candidate' -and $CandidateVitWeightMask){$extra+=@('--vit-weight-mask',"$CandidateVitWeightMask")}
+ if($variant -eq 'candidate' -and $CandidateVitPackInput){$extra+='--vit-pack-input'}
  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
+ if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game started during benchmark; discard timing.'}
  if($LASTEXITCODE -ne 0){throw ($log -join "
 ")}
  $log | Set-Content "$work\$round-$variant.log"
