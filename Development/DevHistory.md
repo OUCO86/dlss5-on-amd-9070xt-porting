@@ -1691,3 +1691,9 @@ COMGR资源LDS61440→43008bytes（60→42KiB），VGPR仍118，SGPR30，private
 随后独立C64候选沿用C128的Q/K直接读取、ex→prob→AV生命周期复用，保持两个head并行，LDS30720→21504bytes（30→21KiB），VGPR94/SGPR30不变、private/spill0。连续40帧ABBA基线20.946/20.951ms，候选20.792/20.774ms，最终FEEA9EF3…匹配、首尾有限。48组C64逐位对照全部一致无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检21.029/21.027ms读回节奏不同，不与连续计时混用。
 
 固定24模块c64-reuse-ex-release-modules，MH attention模块SHA233EC7A820DA34EF9CC5F1F7375EC916212DAC746F63A3A6E7D10FAE5C46A558，DLL仍可沿用ae66d4c8…。新C64复用候选尚未部署；游戏当前仅C128复用。脚本test-c64-reuse-ex.ps1、validate-c64-reuse-ex.ps1、validate-c64-reuse-ex-history.ps1，日志release/HIP/c64-reuse-ex-test.log及c64-reuse-ex-validation.log。
+
+
+### 2026-09-16：部署C64复用版并刷新逐核profile
+部署脚本确认游戏退出，安装c64-reuse-ex-release-modules全部24模块并逐hash通过，DLL沿用ae66d4c8e3730424c41a0a935fb9668465547aa1d15b848d4712209eb0d681b6，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c64-reuse-ex。实机新FPS未测。
+
+current比较/profile脚本统一更新固定模块。profile运行通过，最终RGB7b959143…匹配；第二轮独立mh_attention_fused_fp8_out及mh_attention_crop各29次，对应C256的16块+C512的13块。c64_attention_project8次，C64/C128融合已进入当前实际路径。日志release/HIP/profile-c64-reuse-current.log；逐核串行计时含等待，仅定位，不当连续耗时比例。本轮无新增内核改动。
