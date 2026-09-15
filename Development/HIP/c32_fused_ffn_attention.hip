@@ -95,8 +95,8 @@ DEV i2 load8(const unsigned char*p){
  i2 result{};for(uint e=0;e<8;e++)put_bits(result,e,p[e]);return result;
 #endif
 }
-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
-void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output){
+template<bool HalfOutput>
+DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output){
  uint window=bid();if(window>=windows)return;uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=wave*16,base=window*64;
  union Scratch {float raw[64*33];_Float16 ex[64*66];unsigned char hidden[64*132];};
  __attribute__((shared)) Scratch scratch;
@@ -156,6 +156,11 @@ void c32_fast_ffn_attention_fused(const float*raw_input,const float*fw,const flo
  sync_window();
  for(uint col=0;col<32;col+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,matrix_byte(w,0,3072+(col+rc())*32+k));}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
-  for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float prod=float(ffn[(first+gr()*8+e)*34+col+rc()])*w[8193+col+rc()],v=Hrtz(acc[e]+prod);out[i]=raw_output?v:F(v);}
+  for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float prod=float(ffn[(first+gr()*8+e)*34+col+rc()])*w[8193+col+rc()],v=Hrtz(acc[e]+prod);if constexpr(HalfOutput)reinterpret_cast<_Float16*>(out)[i]=(_Float16)(raw_output?v:F(v));else out[i]=raw_output?v:F(v);}
  }
 }
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+void c32_fast_ffn_attention_fused(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw){c32_fused_body<false>(in,fw,w,out,windows,mode,raw);}
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+void c32_fast_ffn_attention_fused_half(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw){c32_fused_body<true>(in,fw,w,out,windows,mode,raw);}

@@ -11,6 +11,12 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
  [switch]$BothFp8Normalized,
  [switch]$CandidateFp8Ffn,
  [switch]$CandidateFp8Av,
+ [switch]$BothFp8Edges,
+ [switch]$CandidateFp8Deep,
+ [switch]$CandidateFp8Middle,
+ [switch]$CandidateHalfC32,
+ [switch]$BothCompactPipeline,
+ [switch]$CandidateCropC32,
  [string]$BaselineModules='',
  [string]$CandidateModules='',
  [string]$Tag='module-swap-test',
@@ -33,7 +39,13 @@ foreach($round in 0..3){
  $output=Join-Path $work "$round-$variant.f32"
  $extra=@();if($HistoryFile){$extra+=@('--history',$HistoryFile)};if($BothPackedC32 -or ($CandidatePackedC32 -and $variant -eq 'candidate')){$extra+='--packed-c32'}
  if($BothFp8Normalized -or ($CandidateFp8Normalized -and $variant -eq 'candidate')){$extra+='--fp8-normalized'}
+ if($BothFp8Edges){$extra+=@('--fp8-ffn','--fp8-av')}
+ if($variant -eq 'candidate' -and $CandidateFp8Deep){$extra+='--fp8-deep'}
  if($variant -eq 'candidate'){if($CandidateFp8Ffn){$extra+='--fp8-ffn'};if($CandidateFp8Av){$extra+='--fp8-av'}}
+ if($variant -eq 'candidate' -and $CandidateFp8Middle){$extra+='--fp8-middle'}
+ if($variant -eq 'candidate' -and $CandidateHalfC32){$extra+='--half-c32'}
+ if($BothCompactPipeline){$extra+=@('--fp8-deep','--fp8-middle','--half-c32')}
+ if($variant -eq 'candidate' -and $CandidateCropC32){$extra+='--crop-c32'}
  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
  if($LASTEXITCODE -ne 0){throw ($log -join "
 ")}

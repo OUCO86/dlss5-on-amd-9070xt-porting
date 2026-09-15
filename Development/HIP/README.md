@@ -133,3 +133,29 @@ passed to float-consuming exports. Residual features and accumulators stay float
 AV alone saves only0.14ms, not a confirmed standalone speedup. Pool ownership
 remains1910.1MiB despite the smaller logical tensors. C512 split and ViT FFN
 are separate kernels and are not covered by --fp8-ffn in this revision.
+
+### Compact pipeline and optional graph replay (2026-09-15)
+
+HIP_FAST also enables fp8_deep (split/ViT FFN hidden), fp8_middle (MH contract
+output), half_c32 (already half-rounded raw output), and crop_c32 (finish plus
+crop). Standalone runner flags have the same names with hyphens. These change
+storage, not matrix accumulation precision. Rebuild host and the deep, MH padded,
+C32 fused and boundary modules together. Complete sets still contain24 modules.
+Four changes combined: normal900 ABBA51.141→47.923ms, identical RGB; real HDR
+40-frame replay hot median48.476ms, final raw HDR identical to the prior HIP.
+
+DLSS5_HIP_GRAPH=1 optionally records the warmed device network. Input/history/
+output pointers or seed changes invalidate the single cache; noise updates and
+host Infer also clear it. Captures cannot grow the allocation pool. External
+D3D synchronization remains outside the graph. Real HDR ABBA showed under1%
+benefit and periodic reset showed none, so the default remains off.
+benchmark-graph-frame.ps1 checks output hashes and supports periodic resets.
+API declarations follow ROCm/HIP rocm-7.1.1 hip_runtime_api.h.
+
+benchmark_live_capture.cpp supports DLSS5_COMPARE_HLSL builds and optional
+reset_every. Completion timing now submits and waits a checkpoint AFTER Frame
+on the same queue. Flushing only the benchmark's earlier upload submission
+missed asynchronous Frame work; earlier async CPU-only timings are invalid.
+compare-frame-backends.ps1 uses matching HDR/frame conditions. Its current
+HLSL async result is26.975ms, not the older fixture's16.7ms. HIP/HLSL output
+parity remains unresolved; within-backend comparisons are bitwise checked.

@@ -800,3 +800,21 @@ COMGR/gfx1201两个模块编译通过。900正常离线ABBA四轮各6次排除co
 ### 2026-09-15 16:19：《剑星》部署FP8中间张量优化版
 
 Zero明确要求部署。确认SB-Win64-Shipping未运行后，用deploy-stellarblade-update.ps1将native-fp8-edges.addon64与edge-modules全部24个HSACO安装至Steam剑星Win64及私有DLSS5-AMD/HIP，DLL SHA68c8ba0c…、各内核hash逐个校验通过。保留900P/HIP_FAST、temporal-history、continuous，明确ASYNC_SUBMIT=0，避免恢复此前发黑的异步路径。原0202… DLL、23模块和flags备份到D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-fp8-edges；更新脚本-Restore可回退。原900P HLSL备份仍独立保留。等待用户实际游戏测试，离线51.23ms不是已测游戏FPS。
+
+### 2026-09-15 16:28起：完整HDR计时、Graph验证及四项后续优化
+
+读取用户试玩日志，已安装68c8…版最后几批滤镜耗时57.5/57.8ms，之前62.2ms；用户看到游戏14FPS，未把两者等同。游戏退出后，使用真实1296×720 RGBA16F菜单捕获跑完整NativeGameFrame。允许benchmark_live_capture保留flags中的GAME_PROBE；110帧全有限，最后热帧约53ms，前100帧probe的pre0.23/network59.69/post0.15ms包含cold。未以cold均值推断稳态。
+
+新增可选DLSS5_HIP_GRAPH（默认关闭），按官方HIP7.1.1头签名动态加载capture/instantiate/replay API。只录Network内部kernel与最终copy，外部D3D/HIP信号留图外。首次warm填满权重/函数/池；相同input/history/output指针和seed才重放，key改变同步销毁旧图；Infer/SetNoise清缓存。capture期间若需新分配则拒绝并清理捕获，防止不支持操作；单图缓存不无限增长。真实HDR40帧ABBA去前5，各70hot：51.5255→51.0745ms，四轮最终SHA FEEA9EF3…一致；每图build1/replay38。24帧每8帧reset：每图build3/replay18，最终SHA22C171FC…一致，50.748→50.8465ms无收益。Graph不默认启用，也未修复live异步问题。
+
+同时完成四项保持既有数值的存放/搬运优化，独立选项保留：
+- fp8_deep：C512 split、ViT前馈隐藏层字节输出；split消费者精确解码到half做原F16矩阵，ViT消费者直接装FP8矩阵操作数。单项51.1015→50.668ms。
+- fp8_middle：MH contract到projection中间值字节化，残差feature保持f32。单项51.1195→50.7525ms。
+- half_c32：C32融合原始输出本来已Hrtz，改half存放，finish/head读取回float维持算术。单项51.0655→50.5125ms。
+- crop_c32：合并C32 finish及随后的main裁切，直接写目标main；down保持原工作网格。post70原已跳过无用main/down，无重复优化。基于前三项49.3775→48.0835ms。
+
+每项COMGR/gfx1201编译、正常900 ABBA各4轮6次、去cold，各方案10hot。四项最终合并对本轮初始配置：51.141→47.923ms（约6.29%），四轮RGB SHA7b959143…一致；seed123/history=input900.rgba32f：52.3935→49.394ms，四轮SHA75b62d2f…一致。日志release/HIP/deep-byte.log、middle-test.log、half-c32.log、crop-test.log、final-pipeline.log、final-history.log。HIP_FAST默认启用四项，初始化检查生产/消费ABI前提，旧导出和选项保留。
+
+完整Frame基准新增HLSL比较构建DLSS5_COMPARE_HLSL，使用已有preview环境的进程级experimental开关。发现旧计时只Flush外层submission，async时未等Frame内部提交，HLSL异步0.488ms为无效CPU提交时间。修复为Frame后在同一queue排空提交并等其fence，再停止计时。固定真实HDR40帧、去前5：HLSL同步29.379ms、异步26.975ms，最终hash彼此一致；当时HIP同步49.761、Graph49.706，最终hash彼此一致。此条件不能套用旧16.7ms数字；HIP与HLSL之间仍有既有输出差异。compare-frame-backends.ps1可复测。
+
+最终四项完整HDR重放40帧：热中位48.476ms，全部有限，最终SHA FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58，与本轮改动前相同。含cold均值70.900ms不作稳态性能。最终HIP DLL编译通过：release/HIP/native-packed-pipeline.addon64，SHA9453575db8b7103382a4bb5d771cd1265976798f9b60f6521ac8cd625bc5a2fe；配套24模块在远端hip-backend/crop-modules。游戏安装仍68c8…/edge-modules，未覆盖。

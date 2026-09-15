@@ -34,6 +34,10 @@ struct Api {
  HIP_FN(hipDeviceSynchronize,());HIP_FN(hipStreamCreate,(Handle*));HIP_FN(hipStreamSynchronize,(Handle));HIP_FN(hipStreamDestroy,(Handle));
  HIP_FN(hipImportExternalMemory,(Handle*,const MemoryDesc*));HIP_FN(hipExternalMemoryGetMappedBuffer,(void**,Handle,const BufferDesc*));HIP_FN(hipDestroyExternalMemory,(Handle));
  HIP_FN(hipImportExternalSemaphore,(Handle*,const SemaphoreDesc*));HIP_FN(hipSignalExternalSemaphoresAsync,(const Handle*,const SignalParams*,unsigned,Handle));HIP_FN(hipWaitExternalSemaphoresAsync,(const Handle*,const WaitParams*,unsigned,Handle));HIP_FN(hipDestroyExternalSemaphore,(Handle));
+ // Optional graph API, loaded only when requested.
+ HIP_FN(hipStreamBeginCapture,(Handle,int));HIP_FN(hipStreamEndCapture,(Handle,Handle*));
+ HIP_FN(hipGraphInstantiate,(Handle*,Handle,Handle*,char*,size_t));HIP_FN(hipGraphLaunch,(Handle,Handle));
+ HIP_FN(hipGraphDestroy,(Handle));HIP_FN(hipGraphExecDestroy,(Handle));
  HIP_FN(hipModuleLoad,(Handle*,const char*));HIP_FN(hipModuleGetFunction,(Handle*,Handle,const char*));HIP_FN(hipModuleLaunchKernel,(Handle,unsigned,unsigned,unsigned,unsigned,unsigned,unsigned,unsigned,Handle,void**,void**));HIP_FN(hipModuleUnload,(Handle));
  #undef HIP_FN
  using ErrorNameFn=const char*(*)(int);ErrorNameFn hipGetErrorName{};
@@ -43,6 +47,7 @@ struct Api {
  LOAD(hipEventCreate);LOAD(hipEventRecord);LOAD(hipEventElapsedTime);LOAD(hipEventDestroy);LOAD(hipInit);LOAD(hipRuntimeGetVersion);LOAD(hipGetDeviceCount);LOAD(hipDeviceGetName);LOAD(hipSetDevice);LOAD(hipMemGetInfo);LOAD(hipMalloc);LOAD(hipFree);LOAD(hipMemcpy);LOAD(hipMemcpyAsync);LOAD(hipMemsetAsync);LOAD(hipDeviceSynchronize);LOAD(hipStreamCreate);LOAD(hipStreamSynchronize);LOAD(hipStreamDestroy);LOAD(hipImportExternalMemory);LOAD(hipExternalMemoryGetMappedBuffer);LOAD(hipDestroyExternalMemory);LOAD(hipImportExternalSemaphore);LOAD(hipSignalExternalSemaphoresAsync);LOAD(hipWaitExternalSemaphoresAsync);LOAD(hipDestroyExternalSemaphore);LOAD(hipModuleLoad);LOAD(hipModuleGetFunction);LOAD(hipModuleLaunchKernel);LOAD(hipModuleUnload);LOAD(hipGetErrorName);
  #undef LOAD
  }
+ void EnableGraphs(){Load(hipStreamBeginCapture,"hipStreamBeginCapture");Load(hipStreamEndCapture,"hipStreamEndCapture");Load(hipGraphInstantiate,"hipGraphInstantiate");Load(hipGraphLaunch,"hipGraphLaunch");Load(hipGraphDestroy,"hipGraphDestroy");Load(hipGraphExecDestroy,"hipGraphExecDestroy");}
  void Check(int result,const char*what){if(result)throw std::runtime_error(std::string(what)+": "+hipGetErrorName(result)+" ("+std::to_string(result)+")");}
  // Keep runtime loaded until process teardown: driver-owned workers may outlive probe objects.
 };
