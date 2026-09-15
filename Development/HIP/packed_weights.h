@@ -35,6 +35,14 @@ inline void ValidateGroupedMhContract(const std::vector<float>&v,unsigned c){
  for(unsigned row=0;row<c;row++)for(unsigned k=0;k<4*c;k++)if(k/128!=row/32&&v[size_t(4)*c*c+size_t(row)*4*c+k]!=0.f)throw std::runtime_error("nonzero outside grouped contraction");
 }
 // Reorder packed row-major B into [N/16][K/32][K32][N16], preserving bytes.
+// Fragment-native tiles (vit_expand_blocked_fp8_frag_*): same 512-byte (16 rows x 32 k) tiles as TilePackedMatrix, but
+// inside a tile the bytes are ordered [k/16 within tile][lane half gr][row%16][8 consecutive k], so the WMMA B operand of
+// lane (row%16, gr) at K16 step j is one 8-byte load at ((j*2+gr)*16+row%16)*8. Pure permutation of the same bytes.
+inline void FragmentPackedMatrix(std::vector<float>&v,size_t start,size_t rows,size_t columns){
+ if(rows%16||columns%32||start>v.size()||rows*columns>(v.size()-start)*4)throw std::runtime_error("packed fragment shape");
+ auto*dst=reinterpret_cast<uint8_t*>(v.data()+start);std::vector<uint8_t>src(dst,dst+rows*columns);
+ for(size_t n=0;n<rows;n++)for(size_t k=0;k<columns;k++)dst[((n/16)*(columns/32)+k/32)*512+(((k%32)/16*2+(k%16)/8)*16+n%16)*8+k%8]=src[n*columns+k];
+}
 inline void TilePackedMatrix(std::vector<float>&v,size_t start,size_t rows,size_t columns){
  if(rows%16||columns%32||start>v.size()||rows*columns>(v.size()-start)*4)throw std::runtime_error("packed tile shape");
  auto*dst=reinterpret_cast<uint8_t*>(v.data()+start);std::vector<uint8_t>src(dst,dst+rows*columns);

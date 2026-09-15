@@ -225,17 +225,44 @@ void vit_pack_input(const float*in,uint*out,uint count){
  out[word]=(a&65535u)|((b&65535u)<<16);
 }
 // One wave produces16x64, reusing A across four output-column fragments.
-template<bool Tiled=false,bool ByteInput=false>
+DEV i2 vit_weight_fragment_native(const float*w,uint row,uint channels,uint k){i2 b;__builtin_memcpy(&b,reinterpret_cast<const unsigned char*>(w)+((row/16)*(channels/32)+k/32)*512+(((k%32)/16*2+gr())*16+row%16)*8,8);return b;}
+template<bool Tiled=false,bool ByteInput=false,bool Frag=false>
 DEV void vit_expand_blocked_body(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){
  uint tiles=outputs/64,first=bid()/tiles*16,col=bid()%tiles*64;if(first>=tokens)return;
  const uint*pw=reinterpret_cast<const uint*>(w);f8 accum[4]{};
  for(uint k=0;k<inputs;k+=16){i2 a{};
   if constexpr(ByteInput){const uint*p=reinterpret_cast<const uint*>(in);uint off=((first+rc())*inputs+k+gr()*8)/4;a={int(p[off]),int(p[off+1])};}
   else for(uint e=0;e<8;e++)pack(a,e,in[(first+rc())*inputs+k+gr()*8+e]);
-  for(uint n=0;n<4;n++){uint row=col+n*16+rc(),offset=(row*inputs+k+gr()*8)/4;i2 b=vit_weight_fragment<Tiled>(w,row,inputs,k);accum[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum[n]);}
+  for(uint n=0;n<4;n++){uint row=col+n*16+rc();i2 b;if constexpr(Frag)b=vit_weight_fragment_native(w,row,inputs,k);else b=vit_weight_fragment<Tiled>(w,row,inputs,k);accum[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum[n]);}
  }
  for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){float v=accum[n][e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);reinterpret_cast<unsigned char*>(out)[(first+gr()*8+e)*outputs+col+n*16+rc()]=byte_F(v*poly);}
 }
+
+// BM token tiles per wave (host option vit_expand_m4, HLSL BLOCK_M=4 shape): every weight fragment load serves BM
+// token tiles. Each accumulator keeps its own K-ascending order with the same a/b operands as the single-tile body, so
+// the bytes are identical; token tiles past the end are neither loaded nor stored (wave-uniform branch).
+template<bool Tiled,bool ByteInput,uint BM,bool Frag=false>
+DEV void vit_expand_blocked_body_m(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){
+ uint tiles=outputs/64,first=bid()/tiles*16*BM,col=bid()%tiles*64;if(first>=tokens)return;
+ f8 accum[BM][4]{};
+ for(uint k=0;k<inputs;k+=16){i2 a[BM];
+  #pragma unroll
+  for(uint m=0;m<BM;m++){a[m]={};uint row=first+m*16;if(row<tokens){if constexpr(ByteInput){const uint*p=reinterpret_cast<const uint*>(in);uint off=((row+rc())*inputs+k+gr()*8)/4;a[m]={int(p[off]),int(p[off+1])};}else for(uint e=0;e<8;e++)pack(a[m],e,in[(row+rc())*inputs+k+gr()*8+e]);}}
+  i2 b[4];
+  #pragma unroll
+  for(uint n=0;n<4;n++){if constexpr(Frag)b[n]=vit_weight_fragment_native(w,col+n*16+rc(),inputs,k);else b[n]=vit_weight_fragment<Tiled>(w,col+n*16+rc(),inputs,k);}
+  #pragma unroll
+  for(uint m=0;m<BM;m++){if(first+m*16<tokens){
+   #pragma unroll
+   for(uint n=0;n<4;n++)accum[m][n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a[m],b[n],accum[m][n]);}}
+ }
+ #pragma unroll
+ for(uint m=0;m<BM;m++){uint row=first+m*16;if(row<tokens){
+  #pragma unroll
+  for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){float v=accum[m][n][e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);reinterpret_cast<unsigned char*>(out)[(row+gr()*8+e)*outputs+col+n*16+rc()]=byte_F(v*poly);}}}
+}
+WAVE void vit_expand_blocked_fp8_tiled_bytein_m4(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body_m<true,true,4>(in,w,out,tokens,inputs,outputs);}
+WAVE void vit_expand_blocked_fp8_frag_bytein_m4(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body_m<true,true,4,true>(in,w,out,tokens,inputs,outputs);}
 
 template<bool Partial,bool Tiled=false>
 DEV void vit_contract_blocked_body(const float*in,const float*w,const float*skip,float*out,uint tokens){
@@ -260,6 +287,8 @@ WAVE void vit_expand_blocked_fp8_tiled(const float*in,const float*w,float*out,ui
 WAVE void vit_expand_blocked_fp8_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body<false,true>(in,w,out,tokens,inputs,outputs);}
 
 WAVE void vit_expand_blocked_fp8_tiled_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body<true,true>(in,w,out,tokens,inputs,outputs);}
+// Fragment-native weight layout (FragmentPackedMatrix): one 8-byte load per B fragment instead of eight byte gathers.
+WAVE void vit_expand_blocked_fp8_frag_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body<true,true,true>(in,w,out,tokens,inputs,outputs);}
 
 WAVE void vit_contract_blocked_fp8_tiled(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,true>(in,w,skip,out,tokens);}
 WAVE void vit_contract_parts_blocked_fp8_tiled(const float*in,const float*w,float*out,uint tokens){vit_contract_blocked_body<true,true>(in,w,nullptr,out,tokens);}

@@ -36,6 +36,24 @@ namespace hip_reference { struct LayerBenchmark { static bool Check(Network&n){b
   size_t qdiff=0,qbad=0,adiff=0,abad=0;for(size_t i=0;i<vf.size();i++){float d=fp8(v8[i]);qdiff+=memcmp(&d,&vf[i],4)!=0;qbad+=!std::isfinite(vf[i]);}
   for(size_t i=0;i<oa.size();i++){adiff+=memcmp(&oa[i],&ob[i],4)!=0;abad+=!std::isfinite(oa[i])||!std::isfinite(ob[i]);}
   printf("tokens=%u pattern=%u qkv_bytediff=%zu qkv_invalid=%zu bytein_attention_bitdiff=%zu invalid=%zu\n",tokens,pattern,qdiff,qbad,adiff,abad);ok=ok&&!qdiff&&!qbad&&!adiff&&!abad;
+  /* expand M4 (four token tiles per wave) against the single-tile tiled byte-input expand: real block31 expand weights,
+     packed lattice input; hidden bytes must be identical, including the partial last token group. */
+  auto ew=n.PackedVitWeight(n.Block(31,"expand"),4096,1024,true);auto packed=n.New(size_t(tokens)*256),h1=n.New(size_t(tokens)*1024),h4=n.New(size_t(tokens)*1024);
+  n.Run("deep","vit_pack_input",size_t(tokens)*256,n.P(cin),n.P(packed),U(tokens*1024));
+  n.Run("deep","vit_expand_blocked_fp8_tiled_bytein",size_t(tokens)*4096,n.P(packed),ew,n.P(h1),tokens,U(1024),U(4096));
+  n.Run("deep","vit_expand_blocked_fp8_tiled_bytein_m4",size_t(tokens)*4096,n.P(packed),ew,n.P(h4),tokens,U(1024),U(4096));n.Synchronize();
+  std::vector<unsigned char>e1(size_t(tokens)*4096),e4(e1.size());n.api.Check(n.api.hipMemcpy(e1.data(),n.P(h1),e1.size(),2),"read expand");n.api.Check(n.api.hipMemcpy(e4.data(),n.P(h4),e4.size(),2),"read expand m4");
+  size_t ediff=0,ebad=0;for(size_t i=0;i<e1.size();i++){ediff+=e1[i]!=e4[i];ebad+=(e1[i]&127)==127;}
+  printf("tokens=%u pattern=%u expand_m4_bytediff=%zu invalid=%zu\n",tokens,pattern,ediff,ebad);ok=ok&&!ediff&&!ebad;
+  auto fw2=n.PackedVitWeight(n.Block(31,"expand"),4096,1024,true,true);auto hf=n.New(size_t(tokens)*1024);
+  n.Run("deep","vit_expand_blocked_fp8_frag_bytein",size_t(tokens)*4096,n.P(packed),fw2,n.P(hf),tokens,U(1024),U(4096));n.Synchronize();
+  std::vector<unsigned char>ef(e1.size());n.api.Check(n.api.hipMemcpy(ef.data(),n.P(hf),ef.size(),2),"read expand frag");
+  size_t fdiff=0;for(size_t i=0;i<e1.size();i++)fdiff+=e1[i]!=ef[i];
+  printf("tokens=%u pattern=%u expand_frag_bytediff=%zu\n",tokens,pattern,fdiff);ok=ok&&!fdiff;
+  auto hf4=n.New(size_t(tokens)*1024);n.Run("deep","vit_expand_blocked_fp8_frag_bytein_m4",size_t(tokens)*4096,n.P(packed),fw2,n.P(hf4),tokens,U(1024),U(4096));n.Synchronize();
+  std::vector<unsigned char>ef4(e1.size());n.api.Check(n.api.hipMemcpy(ef4.data(),n.P(hf4),ef4.size(),2),"read expand frag m4");
+  size_t f4diff=0;for(size_t i=0;i<e1.size();i++)f4diff+=e1[i]!=ef4[i];
+  printf("tokens=%u pattern=%u expand_frag_m4_bytediff=%zu\n",tokens,pattern,f4diff);ok=ok&&!f4diff;
  }
  return ok;}}; }
 int main(int argc,char**argv){try{

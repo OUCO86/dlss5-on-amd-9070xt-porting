@@ -1957,3 +1957,12 @@ C64家族HIP帧内每块0.284ms，HLSL约0.195（HLSL跳块含一次copy，略�
 test_mh_byte_stream.cpp（C64/128/256×mapped×两pattern×post 4/0×crop）：特征字节解码对f32逐位一致、bytein对f32输入一致、QKV字节一致、project_fb对f32逐位一致、byteout解码逐位一致，48组全过。连续40帧ABBA基线（vit-qkv-fp8-modules，MH_BYTE_STREAM=0）19.272/19.165ms，候选19.375/19.336ms，最终FEEA9EF3…一致——**慢约0.1ms**。与09-15"融合FFN到QKV的byte接口无速度收益"同向：MH块不是带宽绑着的，把f32换字节省下的DRAM流量换不来时间，HLSL C64帧内更快在核形状不在存储格式。代码作为可选路径保留（默认关、未部署、未改DLL默认），模块mh-byte-stream-modules（padded SHA 1806C9D9…、attention SHA B096BB2C…）；脚本compile/test/validate-mh-byte-stream.ps1；日志release/HIP/mh-byte-stream-{0..3}.log。未跑全帧/reset/history三道（不采用）。
 
 今天汇总（光之朱雀，06:00起）：ViT attention融合（−0.11）+ ViT QKV字节（−0.04）逐位一致、三道验证过、默认关未部署；MH字节流null；launch/桥接/CPU排除；差距分解见上。剩余可做：① C64家族核形状对照HLSL native_c64 fp8_stream变体（约0.7ms空间）；② ViT expand BLOCK_M=4共享B tile、qkv/project半精度输入（约0.7ms）；③ C32链帧内成本先用跳块法量（HIP C32不支持skip，需加）；④ Graph在当前19ms基线上重测（09-15测的0.45ms是51ms时代的CPU侧收益，现占比更大）。
+
+
+### 2026-09-16：Graph重测null；ViT expand M4慢、fragment权重布局小赚；三项ViT合计−0.23ms转HIP_FAST默认
+- **Graph**（DLSS5_HIP_GRAPH=1，现基线）：ABBA 19.159/19.162→19.135/19.211，null，与09-15一致。日志release/HIP/graph-current-{0..3}.log。
+- **ViT expand BLOCK_M=4**（vit_expand_blocked_fp8_tiled_bytein_m4，四token tile共用权重fragment，每累加器K序不变）：单元测试240/400/640逐位一致，但ABBA 19.215/19.199→19.711/19.717慢0.5ms。ISA：private_segment 544字节、VGPR 155——累加器数组进了scratch。加#pragma unroll后scratch 0、VGPR 155仍慢0.45（19.636/19.643）：这个形状在HIP上就是不行（闇09-15双tile 0.2%同向），选项vit_expand_m4 / DLSS5_HIP_VIT_EXPAND_M4保留默认关。
+- **fragment原生权重布局**（FragmentPackedMatrix：tile内[k半段][gr][row%16][8字节]，lane一次8字节load代替8次单字节gather；vit_expand_blocked_fp8_frag_bytein，VGPR 73→47）：逐位一致，ABBA 19.211/19.207→19.140/19.192，约0.04ms。frag+M4回到基线（19.205/19.25）。选项vit_expand_frag / DLSS5_HIP_VIT_EXPAND_FRAG / --vit-expand-frag。
+- **合计**：ATTN_FUSED+QKV_FP8+EXPAND_FRAG对原基线（ffn-qkv-round-byte-release-modules，三项关）ABBA 19.415/19.361→19.196/19.126，−0.23ms；全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…匹配。**已改为src/native_hip_network.h HIP_FAST默认开**（env仍可关），compare_layers.cpp生产选项同步。模块集vit-expand-fm4-modules（deep_fast-packed SHA 7A97A773E90BAF507F8F2DC6A460A87C63073AAE0633D082028CC051F5D91AEA，含fused attention/字节QKV/frag/M4全部入口，其余23模块沿用ffn-qkv-round-byte-release-modules）。**游戏未部署、DLL未重编**，等Zero定。脚本compile/test-vit-expand-{m4,frag,fm4}.ps1、test-vit-all.ps1、validate-vit-all.ps1；日志release/HIP/vit-expand-{m4,frag,fm4}-*.log、vit-all-{0..3,full,reset,history-check}.log。
+
+ViT结论：三刀共减约0.1ms/层，剩余对HLSL约0.06ms/层差距分布在expand（HIP 0.067对0.036）与qkv/project的float输入转换上，M4形状和权重布局都已证明不是expand的瓶颈，下一步要看expand核的ISA找真正的等待（可能是WMMA与load的交错/占用率）。
