@@ -1789,3 +1789,13 @@ PackedSplitFfnWeight改用独立@split-expand-f16-contract-fp8 key：展开区�
 部署脚本确认游戏退出，安装native-split-expand-halfweight.addon64（SHA152c5bf83ac760fb71bf12d7b7498132d0e23d7bdd5bf968ccb2151c7e589693）和split-expand-halfweight-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-split-expand-halfweight。新版实际游戏FPS仍待用户反馈。
 
 current比较/profile脚本更新固定模块和benchmark_split_expand_halfweight.exe，compare_layers_current.exe重编译上传。profile成功、最终RGB7b959143…匹配；第二轮主要项仍为C32 chain、普通MH FFN-QKV，C512 standalone QKV13次。memory owned1286.9MiB/213 allocations。逐核串行计时不作为连续性能，最快连续测例仍19.53–19.55ms；日志release/HIP/profile-split-expand-current.log。本轮完成部署与诊断，无额外内核提速。
+
+
+### 2026-09-16：ViT QKV紧凑缓存减少144MiB显存，帧时间无明显收益
+Vit按实际路径只获取所需QKV缓存，packed fused不再先创建原float GPU权重。PackedVitQkvWeight改为@qkv-f16-compact，精确编码后把32个尺度移到half矩阵末端并resize；独立vit_qkv_project_normalize_fused_f16compact入口尺度索引1572864，与旧3145728分开，旧shader入口保留。矩阵与尺度值不变。
+
+连续40帧ABBA基线19.530/19.511ms，候选19.568/19.531ms，最终FEEA9EF3…匹配、首尾有限。差异约0.03ms，不声称帧率提升。profile实测owned1286.9→1142.9MiB，allocations213→205，少144MiB/8个分配；profile最终RGB7b959143…匹配。63488个有限half编码检查及24组ViT逐位对照通过，全40帧/24帧reset/seed123 history各自golden匹配，均无非法值。全检20.748/21.375ms不作为连续性能。
+
+完整DLL release/HIP/native-vit-qkv-compact.addon64 SHAc8842686a683443962619055745d43a4daf22026f68864705e5d6f0f8df06554；固定24模块vit-qkv-compact-release-modules，deep_fast-packed模块SHA73B5CBD3CD2214AE01030D390015F7045326F2A915367C4348D99ABA751699D9。作为显存优化保留，本轮未部署，游戏仍152c5bf8…+split-expand-halfweight-release-modules。
+
+脚本test-vit-qkv-compact.ps1、validate-vit-qkv-compact*.ps1、profile-vit-compact.ps1；test_vit_qkv_halfweight.cpp更新新布局入口。日志release/HIP/vit-qkv-compact-test.log、vit-qkv-compact-validation.log、vit-qkv-compact-profile.log。
