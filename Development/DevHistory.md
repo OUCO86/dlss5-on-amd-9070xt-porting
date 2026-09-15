@@ -976,3 +976,11 @@ COMGR/gfx1201编译通过，packed C32模块SHAC3CF4A4D0C597F9302F69F417A360297F
 仅将输出投影a操作数从逐byte put_bits改成memcpy8，宏HIP_C32_OUTPUT_READ8控制。COMGR编译及正常900 ABBA4轮输出hash全部通过，但热中位34.0665→34.243ms略慢，已从生产源码撤回。补丁归档Development/HIP/experiments/c32-output-read8.patch，测试脚本test-c32-output8.ps1保留（需先应用补丁编译候选，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_OUTPUT_READ8=1）。没有用此变体更新固定候选。
 
 profile-current.ps1更新为c32-input-dword-release-modules并开启identity-shift。热轮逐核等待诊断：mapped C32 9次6.061ms；MH QKV归一化49次7.454ms、融合attention49次4.507ms、matrix投影36次3.515ms、shift pack44次3.286ms/crop45次2.744ms。输出保持7b959143…。逐核等待含调度开销，不当正常帧组成比例；identity-shift确实把原pack49/crop50各减少5次。日志release/HIP/c32-output8-build/test.log和profile-after-c32.log。游戏与固定候选均未改变。
+
+
+### 2026-09-15：MH QKV输入预打包无收益，撤回
+新增独立pack4输入核和fast_dense<true,false,true>的QKV归一化入口，沿用原pack4转换，没有使用带额外clamp的ViT pack核。临时--prepack-qkv开关和min-c选择器在所有49次或仅C>=256时先量化一次，以减少N列块重复转换。
+
+COMGR/gfx1201模块及主机runner编译通过。正常900 ABBA4轮各6次去cold，全通道33.891→34.2605ms更慢；仅C>=256时33.963→34.1615ms也更慢。两组四轮最终RGB全匹配7b959143…。没有明确收益，生产源码与默认配置已恢复，未进一步跑历史/HDR，不把正确输出当提速证明。
+
+实验补丁Development/HIP/experiments/mh-qkv-prepack.patch，脚本test-mh-prepack.ps1（需先应用补丁构建runner和multihead-fast-padded-wave-packed候选；MinChannels默认0，另测256）。实验模块mh-prepack.hsaco由multihead_fast_padded.hip前置HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1生成。日志release/HIP/mh-prepack-build/test.log、mh-prepack-large-test.log。远端reference_current.exe暂为带实验开关runner，但默认关闭；生产源码已撤回。最优固定候选仍c32-input-dword-release-modules+5ab7d7d3 DLL，游戏仍8568acff…异步版，未部署。
