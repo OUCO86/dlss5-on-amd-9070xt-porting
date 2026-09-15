@@ -1,5 +1,8 @@
 // Production C32 FAST4 attention precision, separate from exact reference.
 // All kernels flat grid ceil(work_items/256), block32; token count divisible64.
+#ifndef HIP_C32_DIRECT_WEIGHT8
+#define HIP_C32_DIRECT_WEIGHT8 1
+#endif
 #ifndef HIP_C32_WEIGHT_DWORD
 #define HIP_C32_WEIGHT_DWORD 1
 #endif
@@ -105,6 +108,13 @@ DEV uint matrix_byte(const float*w,uint start,uint index){
  return fp8(w[start+index]);
 #endif
 }
+DEV i2 matrix8(const float*w,uint index){
+#if HIP_C32_DIRECT_WEIGHT8 && defined(HIP_PREPACKED_WEIGHTS)
+ i2 result;__builtin_memcpy(&result,reinterpret_cast<const unsigned char*>(w)+index,8);return result;
+#else
+ i2 result{};for(uint e=0;e<8;e++)put_bits(result,e,matrix_byte(w,0,index+e));return result;
+#endif
+}
 // Byte-preserving packed LDS reads; memcpy does not impose pointer alignment.
 DEV i2 load8(const unsigned char*p){
 #ifdef HIP_C32_LDS_VECTOR
@@ -173,7 +183,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
 #if !HIP_C32_REGISTER_FFN
      put(a,e,float(ffn[(first+rc())*34+k]));
 #endif
-     put_bits(b,e,matrix_byte(w,0,part*1024+(col+rc())*32+k));}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+    }b=matrix8(w,part*1024+(col+rc())*32+kt*16+gr()*8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
    for(uint e=0;e<8;e++)scratch.raw[(first+gr()*8+e)*33+col+rc()]=acc[e];
   }
   sync_owned_rows();f8 sum{};
@@ -204,7 +214,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)packed[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(av[ci][e]));
  sync_window();
  for(uint col=0;col<32;col+=16){f8 acc{};
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,matrix_byte(w,0,3072+(col+rc())*32+k));}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);}b=matrix8(w,3072+(col+rc())*32+kt*16+gr()*8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float residual;
 #if HIP_C32_REGISTER_FFN
    residual=float(saved_ffn[col/16][e]);

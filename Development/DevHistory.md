@@ -952,3 +952,11 @@ COMGR/gfx1201编译通过。当前完整快速链+identity-shift正常900 ABBA4�
 主机DLL不变，使用已编译release/HIP/native-identity-shift.addon64（SHA5ab7d7d3…）；新packed C32 HSACO SHAD2E66FE7D94EBD67622DE37230C9B44DEC71C5E51EE248131FF3AA6C58D91F74。24模块固化于远端hip-backend/c32-dword-release-modules，实验脚本使用另一个c32-dword-modules目录，避免ABBA结束恢复baseline后污染候选。没有部署，游戏仍8568acff…异步版，用户24FPS。
 
 测试脚本test-c32-dword.ps1；本轮编译输入是在c32_fused_ffn_attention.hip前定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_WEIGHT_DWORD=1，调用D:\DLSSNR-Lab\rtc_compile.exe OUTPUT SOURCE comgr。日志release/HIP/c32-dword-build/test/history/hdr/reset.log。
+
+
+### 2026-09-15：C32 QKV/输出投影直接8-byte权重读取
+新增matrix8，packed权重路径直接memcpy8byte到WMMA的i2输入，替换QKV与输出投影的逐byte读取/位拼接；不改变矩阵字节、乘加顺序和舍入。HIP_C32_DIRECT_WEIGHT8默认1，0保留逐byte对照，非packed路径仍逐值转换。基线为上轮DWORD FFN装载，避免混记收益。
+
+COMGR/gfx1201编译通过。正常900P ABBA4轮各6次、去cold中位36.1015→35.2145ms（约2.457%），seed123/history37.4245→36.583ms（约2.249%）；每组四轮最终RGB分别保持7b959143…／75b62d2f…。真实HDR异步40帧34.869ms/FEEA9EF3…、24帧每8帧reset34.746ms/22C171FC…，均全有限；HDR为正确性回归，不单独计算速度增幅。
+
+新packed C32模块SHA2A885047BC050B06BD7188A66B7A7CE72AFEF77C45C40F003C1694E97E942DCD，24模块固定在远端hip-backend/c32-direct8-release-modules；test-c32-direct8.ps1只覆盖独立实验目录。配套主机DLL仍native-identity-shift.addon64/5ab7d7d3…，不需改DLL代码。未部署，游戏仍8568acff…异步版（用户报告24FPS）。日志release/HIP/c32-direct8-build/test/history/hdr/reset.log。编译输入定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_DIRECT_WEIGHT8=1，其余沿用源码默认。
