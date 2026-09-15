@@ -1449,3 +1449,11 @@ HIP_FAST默认grouped_mh_contract=true，DLSS5_HIP_GROUPED_CONTRACT=0/1覆盖，
 部署前脚本确认《剑星》退出，安装801cfc5c… DLL及ffn-qkv-release-modules共24模块，安装hash逐项通过。保持AsyncSubmit=1，旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-ffn-qkv。新游戏FPS尚未测；用户30FPS反馈属于部署前版本。
 
 profile-current.ps1改用固定融合模块并显式启用grouped-mh-contract/ffn-qkv/max-c256，运行成功，最终RGB7b959143…匹配。日志release/HIP/profile-ffn-qkv-current.log。逐核串行计时仍含等待，不作为连续GPU耗时比例；剩余独立mh_qkv_normalize_fused共13次、mh_shift_pack13次，对应C512路径仍待分析。
+
+
+### 2026-09-16：C512直接映射输入实验不采用
+实验将C512的mh_shift_pack去掉，split_mix_blocked直接按原图坐标读取输入，split_projection_blocked的残差同步改为映射读取；越界补零，保留F16/FP8矩阵运算及舍入顺序。新增独立mapped入口与host dispatch，实验DLSS5_HIP_SPLIT_MAPPED=0/1切换。
+
+COMGR与benchmark编译通过；同新模块、连续40帧ABBA：基线22.906/22.943ms，映射22.942/22.976ms，最终FEEA9EF3…一致、首尾有限。未见收益，未扩大到全帧/reset验证，生产源码恢复，游戏仍801cfc5c…融合版。
+
+实验保存Development/HIP/experiments/split-mapped.patch及test-split-mapped.ps1，须应用补丁编译benchmark_split_mapped.exe并以HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1编译deep_fast.hip为split-mapped.hsaco；测试脚本将其放入独立模块目录deep_fast-packed.hsaco。日志release/HIP/split-mapped-test.log。
