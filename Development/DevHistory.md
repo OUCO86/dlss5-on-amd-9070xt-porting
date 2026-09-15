@@ -1583,3 +1583,9 @@ COMGR及benchmark编译通过，连续40帧ABBA基线21.886/21.945ms，候选21.
 mapped_c32_input的Raw分支原先F(half)返回float，再由输入暂存的fp8重新编码。实验增加ForPacking模板参数，仅输入装载路径返回保留零规范化和有符号饱和的原half值，让外层完成一次编码；残差读取保持旧F。未改变Merge/raster分支。
 
 COMGR编译通过；连续40帧ABBA基线21.924/21.949ms，候选21.914/21.878ms，最终FEEA9EF3…一致、首尾有限。仅约0.04ms差异，未扩大全帧/reset/全half编码对照，不纳入生产，源码恢复。补丁experiments/c32-input-single-cast.patch、test-c32-input-single-cast.ps1；编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-input-single-cast-test.log。游戏与最快固定模块不变。
+
+
+### 2026-09-16：C32输入两两FP8打包实验暂不采用
+输入DWORD打包由四次fp8(value,0)改为两次cvt_pk_fp8(value0,value1)，保留每值clamp、mapped读取与字节顺序；不合并上轮单次cast实验。COMGR编译通过，连续40帧ABBA基线21.883/21.950ms、候选21.875/21.927ms，最终FEEA9EF3…一致、首尾有限。无明显收益，未进一步全帧/reset，源码恢复，游戏不变。
+
+补丁experiments/c32-input-pair.patch、test-c32-input-pair.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-input-pair-test.log。此结果不等价于已证明动态指令数量变化；只表明本次源代码改写未带来明显全帧改善。

@@ -1,0 +1,13 @@
+diff --git a/Development/HIP/c32_fused_ffn_attention.hip b/Development/HIP/c32_fused_ffn_attention.hip
+index 02deab7..aaea75c 100644
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -156,7 +156,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+  if(residual_mode!=0&&residual_mode!=3)return;
+  // Stage input64x36 only; FFN matrices are loaded directly from global weights.
+ #if HIP_C32_INPUT_DWORD
+- for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
++ for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32){float v[4];for(uint e=0;e<4;e++)v[e]=clampf(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e],-448.f,448.f);uint lo=uint(__builtin_amdgcn_cvt_pk_fp8_f32(v[0],v[1],0,false)),hi=uint(__builtin_amdgcn_cvt_pk_fp8_f32(v[2],v[3],0,false));word=(lo&65535u)|((hi&65535u)<<16);}__builtin_memcpy(packed+i*4,&word,4);}
+ #else
+  for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k])):0;}
+ #endif
