@@ -1433,3 +1433,13 @@ HIP_FAST默认grouped_mh_contract=true，DLSS5_HIP_GROUPED_CONTRACT=0/1覆盖，
 部署脚本确认游戏退出，安装native-grouped-contract.addon64（SHAce90a942507482e559f523372e2fee91f84f9e9e3c004e473bebf8969d96ffd2）及mh-grouped-contract-release-modules全部24个HSACO，逐hash校验通过。再次核验900P/HIP_FAST1/ASYNC_SUBMIT1，MH模块E239DC3A…匹配，未设置覆盖默认的GROUPED_CONTRACT字段。保持原画质配置，使用载入时零结构验证。
 
 旧c4a25659… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-grouped-contract，回退用部署脚本-Restore -BackupName before-grouped-contract（须退出游戏）。未启动游戏或验证新FPS；约23.8ms是离线连续负载。当前游戏已更新为ce90a942…+分组收缩模块，目标仍未达到HLSL水平。
+
+
+### 2026-09-16：普通MH FFN与QKV融合验证完成
+将C64/128/256的分组FFN三段计算与QKV投影/归一化融合，复用hidden LDS为Q/K原始结果，保留FFN float输出供attention残差使用；Q/K仍按原32项顺序归一化，C512沿用旧路径。HIP_FAST默认启用，可用DLSS5_HIP_FFN_QKV和DLSS5_HIP_FFN_QKV_MAX_C覆盖。
+
+同模块连续40帧ABBA：关闭融合23.782/23.849ms，启用至C256为22.957/22.937ms，最终图像hash均匹配FEEA9EF3…；12组中间结果对照（C64/128/256 × 映射/非映射 × 两种输入）FFN float逐位、QKV逐byte一致，无非法值。40帧全检、24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…；seed123/history参考输出匹配75b62d2f…。日志release/HIP/ffn-qkv-all-test.log及ffn-qkv-validation.log。
+
+候选DLL release/HIP/native-ffn-qkv.addon64已生成，SHA256=801cfc5c86458a31fd4365b6ded71b7f208ba6398ef4629fc23d3a92f069bb68；固定24模块ffn-qkv-release-modules，MH模块SHA256=D4C9A849DD9A17DB00DE6608F6AC256F77558A5F1E6E93A84D48CD837A58BDC5。此融合候选尚未部署，游戏仍为ce90a942…分组收缩版本。
+
+用户最新实测反馈：900P现在30FPS（此前26–27FPS）；历史HLSL为1080P约37FPS。此为用户游戏观测，不将离线22.95ms换算为实际游戏FPS，也不把30FPS归到尚未部署的新融合候选。
