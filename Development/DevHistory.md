@@ -1513,3 +1513,11 @@ C32 mode2 raw half-chain测试：block70 HIP1.729/1.714ms、HLSL1.087/1.117；bl
 COMGR编译通过；连续40帧ABBA基线22.823/22.824ms、候选22.853/22.862ms，最终FEEA9EF3…一致、首尾有限。略慢，不采用，未扩大全帧/reset，生产源码恢复，游戏仍13d4dc10… ViT融合版。
 
 实验experiments/c32-direct-v.patch、test-c32-direct-v.ps1，编译c32_fused_ffn_attention.hip定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块为c32_fused_ffn_attention-packed.hsaco。日志release/HIP/c32-direct-v-test.log。
+
+
+### 2026-09-16：C32 FFN直接读取权重取得约0.9ms收益
+对照shaders/native_c32_ffn_fused.hlsli发现HLSL展开/收缩矩阵直接从权重缓冲Load，HIP先合作搬到LDS。当前改为matrix8(fw+512,…)和matrix8(fw+4608,…)直接读取，删除两段权重LDS装载及一处由此产生的同步；输入/hidden/FFN-V布局、矩阵顺序和舍入保持。保留已验证的contraction→FFN阶段barrier。
+
+COMGR编译通过；连续40帧ABBA：基线22.782/22.847ms，候选21.916/21.927ms，最终FEEA9EF3…匹配、首尾有限。全40帧及24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…；seed123/history匹配75b62d2f…。全检计时读回频率不同，不额外声称21.332ms为连续性能。C32 block70/1/4 × mode0/1/2共9组输出与HLSL逐位一致、无非法值；验证脚本补上CHECK数量与bitdiff/invalid/maxabs强制检查。
+
+固定24模块c32-global-ffn-release-modules，c32_fused_ffn_attention-packed.hsaco SHA256=4F2B207DF5FE199EA2E4BE3868F8F8BDAC9259E83CE8E38F6BA94DC8BD461FDE。仅内核改动，配套DLL沿用13d4dc10…，本轮未部署，游戏仍旧ViT融合模块。脚本test-c32-global-ffn.ps1、validate-c32-global-ffn.ps1、validate-c32-global-ffn-history.ps1；日志release/HIP/c32-global-ffn-test.log、c32-global-ffn-validation.log。

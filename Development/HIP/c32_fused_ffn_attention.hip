@@ -154,39 +154,28 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  __attribute__((shared)) _Float16 ffn[64*34];
 #endif
  if(residual_mode!=0&&residual_mode!=3)return;
- // Input64x36 and expand weights128x36 fill the norm scratch temporarily.
+ // Stage input64x36 only; FFN matrices are loaded directly from global weights.
 #if HIP_C32_INPUT_DWORD
  for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
 #else
  for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k])):0;}
 #endif
-#if HIP_C32_WEIGHT_DWORD && defined(HIP_PREPACKED_WEIGHTS)
- for(uint i=tid;i<128*9;i+=128){uint row=i/9,k=(i%9)*4;uint word=0;if(k<32)__builtin_memcpy(&word,reinterpret_cast<const unsigned char*>(fw+512)+row*32+k,4);__builtin_memcpy(packed+64*36+i*4,&word,4);}
-#else
- for(uint i=tid;i<128*36;i+=128){uint row=i/36,k=i%36;packed[64*36+i]=k<32?static_cast<unsigned char>(matrix_byte(fw,512,row*32+k)):0;}
-#endif
  sync_window();
  for(uint col=0;col<128;col+=16){f8 sum{};
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=load8(packed+64*36+(col+rc())*36+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=matrix8(fw+512,(col+rc())*32+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
   for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
  }
  sync_window();
- // Expand weights are dead; contract32x132 occupies 4224 of their former4608 bytes.
-#if HIP_C32_WEIGHT_DWORD && defined(HIP_PREPACKED_WEIGHTS)
- for(uint i=tid;i<32*33;i+=128){uint row=i/33,k=(i%33)*4;uint word=0;if(k<128)__builtin_memcpy(&word,reinterpret_cast<const unsigned char*>(fw+4608)+row*128+k,4);__builtin_memcpy(packed+64*36+i*4,&word,4);}
-#else
- for(uint i=tid;i<32*132;i+=128){uint row=i/132,k=i%132;packed[64*36+i]=k<128?static_cast<unsigned char>(matrix_byte(fw,4608,row*128+k)):0;}
-#endif
- sync_window();f8 acc[2];acc[0]=f8{};acc[1]=f8{};
+ f8 acc[2];acc[0]=f8{};acc[1]=f8{};
  if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();acc[ci][e]=clampf(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c],-448.f,448.f)*fw[8704+c];}}
  else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++){uint c=ci*16+rc();float remaining=fw[8704+c],piece=0;for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining-=piece;}
    for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,k==c?fp8(piece):0u);}acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
   }}
  for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
-  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=chunk*32+kt*16+gr()*8;a=load8(scratch.hidden+(first+rc())*132+k);b=load8(packed+64*36+(ci*16+rc())*132+k);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=chunk*32+kt*16+gr()*8;a=load8(scratch.hidden+(first+rc())*132+k);b=matrix8(fw+4608,(ci*16+rc())*128+k);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
  }
 #if HIP_C32_ALIAS_FFN_V && HIP_C32_REGISTER_FFN
- // The V region overlaps contract weights: all waves must finish reading them.
+ // Preserve the validated contraction-to-FFN phase boundary.
  sync_window();
 #endif
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){
