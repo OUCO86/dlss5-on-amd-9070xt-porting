@@ -1635,3 +1635,11 @@ COMGR与benchmark编译通过；连续40帧ABBA基线21.899/21.892ms，候选21.
 独立test_c64_attn_project覆盖8个真实C64权重块×post0/3/4×有无crop共48组，融合前后输出逐float位一致、无非法值。首次测试因mh_wave配置缺失在初始化即拒绝，补齐后实际全部通过；没有放宽比较。日志release/HIP/c64-attn-project-test.log、c64-attn-project-validation.log、c64-attn-project-intermediate.log。
 
 完整DLL release/HIP/native-c64-attn-project.addon64 SHA256=2d8d1db1c67de875bb2bbca1809aed6cc74ac57f2c024c3e2637e40d2f886ca8；固定24模块c64-attn-project-release-modules，multihead_fused_attention.hsaco SHA256=EEAC76C3B08EDFD273F7A27EC7675466E0F19E63CFA94D70709F1C7DE7B331D5。本轮未部署，游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。目标仍未达HLSL约16.8ms水平。
+
+
+### 2026-09-16：部署C64注意力投影融合并核对当前差距
+部署脚本确认游戏退出，安装native-c64-attn-project.addon64（SHA2d8d1db1c67de875bb2bbca1809aed6cc74ac57f2c024c3e2637e40d2f886ca8）及c64-attn-project-release-modules全部24模块，逐hash校验通过。AsyncSubmit保持1；旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c64-attn-project。尚无新版实际游戏FPS反馈。
+
+当前比较/profile脚本统一更新模块与benchmark_c64_attn_project.exe，compare_layers_current.exe重新编译上传以匹配融合host路径。连续40帧edges-only ABBA：HLSL16.792/16.783ms，HIP21.309/21.335ms，各自最终golden匹配、首尾有限；当前差距约4.54ms，未达目标。日志release/HIP/backend-c64-fused-current.log。
+
+COMGR资源元数据c64_attention_project：LDS30720bytes、VGPR94、SGPR30、private segment0、spill0。仅资源证据，不直接推断GPU利用率。
