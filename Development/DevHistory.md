@@ -1409,3 +1409,9 @@ RunGraph实验允许借用最终输出buffer，EnqueueRaw用非owned Allocation�
 完整before24.401ms、pure HIP24.269ms、完整after24.548ms；三段原始RGB bitdiff0、无非有限值。首轮额外对照24.480/24.2575ms也一致。当前no-history输入下差值约0.13–0.28ms，桥接/前后处理合计不足解释此前8ms差距；纯HIP计时仍含CPU提交和等待，不能直接叫纯GPU指令时间，也未推广到history场景。
 
 诊断程序编译/运行通过。说明Development/HIP/bridge-isolation.md，脚本measure-bridge-isolation.ps1，日志release/HIP/bridge-isolation-summary.log。本轮无推理算法或游戏部署变化。
+
+
+### 2026-09-16：同输入桥接隔离下Graph复核
+measure-bridge-isolation.ps1增加Graph/Tag参数，实验flags独立写入并检查graph_stats确有重放。Graph1测得完整before24.324ms、pure HIP24.205ms、完整after24.524ms，原始RGB bitdiff0、无非有限；builds3/replays127，与三段输入/输出指针切换相符。
+
+对照此前同程序Graph0 pure24.269ms，只有很小差异。此no-history测例中未见可由Graph消除的大量提交延迟，不能以此声称所有CPU开销为零或泛化到所有场景。Graph默认仍0，未改游戏配置。日志release/HIP/bridge-isolation-graph-summary.log，详细说明bridge-isolation.md。目标仍未达HLSL水平。

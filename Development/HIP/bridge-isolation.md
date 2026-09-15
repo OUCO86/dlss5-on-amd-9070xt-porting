@@ -11,3 +11,6 @@ measure-bridge-isolation.ps1要求游戏退出，40帧、temporal=0、edges_only
 此次完成的三段：full-before24.401ms、pure-HIP24.269ms、full-after24.548ms，原始输出bitdiff0、无非有限值。此前首轮也是full24.480/pure24.2575ms。证明本次no-history输入上，完整前后处理/共享资源/桥接合计没有产生8ms差距。
 
 限制：纯HIP时间含CPU Enqueue和等待，不是仅GPU指令忙时；全流水线与纯HIP使用的缓冲类型不同，不能把差值当单独copy或context-switch成本。未覆盖有history路径，也不是新实机FPS。捕获/上传/最终读回都在pure计时区间外。诊断返回借用资源，只能在单线程持有、已完成GPU工作的Frame上使用。
+
+
+Graph补充对照：脚本新增-Graph 0/1及-Tag，隔离实验使用独立flags文件，不改全局/游戏配置。Graph1结果full-before24.324ms、pure24.205ms、full-after24.524ms，原始输出bitdiff0、无非有限，graph_stats builds=3/replays=127（完整→私有缓冲→完整的指针变化分别重建）。相对Graph0的pure24.269ms只有小差距，不足解释主要缺口；不是声称CPU提交零成本，而是本测例中它没有构成主要可消除延迟。
