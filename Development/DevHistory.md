@@ -922,3 +922,11 @@ NativeGameCodec最多保留8组完整输入绑定、shader-visible heap和resour
 queued_frame_probe新增rotate=2（12张不同颜色纹理），覆盖8组上限后的淘汰。test-binding-cache.ps1的颜色轮换、颜色+motion轮换、固定纹理变内容、12贴图淘汰、淘汰+motion五项均通过，全12帧分别匹配已有411DF44C…／43712DDE…同步hash，全部有限。随后两轮ABBA共8次、每次排除前2帧：旧版4次热均值的中位37.52715ms，快取版37.16005ms，约0.98%降低；所有输出hash一致。此为离线颜色轮换场景，不是实机FPS增幅。
 
 完整DLL编译通过：release/HIP/native-binding-cache.addon64，SHA256 56a97612a43f2cc200a5e395d72fd2fdaab816ee3478b6dbb4a4105303f255ac。配套仍vit-layout-modules24模块。没有部署，游戏保持用户报告24FPS的8568acff…、async1。日志release/HIP/binding-cache.log。
+
+
+### 2026-09-15：运动纹理不可变绑定快取
+NativeTemporalFeed增加最多8组纹理/SRV heap引用快取，命中切换不可变heap；满额未命中才要求NativeGameFrame先Flush后淘汰。消除一般motion轮换的CPU等待，模型与HSACO保持。queued_frame_probe的temporal=3以12张运动纹理交替同样向量，覆盖淘汰。
+
+test-motion-cache.ps1五项正确性测试通过（颜色、颜色+motion、变内容、颜色淘汰、颜色+motion同时淘汰），全部12帧匹配原同步411DF44C…/43712DDE…。8轮ABBA对比颜色快取版与双快取版，颜色+motion轮换每轮10热帧平均耗时的中位37.87255→37.60930ms，约0.70%降低。所有hash一致，离线小幅收益，不是实机FPS证明。
+
+完整DLL编译通过：release/HIP/native-motion-cache.addon64，SHA7358aedb9a3be1d1bdae0acbfac06488ebda05cf717970ba5a90a303d1bd9d00，配套vit-layout-modules不变。未部署，游戏保持用户约24FPS的8568acff…异步修复版。日志release/HIP/motion-cache.log。

@@ -32,3 +32,8 @@ x86_64-w64-mingw32-g++ -w -DDLSS5_USE_HIP=1 -std=c++17 -O2 -static -municode -Is
 ## 颜色绑定快取回归
 
 当前头文件编译探针时输出`queued_frame_cache.exe`，与上一修复版（005bced／e78edb1头文件）构建的`queued_frame_fixed.exe`对照。将`test-binding-cache.ps1`放入相同远端目录运行。探针rotate=2新增12张不同纹理，超出8组绑定快取，逐帧内容仍与两张交替相同，因此可沿用原同步hash检查淘汰正确性。五项正确性测试通过后执行8轮ABBA，比较每次后10帧平均耗时；本轮37.52715→37.16005ms为各方案4次读数的中位数。运动SRV轮换仍采用完成等待，未在本次优化。
+
+
+## 运动绑定快取回归
+
+当前探针输出queued_frame_motion_cache.exe，上一颜色快取版fec7383构建queued_frame_cache.exe。运行test-motion-cache.ps1，沿用同一实验室资产。temporal=3新增12张不同motion纹理，内容与temporal=2相同，结合rotate=2测试两套快取淘汰；8轮ABBA使用颜色+motion轮换，比对颜色快取与双快取。五项正确性及全部ABBA输出hash通过，耗时37.87255→37.60930ms（各方案4次热帧均值的中位）。

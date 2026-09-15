@@ -9,13 +9,16 @@ class NativeTemporalFeed {
  NativeNetworkGeometry geometry=NativeNetworkGeometry::FromHeight(1080);
  ID3D12Resource*motion{},*history{},*rgb{},*bound_texture{};ID3D12DescriptorHeap*heap{};
  ID3D12RootSignature*motion_root{},*history_root{};ID3D12PipelineState*motion_pso{},*history_pso{};
+ struct Binding {ID3D12Resource*texture;ID3D12DescriptorHeap*heap;};
+ std::vector<Binding> bindings;
+ void ClearBindings(){for(auto&b:bindings){b.texture->Release();b.heap->Release();}bindings.clear();}
  UINT mw{},mh{};float scale[2]{};bool motion_recorded{},history_recorded{};
  static void ck(HRESULT h){if(FAILED(h))throw std::runtime_error("temporal feed HRESULT="+std::to_string(unsigned(h)));}
  static ID3D12Resource*Buffer(ID3D12Device*d,UINT64 bytes){D3D12_HEAP_PROPERTIES hp{};hp.Type=D3D12_HEAP_TYPE_DEFAULT;D3D12_RESOURCE_DESC rd{};rd.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;rd.Width=bytes;rd.Height=1;rd.DepthOrArraySize=rd.MipLevels=1;rd.SampleDesc.Count=1;rd.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;rd.Flags=D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;ID3D12Resource*r=nullptr;ck(NativeCreateCommittedResource(d,&hp,D3D12_HEAP_FLAG_NONE,&rd,D3D12_RESOURCE_STATE_UNORDERED_ACCESS,nullptr,IID_PPV_ARGS(&r)));return r;}
  static void Transition(ID3D12GraphicsCommandList*c,ID3D12Resource*r,bool to_uav){D3D12_RESOURCE_BARRIER b{};b.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;b.Transition={r,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,to_uav?D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE:D3D12_RESOURCE_STATE_UNORDERED_ACCESS,to_uav?D3D12_RESOURCE_STATE_UNORDERED_ACCESS:D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE};c->ResourceBarrier(1,&b);}
 public:
  NativeTemporalFeed()=default;NativeTemporalFeed(const NativeTemporalFeed&)=delete;
- ~NativeTemporalFeed(){for(auto*r:{motion,history,rgb,bound_texture})if(r)r->Release();if(heap)heap->Release();for(auto*r:{motion_root,history_root})if(r)r->Release();for(auto*p:{motion_pso,history_pso})if(p)p->Release();}
+ ~NativeTemporalFeed(){ClearBindings();for(auto*r:{motion,history,rgb,bound_texture})if(r)r->Release();if(heap)heap->Release();for(auto*r:{motion_root,history_root})if(r)r->Release();for(auto*p:{motion_pso,history_pso})if(p)p->Release();}
  // motion_w/h: motion texture size; pixel scale: 1080p pixels per motion unit (upscale size for UV-unit vectors).
  void Create(ID3D12Device*d,UINT motion_w,UINT motion_h,float pixel_scale_x,float pixel_scale_y,const std::wstring&dir){
   if(motion||!d||!motion_w||!motion_h)throw std::runtime_error("temporal feed contract");
@@ -27,15 +30,29 @@ public:
   for(UINT i=0;i<2;i++){D3D_SHADER_MACRO macros[]={{"FEED_MOTION",i?"0":"1"},{nullptr,nullptr}};ID3DBlob*code=nullptr,*error=nullptr;auto hr=CompileNativeShader(dir+L"\\native_temporal_feed.hlsl",macros,i?"history_main":"motion_main",&code,&error);if(FAILED(hr)){std::string m=error?std::string((const char*)error->GetBufferPointer(),error->GetBufferSize()):"temporal feed compile";if(error)error->Release();throw std::runtime_error(m);}if(error)error->Release();D3D12_COMPUTE_PIPELINE_STATE_DESC pd{};pd.pRootSignature=i?history_root:motion_root;pd.CS={code->GetBufferPointer(),code->GetBufferSize()};ck(NativeCreateComputePipelineState(d,&pd,IID_PPV_ARGS(i?&history_pso:&motion_pso)));code->Release();}
  }
  void BindNetworkOutput(ID3D12Resource*network_rgb){if(rgb)rgb->Release();rgb=network_rgb;rgb->AddRef();}
- bool NeedsMotionRebind(ID3D12Resource*texture)const{return texture!=bound_texture;}
- // Caller must complete prior GPU uses before a changed texture rewrites the SRV.
+ bool NeedsMotionRebind(ID3D12Resource*texture)const{
+  if(texture==bound_texture)return false;
+  for(const auto&b:bindings)if(b.texture==texture)return false;
+  return bindings.size()>=8;
+ }
+ // Caller completes GPU uses before cache eviction; retained SRVs are immutable.
  // Texture must be readable as a non-pixel shader resource when recorded (FFX compute-read state).
  void RecordMotion(ID3D12GraphicsCommandList*c,ID3D12Resource*texture){
   if(!texture)throw std::runtime_error("motion texture missing");
   if(texture!=bound_texture){
    auto desc=texture->GetDesc();if(desc.Width!=mw||desc.Height!=mh)throw std::runtime_error("motion texture size changed");
-   ID3D12Device*d=nullptr;ck(heap->GetDevice(IID_PPV_ARGS(&d)));D3D12_SHADER_RESOURCE_VIEW_DESC sv{};sv.Format=NativeViewFormat(desc.Format);sv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;sv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;sv.Texture2D.MipLevels=1;d->CreateShaderResourceView(texture,&sv,heap->GetCPUDescriptorHandleForHeapStart());d->Release();
-   texture->AddRef();if(bound_texture)bound_texture->Release();bound_texture=texture;
+   ID3D12DescriptorHeap*next=nullptr;
+   for(const auto&b:bindings)if(b.texture==texture){next=b.heap;next->AddRef();break;}
+   if(!next){
+    if(bindings.size()>=8)ClearBindings(); // caller completed old GPU uses
+    ID3D12Device*d=nullptr;ck(heap->GetDevice(IID_PPV_ARGS(&d)));
+    D3D12_DESCRIPTOR_HEAP_DESC hd{D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,1,D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,0};
+    auto hr=d->CreateDescriptorHeap(&hd,IID_PPV_ARGS(&next));if(FAILED(hr)){d->Release();ck(hr);}
+    D3D12_SHADER_RESOURCE_VIEW_DESC sv{};sv.Format=NativeViewFormat(desc.Format);sv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;sv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;sv.Texture2D.MipLevels=1;
+    d->CreateShaderResourceView(texture,&sv,next->GetCPUDescriptorHandleForHeapStart());d->Release();
+    texture->AddRef();next->AddRef();bindings.push_back({texture,next});
+   }
+   heap->Release();heap=next;texture->AddRef();if(bound_texture)bound_texture->Release();bound_texture=texture;
   }
   if(motion_recorded)Transition(c,motion,true);
   /* DLSS5_MOTION_MAX_PX (Magpie): vectors longer than this many output pixels are treated as static (the AMD optical flow returns tens of thousands of pixels on flat dark areas). 0 = off. */
