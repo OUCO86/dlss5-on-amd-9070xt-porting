@@ -752,3 +752,11 @@ Zero留游戏PID4132在装备菜单，实机截图确认人物变成黑色轮廓
 当前游戏继续运行：continuous和temporal均开启、async=0、DEBUG_DUMPS为空、窗口恢复原尺寸，无手动request。安装DLL仍0202b4dc…，内核/全局flags/驱动未改。部署脚本明确覆盖继承的async=1，防止下一次部署复现。此项为配置修复，无DLL重编。原flags副本留在游戏私有root的native-game-flags.before-capture。
 
 新增capture-live-menu.ps1用于可逆窗口尺寸对照；benchmark_live_capture.cpp及说明提供真实HDR冻结输入的完整Frame回放，MinGW编译通过，未执行GPU回放（实机同步对照已经找到可用规避）。后续恢复异步前需验证连续输入与跨D3D12/HIP同步，原离线测试每轮上传/读回的CPU等待会掩盖这类问题。
+
+### 2026-09-15：gfx12输入寄存器重用首轮候选
+
+新增deep_fast.hip的HIP_VIT_EXPAND_PAIR编译开关：vit_expand每wave计算两个相邻16列输出，共用输入读取和FP8打包；保留各累加器K顺序、FMA激活和原launch ABI，奇数tile早退。默认关闭，build-modules.ps1可用-VitExpandPair生成独立候选。参考SageAttention gfx12的操作数重用思路，自行实现，未复制其量化或softmax算法。
+
+COMGR3/gfx1201 baseline与pair均编译成功；benchmark_expand_pair.cpp在tokens16/400/1600、K1024/N4096、混合符号及E4M3小值输入上输出bitdiff0。ABBA批量墙钟：tokens400 baseline0.241/0.200ms，pair0.183/0.176ms；tokens1600 baseline0.809/0.806ms，pair0.723/0.705ms；tokens16反而较慢。局部结果不代表整网收益。
+
+游戏已退出后执行benchmark-expand-pair.ps1，独立模块目录不动游戏：900完整快图packed+skip42/43/46，四轮各6次排除cold，两方案各10个hot样本。baseline中位65.2045ms、pair65.0745ms，仅约0.20%差异，未确认稳定整网收益；四轮最终RGB SHA256均7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d。保持可选，不启用默认、不部署DLL/内核。日志release/HIP/expand-pair-benchmark.log与expand-pair-network.log。

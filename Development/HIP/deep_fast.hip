@@ -53,7 +53,42 @@ DEV f8 dot8(const float*in,const float*w,uint first,uint row,uint channels,uint 
   a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);
  }return a;
 }
+#ifdef HIP_VIT_EXPAND_PAIR
+// Two adjacent output tiles reuse each input load/FP8 pack. Keep the legacy
+// launch ABI: odd column tiles return; even tiles own both output regions.
+// Each accumulator retains the original increasing-K WMMA order.
+WAVE void vit_expand(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){
+ uint tile=bid()%(outputs/16),first=bid()/(outputs/16)*16,row=tile*16;
+ if(first>=tokens||(tile&1u))return;
+ bool second=row+16<outputs;f8 a{},b{};
+ for(uint k=0;k<inputs;k+=16){
+  i2 x{},y{},z{};
+  for(uint e=0;e<8;e++){
+   uint j=k+gr()*8+e;pack(x,e,in[(first+rc())*inputs+j]);
+#ifndef HIP_PREPACKED_WEIGHTS
+   pack(y,e,w[(row+rc())*inputs+j]);
+   if(second)pack(z,e,w[(row+16+rc())*inputs+j]);
+#endif
+  }
+#ifdef HIP_PREPACKED_WEIGHTS
+  const uint*pw=reinterpret_cast<const uint*>(w);
+  uint offset=((row+rc())*inputs+k+gr()*8)/4;
+  y={int(pw[offset]),int(pw[offset+1])};
+  if(second){offset+=16*inputs/4;z={int(pw[offset]),int(pw[offset+1])};}
+#endif
+  a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);
+  if(second)b=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,z,b);
+ }
+ for(uint e=0;e<8;e++){
+  float v=a[e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);
+  out[(first+gr()*8+e)*outputs+row+rc()]=F(v*poly);
+  if(second){v=b[e];g=clampf(v,-4.f,4.f);poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);
+   out[(first+gr()*8+e)*outputs+row+16+rc()]=F(v*poly);}
+ }
+}
+#else
 WAVE void vit_expand(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=tokens)return;f8 a{};a=dot8(in,w,first,row,inputs,0,inputs,a);for(uint e=0;e<8;e++){float v=a[e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);out[(first+gr()*8+e)*outputs+row+rc()]=F(v*poly);}}
+#endif
 WAVE void vit_project(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=tokens)return;f8 total{};
  if(inputs==4096){for(uint e=0;e<8;e++)total[e]=H(skip[(first+gr()*8+e)*outputs+row+rc()]*w[inputs*outputs+row+rc()]);for(uint p=0;p<4;p++){f8 a{};a=dot8(in,w,first,row,inputs,p*(inputs/4),(p+1)*(inputs/4),a);for(uint e=0;e<8;e++)total[e]+=a[e];}}
  else{for(uint p=0;p<4;p++){f8 a{};if(!p)for(uint e=0;e<8;e++)a[e]=H(skip[(first+gr()*8+e)*outputs+row+rc()]*w[inputs*outputs+row+rc()]);a=dot8(in,w,first,row,inputs,p*(inputs/4),(p+1)*(inputs/4),a);for(uint e=0;e<8;e++)total[e]=p?total[e]+a[e]:a[e];}}

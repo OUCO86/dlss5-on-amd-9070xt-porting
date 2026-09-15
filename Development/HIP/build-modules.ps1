@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory=$true)][string]$OutputDir,
     [string]$SourceDir = $PSScriptRoot,
     [switch]$IsaHalf,
-    [switch]$Fast
+    [switch]$Fast,
+    [switch]$VitExpandPair
 )
 $ErrorActionPreference = 'Stop'
 $OutputDir = [IO.Path]::GetFullPath($OutputDir)
@@ -42,6 +43,7 @@ $manifest = @()
 foreach ($module in $modules) {
     $source = if ($IsaHalf) { "#define HIP_ISA_HALF 1`n" } else { '' }
     if ($module[0] -like '*-packed') { $source += "#define HIP_PREPACKED_WEIGHTS 1`n" }
+    if ($VitExpandPair -and $module[0] -like 'deep_fast*') { $source += "#define HIP_VIT_EXPAND_PAIR 1`n" }
     foreach ($part in $module[1]) {
         $source += [IO.File]::ReadAllText((Join-Path $SourceDir $part)) + "`n"
     }
