@@ -1,3 +1,6 @@
+#ifndef HIP_QKV_SPECIALIZE
+#define HIP_QKV_SPECIALIZE 1
+#endif
 #ifndef HIP_QKV_ROW_SUM
 #define HIP_QKV_ROW_SUM 1
 #endif
@@ -301,7 +304,18 @@ TILE void mh_ffn_contract_fast_fp8_out(const float* hidden,const float* weights,
 TILE void mh_ffn_project_fast_fp8(const float* middle,const float* feature,const float* weights,float* output,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,false>(middle,feature,weights,output,tokens,channels,channels,8*channels*channels,9*channels*channels,4);}
 
 // Full FP32 QKV accumulator is normalized on chip, preserving sequential sums.
-TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tokens,uint channels){if(valid_attn(channels))fast_dense<false,false,true>(in,in,w,out,tokens,3*channels,channels,0,~0u,2);}
+TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tokens,uint channels){
+#if HIP_QKV_SPECIALIZE
+ switch(channels){
+ case 64:fast_dense<false,false,true>(in,in,w,out,tokens,192,64,0,~0u,2);break;
+ case 128:fast_dense<false,false,true>(in,in,w,out,tokens,384,128,0,~0u,2);break;
+ case 256:fast_dense<false,false,true>(in,in,w,out,tokens,768,256,0,~0u,2);break;
+ case 512:fast_dense<false,false,true>(in,in,w,out,tokens,1536,512,0,~0u,2);break;
+ }
+#else
+ if(valid_attn(channels))fast_dense<false,false,true>(in,in,w,out,tokens,3*channels,channels,0,~0u,2);
+#endif
+}
 
 #ifndef HIP_FFN_COOP_INPUT
 #define HIP_FFN_COOP_INPUT 1

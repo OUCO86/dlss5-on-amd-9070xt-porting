@@ -1087,3 +1087,11 @@ benchmark-graph-frame.ps1参数化Runner/Modules/ConfigFile/ExpectedHash，增�
 使用benchmark_merge.exe、mh-input-dword-release-modules、rebind-async-flags做graph0/1/1/0，完整HDR40帧、temporal1、去前5，各方案70热样本：graph0中位30.0715ms，graph1 29.838ms，约0.78%。两个graph轮次均builds1/replays38，四轮最终FEEA9EF3…一致，全有限。没有只开flag却未重放；当前路径收益依旧小，默认和游戏graph保持0，未继续reset或实机Graph测试。
 
 日志release/HIP/graph-current.log，远端graph-current/timings.csv及分轮log。约0.23ms离线收益不能解释HLSL18.8ms vs HIP约30ms主要差距，不据此认定所有调度开销为零。当前游戏仍a7b7521b…+mh-input-dword，尚无新实机FPS反馈。
+
+
+### 2026-09-15：QKV固定通道数特化
+mh_qkv_normalize_fused对64/128/256/512通道分支传递编译期常量N/K给fast_dense，其他计算、LDS布局与32项平方和顺序保持。HIP_QKV_SPECIALIZE默认1，0保留动态尺寸实现。COMGR产物QKV资源：VGPR45（旧46）、SGPR16（旧14）、LDS21760byte、private0；不以寄存器数单独证明收益。
+
+正常900 ABBA4轮各6次去cold31.073→30.785ms；seed123/history32.4475→32.0865ms。两组四轮RGB分别保持7b959143…/75b62d2f…。HDR异步40帧29.660ms/FEEA9EF3…，24帧每8帧reset29.431ms/22C171FC…，均全有限；HDR为回归，无同期ABBA速度结论。
+
+模块编译通过，multihead-fast-padded-wave-packed SHA FEBEF48CAF49ACA87E4A88D06F664F2B183CFD9CCDB1AA5972FFF8824F6EBD61；24模块固定mh-qkv-special-release-modules，配套DLL仍a7b7521b…无需变更。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-mh-qkv-special.ps1，日志release/HIP/mh-qkv-special-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_SPECIALIZE=1。
