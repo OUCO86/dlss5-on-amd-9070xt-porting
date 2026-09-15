@@ -1881,3 +1881,11 @@ COMGR编译通过；连续40帧ABBA基线19.325/19.365ms，候选19.300/19.328ms
 重新运行当前MH同输入逐层对照：block9 C128 HIP0.150200/0.149200ms，对HLSL0.228050/0.207850；block15 C256 HIP0.140550/0.138000，对HLSL0.213450/0.192550；block23 C512 HIP0.205350/0.173400，对HLSL0.150650/0.133600。既有跨后端数值差异不变：block9/15 bitdiff496/129、maxabs2，block23逐位一致；所有测例无非法值。单层重复条件不能直接加总成全帧差距。
 
 日志release/HIP/profile-round-byte-current.log、compare-mh-round-byte-current.log。本轮刷新证据，无生产代码/部署变化，不声称新增提速。
+
+
+### 2026-09-16：decoder上采样投影half权重无稳定收益，暂不采用
+新增@decoder-f16缓存，精确打包inputs*outputs矩阵并保留float残差尺度原偏移；decoder_project2x_halfweight直接读取h8，保持F16 WMMA、inputs1024四段累加、H/F与上采样merge顺序。Up仅在fast_deep+packed路径使用新入口，五处实际矩阵均通过精确编码检查。
+
+COMGR/benchmark编译通过；连续40帧ABBA基线19.318/19.390ms，候选19.363/19.303ms，最终FEEA9EF3…一致、首尾有限。无稳定收益，未扩大全帧/reset，不采用，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
+
+补丁experiments/decoder-halfweight.patch、test-decoder-halfweight.ps1，配套benchmark_decoder_halfweight.exe和HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块deep_fast-packed.hsaco。日志release/HIP/decoder-halfweight-test.log。
