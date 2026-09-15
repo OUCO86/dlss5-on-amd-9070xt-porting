@@ -1319,3 +1319,13 @@ COMGR产物LDS17664→15360byte；普通half VGPR207→190，mapped214→201，p
 C32生产候选仅在matrix residual分支按输出坐标解码packed输入，保留scale_piece及三段顺序、kt零项位置，以FMA替换WMMA。连续40帧ABBA：基线25.252/25.327ms，候选25.204/25.213ms，最终FEEA9EF3…一致、首尾有限。收益不足0.1ms且基线波动相近，未进一步全帧/reset验证，生产源码恢复，不默认。
 
 补丁experiments/c32-scalar-diagonal.patch，test-c32-scalar-diagonal.ps1；候选编译额外定义HIP_C32_SCALAR_DIAGONAL=1。日志release/HIP/diagonal-build/test.log、c32-scalar-diagonal-build/test.log。独立probe和实验内核均编译并运行成功。游戏仍3894351c…+prefix-fused，最优未部署模块仍c32-alias-ffn-release-modules。
+
+
+### 2026-09-15：MH三段对角残差改为同序标量FMA
+新增mh_diagonal_probe.hip/test_mh_diagonal.cpp，用普通MH 36块的6144个真实残差尺度，254个有限FP8基值×3种排列（整行同值、交替符号、按channel轮转并排除NaN编码），共4681728组合对照原WMMA与同序FMA，mismatched_cases=0。MH小尺度分解按原remain<0取符号，不混用C32的符号位版本。每128尺度一批提交，避免单次诊断过长；此为有限覆盖测试，不称任意矩阵的形式化证明。
+
+生产HIP_MH_SCALAR_DIAGONAL默认1：仅matrix_residual分支按原输出坐标读取feature并执行原FP8量化，保留三段component和每段两个K16零项位置，以显式FMA替代WMMA。C512 scalar residual不改，crop及最终epilogue不改，0保留原矩阵路线。
+
+连续40帧ABBA：基线25.245/25.306ms，候选24.850/24.895ms；四轮最终FEEA9EF3…匹配、首尾有限。随后40帧全读回和24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…。全检25.110/25.238ms仅记录，不与连续负载混算。
+
+probe、host及内核编译通过。multihead-fast-padded-wave-packed模块SHA068617327EE1706D75AAAC00D783F413B2571421633DCF974199DE5AFC923832；24模块固定mh-scalar-diagonal-release-modules，含C32 FFN/V暂存复用；配套DLL仍3894351c…无需修改，未部署。游戏仍3894351c…+prefix-fused。脚本test-mh-scalar-diagonal.ps1，日志release/HIP/mh-diagonal-build/test.log和mh-scalar-diagonal-build/test/full/reset.log。生产候选编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_MH_SCALAR_DIAGONAL=1；probe拼接C32公共函数及mh_diagonal_probe.hip。

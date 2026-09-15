@@ -1,3 +1,6 @@
+#ifndef HIP_MH_SCALAR_DIAGONAL
+#define HIP_MH_SCALAR_DIAGONAL 1
+#endif
 #ifndef HIP_FFN_INPUT_PACK4
 #define HIP_FFN_INPUT_PACK4 1
 #endif
@@ -108,12 +111,16 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
    if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}
    else component=F(remain);
    remain-=component;
+#if HIP_MH_SCALAR_DIAGONAL
+   for(uint e=0;e<8;e++){uint p=first+group*8+e;if(p<M&&n<N){float x=__builtin_amdgcn_cvt_f32_fp8(int(q8(feature[p*N+n])),0);for(uint half=0;half<2;half++)accum[e]=__builtin_fmaf(x,half==(n%32)/16?component:0.f,accum[e]);}}
+#else
    #pragma unroll
    for(uint half=0;half<2;half++){i2 a{},b{};
     #pragma unroll
     for(uint e=0;e<8;e++){uint k=half*16+group*8+e,p=first+rc,g=col/32*32;float x=(p<M&&g+k<N)?feature[p*N+g+k]:0.f;pack(a,e,x);pack(b,e,(n<N&&k==n%32)?component:0.f);}
     accum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum);
    }
+#endif
   }
  }
  for(uint chunk=0;chunk<K/32;chunk++){
