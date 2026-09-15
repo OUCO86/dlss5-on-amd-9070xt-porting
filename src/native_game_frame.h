@@ -315,6 +315,12 @@ private:
    if(++r.probe_frames%100==0){if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-game-probe.txt").c_str(),L"ab")){fprintf(f,"frames=%u avg_ms pre=%.2f network=%.2f post=%.2f gpu_total=%.2f cpu_frame=%.2f history=%u reset=%u nomotion=%u overlap=1\n",r.probe_frames,r.probe_sum[0]/100,r.probe_sum[1]/100,r.probe_sum[2]/100,(r.probe_sum[0]+r.probe_sum[1]+r.probe_sum[2])/100,r.probe_cpu/100,r.probe_history,r.probe_reset,r.probe_nomotion);fclose(f);}for(auto&v:r.probe_sum)v=0;r.probe_cpu=0;r.probe_history=r.probe_reset=r.probe_nomotion=0;}}
  }
 public:
+#if defined(DLSS5_BENCH_BRIDGE_ISOLATE) && defined(DLSS5_USE_HIP)
+ // Diagnostic caller must own a quiescent frame; returned objects are borrowed.
+ hip_reference::Network& DiagnosticNetwork(){resources->submit.Flush();return resources->network.DiagnosticNetwork();}
+ ID3D12Resource* DiagnosticInput(){return resources->input.PostBase();}
+ ID3D12Resource* DiagnosticOutput(){return resources->network.Output();}
+#endif
  // motion_texture: this frame's FSR motion vectors (compute-read state). reset: FFX reset flag.
  // History is the previous processed frame's network output; the first frame and reset frames run without it.
  void ProcessSubmittedFrame(ID3D12Resource*target,D3D12_RESOURCE_STATES source_state,

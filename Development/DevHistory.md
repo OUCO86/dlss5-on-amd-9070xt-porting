@@ -1401,3 +1401,11 @@ RunGraph实验允许借用最终输出buffer，EnqueueRaw用非owned Allocation�
 在单wave四输出投影上，只重排C64/128/256 attention权重的projection区域（3*C*C），按[N16][K32][kt16][lane32][byte8]存放；每lane一次load8且跨lane连续。QKV/偏置/尺度不动，C512保持旧布局，独立cache key。CPU纯byte置换与kernel索引配套，不是此前通用[K][N] tile。
 
 程序与COMGR内核编译通过，连续40帧ABBA：基线24.830/24.732ms，候选25.240/25.277ms，最终FEEA9EF3…一致、首尾有限；仍比现有合作LDS投影慢，未进一步全帧/reset，不默认，生产源码恢复。补丁experiments/mh-projection-lanes.patch、test-mh-projection-lanes.ps1；需配套host权重重排及32线程实验入口，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1。日志release/HIP/mh-projection-lanes-build/test.log。游戏未变。
+
+
+### 2026-09-16：同实际输入隔离完整流水线与纯HIP
+增加仅DLSS5_BENCH_BRIDGE_ISOLATE编译的借用诊断访问，取得Frame PostBase与原始网络输出，以及同一已初始化Network。40帧no-history完整Frame后捕获输入，上传一次到HIP私有缓冲，预热10次、40次Enqueue+同步计时，末尾读回逐float位比较；再返回完整Frame40次复核。游戏及生产DLL不启用这些接口。
+
+完整before24.401ms、pure HIP24.269ms、完整after24.548ms；三段原始RGB bitdiff0、无非有限值。首轮额外对照24.480/24.2575ms也一致。当前no-history输入下差值约0.13–0.28ms，桥接/前后处理合计不足解释此前8ms差距；纯HIP计时仍含CPU提交和等待，不能直接叫纯GPU指令时间，也未推广到history场景。
+
+诊断程序编译/运行通过。说明Development/HIP/bridge-isolation.md，脚本measure-bridge-isolation.ps1，日志release/HIP/bridge-isolation-summary.log。本轮无推理算法或游戏部署变化。

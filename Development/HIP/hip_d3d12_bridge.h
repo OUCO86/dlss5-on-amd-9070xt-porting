@@ -35,6 +35,9 @@ public:
   Share(input,pixels*16);Share(history,pixels*16);Share(output,pixels*12,true);Check(device->CreateFence(0,D3D12_FENCE_FLAG_SHARED,IID_PPV_ARGS(&fence)),"shared fence");Check(device->CreateSharedHandle(fence,nullptr,GENERIC_ALL,nullptr,&fence_handle),"fence handle");hip_probe::SemaphoreDesc sd{};sd.type=4;sd.handle.win32.handle=fence_handle;api.Check(api.hipImportExternalSemaphore(&semaphore,&sd),"import fence");event=CreateEventW(nullptr,FALSE,FALSE,nullptr);if(!event)throw std::runtime_error("bridge completion event");network->SetNoise(noise);
  }
  ID3D12Resource*Output()const{return output.resource;}
+#ifdef DLSS5_BENCH_BRIDGE_ISOLATE
+ Network& DiagnosticNetwork(){return *network;}
+#endif
  template<class Submission>void Run(Submission&submit,ID3D12Resource*rgba,ID3D12Resource*temporal,U seed){
   if(submit.Queue()!=queue)throw std::runtime_error("bridge submission queue mismatch");if(!network||failed)throw std::runtime_error("bridge unavailable");InputContract(rgba);if(temporal)InputContract(temporal);auto&api=network->Runtime();
   try{submit.Submit([&](ID3D12GraphicsCommandList*c){

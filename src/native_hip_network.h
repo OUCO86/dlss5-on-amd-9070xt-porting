@@ -24,4 +24,7 @@ color=rgb;color->AddRef();history=temporal;if(history)history->AddRef();
  }
  template<class Submission>void Run(Submission&submit,UINT seed,bool use_history=false){if(use_history&&!history)throw std::runtime_error("HIP history not bound");bridge.Run(submit,color,use_history?history:nullptr,seed);}
  ID3D12Resource*Output()const{return bridge.Output();}
+#ifdef DLSS5_BENCH_BRIDGE_ISOLATE
+ hip_reference::Network& DiagnosticNetwork(){return bridge.DiagnosticNetwork();}
+#endif
 };
