@@ -1,0 +1,45 @@
+diff --git a/Development/HIP/hip_reference_network.h b/Development/HIP/hip_reference_network.h
+index ba7c098..7b6ad41 100644
+--- a/Development/HIP/hip_reference_network.h
++++ b/Development/HIP/hip_reference_network.h
+@@ -127,6 +127,7 @@ class Network {
+   if(module=="mh_fast"){
+    if(kernel.rfind("mh_ffn_fused_c",0)==0){U c=U(std::stoul(kernel.substr(14)));if((c!=64&&c!=128&&c!=256)||count%(c*16))throw std::runtime_error("fused FFN dispatch shape");threads=c*2;groups=count/(c*16);}
+    else if(kernel=="mh_qkv_normalize_fast"||kernel=="mh_qkv_normalize_fast_wave"||kernel=="mh_qkv_normalize_fast_wave_fp8"){threads=256;if(kernel!="mh_qkv_normalize_fast")count=Count(size_t(count)*32);}
++   else if(kernel=="mh_projection_wave4"){threads=32;groups=count/1024;}
+    else if(kernel=="mh_scores_exp_fast"||kernel=="mh_probabilities_fast"||kernel=="mh_attention_av_fast"||kernel=="mh_pool_project_production")threads=32;
+    else {auto tuple=std::make_tuple(args...);auto integer=[](auto x)->U{if constexpr(std::is_integral_v<decltype(x)>)return U(x);else return 0;};
+     std::string shape=kernel;if(shape.size()>4&&shape.substr(shape.size()-4)=="_fp8")shape.resize(shape.size()-4);
+@@ -196,7 +197,8 @@ class Network {
+   Run("mh_fast","mh_probabilities_fast",size_t(windows)*heads*1024,P(ex),P(prob),windows,c);ex.reset();
+   Run("mh_fast","mh_attention_av_fast",size_t(n)*c,P(prob),P(norm),P(av),w,h,c);prob.reset();norm.reset();
+   }
+-  if(cropw)Run("mh_fast","mh_attention_crop",size_t(n)*c,P(av),P(input),weights,P(out),n,U(raw?3:(c==512||rounded_output)?0:4),cropw,croph,w,sx,sy,c);
++  if(c==64&&opt.fp8_av)Run("mh_fast","mh_projection_wave4",size_t(n)*c,P(av),P(input),weights,P(out),n,c,U(raw?3:rounded_output?0:4),cropw,croph,w,sx,sy);
++  else if(cropw)Run("mh_fast","mh_attention_crop",size_t(n)*c,P(av),P(input),weights,P(out),n,U(raw?3:(c==512||rounded_output)?0:4),cropw,croph,w,sx,sy,c);
+   else Run("mh_fast",opt.fp8_av?(c==512?"mh_attention_project_fast_scalar_fp8":"mh_attention_project_fast_matrix_fp8"):(c==512?"mh_attention_project_fast_scalar":"mh_attention_project_fast_matrix"),size_t(n)*c,P(av),P(input),weights,P(out),n,c,U(raw?3:(c==512||rounded_output)?0:4));return out;
+  }
+  Tensor Attention(Tensor input,U w,U h,U c,const std::string&aw,bool raw,bool rounded_output=false){if(opt.fast_mh)return AttentionFast(input,w,h,c,aw,raw,rounded_output);U n=w*h,windows=n/64,heads=c/32;auto qkv=New(size_t(n)*3*c),qk=New(size_t(n)*2*c);Run("mh","mh_qkv",size_t(n)*3*c,P(input),Weight(aw),P(qkv),n,c);Run("mh","mh_normalize",size_t(n)*heads,P(qkv),Weight(aw),P(qk),n,c);auto ex=New(size_t(windows)*heads*4096),prob=New(size_t(windows)*heads*4096);Run("mh","mh_scores_exp",size_t(windows)*heads*4096,P(qk),Weight(aw),P(ex),w,h,c);qk.reset();Run("mh","mh_probabilities",size_t(windows)*heads*64,P(ex),P(prob),windows,c);ex.reset();auto av=New(size_t(n)*c);Run("mh","mh_attention_av",size_t(n)*c,P(prob),P(qkv),P(av),w,h,c);prob.reset();qkv.reset();auto out=New(size_t(n)*c);Run("mh","mh_attention_project",size_t(n)*c,P(av),P(input),Weight(aw),P(out),n,c,U(raw));return out;}
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 0887aac..2165c2a 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -476,3 +476,18 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c
+ KERNEL __attribute__((amdgpu_flat_work_group_size(256,256))) void mh_ffn_fused_c128_project_mapped_g128_qkv(const float*in,const float*w,const float*aw,unsigned char*out,unsigned char*norm,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_qkv_body<128,false,true,true,true>(in,w,out,tokens,width,height,workw,sx,sy,aw,norm);}
+ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project_g128_qkv(const float*in,const float*w,const float*aw,unsigned char*out,unsigned char*norm,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_qkv_body<256,true,true,false,true>(in,w,out,tokens,width,height,workw,sx,sy,aw,norm);}
+ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project_mapped_g128_qkv(const float*in,const float*w,const float*aw,unsigned char*out,unsigned char*norm,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_qkv_body<256,true,true,true,true>(in,w,out,tokens,width,height,workw,sx,sy,aw,norm);}
++
++
++template<uint C> DEV void projection_wave4(const unsigned char*av,const float*feature,const float*w,float*out,uint M,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy){
++ uint l=__builtin_amdgcn_workitem_id_x(),rc=l&15,gr=l>>4,bid=__builtin_amdgcn_workgroup_id_x(),first=bid/(C/64)*16,col=bid%(C/64)*64;f8 acc[4]{};
++ #pragma unroll
++ for(uint j=0;j<4;j++){uint n=col+j*16+rc;float remain=w[4*C*C+(C/32)*4096+C/32+n];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float v=absf(remain)*512.f;uint q=uint(v);float r=v-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;
++  for(uint e=0;e<8;e++){uint p=first+gr*8+e;float x=p<M?__builtin_amdgcn_cvt_f32_fp8(int(q8(feature[p*C+n])),0):0.f;for(uint h=0;h<2;h++)acc[j][e]=__builtin_fmaf(x,h==(n%32)/16?component:0.f,acc[j][e]);}}}
++ const uint*pw=reinterpret_cast<const uint*>(w);
++ for(uint k=0;k<C;k+=16){i2 a{};if(first+rc<M)__builtin_memcpy(&a,av+(first+rc)*C+k+gr*8,8);
++  #pragma unroll
++  for(uint j=0;j<4;j++){uint off=3*C*C+((col+j*16+rc)*C+k+gr*8)/4;i2 b={int(pw[off]),int(pw[off+1])};acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[j]);}}
++ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){uint p=first+gr*8+e,n=col+j*16+rc;if(p>=M)continue;uint dest=p*C+n;if(cropw){uint x=p%workw,y=p/workw;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*C+n;}out[dest]=post==3?Hrtz(acc[j][e]):post==0?F(Hrtz(acc[j][e])):F(acc[j][e]);}
++}
++KERNEL __attribute__((amdgpu_flat_work_group_size(32,32)))
++void mh_projection_wave4(const unsigned char*av,const float*feature,const float*w,float*out,uint M,uint C,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy){switch(C){case 64:projection_wave4<64>(av,feature,w,out,M,post,cropw,croph,workw,sx,sy);break;case 128:projection_wave4<128>(av,feature,w,out,M,post,cropw,croph,workw,sx,sy);break;case 256:projection_wave4<256>(av,feature,w,out,M,post,cropw,croph,workw,sx,sy);break;}}

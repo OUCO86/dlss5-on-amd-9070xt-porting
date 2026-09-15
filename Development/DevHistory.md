@@ -1609,3 +1609,11 @@ compare_layers.cpp新增62–65（400×256，shift0/3/1/2）和c64-only过滤，
 单层ABBA wall：62 HIP0.321350/0.313300ms，HLSL0.328150/0.291700；63 HIP0.387800/0.386350，HLSL0.322800/0.283100；64 HIP0.372900/0.367700，HLSL0.319350/0.279400；65 HIP0.375150/0.369000，HLSL0.346350/0.300100。HLSL首次/末次仍有时钟或调度变化，不能把整网绕过差额与逐层值直接相加。
 
 编译/运行通过，日志release/HIP/compare-c64-decoder-current.log（格式未修正）及compare-c64-decoder-formats.log（修正后）。本轮定位与工具修正，无新增性能收益、无游戏部署。
+
+
+### 2026-09-16：仅C64启用单wave四输出投影仍慢
+依据C64解码器phase诊断，复用旧projection_wave4实现但仅c==64且FP8 AV启用，其他C128/256/512保持当前投影。单wave16token×64输出，32线程、count/1024 dispatch，保留三段标量残差、K16顺序与crop/epilogue。区别于旧全通道实验，单独检查C64是否曾被其他通道退化掩盖。
+
+COMGR及专用benchmark编译通过；连续40帧ABBA基线21.898/21.953ms，候选22.075/22.054ms，最终FEEA9EF3…一致、首尾有限。仍更慢，不采用，未扩大全帧/reset，源码恢复，游戏不变。
+
+补丁experiments/c64-projection-wave4.patch、test-c64-projection-wave4.ps1，配套benchmark_c64_projection_wave4.exe与HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块multihead-fast-padded-wave-packed.hsaco；日志release/HIP/c64-projection-wave4-test.log。
