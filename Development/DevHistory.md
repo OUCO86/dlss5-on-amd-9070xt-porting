@@ -1373,3 +1373,11 @@ HIP_FAST默认开启，DLSS5_HIP_DIRECT_INPUT=0/1可覆盖，要求fast_prefix/p
 部署脚本确认游戏退出，安装native-direct-input.addon64（SHAc4a256596c1cbfb540e3877db65bcb5d9897abd0ada6b7241525258a5d4e3f87）及prefix-direct-input-release-modules的24个HSACO，逐hash校验通过。维持900P/async1，采用已完成全帧、reset及轮换/淘汰排队验证的直接raster读取；不包含未采用的D3D raster-only边界实验。
 
 旧3894351c… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-direct-input；回退用部署脚本-Restore -BackupName before-direct-input（须游戏退出）。本轮未启动游戏或测新FPS，当前约24.7ms为离线连续负载。游戏现已更新为c4a25659…，不再是3894351c版本。
+
+
+### 2026-09-16：最新profile及保持64×64的QKV双输出wave实验
+profile-current.ps1更新为prefix-direct-input-release-modules及全部当前快速选项，reference runner新增--direct-prefix-input。运行最终RGB7b959143…匹配；已不再有普通MH shift/crop及独立prefix features/project，QKV仍是热点之一。逐核等待累计仅用于定位，不当连续负载百分比，日志release/HIP/profile-direct-current.log。
+
+另试QKV保持64×64输出区、256线程/8wave，每wave16×32两输出，共用A，K16顺序与row-sum不变。它不是早期M32 tile方案。首版四个C模板各分配一份LDS，COMGR报87040>65536；改由入口统一分配sa/sb/tile/inverse并传给模板后编译通过。未使用编译失败后的不完整基准。
+
+连续40帧ABBA：基线24.737/24.708ms，候选24.974/24.931ms，最终FEEA9EF3…一致、首尾有限；更慢，不采用，生产源码恢复。补丁experiments/qkv-pair-group.patch、test-qkv-pair-group.ps1，需配套256线程host配置与实验模块；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_PAIR_GROUP=1。日志release/HIP/qkv-pair-group-build/test.log。游戏仍c4a25659…+prefix-direct-input，未改。

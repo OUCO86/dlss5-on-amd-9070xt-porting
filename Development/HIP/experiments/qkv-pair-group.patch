@@ -1,0 +1,71 @@
+diff --git a/Development/HIP/hip_reference_network.h b/Development/HIP/hip_reference_network.h
+index a8f7af1..8087177 100644
+--- a/Development/HIP/hip_reference_network.h
++++ b/Development/HIP/hip_reference_network.h
+@@ -24,7 +24,7 @@ inline std::vector<float> ReadWeights(const std::string&path){std::ifstream test
+ struct Allocation {Api*api;void*ptr{};size_t bytes,capacity;bool owned=true;Allocation(Api&a,size_t n):api(&a),bytes(n),capacity(n){if(!n)throw std::runtime_error("zero HIP allocation");a.Check(a.hipMalloc(&ptr,n),"hipMalloc");}Allocation(Api&a,void*p,size_t n):api(&a),ptr(p),bytes(n),capacity(n),owned(false){}~Allocation(){if(ptr&&owned){api->hipDeviceSynchronize();api->hipFree(ptr);}}};
+ using Tensor=std::shared_ptr<Allocation>;
+ inline std::set<U> ParseSkipBlocks(const std::string&s){std::set<U>out;size_t p=0;while(p<s.size()){size_t q=s.find(',',p);if(q==std::string::npos)q=s.size();auto word=s.substr(p,q-p);size_t used=0;unsigned long b=std::stoul(word,&used);if(used!=word.size()||!((b>=5&&b<=30)||(b>=40&&b<=65)))throw std::runtime_error("unsupported skipped residual block");out.insert(U(b));p=q+1;}return out;}
+-struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7,tiled_ffn_min_c=64,vit_weight_mask=0;bool direct_prefix_input=false,prefix_fused=false,mh_input_mapped=false,mh_project_crop=false,vit_qkv_blocked=false,split_project_blocked=false,split_mix_blocked=false,split_ffn_fused=false,fused_ffn_project=false,post_merge_fold=false,pre_main8=false,raw_chain=false,elide_identity_shift=false,fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false,packed_c32=false,fp8_normalized=false,fp8_ffn=false,fp8_av=false,fp8_deep=false,fp8_middle=false,half_c32=false,crop_c32=false,fused_qkv_norm=false,vit_pack_input=false,vit_contract_blocked=false,vit_blocked=false,vit_split_k=false,mapped_c32=false,fused_mh_ffn=false,tiled_mh_ffn=false,graph=false;};
++struct Options {std::set<U>skip_blocks;U width=512,height=512,seed=0,post_shift=0;std::string assets,modules,dump_dir,dump_only;unsigned runtime=7,tiled_ffn_min_c=64,vit_weight_mask=0;bool qkv_pair_group=false,direct_prefix_input=false,prefix_fused=false,mh_input_mapped=false,mh_project_crop=false,vit_qkv_blocked=false,split_project_blocked=false,split_mix_blocked=false,split_ffn_fused=false,fused_ffn_project=false,post_merge_fold=false,pre_main8=false,raw_chain=false,elide_identity_shift=false,fast_vit=false,wmma=false,pooled=false,profile=false,wall_profile=false,wave=false,tiled=false,fast_c32=false,fused_c32=false,fast_mh=false,fast_deep=false,fast_prefix=false,mh_wave=false,fused_ffn=false,fused_mh=false,packed_weights=false,packed_c32=false,fp8_normalized=false,fp8_ffn=false,fp8_av=false,fp8_deep=false,fp8_middle=false,half_c32=false,crop_c32=false,fused_qkv_norm=false,vit_pack_input=false,vit_contract_blocked=false,vit_blocked=false,vit_split_k=false,mapped_c32=false,fused_mh_ffn=false,tiled_mh_ffn=false,graph=false;};
+ class Network {
+ #ifdef DLSS5_LAYER_BENCH
+  friend struct LayerBenchmark;
+@@ -131,7 +131,7 @@ class Network {
+     std::string shape=kernel;if(shape.size()>4&&shape.substr(shape.size()-4)=="_fp8")shape.resize(shape.size()-4);
+     bool project=shape=="mh_attention_project_fast_matrix"||shape=="mh_attention_project_fast_scalar";
+     U c=project?integer(std::get<sizeof...(A)-2>(tuple)):integer(std::get<sizeof...(A)-1>(tuple));U cols=c*(shape=="mh_ffn_expand_fast"?4:(shape=="mh_qkv_fast"||shape=="mh_qkv_normalize_fused")?3:1);
+-    if(!cols)throw std::runtime_error("MH fast channel ABI");groups=((count/cols+63)/64)*((cols+63)/64);threads=512;
++    if(!cols)throw std::runtime_error("MH fast channel ABI");groups=((count/cols+63)/64)*((cols+63)/64);threads=(kernel=="mh_qkv_normalize_fused"&&opt.qkv_pair_group)?256:512;
+    }
+   }
+   if(module=="c32_fused"||module=="c32_fused_ffn"||module=="mh_fused"){groups=count;threads=128;}
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 348c3ef..60e7436 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -316,8 +316,30 @@ TILE void mh_ffn_contract_fast_fp8_out(const float* hidden,const float* weights,
+ TILE void mh_ffn_project_fast_fp8(const float* middle,const float* feature,const float* weights,float* output,uint tokens,uint channels){if(valid_c(channels))fast_dense<true,false>(middle,feature,weights,output,tokens,channels,channels,8*channels*channels,9*channels*channels,4);}
+ 
+ // Full FP32 QKV accumulator is normalized on chip, preserving sequential sums.
+-TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tokens,uint channels){
+-#if HIP_QKV_SPECIALIZE
++#ifdef HIP_QKV_PAIR_GROUP
++template<uint C> DEV void qkv_pair_group(const float*in,const float*w,unsigned char*out,uint M,uint*sa,uint*sb,float*tile,float*inverse){
++ constexpr uint N=3*C;uint t=__builtin_amdgcn_workitem_id_x(),l=t%32,rc=l&15,gr=l>>4,wave=t/32,wm=wave/2,wn=(wave%2)*2,block=__builtin_amdgcn_workgroup_id_x(),mr=block/(N/64)*64,nc=block%(N/64)*64;
++ f8 acc[2]{};
++ for(uint k0=0;k0<C;k0+=32){for(uint load=t;load<512;load+=256){uint row=load/8,k=k0+(load%8)*4,p=mr+row,n=nc+row;sa[row*9+load%8]=p<M?pack4(in[p*C+k],in[p*C+k+1],in[p*C+k+2],in[p*C+k+3]):0u;
++#ifdef HIP_PREPACKED_WEIGHTS
++ sb[row*9+load%8]=n<N?reinterpret_cast<const uint*>(w)[(n*C+k)/4]:0u;
++#else
++ sb[row*9+load%8]=n<N?pack4(w[n*C+k],w[n*C+k+1],w[n*C+k+2],w[n*C+k+3]):0u;
++#endif
++ }__builtin_amdgcn_s_barrier();for(uint half=0;half<2;half++){uint k=half*4+gr*2;i2 a={int(sa[(wm*16+rc)*9+k]),int(sa[(wm*16+rc)*9+k+1])};for(uint j=0;j<2;j++){i2 b={int(sb[((wn+j)*16+rc)*9+k]),int(sb[((wn+j)*16+rc)*9+k+1])};acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[j]);}}__builtin_amdgcn_s_barrier();}
++ for(uint j=0;j<2;j++)for(uint e=0;e<8;e++)tile[(wm*16+gr*8+e)*65+(wn+j)*16+rc]=acc[j][e];__builtin_amdgcn_s_barrier();
++ if(t<128){uint row=t%64,h=t/64,n=nc+h*32,part=n/C,head=(n%C)/32;float inv=1.f;if(mr+row<M&&n<N&&part<2){float ss=0;for(uint k=0;k<32;k++){float v=tile[row*65+h*32+k];ss+=v*v;}inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?w[4*C*C+(C/32)*4096+head]:1.f);}inverse[h*64+row]=inv;}
++ __builtin_amdgcn_s_barrier();for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){uint row=wm*16+gr*8+e,p=mr+row,n=nc+(wn+j)*16+rc;if(p<M&&n<N)out[p*N+n]=static_cast<unsigned char>(q8(F(acc[j][e]*inverse[((wn+j)/2)*64+row])));}
++}
++#define QKV_TILE KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
++#else
++#define QKV_TILE TILE
++#endif
++QKV_TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tokens,uint channels){
++#ifdef HIP_QKV_PAIR_GROUP
++ __attribute__((shared)) uint sa[64*9],sb[64*9];__attribute__((shared)) float tile[64*65],inverse[128];
++ switch(channels){case 64:qkv_pair_group<64>(in,w,reinterpret_cast<unsigned char*>(out),tokens,sa,sb,tile,inverse);break;case 128:qkv_pair_group<128>(in,w,reinterpret_cast<unsigned char*>(out),tokens,sa,sb,tile,inverse);break;case 256:qkv_pair_group<256>(in,w,reinterpret_cast<unsigned char*>(out),tokens,sa,sb,tile,inverse);break;case 512:qkv_pair_group<512>(in,w,reinterpret_cast<unsigned char*>(out),tokens,sa,sb,tile,inverse);break;}
++#elif HIP_QKV_SPECIALIZE
+  switch(channels){
+  case 64:fast_dense<false,false,true>(in,in,w,out,tokens,192,64,0,~0u,2);break;
+  case 128:fast_dense<false,false,true>(in,in,w,out,tokens,384,128,0,~0u,2);break;
+diff --git a/src/native_hip_network.h b/src/native_hip_network.h
+index 36bc126..8cedde8 100644
+--- a/src/native_hip_network.h
++++ b/src/native_hip_network.h
+@@ -18,6 +18,7 @@ public:
+   if(const char*v=std::getenv("DLSS5_HIP_GRAPH")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("DLSS5_HIP_GRAPH must be 0 or 1");o.graph=!strcmp(v,"1");}
+   if(const char*v=std::getenv("DLSS5_HIP_PREFIX_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("prefix fused must be 0 or 1");o.prefix_fused=!strcmp(v,"1");}
+   if(const char*v=std::getenv("DLSS5_HIP_DIRECT_INPUT")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("direct input must be 0 or 1");o.direct_prefix_input=!strcmp(v,"1");}
++  if(const char*v=std::getenv("DLSS5_HIP_QKV_PAIR_GROUP")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("QKV pair flag");o.qkv_pair_group=!strcmp(v,"1");}
+   const char*modules=std::getenv("DLSS5_HIP_MODULES");o.modules=modules&&*modules?std::string(modules):Utf8(directory+L"\\HIP");bridge.Create(q,o,noise);
+   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-hip.txt").c_str(),L"ab")){fprintf(f,"pid=%lu runtime=7 fast=%u packed_weights=%u packed_c32=%u fp8_normalized=%u fp8_ffn=%u fp8_av=%u fp8_deep=%u fp8_middle=%u half_c32=%u crop_c32=%u fused_qkv_norm=%u fused_mh_ffn=%u tiled_mh_ffn=%u tiled_ffn_min_c=%u mapped_c32=%u vit_blocked=%u vit_contract_blocked=%u vit_split_k=%u vit_weight_mask=%u vit_pack_input=%u elide_identity_shift=%u direct_prefix_input=%u prefix_fused=%u mh_input_mapped=%u mh_project_crop=%u vit_qkv_blocked=%u split_project_blocked=%u split_mix_blocked=%u split_ffn_fused=%u fused_ffn_project=%u post_merge_fold=%u pre_main8=%u raw_chain=%u graph=%u processing=%ux%u modules=%s\n",GetCurrentProcessId(),unsigned(fast),unsigned(o.packed_weights),unsigned(o.packed_c32),unsigned(o.fp8_normalized),unsigned(o.fp8_ffn),unsigned(o.fp8_av),unsigned(o.fp8_deep),unsigned(o.fp8_middle),unsigned(o.half_c32),unsigned(o.crop_c32),unsigned(o.fused_qkv_norm),unsigned(o.fused_mh_ffn),unsigned(o.tiled_mh_ffn),o.tiled_ffn_min_c,unsigned(o.mapped_c32),unsigned(o.vit_blocked),unsigned(o.vit_contract_blocked),unsigned(o.vit_split_k),o.vit_weight_mask,unsigned(o.vit_pack_input),unsigned(o.elide_identity_shift),unsigned(o.direct_prefix_input),unsigned(o.prefix_fused),unsigned(o.mh_input_mapped),unsigned(o.mh_project_crop),unsigned(o.vit_qkv_blocked),unsigned(o.split_project_blocked),unsigned(o.split_mix_blocked),unsigned(o.split_ffn_fused),unsigned(o.fused_ffn_project),unsigned(o.post_merge_fold),unsigned(o.pre_main8),unsigned(o.raw_chain),unsigned(o.graph),o.width,o.height,o.modules.c_str());fclose(f);}
+ color=rgb;color->AddRef();history=temporal;if(history)history->AddRef();
