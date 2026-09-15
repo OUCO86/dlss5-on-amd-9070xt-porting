@@ -1329,3 +1329,9 @@ C32生产候选仅在matrix residual分支按输出坐标解码packed输入，�
 连续40帧ABBA：基线25.245/25.306ms，候选24.850/24.895ms；四轮最终FEEA9EF3…匹配、首尾有限。随后40帧全读回和24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…。全检25.110/25.238ms仅记录，不与连续负载混算。
 
 probe、host及内核编译通过。multihead-fast-padded-wave-packed模块SHA068617327EE1706D75AAAC00D783F413B2571421633DCF974199DE5AFC923832；24模块固定mh-scalar-diagonal-release-modules，含C32 FFN/V暂存复用；配套DLL仍3894351c…无需修改，未部署。游戏仍3894351c…+prefix-fused。脚本test-mh-scalar-diagonal.ps1，日志release/HIP/mh-diagonal-build/test.log和mh-scalar-diagonal-build/test/full/reset.log。生产候选编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_MH_SCALAR_DIAGONAL=1；probe拼接C32公共函数及mh_diagonal_probe.hip。
+
+
+### 2026-09-15：部署C32暂存复用及MH标量残差候选
+部署脚本确认游戏退出，安装已编译native-prefix-fused.addon64（3894351ccba9080524095cd5c87644806224c62f071250ead3c3e18526283f9b）和mh-scalar-diagonal-release-modules的24个HSACO，逐hash校验通过。DLL与上版相同，内核增加C32 FFN/V暂存复用及MH同序标量残差，不包含未采用的C32标量残差或occupancy提示。维持900P/async1。
+
+旧DLL/模块/flags/标记完整备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-mh-scalar-diagonal；回退使用部署脚本-Restore -BackupName before-mh-scalar-diagonal（游戏须退出）。当前候选连续负载约24.85–24.90ms，新实机FPS待验证，未宣称追平HLSL。游戏当前模块已更新，不再是原prefix-fused模块集合。
