@@ -1457,3 +1457,13 @@ profile-current.ps1改用固定融合模块并显式启用grouped-mh-contract/ff
 COMGR与benchmark编译通过；同新模块、连续40帧ABBA：基线22.906/22.943ms，映射22.942/22.976ms，最终FEEA9EF3…一致、首尾有限。未见收益，未扩大到全帧/reset验证，生产源码恢复，游戏仍801cfc5c…融合版。
 
 实验保存Development/HIP/experiments/split-mapped.patch及test-split-mapped.ps1，须应用补丁编译benchmark_split_mapped.exe并以HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1编译deep_fast.hip为split-mapped.hsaco；测试脚本将其放入独立模块目录deep_fast-packed.hsaco。日志release/HIP/split-mapped-test.log。
+
+
+### 2026-09-16：ViT QKV投影与归一化融合
+新增vit_qkv_project_normalize_fused：沿用每wave16token×32channel双输出投影，Q/K将float暂存在16×33 LDS，再用原来的两次F16 WMMA归约平方和；保留平方后转F16、rsq、Q scale和最终F顺序，V直接F。省去8次独立归一化调度和全局QKV float中间缓冲。HIP_FAST默认启用，DLSS5_HIP_VIT_QKV_FUSED=0/1覆盖；reference CLI --vit-qkv-fused，要求fast_deep。
+
+同新模块连续40帧ABBA：基线22.961/22.917ms，融合22.810/22.801ms，最终FEEA9EF3…匹配、首尾有限。8个ViT层31–38 × 零输入/两种幅度混合正负输入，共24组32token中间结果逐float位一致，无非法值。40帧全检及24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…；seed123/history参考输出匹配75b62d2f…。全检读回频率不同，其22.669/22.657ms不作为额外提速证据。
+
+完整DLL编译成功：release/HIP/native-vit-qkv-fused.addon64 SHA256=13d4dc10e6507eb05120b056a6710498e4922a53e699dd6878be2674614ae821；固定24模块vit-qkv-fused-release-modules，deep_fast-packed模块SHA256=5AFA30B02A10269FD6AE69D68DAD542C5432150E58EC5ACC63D54A48BFC0FEE7。未部署，游戏仍801cfc5c… FFN/QKV融合版。
+
+脚本test-vit-qkv-fused.ps1、test_vit_qkv.cpp、validate-vit-qkv.ps1、validate-vit-qkv-history.ps1；日志release/HIP/vit-qkv-fused-test.log、vit-qkv-validation.log。编译deep_fast.hip时HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1。
