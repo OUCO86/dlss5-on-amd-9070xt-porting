@@ -1865,3 +1865,11 @@ COMGR编译通过；连续40帧ABBA基线19.340/19.337ms，候选19.860/19.822ms
 COMGR编译通过；连续40帧ABBA基线19.325/19.365ms，候选19.300/19.328ms，最终FEEA9EF3…一致、首尾有限。约0.03ms差异，未扩大全帧/reset，不纳入生产，源码恢复。游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
 
 补丁experiments/c32-expand-pair.patch、test-c32-expand-pair.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块c32_fused_ffn_attention-packed.hsaco。日志release/HIP/c32-expand-pair-test.log。
+
+
+### 2026-09-16：C512投影同时写byte供QKV使用无稳定收益
+独立split_projection_blocked_dual保留float残差输出，同时写额外FP8 byte缓冲；c512_qkv_normalize_bytein使用fast_dense<true,false,true>直接读取字节，host新增内部可选byte_input并仅兼容C512快速路径启用。没有替换float残差或改变QKV矩阵/归一化。
+
+两个COMGR模块及专用benchmark编译通过；连续40帧ABBA基线19.330/19.371ms，候选19.379/19.280ms，最终FEEA9EF3…一致、首尾有限。无稳定收益，未扩大全帧/reset，不采用，源码恢复，游戏仍c8842686…+ffn-qkv-round-byte-release-modules。
+
+补丁experiments/c512-qkv-byte.patch、test-c512-qkv-byte.ps1；配套benchmark_c512_qkv_byte.exe，deep_fast.hip和multihead_fast_padded.hip各编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1为c512-qkv-byte-deep/mh.hsaco，分别替换独立实验目录deep_fast-packed与multihead-fast-padded-wave-packed模块。日志release/HIP/c512-qkv-byte-test.log。
