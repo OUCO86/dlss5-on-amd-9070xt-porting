@@ -1273,3 +1273,11 @@ HIP_FAST默认prefix_fused=true；DLSS5_HIP_PREFIX_FUSED=0/1可覆盖，referenc
 部署脚本确认游戏退出，安装native-prefix-fused.addon64（SHA3894351ccba9080524095cd5c87644806224c62f071250ead3c3e18526283f9b）及prefix-fused-release-modules全部24个HSACO，逐hash校验通过。再次确认900P/HIP_FAST1/ASYNC_SUBMIT1，prefix_fast为F9AF53C5…匹配，未设置覆盖默认的PREFIX_FUSED/INLINE字段。默认采用特征+投影融合，不含完全内联C32实验，含FFN input pack4。
 
 旧b4e46e15… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-prefix-fused。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-prefix-fused（游戏须退出）。本次未启动游戏、未验证实机FPS；连续负载约25.36ms仅是离线性能。当前游戏安装已更新为3894351c…，不是b4e46e15；最后明确实机900P30FPS仍对应更早13c7版。
+
+
+### 2026-09-15：前置融合核硬件RTZ实验无明确收益
+测试用HIP_PREFIX_RTZ_ISA将prefix的有限值Hrtz替换为v_cvt_pkrtz_f16_f32+v_cvt_f32_f16，非有限输入仍先按原实现返回x；不改变其他矩阵RNE转换。COMGR/gfx1201编译通过。
+
+同一连续负载40帧ABBA：基线25.392/25.389ms，候选25.370/25.383ms，四轮最终FEEA9EF3…匹配且首尾有限。收益约0.01ms，不作稳定提速；未另做全域转换或全帧/reset验证，生产源码已恢复。补丁experiments/prefix-rtz.patch，test-prefix-rtz.ps1；编译时定义HIP_PREFIX_RTZ_ISA=1，日志release/HIP/prefix-rtz-build/test.log。
+
+当前游戏及固定候选仍3894351c…+prefix-fused-release-modules，未改驱动/游戏配置。
