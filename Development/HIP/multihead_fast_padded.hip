@@ -228,3 +228,20 @@ void mh_qkv_normalize_fast_wave(const float* qkv,const float* weights,float* nor
   normalized[offset]=F(v*inv);
  }
 }
+
+// Byte-output ABI: same arithmetic, one byte per normalized element.
+KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
+void mh_qkv_normalize_fast_wave_fp8(const float* qkv,const float* weights,unsigned char* normalized,uint tokens,uint channels){
+ uint t=__builtin_amdgcn_workitem_id_x(),row=__builtin_amdgcn_workgroup_id_x()*8+t/32,c=t%32,heads=channels/32;
+ if(!valid_attn(channels)||row>=tokens*heads)return;
+ uint p=row/heads,head=row%heads,scale=4*channels*channels+heads*4096;
+ for(uint part=0;part<3;part++){
+  uint offset=(p*3+part)*channels+head*32+c;float v=qkv[offset],inv=1.f;
+  if(part<2){float sq=v*v,ss=0.f;
+   #pragma unroll
+   for(uint j=0;j<32;j++)ss+=value(__builtin_amdgcn_readlane(bits(sq),j));
+   inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?weights[scale+head]:1.f);
+  }
+  normalized[offset]=static_cast<unsigned char>(q8(F(v*inv)));
+ }
+}

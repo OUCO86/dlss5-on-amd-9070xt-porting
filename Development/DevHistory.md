@@ -780,3 +780,11 @@ C32 attention/boundary、deep、MH fast/padded/fused、C32 fused的F(float)新�
 合并两项seed123对照：61.1815→58.990ms，四轮SHA75b62d2f…一致；显式传入input900.rgba32f作为history的对照62.516→60.1915ms，同样一致（这组fixture最终hash与无history相同，不据此宣称动态时序画质验收）。各ABBA四轮6次、去cold，每方案10hot；均离线墙钟，不是游戏FPS。尝试amdgpu_waves_per_eu(4)生成指令与原版完全相同，VGPR158、private0、LDS19712，不保留该提示。
 
 HIP DLL编译通过，release/HIP/native-conversion-packed.addon64 SHA256 888fe40b638f7ffbd8194a9e40ae6aa92fa32c21f01fec8a4597e32a69d2413e。游戏安装未替换。候选模块在远端hip-backend/conversion-modules；基线conversion-baseline含上一轮C32 RTZ。测试日志release/HIP/conversion-network.log、c32-packed-network.log、conversion-packed-seed123.log、conversion-packed-history.log、fp8-conversion-probe.log。
+
+### 2026-09-15 15:52：MH归一化中间张量改为FP8字节
+
+新增导出mh_qkv_normalize_fast_wave_fp8与mh_attention_fused_fp8：归一化保持原32通道顺序求和、尺度和量化结果，直接写FP8字节；融合attention直接读字节进共享内存，不再读取f32并重新打包。norm张量有效分配字节数降为原1/4，其他张量分配规则不变；池总容量不保证同比下降。保留原f32导出。--fp8-normalized显式要求fast_mh+mh_wave+fused_mh，否则初始化拒绝，避免生产者消费者ABI混用。
+
+两模块COMGR/gfx1201编译成功。正常900离线ABBA四轮各6次、排除cold，各方案10hot：基线58.8955ms、byte55.3815ms，约5.97%减少；四轮最终SHA256均7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d。seed123加显式history=input900.rgba32f对照60.177→56.7405ms，四轮SHA均75b62d2f36b6861b1536ec06b087c3ddb8850f4cdf810e734e16e2bc0223c3f8。这组history fixture的hash与之前无history相同，仅作路径一致性测试，不宣称动态游戏时序验收。日志release/HIP/byte-normalized.log、byte-normalized-history.log。
+
+HIP_FAST默认启用fp8_normalized，日志加状态字段。无需增加模块数，但必须重编含新导出的multihead-fast-padded-wave-packed与multihead_fused_attention。完整HIP DLL编译通过：release/HIP/native-byte-normalized.addon64，SHA256 9026e1ce4428c5ec95e7731dc44ddc8407646e42299a53fa021347fbb5f8cd46。候选模块在远端hip-backend/byte-modules；安装中的DLL与模块未替换。

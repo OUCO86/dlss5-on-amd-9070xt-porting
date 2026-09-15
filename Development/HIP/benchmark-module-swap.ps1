@@ -6,6 +6,8 @@ param([string]$Root='D:\DLSSNR-Lab\hip-backend',
  [string]$HistoryFile='',
  [string]$Runner='reference_network.exe',
  [switch]$CandidatePackedC32,
+ [switch]$BothPackedC32,
+ [switch]$CandidateFp8Normalized,
  [string]$BaselineModules='',
  [string]$CandidateModules='',
  [string]$Tag='module-swap-test',
@@ -26,7 +28,8 @@ foreach($round in 0..3){
   Copy-Item (Join-Path $sourceDir '*.hsaco') $modules -Force
  }else{Copy-Item (Join-Path $Root $source) (Join-Path $modules $Module) -Force}
  $output=Join-Path $work "$round-$variant.f32"
- $extra=@();if($HistoryFile){$extra+=@('--history',$HistoryFile)};if($CandidatePackedC32 -and $variant -eq 'candidate'){$extra+='--packed-c32'}
+ $extra=@();if($HistoryFile){$extra+=@('--history',$HistoryFile)};if($BothPackedC32 -or ($CandidatePackedC32 -and $variant -eq 'candidate')){$extra+='--packed-c32'}
+ if($CandidateFp8Normalized -and $variant -eq 'candidate'){$extra+='--fp8-normalized'}
  $log=& (Join-Path $Root $Runner) $Assets $modules "$Root\input900.rgba32f" "$Assets\noise.f32" $output --900 --wmma --wave --tiled --pooled --fused-c32 --fused-ffn --fused-mh --fast-mh --mh-wave --fast-deep --fast-prefix --skip-blocks 42,43,46 --packed-weights --seed $Seed --repeat 6 @extra 2>&1
  if($LASTEXITCODE -ne 0){throw ($log -join "
 ")}

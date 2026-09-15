@@ -104,3 +104,17 @@ original offsets. Normal and packed modules must not be interchanged.
 Combined offline ABBA: 61.1815→58.990ms at seed123 with equal output hashes.
 The DLL compiles, but these changes have not been installed into the game.
 See DevHistory for separate conversion/packing measurements and limitations.
+
+### Byte-sized normalized QKV (2026-09-15)
+
+--fp8-normalized requires fast MH, wave normalization and fused attention.
+The producer mh_qkv_normalize_fast_wave_fp8 writes one E4M3 byte per element;
+mh_attention_fused_fp8 consumes those bytes directly. Original raster
+[pixel][Q,K,V][channel] indices and arithmetic are preserved. Only this tensor's
+allocation is quartered; the pool's total capacity need not fall by the same
+factor. Original float exports remain available.
+
+HIP_FAST enables this path. Rebuild both multihead-fast-padded-wave-packed and
+multihead_fused_attention: an older 24-module set lacks the new exports.
+900 offline ABBA: 58.8955→55.3815ms with identical final RGB; explicit history
+fixture: 60.177→56.7405ms, also identical. These are not game FPS measurements.
