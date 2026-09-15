@@ -1659,3 +1659,11 @@ COMGR资源元数据c64_attention_project：LDS30720bytes、VGPR94、SGPR30、pr
 部署脚本确认游戏退出，安装native-c128-attn-project.addon64（SHAae66d4c8e3730424c41a0a935fb9668465547aa1d15b848d4712209eb0d681b6）与c128-attn-project-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c128-attn-project。实际游戏新FPS未测。
 
 current比较/profile脚本切换固定C128融合模块和benchmark_c128_attn_project.exe，逐层比较工具重新编译上传。连续40帧edges-only ABBA：HLSL16.799/16.794ms，HIP21.117/21.119ms，各自golden匹配、首尾有限；差距约4.32ms，仍未达目标。日志release/HIP/backend-c128-fused-current.log。
+
+
+### 2026-09-16：C128两头分批复用工作区更慢，撤回
+实验将四head同时处理改为两head×两批，256线程，共用2head ex/packed工作区，AV独立64×132byte跨批保存，每批末同步后复用工作区；投影每wave负责16token×64通道四片结果。COMGR与专用benchmark编译通过。
+
+资源LDS61440→39168bytes，VGPR118→151，private segment0→160bytes，metadata VGPR/SGPR spill count仍0，不能把private segment直接等同寄存器溢出计数。连续40帧ABBA基线21.092/21.109ms，候选21.399/21.324ms，最终FEEA9EF3…匹配、首尾有限。更慢，不采用，未扩大全帧/reset，源码恢复，游戏仍ae66d4c8…+c128-attn-project-release-modules。
+
+补丁experiments/c128-batched-heads.patch、test-c128-batched-heads.ps1；需配套256线程host编译benchmark_c128_batched_heads.exe及HIP_ISA_HALF=1内核，目标multihead_fused_attention.hsaco。日志release/HIP/c128-batched-heads-test.log。
