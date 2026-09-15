@@ -1653,3 +1653,9 @@ COMGR资源元数据c64_attention_project：LDS30720bytes、VGPR94、SGPR30、pr
 12个C128块9–14/56–61 × post0/3/4 × 有无crop共72组融合前后逐float位一致，无非法值。日志release/HIP/c128-attn-project-validation.log。完整DLL编译成功：release/HIP/native-c128-attn-project.addon64 SHAae66d4c8e3730424c41a0a935fb9668465547aa1d15b848d4712209eb0d681b6；固定24模块c128-attn-project-release-modules，MH attention模块SHA1B307FB5DC7036E396ECBCCCA5A978B435B6A79479DA302CD5F16CE4F967523E。
 
 本轮未部署，游戏仍C64融合2d8d1db1…+c64-attn-project-release-modules。约0.2ms收益保留，目标尚未达到HLSL水平。
+
+
+### 2026-09-16：部署C128融合并刷新基线
+部署脚本确认游戏退出，安装native-c128-attn-project.addon64（SHAae66d4c8e3730424c41a0a935fb9668465547aa1d15b848d4712209eb0d681b6）与c128-attn-project-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c128-attn-project。实际游戏新FPS未测。
+
+current比较/profile脚本切换固定C128融合模块和benchmark_c128_attn_project.exe，逐层比较工具重新编译上传。连续40帧edges-only ABBA：HLSL16.799/16.794ms，HIP21.117/21.119ms，各自golden匹配、首尾有限；差距约4.32ms，仍未达目标。日志release/HIP/backend-c128-fused-current.log。
