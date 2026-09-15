@@ -1049,3 +1049,11 @@ multihead_fused_attention的两个byte输入入口把normalized→LDS的逐byte�
 COMGR/gfx1201编译通过。正常900 ABBA4轮各6次去cold31.5085→31.1215ms，seed123/history32.871→32.549ms。各组四轮输出分别保持7b959143…/75b62d2f…。HDR异步40帧30.047ms/FEEA9EF3…，24帧每8帧reset29.932ms/22C171FC…，全有限；HDR为正确性回归，不与异轮数字直接相减。
 
 multihead_fused_attention模块SHA3628F07C3F4A1F3926B712BCC52DD34859C85F926B38B02373355580F0272BB2；24模块固定mh-input-dword-release-modules（包含QKV row-sum与C32 merge-fold）。配套DLL仍native-post-merge.addon64/a7b7521b…；未部署，游戏仍5ab7d7d3…+C32 inputDWORD，用户900P26～27FPS。脚本test-mh-input-dword.ps1，日志release/HIP/mh-input-dword-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_MH_INPUT_DWORD=1。
+
+
+### 2026-09-15：MH V转置与直接F-byte输出实验归档
+V转置候选在载入时将V写为[channel][token]、行跨度68，保留Q/K布局；V从packed偏移4608开始、末端6784<6912，概率区64×68=4352，不重叠。AV阶段B操作数可连续memcpy8。正常900 ABBA4轮各6次去cold31.155→31.198ms，四轮RGB7b959143…一致，但无收益，已撤回。补丁experiments/mh-transpose-v.patch、test-mh-transpose-v.ps1；编译定义HIP_ISA_HALF=1、HIP_MH_TRANSPOSE_V=1。
+
+另独立试encoded_F直接返回FP8 byte，代替fp8(F(acc))的转换/还原/再转换；显式保留输入正负零归正零、带符号非有限/超范围饱和到448，普通值用原转换指令。正常900 ABBA同条件31.185→31.0765ms，四轮RGB一致；差距约0.1ms，不足认定稳定收益，未默认、未进行历史/HDR或全域转换证明。生产源码已恢复。补丁experiments/mh-direct-fbyte.patch、test-mh-direct-fbyte.ps1；编译定义HIP_ISA_HALF=1、HIP_MH_DIRECT_FBYTE=1。
+
+两候选COMGR/gfx1201编译通过；日志release/HIP/mh-transpose-v-build/test.log、mh-direct-fbyte-build/test.log。最优固定候选仍mh-input-dword-release-modules+a7b7521b DLL；游戏未变，仍5ab7d7d3…+C32 inputDWORD，用户900P26～27FPS。
