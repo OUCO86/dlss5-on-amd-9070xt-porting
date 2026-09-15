@@ -1311,3 +1311,11 @@ COMGR产物LDS17664→15360byte；普通half VGPR207→190，mapped214→201，p
 基于已验证c32-alias-ffn候选，给128线程入口增加amdgpu_waves_per_eu(8)。COMGR编译通过；资源仍为LDS15360、private0，普通half VGPR190、mapped/chain201、post-merge170，未改变配置。
 
 连续40帧ABBA：基线25.296/25.340ms，候选25.314/25.336ms，最终FEEA9EF3…一致且首尾有限，无收益。未进行全帧/reset，不采用；生产源码未加入该提示。补丁experiments/c32-alias-waves8.patch，test-c32-alias-waves8.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。日志release/HIP/c32-alias-waves8-build/test.log。固定候选仍c32-alias-ffn-release-modules+3894351c DLL，游戏仍prefix-fused模块。
+
+
+### 2026-09-15：对角残差独立GPU对照与C32试验
+新增diagonal_probe.hip和test_diagonal.cpp。读取block2/3/4/67/68/69 FFN的192个真实尺度，每尺度遍历254个有限FP8编码，共48768个组合，比较原3段×2个K16 WMMA与保留零项位置的6次标量FMA；全部bitdiff0。测试tile内各输入使用相同FP8编码，不是任意混合符号矩阵的穷举证明；同一case比较全部两列块/行结果。编译probe时将其附在c32_fused_ffn_attention.hip后，定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1。
+
+C32生产候选仅在matrix residual分支按输出坐标解码packed输入，保留scale_piece及三段顺序、kt零项位置，以FMA替换WMMA。连续40帧ABBA：基线25.252/25.327ms，候选25.204/25.213ms，最终FEEA9EF3…一致、首尾有限。收益不足0.1ms且基线波动相近，未进一步全帧/reset验证，生产源码恢复，不默认。
+
+补丁experiments/c32-scalar-diagonal.patch，test-c32-scalar-diagonal.ps1；候选编译额外定义HIP_C32_SCALAR_DIAGONAL=1。日志release/HIP/diagonal-build/test.log、c32-scalar-diagonal-build/test.log。独立probe和实验内核均编译并运行成功。游戏仍3894351c…+prefix-fused，最优未部署模块仍c32-alias-ffn-release-modules。
