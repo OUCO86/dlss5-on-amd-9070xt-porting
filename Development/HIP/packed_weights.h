@@ -16,6 +16,9 @@ inline uint8_t ExactWeightFp8(float value){
  if(exponent<1||exponent>15||(a&0xfffffu)||(exponent==15&&mantissa==7))throw std::runtime_error("matrix weight not exact finite FP8");
  return uint8_t(sign|(uint8_t(exponent)<<3)|mantissa);
 }
+// Lossless binary16 encoding; reject any weight that would require rounding.
+inline uint16_t ExactWeightHalf(float v){uint32_t b;std::memcpy(&b,&v,4);uint32_t a=b&0x7fffffffu;uint16_t sign=uint16_t((b>>16)&0x8000u);if(!a)return sign;if(a>=0x7f800000u)throw std::runtime_error("nonfinite half weight");int e=int(a>>23)-127;if(e>15)throw std::runtime_error("half weight overflow");if(e>=-14){if(a&8191u)throw std::runtime_error("weight not exact half");return uint16_t(sign|((e+15)<<10)|((a>>13)&1023u));}float x=v<0?-v:v,q=x*16777216.f;if(q<1||q>1023||q!=float(uint32_t(q)))throw std::runtime_error("weight not exact half subnormal");return uint16_t(sign|uint16_t(q));}
+inline void PackHalfMatrix(std::vector<float>&v,size_t count){if(count>v.size())throw std::runtime_error("half matrix shape");auto*bytes=reinterpret_cast<uint8_t*>(v.data());for(size_t i=0;i<count;i++){uint16_t h=ExactWeightHalf(v[i]);std::memcpy(bytes+i*2,&h,2);}}
 // Preserve float-region offsets for scales/bias and separate matrix regions.
 // Each matrix becomes row-major FP8 at its original starting byte address.
 inline void PackWeightRegions(std::vector<float>&values,const std::vector<std::pair<size_t,size_t>>&regions){

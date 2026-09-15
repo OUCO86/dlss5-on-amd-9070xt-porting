@@ -1749,3 +1749,13 @@ COMGR和专用benchmark编译通过，资源LDS54528bytes、VGPR230、SGPR40、p
 部署脚本确认游戏退出，安装native-split-contract-fp8.addon64（SHA872ac9cf127375cec5c9398cb0c75365f16185204587c07800e7c750975086d0）及split-contract-fp8-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-split-contract-fp8。新版实际游戏FPS尚无反馈。
 
 current比较/profile脚本更新固定模块和benchmark_split_ffn_fp8.exe（已重编译为仅收缩FP8），compare_layers_current.exe重新编译上传。连续40帧edges-only ABBA HLSL16.783/16.799ms，HIP20.341/20.355ms，各自golden匹配、首尾有限；当前差距约3.56ms，目标仍未完成。日志release/HIP/backend-split-contract-current.log。本轮是部署与复核，没有额外内核提速。
+
+
+### 2026-09-16：ViT QKV精确F16权重预打包取得约0.57ms收益
+先检查block31的3145728个矩阵float均可精确F16表示。新增ExactWeightHalf/PackHalfMatrix（拒绝需要舍入、溢出或非有限的值），PackedVitQkvWeight独立@qkv-f16缓存，矩阵压为连续half，末端32个float尺度保持原字节偏移。新vit_qkv_project_normalize_fused_f16weight直接memcpy16bytes到h8，保留F16 WMMA、K16顺序及原归一化。非packed沿用旧fused入口。
+
+连续40帧ABBA基线20.250/20.336ms，候选19.751/19.693ms，最终FEEA9EF3…匹配、首尾有限。CPU全部63488个有限half编码（含正负零/次正规）往返一致，3个非精确/超范围样本正确拒绝。8个ViT块×3种输入共24组输出逐位一致、无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…，seed123/history75b62d2f…匹配。全检21.013/20.315ms读回节奏不同，不当连续性能。
+
+完整DLL release/HIP/native-vit-qkv-halfweight.addon64 SHA121042cdfd89492e4dee4b1477142470abdc67b6f678e6617d2952744de34883；固定24模块vit-qkv-halfweight-release-modules，deep_fast-packed模块SHAAB04D407E6A78B429FEAD20CB4D24A8A29BC680AED5D248FD904BA29ECF07627。未部署，游戏仍872ac9cf…+split-contract-fp8-release-modules。
+
+脚本test-vit-qkv-halfweight.ps1、test_vit_qkv_halfweight.cpp、validate-vit-qkv-halfweight*.ps1，日志release/HIP/vit-qkv-halfweight-test.log、vit-qkv-halfweight-validation.log。当前实现仍分配原qw缓存后取half缓存，初始化存储可后续单独检查；未将CPU编码检查扩称所有浮点舍入算法验证。

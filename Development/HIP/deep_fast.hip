@@ -287,3 +287,16 @@ void split_ffn_fused_fp8(const float*in,const float*w,float*out,uint tokens){
  for(uint k=0;k<256;k+=16){i2 a{};__builtin_memcpy(&a,hidden+rc()*260+k+gr()*8,8);uint off=393216+g*4096+((wave*16+rc())*256+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
  for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+g*64+wave*16+rc()]=F(Hrtz(result[e]));
 }
+
+WAVE void vit_qkv_project_normalize_fused_f16weight(const float*in,const float*w,float*out,uint tokens){
+ uint perpart=(tokens/16)*32,part=bid()/perpart,local=bid()%perpart,first=local/32*16,row=local%32*32;if(part>=3)return;f8 acc[2]{};
+ for(uint k=0;k<1024;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*1024+k+gr()*8+e];for(uint j=0;j<2;j++){h8 b{};__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w)+part*1048576+(row+j*16+rc())*1024+k+gr()*8,16);acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
+ __attribute__((shared)) float raw[16*33];
+ f8 sum{};
+ if(part<2){
+  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++)raw[(gr()*8+e)*33+j*16+rc()]=acc[j][e];
+  __builtin_amdgcn_s_barrier();
+  for(uint k=0;k<32;k+=16){h8 x{},ones{};for(uint e=0;e<8;e++){float v=raw[rc()*33+k+gr()*8+e];x[e]=(_Float16)(v*v);ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,ones,sum);}
+ }
+ for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){float scale=part==0?5.65625f*w[3145728+row/32]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=F(v);}
+}
