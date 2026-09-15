@@ -1191,3 +1191,11 @@ fast_dense新增Crop模板，仅改变最终有效区写地址，工作区矩阵
 部署脚本确认游戏退出，安装native-mh-mapped.addon64（SHAb4e46e159746caafe4877e5128af2bb1b5098d89950882ed7a4f750f3ef3a4e0）及mh-input-mapped-release-modules全部24个HSACO，逐hash验证通过。再次确认900P/HIP_FAST1/ASYNC_SUBMIT1、MH packed模块899CDB45…匹配。包含ViT QKV两输出、MH投影crop及普通MH输入映射；不含已归档的C512映射。
 
 旧13c7cd12… DLL/模块/flags/标记备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-mh-mapped，用户900P30FPS属于此旧版。回退用deploy-stellarblade-update.ps1 -Restore -BackupName before-mh-mapped（游戏须退出）。本轮未启动游戏或验证新FPS；离线约27.8ms不等于游戏FPS。当前新安装的画面和性能待试玩。
+
+
+### 2026-09-15：当前两后端对照出现HLSL基准漂移，未认定追平
+compare-current-backends.ps1更新HIP为benchmark_mh_mapped.exe+mh-input-mapped-release-modules，同一HDR/900P/history/async做HLSL/HIP/HIP/HLSL：HLSL26.622、HIP26.341、HIP27.142、HLSL26.520ms。各后端自身hash稳定（HLSL C7C2F49D…、HIP FEEA9EF3…），全有限。HLSL显著慢于此前同条件18.840/18.821ms，不能把参考变慢算作HIP优化收益。
+
+再用更早benchmark_live_hlsl.exe、相同配置和输入复核：26.719ms，hash仍C7C2F49D…。远端compare-hlsl-async-flags.txt与rebind-async-flags.txt逐行Compare-Object无差异。因此新/旧HLSL测试程序都出现当前慢值，未定位根因；可能仍需检查驱动运行状态/频率/资源驻留或其他共享环境因素，不能把猜测当结论。进程检查未见游戏运行；未终止其他进程或更改驱动/全局设置。
+
+日志release/HIP/compare-after-mapped.log和hlsl-old-binary-check.log。当前测得两后端接近只限当下条件，不证明重现历史HLSL18.8ms，也不证明HIP900P或1080P游戏帧率已追平。目标保持未完成。游戏仍b4e46e15…+mh-input-mapped，本轮未部署或修改配置。
