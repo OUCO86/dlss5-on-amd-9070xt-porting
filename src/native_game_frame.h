@@ -220,12 +220,12 @@ public:
   }catch(...){failed=true;throw;}
  }
  void RebindSourceAfterCompletion(ID3D12Resource*source){
-  // ProcessSubmittedFrame holds this mutex through all completion waits. Failed
-  // frames are never eligible: timeout does not mean GPU work has completed.
+  // CPU serialization does not imply GPU completion in deferred mode.
+  // A descriptor rewrite and releasing its old resource require a fence wait.
   std::lock_guard<std::mutex>guard(mutex);
   if(!ready||failed||!source)throw std::runtime_error("frame rebind unavailable");
   if(source==resources->original)return;
-  try{resources->encode.RebindInputAfterCompletion(0,source);if(!resources->overlap)resources->decode.RebindInputAfterCompletion(2,source);resources->original=source;}
+  try{resources->submit.Flush();if(resources->overlap)resources->compute.Flush();resources->encode.RebindInputAfterCompletion(0,source);if(!resources->overlap)resources->decode.RebindInputAfterCompletion(2,source);resources->original=source;}
   catch(...){failed=true;throw;}
  }
  // Synchronizes encode -> network -> FP16 bridge -> decode -> FP16 copy on the
@@ -328,6 +328,7 @@ public:
   try{
    auto&r=*resources;
    const bool use_history=r.temporal&&motion_texture&&!reset&&r.feed.HasHistory();
+   if(use_history&&r.feed.NeedsMotionRebind(motion_texture)){r.submit.Flush();if(r.overlap)r.compute.Flush();}
    {static unsigned every=[]{const wchar_t*v=_wgetenv(L"DLSS5_MAKE_RESIDENT_EVERY");return v?unsigned(wcstoul(v,nullptr,10)):0u;}();static unsigned frames=0;static unsigned fails=0;
     if(every&&++frames%every==0){HRESULT mr=NativeMakeAllResident(r.submit.Device());if(FAILED(mr)&&++fails<=5)if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu make_resident_failed hr=%08x tracked=%u\n",GetCurrentProcessId(),unsigned(mr),unsigned(NativeTrackedResources().size()));fclose(f);}}}
    if(r.overlap){ProcessOverlap(r,target,source_state,target_state,seed,temporal_enabled,motion_texture,reset,use_history);return;}

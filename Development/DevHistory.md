@@ -885,7 +885,7 @@ Zero接受继续部署并优化。确认游戏退出后安装native-c32-vit-bloc
 
 ### 2026-09-15 19:15：用户实机反馈
 
-Zero实测新版900P约17FPS，回忆之前HLSL在游戏1080P设置约37FPS。当前PID26192启动日志确认最新4c062…功能组合、内部processing1600×1024，末批滤镜耗时43.9–51.6ms。旧HLSL备份flags也写NETWORK_HEIGHT=900，但尚未确认是否对应37FPS那次；不把游戏设置分辨率自动等同模型内部计算分辨率。用户报告原样保留，性能差距仍显著。随后确认游戏已退出，再继续离线测试。
+Zero实测新版900P约17FPS，回忆之前HLSL在游戏1080P设置约37FPS。当前PID26192启动日志确认最新4c062…功能组合、内部processing1600×1024，末批处理帧间隔43.9–51.6ms（含游戏调度，不是纯滤镜耗时）。旧HLSL备份flags也写NETWORK_HEIGHT=900，但尚未确认是否对应37FPS那次；不把游戏设置分辨率自动等同模型内部计算分辨率。用户报告原样保留，性能差距仍显著。随后确认游戏已退出，再继续离线测试。
 
 ### 2026-09-15：ViT展开权重重排与输入预打包
 
@@ -896,3 +896,14 @@ Zero实测新版900P约17FPS，回忆之前HLSL在游戏1080P设置约37FPS。�
 完整HDR40帧热中位39.768ms，最终FEEA9EF3…；24帧每8帧历史重置39.514ms，最终22C171FC…，均匹配之前hash且全有限。原生runner/内核/完整DLL编译通过。HIP_FAST默认mask1、pack_input=1，收缩重排保持关闭。小幅离线收益不等于用户17FPS已追上旧37FPS。
 
 候选DLL release/HIP/native-vit-layout.addon64，SHAf0460eb0b00ade0ab26c8d430b3f7203a6be08374321ce0a357c94806a9ee8ff，24模块在远端vit-layout-modules；尚未部署，游戏保持本轮已安装4c0620a5…约40ms版。日志release/HIP/vit-layout-expand/contract/both.log、vit-pack-input.log、vit-layout-combined.log、vit-layout-combined-history.log、vit-layout-hdr.log、vit-layout-reset.log。基准脚本新增轮次结束时的游戏进程检查，若游戏启动则丢弃受干扰计时。
+
+
+### 2026-09-15：修复异步颜色／运动描述符重绑竞态
+
+RebindSourceAfterCompletion原来只持有CPU锁，在deferred提交尚未完成时就原位重写SRV并释放旧resource；TemporalFeed轮换motion纹理也会改写仍在使用的SRV。现在仅在颜色或运动纹理指针变化时先Flush已有提交，overlap路径同时Flush计算队列，再重绑。纹理不变不增加等待，模型和内核计算未改。
+
+新增queued_frame_probe.cpp、run-queued-frame.ps1和test-rebind-lifetime.ps1：12帧排队、逐帧独立快照、末尾统一读回，保留所有源资源以隔离描述符竞态。11组进程、7项比较全部通过：旧异步颜色轮换和motion轮换均偏离同步结果；修复后颜色、motion、两者同时轮换的全部帧分别匹配411DF44C…、F687BC96…、43712DDE…。固定同一texture但交替内容的旧同步／旧异步／新异步均匹配411DF44C…。旧异步错误hash随调度变化，不能写死错误hash。
+
+独立真实HDR40帧同步／异步热中位39.375／38.833ms，最终均FEEA9EF3…且全有限；短轮离线计时不作为稳定提速或游戏FPS结论。validate-hdr.ps1增加Flags参数。更正此前日志解释：游戏avg_ms_per_frame是处理帧间隔，包含游戏调度，不能当纯推理耗时。
+
+完整DLL编译通过：release/HIP/native-async-rebind.addon64，SHA256 8568acff121c6fab93b7b1f77d9df8c1c14549a6bee303a4e7ab35abd2bd09d7；配套沿用vit-layout-modules。未部署，游戏仍4c0620a5…及async=0。实机异步正确性、overlap性能未在本轮验证。复现说明见Development/HIP/rebind-lifetime.md，结果日志release/HIP/rebind-regression.log和rebind-hdr-sync/async.log。

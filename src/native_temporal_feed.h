@@ -27,6 +27,8 @@ public:
   for(UINT i=0;i<2;i++){D3D_SHADER_MACRO macros[]={{"FEED_MOTION",i?"0":"1"},{nullptr,nullptr}};ID3DBlob*code=nullptr,*error=nullptr;auto hr=CompileNativeShader(dir+L"\\native_temporal_feed.hlsl",macros,i?"history_main":"motion_main",&code,&error);if(FAILED(hr)){std::string m=error?std::string((const char*)error->GetBufferPointer(),error->GetBufferSize()):"temporal feed compile";if(error)error->Release();throw std::runtime_error(m);}if(error)error->Release();D3D12_COMPUTE_PIPELINE_STATE_DESC pd{};pd.pRootSignature=i?history_root:motion_root;pd.CS={code->GetBufferPointer(),code->GetBufferSize()};ck(NativeCreateComputePipelineState(d,&pd,IID_PPV_ARGS(i?&history_pso:&motion_pso)));code->Release();}
  }
  void BindNetworkOutput(ID3D12Resource*network_rgb){if(rgb)rgb->Release();rgb=network_rgb;rgb->AddRef();}
+ bool NeedsMotionRebind(ID3D12Resource*texture)const{return texture!=bound_texture;}
+ // Caller must complete prior GPU uses before a changed texture rewrites the SRV.
  // Texture must be readable as a non-pixel shader resource when recorded (FFX compute-read state).
  void RecordMotion(ID3D12GraphicsCommandList*c,ID3D12Resource*texture){
   if(!texture)throw std::runtime_error("motion texture missing");
