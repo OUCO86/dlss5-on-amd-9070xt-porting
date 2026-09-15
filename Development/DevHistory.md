@@ -1529,3 +1529,11 @@ COMGR编译通过；连续40帧ABBA：基线22.782/22.847ms，候选21.916/21.92
 随后仅在独立候选中将FFN展开后、contract→FFN、FFN→QKV的三处整组同步换为已有sync_owned_rows，保留合作输入载入及注意力跨wave读之前的整组同步。当前直接权重路径不再共享contract权重，各wave负责16行，hidden stride132与raw stride33float对应相同字节分区。
 
 COMGR编译通过；连续40帧ABBA：基线21.939/21.940ms、候选21.900/21.912ms，最终FEEA9EF3…一致、首尾有限。仅约0.03ms收益，未进一步全帧/reset，不纳入当前版本，生产源码恢复。补丁experiments/c32-local-ffn.patch、test-c32-local-ffn.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-local-ffn-test.log。游戏仍已部署的直接权重版。
+
+
+### 2026-09-16：C32分半隐藏层计算实验不采用
+参照HLSL ffn_fused的两半结构，先初始化残差累加器，再每次展开64个hidden通道并立即收缩，hidden stride132→68、重复使用64通道暂存。收缩仍依次K0–127，保留各舍入及阶段同步。scratch union受raw/ex大小限制，总LDS未减少。
+
+COMGR编译通过；连续40帧ABBA基线21.888/21.943ms，候选22.739/22.787ms，最终FEEA9EF3…一致、首尾有限。明显更慢，不采用，未扩大全帧/reset，生产源码恢复。half_chain汇编资源基线VGPR190、候选180；二者SGPR46、LDS15360、private/spill0，因此不能把慢归因于VGPR增长或spill，尽管累加器生存区间发生变化。
+
+补丁experiments/c32-half-hidden.patch、test-c32-half-hidden.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-half-hidden-test.log。游戏仍已部署c32-global-ffn-release-modules+13d4dc10… DLL，离线约21.9ms。
