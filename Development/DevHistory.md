@@ -1707,3 +1707,9 @@ current比较/profile脚本统一更新固定模块。profile运行通过，最�
 完整DLL release/HIP/native-c256-attn-project.addon64 SHA57b8ab453ffc21bde177d080d382ff1c47eee0a5fe085bf973b552f7a8d1b182；固定24模块c256-attn-project-release-modules，MH attention模块SHA88B85C7DB6C5F0258031975E9902BE165009EF9858C0C025652B89A5D4ED5935。未部署，游戏仍ae66d4c8…+c64-reuse-ex-release-modules。
 
 脚本test-c256-attn-project.ps1对应初版（由experiments/c256-four-acc.patch在最终源码上还原），test-c256-projection-pairs.ps1及validate-c256-projection-pairs*.ps1对应最终版，test_c256_attn_project.cpp做中间对照。日志release/HIP/c256-attn-project-test.log、c256-projection-pairs-test.log、c256-projection-pairs-validation.log。
+
+
+### 2026-09-16：部署C256融合并刷新当前整网差距
+部署脚本确认游戏退出，安装native-c256-attn-project.addon64（SHA57b8ab453ffc21bde177d080d382ff1c47eee0a5fe085bf973b552f7a8d1b182）和c256-attn-project-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c256-attn-project。新版游戏FPS仍待用户实测。
+
+current比较/profile脚本更新固定模块与benchmark_c256_attn_project.exe，compare_layers_current.exe重新编译上传。连续40帧edges-only ABBA：HLSL16.774/16.789ms，HIP20.502/20.527ms，各自最终golden匹配、首尾有限；差距约3.73ms，尚未达到目标。日志release/HIP/backend-c256-fused-current.log。本轮完成部署和基线复核，无额外内核优化。
