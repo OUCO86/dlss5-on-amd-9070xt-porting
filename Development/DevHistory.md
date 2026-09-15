@@ -1207,3 +1207,11 @@ compare-current-backends.ps1更新HIP为benchmark_mh_mapped.exe+mh-input-mapped-
 40帧去前5，35热样本中位：in-list25.83108ms、gaps0.06636ms、CPU record/submit0.543ms、network wall26.373ms。完整HDR热中位27.001ms，最终C7C2F49D…匹配HLSL参考，全有限。当前HLSL慢值主要处于GPU列表执行区间，不是CPU记录或列表间空档，但区间含GPU等待/抢占，尚未定位频率、驱动或shader路径原因。
 
 诊断exe编译通过，说明Development/HIP/hlsl-list-timing.md，日志release/HIP/hlsl-lists-summary.log、hlsl-lists.log（后者UTF-16）。游戏未修改，历史HLSL18.8ms尚未重现，目标未判完成。
+
+
+### 2026-09-15：HLSL慢基准的只读ADL遥测
+新增read-adl-telemetry.cpp，按AMD官方头文件/接口动态查询驱动时钟、负载、温度，不调用任何设置API；measure-hlsl-telemetry.ps1并行记录150×200ms样本与HLSL40帧检查。当前接口已deprecated但驱动仍返回supported数据，说明和来源见Development/HIP/adl-telemetry.md。
+
+HLSL本轮26.872ms、C7C2F49D…一致。tick284568312–284575609窗口内adapter0、gfx activity>50%的8样本：核心1511–1849MHz，中位1807MHz；edge43–44°C，hotspot47–52°C。多个逻辑adapter不当独立GPU统计，ASIC power不支持不报0W。窗口包括初始化/收尾、样本少，且旧18.8ms无遥测，不能据此认定降频就是漂移根因。
+
+日志release/HIP/hlsl-adl-summary.log、hlsl-adl.log。工具编译/查询成功；未修改游戏或驱动设置。代码审计显示逐帧benchmark会完整读回、扫描HDR数据，可能造成GPU间歇负载，后续需要控制此条件才可判断频率影响。
