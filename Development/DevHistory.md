@@ -1561,3 +1561,11 @@ COMGR编译通过；连续40帧ABBA基线21.969/21.881ms、候选22.055/22.064ms
 实验只将split_mix_blocked的F16操作数改为现场pack FP8后用FP8 WMMA，仍读取float权重与float输入、K16顺序不变。COMGR编译通过。连续40帧ABBA基线21.904/21.893ms，候选22.059/22.083ms，最终FEEA9EF3…一致、首尾有限；更慢，未扩大全帧/reset/所有权重检查，生产源码恢复，游戏不变。
 
 补丁experiments/split-mix-fp8.patch、test-split-mix-fp8.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，模块deep_fast-packed.hsaco，日志release/HIP/split-mix-fp8-test.log。该结果包含现场操作数打包成本，不能代表预打包权重/byte输入布局的性能。
+
+
+### 2026-09-16：C512 mix预打包权重实验暂不采用
+新增独立split_mix_fp8_packed入口，保留float输入现场FP8转换，权重使用PackedDeepWeight(ffwd,262144)一次精确编码并缓存，读取两DWORD作为WMMA B。原始ffwd缓存仍供后续F16展开/收缩使用，打包缓存@fp8独立。沿用ExactWeightFp8逐值检查，运行所经过的mix矩阵均通过，未把此检查扩称所有展开/收缩或任意输入已验证。
+
+COMGR及benchmark编译通过，连续40帧ABBA基线21.886/21.945ms，候选21.925/21.834ms；最终FEEA9EF3…一致、首尾有限。无稳定可见优势，不纳入生产，未扩大全帧/reset，源码恢复。相对上一轮现场打包两操作数不再明显慢，但不同轮次不能直接当精确收益。
+
+补丁experiments/split-mix-packed.patch、test-split-mix-packed.ps1，需配套编译benchmark_split_mix_packed.exe和HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核split-mix-packed.hsaco，目标deep_fast-packed.hsaco；日志release/HIP/split-mix-packed-test.log。游戏仍c32-global-ffn-release-modules+13d4dc10… DLL。
