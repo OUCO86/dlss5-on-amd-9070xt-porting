@@ -6,8 +6,8 @@ $lines+=@('DLSS5_HIP_PREFIX_FUSED=1','DLSS5_HIP_DIRECT_INPUT=1','DLSS5_HIP_GROUP
 foreach($i in 0..3){
  if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game running'}
  $hlsl=$i -in @(0,3)
- $exe=if($hlsl){'benchmark_hlsl_edges.exe'}else{'benchmark_vit_qkv_halfweight.exe'}
+ $exe=if($hlsl){'benchmark_hlsl_edges.exe'}else{'benchmark_split_expand_halfweight.exe'}
  $expected=if($hlsl){'C7C2F49D3F637F7EA50E3236510677E06574067CC707CE03275EDF4609CAF30B'}else{'FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58'}
- & "$r\validate-hdr.ps1" -Runner $exe -Modules vit-qkv-halfweight-release-modules -Name "$Tag-$i" -Flags "$Tag-flags.txt" -Frames $Frames -EdgesOnly $EdgesOnly -ExpectedHash $expected
+ & "$r\validate-hdr.ps1" -Runner $exe -Modules split-expand-halfweight-release-modules -Name "$Tag-$i" -Flags "$Tag-flags.txt" -Frames $Frames -EdgesOnly $EdgesOnly -ExpectedHash $expected
  if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game started'}
 }

@@ -1783,3 +1783,9 @@ PackedSplitFfnWeight改用独立@split-expand-f16-contract-fp8 key：展开区�
 完整DLL release/HIP/native-split-expand-halfweight.addon64 SHA152c5bf83ac760fb71bf12d7b7498132d0e23d7bdd5bf968ccb2151c7e589693；固定24模块split-expand-halfweight-release-modules，deep_fast-packed模块SHA187092DABAC3387AC17302AB7C0CABE8CC53F44845403A3AC47EB3D2ACA6E37D。未部署，游戏仍121042cd…+vit-qkv-halfweight-release-modules。
 
 脚本test-split-expand-halfweight.ps1、validate-split-expand-halfweight*.ps1，test_split_ffn_fp8.exe按当前布局重新编译；日志release/HIP/split-expand-halfweight-test.log和split-expand-halfweight-validation.log。
+
+
+### 2026-09-16：部署C512展开half权重版并刷新profile
+部署脚本确认游戏退出，安装native-split-expand-halfweight.addon64（SHA152c5bf83ac760fb71bf12d7b7498132d0e23d7bdd5bf968ccb2151c7e589693）和split-expand-halfweight-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-split-expand-halfweight。新版实际游戏FPS仍待用户反馈。
+
+current比较/profile脚本更新固定模块和benchmark_split_expand_halfweight.exe，compare_layers_current.exe重编译上传。profile成功、最终RGB7b959143…匹配；第二轮主要项仍为C32 chain、普通MH FFN-QKV，C512 standalone QKV13次。memory owned1286.9MiB/213 allocations。逐核串行计时不作为连续性能，最快连续测例仍19.53–19.55ms；日志release/HIP/profile-split-expand-current.log。本轮完成部署与诊断，无额外内核提速。
