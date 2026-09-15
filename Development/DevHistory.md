@@ -1297,3 +1297,11 @@ HIP_C32_PAIRED_INPUT候选把每四个输入值的4次单值FP8转换改为2次�
 min3：基线25.417/25.447ms，候选25.427/25.413ms；min8：基线25.428/25.436ms，候选25.449/25.521ms。未见收益。两候选实际资源都与当前一致：普通half VGPR207、mapped/chain214、post-merge193，LDS17664byte、private0；汇编报告Occupancy7。这是编译器估计，非实测运行中的wave数量。min8并未让实际资源降至新档位，不能据此认定提高真实occupancy一定无效。
 
 生产源码恢复。补丁experiments/c32-waves-hint.patch，test-c32-waves3.ps1/test-c32-waves8.ps1；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1及HIP_C32_MIN_WAVES=3或8。日志release/HIP/c32-waves3-build/test.log、c32-waves8-build/test.log。游戏未改，仍3894351c…+prefix-fused。
+
+
+### 2026-09-15：C32 FFN byte暂存复用V区
+HIP_C32_ALIAS_FFN_V默认1，仅在REGISTER_FFN路径将ffn8映射到packed的V区（128×36偏移）。Q/K阶段不覆盖此区；V阶段在本wave完成FFN输入读取后才覆盖为normalized V，最终残差使用既有saved_ffn寄存器。因该区与contract权重重叠，contract结束后额外全组barrier，再写FFN byte；不能移除此同步。0保留旧独立ffn8。
+
+COMGR产物LDS17664→15360byte；普通half VGPR207→190，mapped214→201，post-merge193→170，private均0。连续40帧ABBA：基线25.469/25.448ms，候选25.264/25.299ms，最终FEEA9EF3…匹配，首尾有限。随后40帧全检与24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…。全检25.207/25.419ms只记录，不与连续负载混算。
+
+内核编译通过，packed C32模块SHA4E333BCDAB6B11CC9BE2306C0CA9112414229548B5D8B06F2325635E85E7C48F；24模块固定c32-alias-ffn-release-modules，配套DLL仍native-prefix-fused.addon64/3894351c…无需修改。未部署，游戏仍3894351c…+prefix-fused模块。脚本test-c32-alias-ffn.ps1，日志release/HIP/c32-alias-ffn-build/test/full/reset.log；编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_C32_ALIAS_FFN_V=1。

@@ -1,3 +1,6 @@
+#ifndef HIP_C32_ALIAS_FFN_V
+#define HIP_C32_ALIAS_FFN_V 1
+#endif
 // Production C32 FAST4 attention precision, separate from exact reference.
 // All kernels flat grid ceil(work_items/256), block32; token count divisible64.
 #ifndef HIP_C32_INPUT_DWORD
@@ -140,7 +143,13 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  __attribute__((shared)) unsigned char packed[3*64*36];
 #if HIP_C32_REGISTER_FFN
  h8 saved_ffn[2];
+#if HIP_C32_ALIAS_FFN_V
+ // Q/K writes are disjoint; V overwrites only after this wave finishes its FFN reads.
+ // The final residual remains in saved_ffn registers.
+ unsigned char*ffn8=packed+128*36;
+#else
  __attribute__((shared)) unsigned char ffn8[64*36];
+#endif
 #else
  __attribute__((shared)) _Float16 ffn[64*34];
 #endif
@@ -176,6 +185,10 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=chunk*32+kt*16+gr()*8;a=load8(scratch.hidden+(first+rc())*132+k);b=load8(packed+64*36+(ci*16+rc())*132+k);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
  }
+#if HIP_C32_ALIAS_FFN_V && HIP_C32_REGISTER_FFN
+ // The V region overlaps contract weights: all waves must finish reading them.
+ sync_window();
+#endif
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){
 #if HIP_C32_REGISTER_FFN
   float v=Hrtz(acc[ci][e]);saved_ffn[ci][e]=(_Float16)v;ffn8[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(v));
