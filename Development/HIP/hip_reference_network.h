@@ -86,7 +86,7 @@ class Network {
    it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;
   }return P(it->second);
  }
- void* PackedSplitFfnWeight(const std::string&name){const auto key=name+"@split-contract-fp8";auto it=weights.find(key);if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);if(v.size()!=WeightElements(name))throw std::runtime_error("split FFN weight shape");PackWeightRegions(v,{{393216,131072}});it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;}return P(it->second);}
+ void* PackedSplitFfnWeight(const std::string&name){const auto key=name+"@split-expand-f16-contract-fp8";auto it=weights.find(key);if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);if(v.size()!=WeightElements(name))throw std::runtime_error("split FFN weight shape");for(size_t i=0;i<131072;i++){uint16_t h=ExactWeightHalf(v[262144+i]);std::memcpy(reinterpret_cast<unsigned char*>(v.data()+262144)+i*2,&h,2);}PackWeightRegions(v,{{393216,131072}});it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;}return P(it->second);}
  void* PackedDeepWeight(const std::string&name,size_t matrix_elements){
   if(!opt.packed_weights||!opt.fast_deep)return Weight(name);
   const std::string key=name+"@fp8";auto it=weights.find(key);if(it==weights.end()){

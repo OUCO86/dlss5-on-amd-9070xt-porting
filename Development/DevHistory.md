@@ -1773,3 +1773,13 @@ current比较/profile脚本更新固定模块和benchmark_vit_qkv_halfweight.exe
 COMGR和专用benchmark编译通过；连续40帧ABBA基线19.647/19.680ms，候选19.636/19.595ms，最终FEEA9EF3…一致、首尾有限。约0.05ms差异，未扩大全帧/reset，不纳入生产，源码恢复，游戏仍121042cd…+vit-qkv-halfweight-release-modules。
 
 补丁experiments/split-mix-halfweight.patch、test-split-mix-halfweight.ps1；需匹配benchmark_split_mix_halfweight.exe及HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1内核，模块deep_fast-packed.hsaco。日志release/HIP/split-mix-halfweight-test.log。
+
+
+### 2026-09-16：C512展开half预打包通过，约0.17ms收益
+PackedSplitFfnWeight改用独立@split-expand-f16-contract-fp8 key：展开区域262144起131072个float精确编码为half，收缩保持已验证FP8区域及原始起始字节偏移。展开直接读取half向量，保留F16 WMMA/K16顺序、激活与舍入，不启用有反例的FP8展开。非packed旧路径保持。
+
+连续40帧ABBA基线19.663/19.752ms，候选19.554/19.528ms，最终FEEA9EF3…匹配、首尾有限。48组C512逐位对照全部一致无非法值，含block46宽幅输入；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检20.818/21.316ms因读回节奏不同，不当连续计时。
+
+完整DLL release/HIP/native-split-expand-halfweight.addon64 SHA152c5bf83ac760fb71bf12d7b7498132d0e23d7bdd5bf968ccb2151c7e589693；固定24模块split-expand-halfweight-release-modules，deep_fast-packed模块SHA187092DABAC3387AC17302AB7C0CABE8CC53F44845403A3AC47EB3D2ACA6E37D。未部署，游戏仍121042cd…+vit-qkv-halfweight-release-modules。
+
+脚本test-split-expand-halfweight.ps1、validate-split-expand-halfweight*.ps1，test_split_ffn_fp8.exe按当前布局重新编译；日志release/HIP/split-expand-halfweight-test.log和split-expand-halfweight-validation.log。
