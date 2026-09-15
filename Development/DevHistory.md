@@ -796,3 +796,7 @@ HIP_FAST默认启用fp8_normalized，日志加状态字段。无需增加模块�
 COMGR/gfx1201两个模块编译通过。900正常离线ABBA四轮各6次排除cold，每方案10hot，最终输出逐位一致：FFN单独55.2365→51.6275ms；AV单独55.2625→55.1255ms（幅度小，不确认稳定单项加速）；合并55.379→51.231ms（约7.49%）。四轮SHA均7b9591437302ea680c87684b3c690edd7fa76b56a1f7aca0c11773464512e29d。seed123、history=input900.rgba32f合并对照56.850→52.627ms，四轮SHA均75b62d2f36b6861b1536ec06b087c3ddb8850f4cdf810e734e16e2bc0223c3f8。该history fixture最终hash同既有无history，不替代动态时序验证。两条张量有效存储均减为1/4，但池常驻仍1910.1MiB/195 allocations，未宣称总显存下降。
 
 日志release/HIP/edge-ffn.log、edge-av.log、edge-combined.log、edge-history.log；测试目录远端hip-backend/edge-modules和edge-*。完整HIP DLL编译通过：release/HIP/native-fp8-edges.addon64，SHA256 68c8ba0ca6293660bdab99a66c6eac71576133846dfcef0c700bb8818decd107。需配套含新导出的MH padded/attention模块，仍24模块。游戏安装未替换。
+
+### 2026-09-15 16:19：《剑星》部署FP8中间张量优化版
+
+Zero明确要求部署。确认SB-Win64-Shipping未运行后，用deploy-stellarblade-update.ps1将native-fp8-edges.addon64与edge-modules全部24个HSACO安装至Steam剑星Win64及私有DLSS5-AMD/HIP，DLL SHA68c8ba0c…、各内核hash逐个校验通过。保留900P/HIP_FAST、temporal-history、continuous，明确ASYNC_SUBMIT=0，避免恢复此前发黑的异步路径。原0202… DLL、23模块和flags备份到D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-fp8-edges；更新脚本-Restore可回退。原900P HLSL备份仍独立保留。等待用户实际游戏测试，离线51.23ms不是已测游戏FPS。
