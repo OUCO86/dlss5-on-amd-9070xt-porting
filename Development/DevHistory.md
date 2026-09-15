@@ -1025,3 +1025,11 @@ COMGR内核、runner和完整DLL编译通过：release/HIP/native-pre-main8.addo
 正常900 ABBA4轮各6次去cold33.2485→32.855ms；seed123/history34.700→34.1255ms。每组四轮RGB分别保持7b959143…/75b62d2f…。完整HDR异步40帧33.300ms/FEEA9EF3…，24帧每8帧reset31.376ms/22C171FC…，均全有限；HDR非同期ABBA，不把异轮绝对值串成收益。
 
 COMGR内核、runner、完整DLL编译通过：release/HIP/native-post-merge.addon64 SHAa7b7521b1ade857a9867327499a77a6ed12beb0b66ce8dbe5e67011d1a923b07；packed C32模块SHA4023CEBB405CB724CA7A43CE1224ADC412387DB0AD30C88F1DC7B9638A097B06；24模块固定post-merge-fold-release-modules，含main8 boundary。未部署，游戏仍5ab7d7d3…+inputDWORD（用户900P26～27FPS）。脚本test-post-merge-fold.ps1，日志release/HIP/post-merge-fold-build/test/history/hdr/reset.log。编译C32定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：刷新MH同输入层级对照，QKV单wave四输出实验撤回
+compare_layers.cpp增加mh-only过滤，并在所选融合FFN配置中启用identity-shift；compare-current-mh.ps1对C64块5/6、C128块9、C256块15、C512块23用当前模块执行同输入两后端比较。各层均有限，已有跨后端数值差异保留，不能称整体逐位一致。例C64块5 HLSL wall0.3402/0.2887ms、HIP0.4797/0.4690ms；HLSL详细QKV归一化约0.04344ms，HIP重复20次隔离批次约0.167883ms。一个是D3D GPU区间，一个是HIP批次wall时间，不直接当精确4倍证据，但可指向QKV。日志release/HIP/mh-current.log。
+
+对照native_wave_qkv_normalize.hlsl，试验单wave16×64输出、四acc共用A，替代HIP fast_dense的512线程64×64；QKV平方和仍保持原32项顺序，以LDS每行串行求和，不启用HLSL可选half平方MMA以避免混改精度。COMGR及runner编译通过；正常900 ABBA4轮各6次去cold32.939→33.727ms更慢，四轮RGB7b959143…一致。未继续历史/HDR，已撤回生产改动。补丁experiments/mh-qkv-wave4.patch、脚本test-mh-wave4.ps1；需应用补丁再构建实验runner/模块，当前默认源码不含该入口。日志release/HIP/mh-wave4-build/test.log。
+
+最优固定候选仍a7b7521b…DLL+post-merge-fold-release-modules，游戏仍5ab7d7d3…+inputDWORD，未部署新实验。

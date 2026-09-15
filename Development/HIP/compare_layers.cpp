@@ -64,9 +64,10 @@ struct LayerBenchmark {
 };
 }
 int main(int argc,char**argv){try{
- if(argc!=5&&argc!=6&&argc!=7)throw std::runtime_error("usage: compare_layers.exe ASSETS FLAGS MODULES OUTPUT.csv [pattern] [fused-ffn]");
+ if(argc!=5&&argc!=6&&argc!=7&&argc!=8)throw std::runtime_error("usage: compare_layers.exe ASSETS FLAGS MODULES OUTPUT.csv [pattern] [fused-ffn]");
+ if(argc==8&&std::string(argv[7])!="mh-only")throw std::runtime_error("unknown layer filter");
  unsigned pattern=argc>=6?std::stoul(argv[5]):0;if(pattern>1)throw std::runtime_error("pattern must be0 or1");
- if(argc==7&&(std::string(argv[6])!="fused-ffn"&&std::string(argv[6])!="fused-tiled"&&std::string(argv[6])!="fused-selected"))throw std::runtime_error("unknown layer option");load_flags(argv[2]);const unsigned repeats=20;
+ if(argc>=7&&(std::string(argv[6])!="fused-ffn"&&std::string(argv[6])!="fused-tiled"&&std::string(argv[6])!="fused-selected"))throw std::runtime_error("unknown layer option");load_flags(argv[2]);const unsigned repeats=20;
  const IID experimental={0x76f5573e,0xf13a,0x40f5,{0xb2,0x97,0x81,0xce,0x9e,0x18,0x93,0x3f}};
  ck(D3D12EnableExperimentalFeatures(1,&experimental,nullptr,nullptr));
  IDXGIFactory1*factory{};ck(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));ID3D12Device*d{};
@@ -77,7 +78,7 @@ int main(int argc,char**argv){try{
  std::ofstream phases(std::string(argv[4])+".hip-phases.csv");phases<<"block,C,mode,kernel,batch_wall_ms_per_call,calls\n";std::ofstream csv(argv[4]);if(!csv)throw std::runtime_error("CSV open");csv<<"block,C,W,H,shift,mode,round,backend,wall_ms,gpu_ms,bitdiff,invalid,maxabs\n";
  struct Case{unsigned b,c,w,h,shift;};
  for(auto item:{Case{70,32,1600,1024,3},Case{1,32,800,512,0},Case{4,32,800,512,2},Case{5,64,400,256,0},Case{6,64,400,256,3},Case{9,128,200,128,0},Case{15,256,100,64,0},Case{23,512,50,32,0},Case{31,1024,20,20,0}}){
-  auto b=item.b,C=item.c,W=item.w,H=item.h,shift=item.shift;size_t count=size_t(W)*H*C;
+  auto b=item.b,C=item.c,W=item.w,H=item.h,shift=item.shift;if(argc==8&&(C==32||C==1024))continue;size_t count=size_t(W)*H*C;
   std::string stem=b==70?"post70":"block"+std::to_string(b);
   auto fw=hip_reference::ReadWeights(std::string(argv[1])+"/"+stem+(C==1024?"-expand.f32":C==512?"-ffwd.f32":"-ffn.f32")),aw=hip_reference::ReadWeights(std::string(argv[1])+"/"+stem+(C==1024?"-qkv.f32":"-attention.f32"));
   std::vector<float>input(count);for(size_t i=0;i<count;i++)input[i]=pattern&&C==32?float(int((i*73+19)%2048)-1024)/512.f:fp8(unsigned((i*(pattern?53:37)+i/31+11)%(pattern?96:80))|((i%3==0)?128:0));
@@ -86,7 +87,7 @@ int main(int argc,char**argv){try{
 
   hip_reference::Options o;o.assets=argv[1];o.modules=argv[3];o.width=1600;o.height=1024;o.post_shift=3;
   o.wmma=o.wave=o.tiled=o.pooled=o.fast_vit=o.fast_c32=o.fused_c32=o.fused_ffn=o.fast_mh=o.fused_mh=o.mh_wave=o.fast_deep=o.fast_prefix=o.packed_weights=o.packed_c32=o.fp8_normalized=o.fp8_ffn=o.fp8_av=o.fp8_deep=o.fp8_middle=o.half_c32=o.crop_c32=o.fused_qkv_norm=true;
-  o.fused_mh_ffn=argc==7;o.tiled_mh_ffn=argc==7&&std::string(argv[6])!="fused-ffn";o.tiled_ffn_min_c=argc==7&&std::string(argv[6])=="fused-selected"?256:64;hip_reference::Network net(o);auto hi=hip_reference::LayerBenchmark::Input(net,input);hip_reference::Tensor ho;
+  o.fused_mh_ffn=argc>=7;o.tiled_mh_ffn=argc>=7&&std::string(argv[6])!="fused-ffn";o.tiled_ffn_min_c=argc>=7&&std::string(argv[6])=="fused-selected"?256:64;o.elide_identity_shift=true;hip_reference::Network net(o);auto hi=hip_reference::LayerBenchmark::Input(net,input);hip_reference::Tensor ho;
   unsigned current_mode=0;auto hiprun=[&]{ho.reset();ho=hip_reference::LayerBenchmark::Run(net,hi,W,H,C,b,shift,current_mode==2);};hiprun();net.Synchronize();
   size_t output_count=C==32?size_t(W+((shift&1)?8:0))*(H+((shift&2)?8:0))*32:count;
   auto actual=hip_reference::LayerBenchmark::Read(net,ho,output_count,C==32);
