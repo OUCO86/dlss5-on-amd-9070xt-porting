@@ -1,0 +1,43 @@
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 93351c7..bb3e05d 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -86,8 +86,14 @@ DEV uint pack4(float a,float b,float c,float d){uint lo=uint(__builtin_amdgcn_cv
+ template<bool ByteInput=false,bool ByteOutput=false,bool Normalize=false>
+ DEV void fast_dense(const float* input,const float* feature,const float* weights,float* output,
+  uint M,uint N,uint K,uint matrix_offset,uint skip_offset,uint epilogue,uint width=0,uint valid_width=0,uint valid_height=0,uint matrix_residual=0){
++#ifdef HIP_QKV_SHARED_WORKSPACE
++ union Workspace {struct {uint a[576],b[576];} matrix;float norm[Normalize?64*65+128:1];};
++ __attribute__((shared)) Workspace workspace;
++ uint*sa=workspace.matrix.a;uint*sb=workspace.matrix.b;
++#else
+  __attribute__((shared)) uint sa[576];
+  __attribute__((shared)) uint sb[576];
++#endif
+  uint block=__builtin_amdgcn_workgroup_id_x(),nt=(N+63)/64;
+  if(!nt||block>=((M+63)/64)*nt)return;
+  uint mr=block/nt*64,nc=block%nt*64,t=__builtin_amdgcn_workitem_id_x(),wave=t/32,l=t%32,rc=l&15,group=l>>4;
+@@ -139,7 +145,11 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+  }
+ #if HIP_QKV_ROW_SUM
+  if constexpr(Normalize){
++#ifdef HIP_QKV_SHARED_WORKSPACE
++  float*tile_qkv=workspace.norm;float*norm_inv=workspace.norm+64*65;
++#else
+   __attribute__((shared)) float tile_qkv[64*65],norm_inv[128];
++#endif
+   for(uint e=0;e<8;e++)tile_qkv[(wm*16+group*8+e)*65+wn*16+rc]=accum[e];
+   __builtin_amdgcn_s_barrier();
+   uint channels=N/3,heads=channels/32,scale=4*channels*channels+heads*4096;
+@@ -155,7 +165,11 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+  }
+ #else
+  if constexpr(Normalize){
++#ifdef HIP_QKV_SHARED_WORKSPACE
++  float*tile_qkv=workspace.norm;
++#else
+   __attribute__((shared)) float tile_qkv[64*64];
++#endif
+   for(uint e=0;e<8;e++)tile_qkv[(wm*16+group*8+e)*64+wn*16+rc]=accum[e];
+   __builtin_amdgcn_s_barrier();
+   uint channels=N/3,heads=channels/32,scale=4*channels*channels+heads*4096;

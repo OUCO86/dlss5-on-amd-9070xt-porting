@@ -1071,3 +1071,11 @@ PackedMhWeight仅对QKV矩阵区域做TilePackedMatrix [N16][K32][K][N]纯byte�
 COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold31.129→31.4705ms更慢；四轮最终RGB7b959143…一致。未进行历史/HDR，生产源码已恢复，未加入已部署版本或固定候选。推测全域连续读取收益被LDS散写/指令成本抵消，未做ISA级归因证明。
 
 补丁Development/HIP/experiments/mh-qkv-tiled.patch，test-mh-qkv-tiled.ps1（先应用补丁构建实验runner和模块），编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1；日志release/HIP/mh-qkv-tiled-build/test.log。游戏本轮确认退出，当前安装仍a7b7521b…+mh-input-dword，等待实机反馈。远端reference_current.exe含实验开关但默认关闭；源码已撤回。
+
+
+### 2026-09-15：QKV ISA资源检查及共享暂存复用实验撤回
+读取当前mh-row-sum.hsaco.s：mh_qkv_normalize_fused使用VGPR46、SGPR14、固定LDS21760byte、private segment0，无scratch spill。没有据此给出硬件occupancy百分比。
+
+试用union复用矩阵sa/sb与归一化tile/inverse（两段使用之间已有全组barrier），非Normalize实例仍只分配矩阵空间。编译后的QKV LDS降到17152byte，VGPR47、SGPR14、private0。正常900 ABBA4轮各6次去cold31.1555→31.2715ms，四轮RGB7b959143…一致，但无收益；已恢复生产源码，未跑历史/HDR、未默认。补丁experiments/mh-shared-workspace.patch，test-mh-shared-workspace.ps1（先应用补丁编译，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_SHARED_WORKSPACE=1）。日志release/HIP/mh-shared-workspace-build/test.log。
+
+当前安装及固定候选仍a7b7521b…+mh-input-dword-release-modules。此次未部署或修改游戏配置。
