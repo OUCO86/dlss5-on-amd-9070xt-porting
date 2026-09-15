@@ -1697,3 +1697,13 @@ COMGR资源LDS61440→43008bytes（60→42KiB），VGPR仍118，SGPR30，private
 部署脚本确认游戏退出，安装c64-reuse-ex-release-modules全部24模块并逐hash通过，DLL沿用ae66d4c8e3730424c41a0a935fb9668465547aa1d15b848d4712209eb0d681b6，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c64-reuse-ex。实机新FPS未测。
 
 current比较/profile脚本统一更新固定模块。profile运行通过，最终RGB7b959143…匹配；第二轮独立mh_attention_fused_fp8_out及mh_attention_crop各29次，对应C256的16块+C512的13块。c64_attention_project8次，C64/C128融合已进入当前实际路径。日志release/HIP/profile-c64-reuse-current.log；逐核串行计时含等待，仅定位，不当连续耗时比例。本轮无新增内核改动。
+
+
+### 2026-09-16：C256两批注意力+投影融合通过，约0.23ms收益
+新增c256_attention_project，512线程、每批4head共两批，沿Q/K直接读及ex→prob复用，独立AV64×260bytes跨批保存，LDS59648bytes。初版四片投影同时存活，private160/VGPR124；ABBA基线20.800/20.814ms，初版20.743/20.684ms，小幅收益。随后改成两对投影依次计算，保持各列K16顺序及三段残差，private降为0，VGPR152/SGPR42、spill0，LDS不变。
+
+最终连续40帧ABBA基线20.784/20.809ms，候选20.573/20.551ms，最终FEEA9EF3…匹配、首尾有限。16个C256权重块15–22/48–55 × post0/3/4 × crop开关共96组逐位对照全部一致无非法值；全40帧及24帧每8帧reset全有限，最终FEEA9EF3…/22C171FC…；seed123/history75b62d2f…匹配。全检21.693/21.010ms读回节奏不同，不当连续性能。
+
+完整DLL release/HIP/native-c256-attn-project.addon64 SHA57b8ab453ffc21bde177d080d382ff1c47eee0a5fe085bf973b552f7a8d1b182；固定24模块c256-attn-project-release-modules，MH attention模块SHA88B85C7DB6C5F0258031975E9902BE165009EF9858C0C025652B89A5D4ED5935。未部署，游戏仍ae66d4c8…+c64-reuse-ex-release-modules。
+
+脚本test-c256-attn-project.ps1对应初版（由experiments/c256-four-acc.patch在最终源码上还原），test-c256-projection-pairs.ps1及validate-c256-projection-pairs*.ps1对应最终版，test_c256_attn_project.cpp做中间对照。日志release/HIP/c256-attn-project-test.log、c256-projection-pairs-test.log、c256-projection-pairs-validation.log。

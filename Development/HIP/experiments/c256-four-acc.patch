@@ -1,0 +1,20 @@
+--- a/Development/HIP/multihead_fused_attention.hip
++++ b/Development/HIP/multihead_fused_attention.hip
+@@ -267,12 +267,9 @@
+  for(uint col=0;col<32;col+=16)for(uint e=0;e<8;e++)avbytes[(first+gr()*8+e)*260+head*32+col+rc()]=static_cast<unsigned char>(fp8(F(av[col/16][e])));
+  sync_window();
+  } // Complete both batches before projection.
+- for(uint pair=0;pair<2;pair++){
+- f8 result[2]{};
+- for(uint j=0;j<2;j++){uint col=localhead*64+pair*32+j*16+rc();float remain=w[4*256*256+8*4096+8+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*256+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
++ f8 result[4]{};
++ for(uint j=0;j<4;j++){uint col=localhead*64+j*16+rc();float remain=w[4*256*256+8*4096+8+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*256+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
+  const uint*pw=reinterpret_cast<const uint*>(w);
+- for(uint k=0;k<256;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*260+k+gr()*8,8);for(uint j=0;j<2;j++){uint col=localhead*64+pair*32+j*16+rc(),off=3*256*256+(col*256+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}
+- for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=localhead*64+pair*32+j*16+rc(),dest=p*256+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*256+col;}float v=result[j][e];out[dest]=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);}
+-
+- }
+-}
++ for(uint k=0;k<256;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*260+k+gr()*8,8);for(uint j=0;j<4;j++){uint col=localhead*64+j*16+rc(),off=3*256*256+(col*256+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}
++ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=localhead*64+j*16+rc(),dest=p*256+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*256+col;}float v=result[j][e];out[dest]=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);}
++}
