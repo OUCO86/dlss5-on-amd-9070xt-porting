@@ -1231,3 +1231,11 @@ HIP_FFN_INPUT_PACK4默认1：合作输入以四个值调用原pack4量化并memc
 用同一benchmark_hip_edges.exe、相同配置和输入做模块ABBA，每轮40帧、去前5，首尾检查：基线热中位26.363/26.382ms，候选26.129/26.182ms。四轮最终FEEA9EF3…匹配；首尾模式只验证2帧，不称全帧验证。随后候选独立40帧全读回和24帧每8帧reset均全有限，最终分别匹配FEEA9EF3…/22C171FC…。两次全检计时27.478/26.545ms仅记录，不与连续负载计时相减。未另跑seed123的整网ABBA。
 
 COMGR/gfx1201模块编译通过，multihead-fast-padded-wave-packed SHA12425000552D3B5AC34C98BB7E10156091D981D98B0D5722C151C2D973BD8F47；24模块固定ffn-input-pack4-release-modules，配套DLL仍native-mh-mapped.addon64/b4e46e15…无需修改。未部署，游戏仍b4e46e15…+mh-input-mapped模块。脚本test-ffn-input-pack4.ps1，日志release/HIP/ffn-input-pack4-build/test/full/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_FFN_INPUT_PACK4=1。
+
+
+### 2026-09-15：QKV/FFN直接量化byte收益过小，归档
+实验dense_byte_F合并q8(F(x))，保留输入正负零归正零、带符号超范围/非有限饱和，其余直接执行FP8转换；用于QKV归一化和FFN隐藏/收缩输出。未改输出float的路径。
+
+COMGR/gfx1201编译通过。连续负载EdgesOnly=1、40帧ABBA：基线26.127/26.129ms，候选26.053/26.045ms；四轮最终FEEA9EF3…匹配，首尾检查有限。收益约0.08ms，未进一步做全域转换证明、全帧/history-reset验证，生产源码已恢复，未默认。补丁experiments/dense-direct-fbyte.patch，test-dense-direct-fbyte.ps1（需应用补丁编译，定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_DENSE_DIRECT_FBYTE=1）；日志release/HIP/dense-direct-fbyte-build/test.log。
+
+最优固定候选仍ffn-input-pack4-release-modules+b4e46e15 DLL，游戏仍b4e46e15+mh-input-mapped，本轮未部署。

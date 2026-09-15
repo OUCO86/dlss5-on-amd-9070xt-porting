@@ -1,0 +1,68 @@
+diff --git a/Development/HIP/multihead_fast_padded.hip b/Development/HIP/multihead_fast_padded.hip
+index 91cd567..99fa7ab 100644
+--- a/Development/HIP/multihead_fast_padded.hip
++++ b/Development/HIP/multihead_fast_padded.hip
+@@ -82,6 +82,13 @@ using i2=int __attribute__((ext_vector_type(2)));
+ using f8=float __attribute__((ext_vector_type(8)));
+ #define TILE KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+ DEV uint q8(float x){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(x,x,0,false))&255u;}
++DEV uint dense_byte_F(float x){
++#ifdef HIP_DENSE_DIRECT_FBYTE
++ uint b=bits(x),a=b&0x7fffffffu;if(a==0)return 0;if(a>=0x43e00000u)return ((b>>24)&128u)|126u;return uint(__builtin_amdgcn_cvt_pk_fp8_f32(x,0.f,0,false))&255u;
++#else
++ return q8(F(x));
++#endif
++}
+ DEV void pack(i2&v,uint e,float x){v[e/4]=int(uint(v[e/4])|(q8(x)<<(8*(e%4))));}
+ // Diagnostic production HLSL f32tof16 path: explicit RTZ, distinct from
+ // Cast<F16> / ISA_HALF RNE. Keep both exported contracts until measured.
+@@ -156,7 +163,7 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+    }norm_inv[h*64+row]=inv;
+   }
+   __builtin_amdgcn_s_barrier();
+-  for(uint e=0;e<8;e++){uint row=wm*16+group*8+e,p=mr+row,n=col+rc;if(p<M&&n<N)reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(q8(F(accum[e]*norm_inv[(wn/2)*64+row])));}
++  for(uint e=0;e<8;e++){uint row=wm*16+group*8+e,p=mr+row,n=col+rc;if(p<M&&n<N)reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(dense_byte_F(accum[e]*norm_inv[(wn/2)*64+row]));}
+   return;
+  }
+ #else
+@@ -175,7 +182,7 @@ DEV void fast_dense(const float* input,const float* feature,const float* weights
+     for(uint j=0;j<32;j++)ss+=value(__builtin_amdgcn_readlane(bits(sq),j));
+     inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?weights[scale+head]:1.f);
+    }
+-   reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(q8(F(v*inv)));
++   reinterpret_cast<unsigned char*>(output)[p*N+n]=static_cast<unsigned char>(dense_byte_F(v*inv));
+   }
+   return;
+  }
+@@ -292,7 +299,7 @@ void mh_qkv_normalize_fast_wave_fp8(const float* qkv,const float* weights,unsign
+    for(uint j=0;j<32;j++)ss+=value(__builtin_amdgcn_readlane(bits(sq),j));
+    inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?weights[scale+head]:1.f);
+   }
+-  normalized[offset]=static_cast<unsigned char>(q8(F(v*inv)));
++  normalized[offset]=static_cast<unsigned char>(dense_byte_F(v*inv));
+  }
+ }
+ 
+@@ -356,19 +363,19 @@ DEV void mh_ffn_fused_body(const float*in,const float*w,unsigned char*out,uint t
+  // Every wave must finish reading input before its storage becomes hidden.
+  __builtin_amdgcn_s_barrier();
+ #endif
+- for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e++){float a=expand[tile][e],g=clampf(a,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,poly=g*q+.89453125f;hidden[(group*8+e)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>(q8(F(a*poly)));}
++ for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e++){float a=expand[tile][e],g=clampf(a,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,poly=g*q+.89453125f;hidden[(group*8+e)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>(dense_byte_F(a*poly));}
+  __builtin_amdgcn_s_barrier();
+  f8 accum{};
+  for(uint k=0;k<4*C;k+=16){i2 a;__builtin_memcpy(&a,hidden+rc*(4*C+4)+k+group*8,8);uint offset=4*C*C+((wave*16+rc)*(4*C)+k+group*8)/4;i2 b{};if constexpr(Tiled){const unsigned char*wb=reinterpret_cast<const unsigned char*>(w+4*C*C);uint row=wave*16+rc,off=((row/16)*(4*C/32)+k/32)*512+(k%32+group*8)*16+row%16;for(uint e=0;e<8;e++)b[e/4]=int(uint(b[e/4])|(uint(wb[off+e*16])<<(8*(e%4))));}else b={int(pw[offset]),int(pw[offset+1])};accum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum);}
+  if constexpr(Project){
+   __builtin_amdgcn_s_barrier();
+-  for(uint e=0;e<8;e++)hidden[(group*8+e)*(C+4)+wave*16+rc]=static_cast<unsigned char>(q8(F(Hrtz(accum[e]))));
++  for(uint e=0;e<8;e++)hidden[(group*8+e)*(C+4)+wave*16+rc]=static_cast<unsigned char>(dense_byte_F(Hrtz(accum[e])));
+   __builtin_amdgcn_s_barrier();
+   f8 result{};for(uint e=0;e<8;e++)result[e]=Hrtz(ffn_input<C,Mapped>(in,first+group*8+e,wave*16+rc,width,height,workw,sx,sy)*w[9*C*C+wave*16+rc]);
+   for(uint k=0;k<C;k+=16){i2 a,b;__builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);uint off=8*C*C+((wave*16+rc)*C+k+group*8)/4;b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
+   for(uint e=0;e<8;e++)reinterpret_cast<float*>(out)[(first+group*8+e)*C+wave*16+rc]=F(result[e]);
+  }else{
+- for(uint e=0;e<8;e++)out[(first+group*8+e)*C+wave*16+rc]=static_cast<unsigned char>(q8(F(Hrtz(accum[e]))));
++ for(uint e=0;e<8;e++)out[(first+group*8+e)*C+wave*16+rc]=static_cast<unsigned char>(dense_byte_F(Hrtz(accum[e])));
+  }
+ }
+ KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) void mh_ffn_fused_c64(const float*in,const float*w,unsigned char*out,uint tokens){mh_ffn_fused_body<64>(in,w,out,tokens);}
