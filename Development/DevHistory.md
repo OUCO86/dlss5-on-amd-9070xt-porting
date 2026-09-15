@@ -1577,3 +1577,9 @@ COMGR及benchmark编译通过，连续40帧ABBA基线21.886/21.945ms，候选21.
 同条件连续40帧edges-only ABBA：HLSL16.800/16.789ms，HIP21.898/21.927ms，各自最终C7C2F49D…/FEEA9EF3…匹配、首尾有限。当前整帧差距约5.1ms，目标未达成。本轮复核已有收益，无新内核改动或部署。
 
 日志release/HIP/compare-c32-global-current.log、backend-c32-global-current.log。已异步请求用户下次试玩反馈900P实际FPS及画面异常，离线工作不依赖回复。
+
+
+### 2026-09-16：C32 raw输入移除重复FP8往返实验暂不采用
+mapped_c32_input的Raw分支原先F(half)返回float，再由输入暂存的fp8重新编码。实验增加ForPacking模板参数，仅输入装载路径返回保留零规范化和有符号饱和的原half值，让外层完成一次编码；残差读取保持旧F。未改变Merge/raster分支。
+
+COMGR编译通过；连续40帧ABBA基线21.924/21.949ms，候选21.914/21.878ms，最终FEEA9EF3…一致、首尾有限。仅约0.04ms差异，未扩大全帧/reset/全half编码对照，不纳入生产，源码恢复。补丁experiments/c32-input-single-cast.patch、test-c32-input-single-cast.ps1；编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-input-single-cast-test.log。游戏与最快固定模块不变。

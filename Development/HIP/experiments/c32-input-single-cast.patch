@@ -1,0 +1,29 @@
+diff --git a/Development/HIP/c32_fused_ffn_attention.hip b/Development/HIP/c32_fused_ffn_attention.hip
+index 02deab7..a3be449 100644
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -129,10 +129,10 @@ DEV i2 load8(const unsigned char*p){
+  i2 result{};for(uint e=0;e<8;e++)put_bits(result,e,p[e]);return result;
+ #endif
+ }
+-template<bool Raw=false,bool Merge=false>
++template<bool Raw=false,bool Merge=false,bool ForPacking=false>
+ DEV float mapped_c32_input(const float*in,uint window,uint token,uint channel,uint width,uint height,uint sx,uint sy,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr){uint ww=width+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);if(x<0||y<0||x>=int(width)||y>=int(height))return 0.f;
+  if constexpr(Merge){uint i=(uint(y)*width+uint(x))*32+channel,q=((uint(y)/2)*(width/2)+uint(x)/2)*32+channel;float high=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[i]),0);return Hrtz(Hrtz(in[q]*scales[channel])+high*scales[32+channel]);}
+- if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;return F(float(reinterpret_cast<const _Float16*>(in)[(tile*64+token0)*32+channel]));}
++ if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;float v=float(reinterpret_cast<const _Float16*>(in)[(tile*64+token0)*32+channel]);if constexpr(ForPacking){uint b=bits(v),a=b&0x7fffffffu;if(!a)return 0.f;if(a>=0x43e00000u)return value((b&0x80000000u)|0x43e00000u);return v;}return F(v);}
+  return in[(uint(y)*width+uint(x))*32+channel];}
+ 
+ template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false>
+@@ -156,9 +156,9 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+  if(residual_mode!=0&&residual_mode!=3)return;
+  // Stage input64x36 only; FFN matrices are loaded directly from global weights.
+ #if HIP_C32_INPUT_DWORD
+- for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
++ for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped,Merge,true>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
+ #else
+- for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k])):0;}
++ for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped,Merge,true>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k])):0;}
+ #endif
+  sync_window();
+  for(uint col=0;col<128;col+=16){f8 sum{};
