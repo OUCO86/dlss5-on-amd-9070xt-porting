@@ -1127,3 +1127,11 @@ COMGR/gfx1201模块与runner编译通过，正常900 ABBA4轮各6次去cold29.93
 初版复用单wave gr()辅助函数导致多wave索引错误，首轮hash检查拦截；修正为(workitem_id>>4)&1，仅将gr明确限制为wave内半组，原32线程核行为相同。失败轮不计性能。修正后正常900 ABBA4轮各6次去cold29.924→29.509ms，seed123/history31.4555→30.8895ms；各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧28.902ms/FEEA9EF3…，24帧每8帧reset29.561ms/22C171FC…，全有限。HDR非同期ABBA，无独立速度增幅结论。
 
 内核、runner和完整DLL编译通过：release/HIP/native-split-ffn.addon64 SHA1d9470bc2bb8919a6c3af1cc1dafb97611287ef46bc1c69631484ce92ed33f4c；deep_fast-packed模块SHABC15C323B19D4FDD574C73D8D885D7C3D8328BAF6593AD11C32DE9F774EAD255；24模块固定split-ffn-release-modules，含普通MH第三投影融合。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-split-ffn.ps1，日志release/HIP/split-ffn-build/test/history/hdr/reset.log，编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。
+
+
+### 2026-09-15：C512 split mix四输出分块
+新增split_mix_blocked：单wave16×64输出、四个acc共用同一A片段；K512仍逐K16执行FP16 WMMA，最终F(Hrtz)不变。dispatch实际数量原1/4。--split-mix-blocked独立，HIP_FAST默认启用并记日志；其他split阶段本轮保持。
+
+正常900 ABBA4轮各6次去cold29.5895→29.136ms，seed123/history30.922→30.5395ms。各组四轮RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧29.785ms/FEEA9EF3…，24帧每8帧reset27.787ms/22C171FC…，全有限；HDR非同期ABBA，不把异轮耗时拼接成收益。
+
+内核、runner和完整DLL编译通过：release/HIP/native-split-mix.addon64 SHA3b2c1d021b1c88c2934f3140b1ca02254abba70b7bb4aaa23160ee52ec6d955c；deep_fast-packed模块SHA5F6646A4102258D7874F587A9E456AB24B4B5D9B178308214DC1997537DBC544；24模块固定split-mix-blocked-release-modules。未部署，游戏仍a7b7521b…+mh-input-dword。脚本test-split-mix-blocked.ps1，日志release/HIP/split-mix-blocked-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。

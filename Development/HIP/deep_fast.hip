@@ -233,3 +233,9 @@ void split_ffn_fused(const float*in,const float*w,float*out,uint tokens){
  for(uint k=0;k<256;k+=16){h8 a{},b{};for(uint e=0;e<8;e++){uint kk=k+gr()*8+e;a[e]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(hidden[rc()*260+kk]),0);b[e]=(_Float16)w[393216+g*16384+(wave*16+rc())*256+kk];}result=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,result);}
  for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+g*64+wave*16+rc()]=F(Hrtz(result[e]));
 }
+
+WAVE void split_mix_blocked(const float*in,const float*w,float*out,uint tokens){
+ uint first=bid()/8*16,row=bid()%8*64;if(first>=tokens)return;f8 acc[4]{};
+ for(uint k=0;k<512;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*512+k+gr()*8+e];for(uint j=0;j<4;j++){h8 b{};for(uint e=0;e<8;e++)b[e]=(_Float16)w[(row+j*16+rc())*512+k+gr()*8+e];acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+row+j*16+rc()]=F(Hrtz(acc[j][e]));
+}
