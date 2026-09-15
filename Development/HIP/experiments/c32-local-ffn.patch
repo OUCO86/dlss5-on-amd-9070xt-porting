@@ -1,0 +1,31 @@
+diff --git a/Development/HIP/c32_fused_ffn_attention.hip b/Development/HIP/c32_fused_ffn_attention.hip
+index 02deab7..72b39e6 100644
+--- a/Development/HIP/c32_fused_ffn_attention.hip
++++ b/Development/HIP/c32_fused_ffn_attention.hip
+@@ -165,7 +165,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=matrix8(fw+512,(col+rc())*32+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
+   for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
+  }
+- sync_window();
++ sync_owned_rows();
+  f8 acc[2];acc[0]=f8{};acc[1]=f8{};
+  if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();acc[ci][e]=clampf(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c],-448.f,448.f)*fw[8704+c];}}
+  else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++){uint c=ci*16+rc();float remaining=fw[8704+c],piece=0;for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining-=piece;}
+@@ -176,7 +176,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+  }
+ #if HIP_C32_ALIAS_FFN_V && HIP_C32_REGISTER_FFN
+  // Preserve the validated contraction-to-FFN phase boundary.
+- sync_window();
++ sync_owned_rows();
+ #endif
+  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){
+ #if HIP_C32_REGISTER_FFN
+@@ -185,7 +185,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
+   ffn[(first+gr()*8+e)*34+ci*16+rc()]=(_Float16)Hrtz(acc[ci][e]);
+ #endif
+  }
+- sync_window();
++ sync_owned_rows();
+  // A single raw QKV plane is reused after its norm has been packed separately.
+  for(uint part=0;part<3;part++){
+   for(uint col=0;col<32;col+=16){f8 acc{};

@@ -1521,3 +1521,11 @@ COMGR编译通过；连续40帧ABBA基线22.823/22.824ms、候选22.853/22.862ms
 COMGR编译通过；连续40帧ABBA：基线22.782/22.847ms，候选21.916/21.927ms，最终FEEA9EF3…匹配、首尾有限。全40帧及24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…；seed123/history匹配75b62d2f…。全检计时读回频率不同，不额外声称21.332ms为连续性能。C32 block70/1/4 × mode0/1/2共9组输出与HLSL逐位一致、无非法值；验证脚本补上CHECK数量与bitdiff/invalid/maxabs强制检查。
 
 固定24模块c32-global-ffn-release-modules，c32_fused_ffn_attention-packed.hsaco SHA256=4F2B207DF5FE199EA2E4BE3868F8F8BDAC9259E83CE8E38F6BA94DC8BD461FDE。仅内核改动，配套DLL沿用13d4dc10…，本轮未部署，游戏仍旧ViT融合模块。脚本test-c32-global-ffn.ps1、validate-c32-global-ffn.ps1、validate-c32-global-ffn-history.ps1；日志release/HIP/c32-global-ffn-test.log、c32-global-ffn-validation.log。
+
+
+### 2026-09-16：部署C32直接权重候选，局部同步实验暂不采用
+部署脚本确认游戏退出，将c32-global-ffn-release-modules全部24模块安装并逐hash通过，DLL沿用13d4dc10e6507eb05120b056a6710498e4922a53e699dd6878be2674614ae821。旧模块/config/DLL备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-c32-global-ffn，AsyncSubmit保持1。实机新FPS未测。
+
+随后仅在独立候选中将FFN展开后、contract→FFN、FFN→QKV的三处整组同步换为已有sync_owned_rows，保留合作输入载入及注意力跨wave读之前的整组同步。当前直接权重路径不再共享contract权重，各wave负责16行，hidden stride132与raw stride33float对应相同字节分区。
+
+COMGR编译通过；连续40帧ABBA：基线21.939/21.940ms、候选21.900/21.912ms，最终FEEA9EF3…一致、首尾有限。仅约0.03ms收益，未进一步全帧/reset，不纳入当前版本，生产源码恢复。补丁experiments/c32-local-ffn.patch、test-c32-local-ffn.ps1，编译定义HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，日志release/HIP/c32-local-ffn-test.log。游戏仍已部署的直接权重版。
