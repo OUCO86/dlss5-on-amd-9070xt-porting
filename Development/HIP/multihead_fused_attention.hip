@@ -1,3 +1,6 @@
+#ifndef HIP_MH_INPUT_DWORD
+#define HIP_MH_INPUT_DWORD 1
+#endif
 // Production MH score/probability/AV fused; normalized f32 HWC input.
 // All kernels flat grid ceil(work_items/256), block32; token count divisible64.
 #pragma clang fp contract(off)
@@ -103,7 +106,11 @@ void mh_attention_fused_fp8(const unsigned char*normalized,const float*w,float*o
  __attribute__((shared)) _Float16 ex[64*66];
  __attribute__((shared)) unsigned char packed[3*64*36];
  // 6912-byte packed Q/K/V. No global intermediate writes.
+#if HIP_MH_INPUT_DWORD
+ for(uint i=tid;i<3*64*8;i+=128){uint part=i/(64*8),tok=(i/8)%64,c=(i%8)*4,p=raster(win,tok,width),word;__builtin_memcpy(&word,normalized+(p*3+part)*channels+head*32+c,4);__builtin_memcpy(packed+(part*64+tok)*36+c,&word,4);}
+#else
  for(uint i=tid;i<3*64*32;i+=128){uint part=i/(64*32),tok=(i/32)%64,c=i%32,p=raster(win,tok,width);packed[(part*64+tok)*36+c]=normalized[(p*3+part)*channels+head*32+c];}
+#endif
  sync_window();
  for(uint key=0;key<64;key+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,packed[(64+key+rc())*36+k]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
@@ -128,7 +135,11 @@ void mh_attention_fused_fp8_out(const unsigned char*normalized,const float*w,uns
  __attribute__((shared)) _Float16 ex[64*66];
  __attribute__((shared)) unsigned char packed[3*64*36];
  // 6912-byte packed Q/K/V. No global intermediate writes.
+#if HIP_MH_INPUT_DWORD
+ for(uint i=tid;i<3*64*8;i+=128){uint part=i/(64*8),tok=(i/8)%64,c=(i%8)*4,p=raster(win,tok,width),word;__builtin_memcpy(&word,normalized+(p*3+part)*channels+head*32+c,4);__builtin_memcpy(packed+(part*64+tok)*36+c,&word,4);}
+#else
  for(uint i=tid;i<3*64*32;i+=128){uint part=i/(64*32),tok=(i/32)%64,c=i%32,p=raster(win,tok,width);packed[(part*64+tok)*36+c]=normalized[(p*3+part)*channels+head*32+c];}
+#endif
  sync_window();
  for(uint key=0;key<64;key+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,packed[(64+key+rc())*36+k]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}

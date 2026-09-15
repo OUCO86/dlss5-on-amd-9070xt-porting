@@ -1041,3 +1041,11 @@ compare_layers.cpp增加mh-only过滤，并在所选融合FFN配置中启用iden
 COMGR/gfx1201编译通过。正常900 ABBA4轮各6次去cold32.722→31.6795ms；seed123/history34.277→32.9245ms。各组四轮最终RGB分别匹配7b959143…/75b62d2f…。HDR异步40帧30.328ms/FEEA9EF3…，24帧每8帧reset30.258ms/22C171FC…，均全有限；HDR非同期ABBA，不把30ms当游戏FPS或直接拼接前轮收益。
 
 新multihead-fast-padded-wave-packed模块SHA49458E566DF2E94E2098333BE1DB7F3D15D83A0655E39BDA9D01363910A53A8C；24模块固定mh-row-sum-release-modules。主机DLL无需修改，配套native-post-merge.addon64/a7b7521b…；未部署，游戏仍5ab7d7d3…+inputDWORD（用户900P26～27FPS）。test-mh-row-sum.ps1复现；日志release/HIP/mh-row-sum-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1、HIP_QKV_ROW_SUM=1。
+
+
+### 2026-09-15：MH attention QKV byte输入DWORD搬运
+multihead_fused_attention的两个byte输入入口把normalized→LDS的逐byte搬运改为memcpy4，保留3×64×36布局、padding和原softmax/WMMA顺序。HIP_MH_INPUT_DWORD默认1，0保留旧逐byte路径；float输入入口不改。
+
+COMGR/gfx1201编译通过。正常900 ABBA4轮各6次去cold31.5085→31.1215ms，seed123/history32.871→32.549ms。各组四轮输出分别保持7b959143…/75b62d2f…。HDR异步40帧30.047ms/FEEA9EF3…，24帧每8帧reset29.932ms/22C171FC…，全有限；HDR为正确性回归，不与异轮数字直接相减。
+
+multihead_fused_attention模块SHA3628F07C3F4A1F3926B712BCC52DD34859C85F926B38B02373355580F0272BB2；24模块固定mh-input-dword-release-modules（包含QKV row-sum与C32 merge-fold）。配套DLL仍native-post-merge.addon64/a7b7521b…；未部署，游戏仍5ab7d7d3…+C32 inputDWORD，用户900P26～27FPS。脚本test-mh-input-dword.ps1，日志release/HIP/mh-input-dword-build/test/history/hdr/reset.log。编译定义HIP_ISA_HALF=1、HIP_MH_INPUT_DWORD=1。
