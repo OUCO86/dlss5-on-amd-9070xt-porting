@@ -1415,3 +1415,15 @@ RunGraph实验允许借用最终输出buffer，EnqueueRaw用非owned Allocation�
 measure-bridge-isolation.ps1增加Graph/Tag参数，实验flags独立写入并检查graph_stats确有重放。Graph1测得完整before24.324ms、pure HIP24.205ms、完整after24.524ms，原始RGB bitdiff0、无非有限；builds3/replays127，与三段输入/输出指针切换相符。
 
 对照此前同程序Graph0 pure24.269ms，只有很小差异。此no-history测例中未见可由Graph消除的大量提交延迟，不能以此声称所有CPU开销为零或泛化到所有场景。Graph默认仍0，未改游戏配置。日志release/HIP/bridge-isolation-graph-summary.log，详细说明bridge-isolation.md。目标仍未达HLSL水平。
+
+
+### 2026-09-16：发现并利用MH FFN收缩的精确分组零结构
+inspect-weight-sparsity.ps1只读统计200个实际矩阵。FFN收缩总体零值约84%，展开/QKV约1%；连续K4中至多2个非零的条件并不覆盖任何完整矩阵，不能直接当完整2:4稀疏支持。进一步核实：36个普通MH收缩矩阵在每32个输出通道对应的128个hidden通道以外全为零；另外10个C32收缩宽度本来就是128，其分组检查是平凡成立。
+
+新增ValidateGroupedMhContract，在未打包权重上逐值检查范围与零结构；grouped cache key独立，越界非零直接拒绝。host测试覆盖有效组、负零、分组外非零及截断数据。新_g128入口只遍历本wave所属组的128个K，原非零K16顺序和F(Hrtz)输出保持，不修改权重。C64/C128/C256收缩从K=256/512/1024缩到128，展开和第三投影不变。零项可能影响零符号，但此收缩输出的F会规范化精确零，实际测试仍做结果核验。
+
+连续40帧ABBA：基线24.709/24.727ms，候选23.792/23.781ms，最终FEEA9EF3…匹配、首尾有限。40帧全检及24帧每8帧reset全有限，最终分别匹配FEEA9EF3…/22C171FC…。另编译reference runner，以seed123/history=input900.rgba32f运行完整当前链，最终RGB75b62d2f…匹配；该带上传读回计时不当性能基准。
+
+HIP_FAST默认grouped_mh_contract=true，DLSS5_HIP_GROUPED_CONTRACT=0/1覆盖，reference CLI --grouped-mh-contract；旧入口保留。内核、runner、完整DLL编译通过：release/HIP/native-grouped-contract.addon64 SHAce90a942507482e559f523372e2fee91f84f9e9e3c004e473bebf8969d96ffd2；MH packed模块SHAE239DC3A1B4C5B9D9E2C2D3075FC7ED01832EED9E9E0E0A3AB58B7D96637EB7C；24模块固定mh-grouped-contract-release-modules。未部署，游戏仍c4a25659…+prefix-direct-input。
+
+工具：inspect-weight-sparsity.ps1、test_grouped_contract_guard.cpp、test-mh-grouped-contract.ps1、validate-grouped-contract.ps1、validate-grouped-history.ps1；日志release/HIP/weight-sparsity.csv、mh-grouped-contract-build/test.log、grouped-contract-validation.log。编译MH定义HIP_ISA_HALF=1、HIP_PREPACKED_WEIGHTS=1。

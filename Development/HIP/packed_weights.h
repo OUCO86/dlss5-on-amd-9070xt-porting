@@ -26,6 +26,11 @@ inline void PackWeightRegions(std::vector<float>&values,const std::vector<std::p
   uint8_t encoded=ExactWeightFp8(values[r.first+i]);bytes[r.first*4+i]=encoded;
  }
 }
+// Exact structural precondition for the grouped MH contraction fast path.
+inline void ValidateGroupedMhContract(const std::vector<float>&v,unsigned c){
+ if((c!=64&&c!=128&&c!=256)||v.size()<size_t(8)*c*c)throw std::runtime_error("grouped contract shape");
+ for(unsigned row=0;row<c;row++)for(unsigned k=0;k<4*c;k++)if(k/128!=row/32&&v[size_t(4)*c*c+size_t(row)*4*c+k]!=0.f)throw std::runtime_error("nonzero outside grouped contraction");
+}
 // Reorder packed row-major B into [N/16][K/32][K32][N16], preserving bytes.
 inline void TilePackedMatrix(std::vector<float>&v,size_t start,size_t rows,size_t columns){
  if(rows%16||columns%32||start>v.size()||rows*columns>(v.size()-start)*4)throw std::runtime_error("packed tile shape");
