@@ -1759,3 +1759,9 @@ current比较/profile脚本更新固定模块和benchmark_split_ffn_fp8.exe（�
 完整DLL release/HIP/native-vit-qkv-halfweight.addon64 SHA121042cdfd89492e4dee4b1477142470abdc67b6f678e6617d2952744de34883；固定24模块vit-qkv-halfweight-release-modules，deep_fast-packed模块SHAAB04D407E6A78B429FEAD20CB4D24A8A29BC680AED5D248FD904BA29ECF07627。未部署，游戏仍872ac9cf…+split-contract-fp8-release-modules。
 
 脚本test-vit-qkv-halfweight.ps1、test_vit_qkv_halfweight.cpp、validate-vit-qkv-halfweight*.ps1，日志release/HIP/vit-qkv-halfweight-test.log、vit-qkv-halfweight-validation.log。当前实现仍分配原qw缓存后取half缓存，初始化存储可后续单独检查；未将CPU编码检查扩称所有浮点舍入算法验证。
+
+
+### 2026-09-16：部署ViT F16权重版并刷新当前差距
+部署脚本确认游戏退出，安装native-vit-qkv-halfweight.addon64（SHA121042cdfd89492e4dee4b1477142470abdc67b6f678e6617d2952744de34883）及vit-qkv-halfweight-release-modules全部24模块，逐hash通过，AsyncSubmit保持1。旧DLL/模块/config备份D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-qkv-halfweight。新版实际游戏FPS尚无反馈。
+
+current比较/profile脚本更新固定模块和benchmark_vit_qkv_halfweight.exe，compare_layers_current.exe重编译上传。连续40帧edges-only ABBA：HLSL16.772/16.770ms，HIP19.681/19.687ms，各自最终golden匹配、首尾有限；当前差距约2.91ms，仍未达到目标。日志release/HIP/backend-vit-halfweight-current.log。本轮完成部署及复核，无额外内核改动。
