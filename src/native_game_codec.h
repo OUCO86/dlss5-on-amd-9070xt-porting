@@ -12,6 +12,10 @@
 class NativeGameCodec {
  ID3D12Resource*source[3]{};ID3D12Resource*output{};
  ID3D12DescriptorHeap*heap{};ID3D12RootSignature*root{};ID3D12PipelineState*pso{};
+ struct Binding {ID3D12DescriptorHeap*heap;std::array<ID3D12Resource*,3> sources;};
+ std::vector<Binding> bindings;
+ static constexpr size_t binding_limit=8;
+ void ClearBindings(){for(auto&b:bindings){b.heap->Release();for(auto*r:b.sources)if(r)r->Release();}bindings.clear();}
  UINT count{};bool recorded{};NativeInputGeometry geometry{};UINT out_width{},out_height{},row_pitch{};
  bool unorm_out{},unorm8_out{};DXGI_FORMAT out_format{};
  static void step(ID3D12Device*d,const char*what){if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-game-oneshot.txt").c_str(),L"ab")){fprintf(f,"pid=%lu tick=%llu event=codec_step detail=%s removed=%08x\n",GetCurrentProcessId(),GetTickCount64(),what,unsigned(d->GetDeviceRemovedReason()));fclose(f);}}
@@ -21,7 +25,7 @@ class NativeGameCodec {
  }
 public:
  NativeGameCodec()=default;NativeGameCodec(const NativeGameCodec&)=delete;
- ~NativeGameCodec(){for(auto*r:source)if(r)r->Release();if(output)output->Release();if(heap)heap->Release();if(root)root->Release();if(pso)pso->Release();}
+ ~NativeGameCodec(){ClearBindings();for(auto*r:source)if(r)r->Release();if(output)output->Release();if(heap)heap->Release();if(root)root->Release();if(pso)pso->Release();}
  // Encode: {linear original}. Decode: {encoded proxy, encoded neural, linear original}.
  void Create(ID3D12Device*d,const std::vector<ID3D12Resource*>&inputs,const std::wstring&dir){
   if(count||!d||(inputs.size()!=1&&inputs.size()!=3))throw std::runtime_error("codec initialization contract");
@@ -61,7 +65,14 @@ public:
   const D3D_SHADER_MACRO uint_out[]={{"NATIVE_CODEC_FIT",fit},{"NATIVE_CODEC_UINT_OUT","1"},{"NATIVE_CODEC_SRGB_IO",srgb_io},{nullptr,nullptr}},unorm8[]={{"NATIVE_CODEC_FIT",fit},{"NATIVE_CODEC_UNORM8_OUT","1"},{"NATIVE_CODEC_BGRA",(out_format==DXGI_FORMAT_B8G8R8A8_UNORM||out_format==DXGI_FORMAT_B8G8R8A8_UNORM_SRGB)?"1":"0"},{"NATIVE_CODEC_DEBUG_TINT",(_wgetenv(L"DLSS5_DEBUG_TINT")&&!wcscmp(_wgetenv(L"DLSS5_DEBUG_TINT"),L"1"))?"1":"0"},{"NATIVE_CODEC_SRGB_IO",srgb_io},{nullptr,nullptr}},plain[]={{"NATIVE_CODEC_FIT",fit},{"NATIVE_CODEC_SRGB_IO",srgb_io},{nullptr,nullptr}}; /* DLSS5_DEBUG_TINT=1 (diagnostic): the UNORM8 path writes a magenta-tinted picture so the write-back is visible */hr=CompileNativeShader(dir+(count==3?L"\\native_codec_decode.hlsl":L"\\native_codec_encode.hlsl"),unorm8_out?unorm8:unorm_out?uint_out:plain,"main",&b,&err);if(err)err->Release();check(hr,"compile");step(d,"compiled");
   D3D12_COMPUTE_PIPELINE_STATE_DESC pd{};pd.pRootSignature=root;pd.CS={b->GetBufferPointer(),b->GetBufferSize()};hr=NativeCreateComputePipelineState(d,&pd,IID_PPV_ARGS(&pso));b->Release();check(hr,"pso");
  }
- // Caller must have completed every GPU use of this stage before rebinding.
+ // Cached heaps are immutable and retain their resources. A full cache requires
+ // completion before eviction; the current heap remains owned separately.
+ bool RebindNeedsCompletion(UINT index,ID3D12Resource*replacement)const{
+  if(index>=count)return true;
+  for(const auto&b:bindings){bool match=true;for(UINT i=0;i<count;i++)if(b.sources[i]!=(i==index?replacement:source[i]))match=false;if(match)return false;}
+  return bindings.size()>=binding_limit;
+ }
+ // Caller completes GPU uses only when RebindNeedsCompletion reports eviction.
  void RebindInputAfterCompletion(UINT index,ID3D12Resource*replacement){
   if(!pso||index>=count||!replacement)throw std::runtime_error("codec rebind contract");
   if(replacement==source[index])return;
@@ -72,9 +83,22 @@ public:
   ID3D12Device*d=nullptr,*owner=nullptr;check(heap->GetDevice(IID_PPV_ARGS(&d)));
   auto hr=replacement->GetDevice(IID_PPV_ARGS(&owner));if(FAILED(hr)){d->Release();check(hr);}
   bool same=NativeSameDevice(owner,d);owner->Release();if(!same){d->Release();throw std::runtime_error("codec rebind device mismatch");}
-  D3D12_SHADER_RESOURCE_VIEW_DESC sv{};sv.Format=NativeViewFormat(desc.Format);sv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;sv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;sv.Texture2D.MipLevels=1;
+  for(const auto&b:bindings){bool match=true;for(UINT i=0;i<count;i++)if(b.sources[i]!=(i==index?replacement:source[i]))match=false;
+   if(match){b.heap->AddRef();heap->Release();heap=b.heap;replacement->AddRef();source[index]->Release();source[index]=replacement;d->Release();return;}}
+  if(bindings.size()>=binding_limit)ClearBindings(); // caller has waited
+  bool retained=false;for(const auto&b:bindings)if(b.heap==heap)retained=true;
+  if(!retained){Binding saved{heap,{source[0],source[1],source[2]}};saved.heap->AddRef();for(auto*r:saved.sources)if(r)r->AddRef();bindings.push_back(saved);}
+  ID3D12DescriptorHeap*next=nullptr;D3D12_DESCRIPTOR_HEAP_DESC hd{D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,count+1,D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,0};
+  auto create_hr=d->CreateDescriptorHeap(&hd,IID_PPV_ARGS(&next));if(FAILED(create_hr)){d->Release();check(create_hr,"rebind heap");}
+  heap->Release();heap=next;
+  D3D12_SHADER_RESOURCE_VIEW_DESC sv{};sv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;sv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;sv.Texture2D.MipLevels=1;
+  auto cursor=heap->GetCPUDescriptorHandleForHeapStart();const UINT stride=d->GetDescriptorHandleIncrementSize(hd.Type);
+  for(UINT i=0;i<count;i++){auto*r=i==index?replacement:source[i];sv.Format=NativeViewFormat(r->GetDesc().Format);d->CreateShaderResourceView(r,&sv,cursor);cursor.ptr+=stride;}
+  D3D12_UNORDERED_ACCESS_VIEW_DESC uv{};if(unorm_out||unorm8_out){uv.Format=DXGI_FORMAT_R32_TYPELESS;uv.ViewDimension=D3D12_UAV_DIMENSION_BUFFER;uv.Buffer.NumElements=row_pitch*out_height/4;uv.Buffer.Flags=D3D12_BUFFER_UAV_FLAG_RAW;}else{uv.Format=DXGI_FORMAT_R16G16B16A16_FLOAT;uv.ViewDimension=D3D12_UAV_DIMENSION_TEXTURE2D;}d->CreateUnorderedAccessView(output,nullptr,&uv,cursor);
+  sv.Format=NativeViewFormat(desc.Format);
   auto cpu=heap->GetCPUDescriptorHandleForHeapStart();cpu.ptr+=SIZE_T(index)*d->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   replacement->AddRef();d->CreateShaderResourceView(replacement,&sv,cpu);d->Release();source[index]->Release();source[index]=replacement;
+  Binding fresh{heap,{source[0],source[1],source[2]}};fresh.heap->AddRef();for(auto*r:fresh.sources)if(r)r->AddRef();bindings.push_back(fresh);
  }
  void Record(ID3D12GraphicsCommandList*c,const std::vector<D3D12_RESOURCE_STATES>&before,float paper_white=1.f){
   if(!c||!pso||before.size()!=count||(paper_white!=1.f&&paper_white!=.5f&&paper_white!=2.f))throw std::runtime_error("codec unverified record contract");

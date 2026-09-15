@@ -27,3 +27,8 @@ x86_64-w64-mingw32-g++ -w -DDLSS5_USE_HIP=1 -std=c++17 -O2 -static -municode -Is
 | 颜色及运动轮换 | 43712DDEE8EA04AD645BB2A1AEC55F60839F27C0C3E293A94DC2A5EC35399DFF |
 
 独立HDR40帧验证同步／异步热中位39.375／38.833ms，最终hash均FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58且全有限。短轮离线数据不代表稳定速度收益；实机异步和overlap性能另行验证。游戏avg_ms_per_frame是处理帧间隔，不能和上述推理计时直接相减。
+
+
+## 颜色绑定快取回归
+
+当前头文件编译探针时输出`queued_frame_cache.exe`，与上一修复版（005bced／e78edb1头文件）构建的`queued_frame_fixed.exe`对照。将`test-binding-cache.ps1`放入相同远端目录运行。探针rotate=2新增12张不同纹理，超出8组绑定快取，逐帧内容仍与两张交替相同，因此可沿用原同步hash检查淘汰正确性。五项正确性测试通过后执行8轮ABBA，比较每次后10帧平均耗时；本轮37.52715→37.16005ms为各方案4次读数的中位数。运动SRV轮换仍采用完成等待，未在本次优化。

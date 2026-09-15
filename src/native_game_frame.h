@@ -221,11 +221,11 @@ public:
  }
  void RebindSourceAfterCompletion(ID3D12Resource*source){
   // CPU serialization does not imply GPU completion in deferred mode.
-  // A descriptor rewrite and releasing its old resource require a fence wait.
+  // Immutable cached bindings need no wait; eviction requires GPU completion.
   std::lock_guard<std::mutex>guard(mutex);
   if(!ready||failed||!source)throw std::runtime_error("frame rebind unavailable");
   if(source==resources->original)return;
-  try{resources->submit.Flush();if(resources->overlap)resources->compute.Flush();resources->encode.RebindInputAfterCompletion(0,source);if(!resources->overlap)resources->decode.RebindInputAfterCompletion(2,source);resources->original=source;}
+  try{if(resources->encode.RebindNeedsCompletion(0,source)||(!resources->overlap&&resources->decode.RebindNeedsCompletion(2,source))){resources->submit.Flush();if(resources->overlap)resources->compute.Flush();}resources->encode.RebindInputAfterCompletion(0,source);if(!resources->overlap)resources->decode.RebindInputAfterCompletion(2,source);resources->original=source;}
   catch(...){failed=true;throw;}
  }
  // Synchronizes encode -> network -> FP16 bridge -> decode -> FP16 copy on the

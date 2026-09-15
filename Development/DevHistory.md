@@ -911,3 +911,14 @@ RebindSourceAfterCompletion原来只持有CPU锁，在deferred提交尚未完成
 
 ### 2026-09-15 20:26：部署异步重绑修复到《剑星》
 用户授权实机验证。部署脚本确认游戏退出后安装8568acff121c6fab93b7b1f77d9df8c1c14549a6bee303a4e7ab35abd2bd09d7 DLL及vit-layout-modules的24个HSACO，逐hash校验通过。游戏私有配置ASYNC_SUBMIT=1，NETWORK_HEIGHT=900、HIP_FAST=1，continuous/history保持。旧4c062… DLL、模块、配置和标记备份在D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-async-rebind。部署脚本新增AsyncSubmit参数，默认仍0；-Restore -BackupName before-async-rebind可恢复原同步安装。实际画面和FPS待用户启动游戏测试，本次没有启动游戏或宣称实机已通过。
+
+
+### 2026-09-15 20:50：用户实测异步版约24FPS
+Zero试玩8568acff…异步修复候选后报告约24FPS，上一同步版报告约17FPS。保留为实机观察，不把两次试玩当严格同场景基准；用户未逐项描述画面检查结果。本轮开始确认游戏已退出。
+
+### 2026-09-15：颜色输入不可变描述符快取
+NativeGameCodec最多保留8组完整输入绑定、shader-visible heap和resource引用。命中直接切换heap；未命中创建独立heap，不改写GPU使用中的描述符；快取满额才由NativeGameFrame等待完成后淘汰。编码器和解码器分别维护快取。运动纹理保持原重绑等待。未改模型计算、量化或HSACO。
+
+queued_frame_probe新增rotate=2（12张不同颜色纹理），覆盖8组上限后的淘汰。test-binding-cache.ps1的颜色轮换、颜色+motion轮换、固定纹理变内容、12贴图淘汰、淘汰+motion五项均通过，全12帧分别匹配已有411DF44C…／43712DDE…同步hash，全部有限。随后两轮ABBA共8次、每次排除前2帧：旧版4次热均值的中位37.52715ms，快取版37.16005ms，约0.98%降低；所有输出hash一致。此为离线颜色轮换场景，不是实机FPS增幅。
+
+完整DLL编译通过：release/HIP/native-binding-cache.addon64，SHA256 56a97612a43f2cc200a5e395d72fd2fdaab816ee3478b6dbb4a4105303f255ac。配套仍vit-layout-modules24模块。没有部署，游戏保持用户报告24FPS的8568acff…、async1。日志release/HIP/binding-cache.log。
