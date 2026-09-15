@@ -1,0 +1,13 @@
+diff --git a/Development/HIP/deep_fast.hip b/Development/HIP/deep_fast.hip
+index 867edf6..541cf51 100644
+--- a/Development/HIP/deep_fast.hip
++++ b/Development/HIP/deep_fast.hip
+@@ -279,7 +279,7 @@ void split_ffn_fused_fp8(const float*in,const float*w,float*out,uint tokens){
+  if(first>=tokens)return;
+  __attribute__((shared)) unsigned char hidden[16*260];
+  f8 expanded[4]{};
+- for(uint j=0;j<4;j++)for(uint k=0;k<64;k+=16){h8 a{},b{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*512+g*64+k+gr()*8+e];__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w+262144)+g*16384+(wave*64+j*16+rc())*64+k+gr()*8,16);expanded[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,expanded[j]);}
++ for(uint k=0;k<64;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*512+g*64+k+gr()*8+e];for(uint j=0;j<4;j++){h8 b{};__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w+262144)+g*16384+(wave*64+j*16+rc())*64+k+gr()*8,16);expanded[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,expanded[j]);}}
+  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){float v=Hrtz(expanded[j][e]),gate=clampf(v,-4.f,4.f),poly=gate*(absf(gate)*(-.055908203125f)+.447265625f)+.89453125f;hidden[(gr()*8+e)*260+wave*64+j*16+rc()]=byte_F(v*poly);}
+  __builtin_amdgcn_s_barrier();
+  f8 result{};

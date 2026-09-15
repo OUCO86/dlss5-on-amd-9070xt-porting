@@ -1905,3 +1905,11 @@ COMGR与专用benchmark编译通过；连续40帧ABBA基线19.330/19.368ms，候
 随后完整网络--profile复现PROFILE INVALID，两轮中有负值/非有限区间，输出RGB golden仍匹配。再加--wall-profile逐核drain/同步，首轮仍出现INVALID，第二轮数值正常（TOTAL23.152340ms），不能据此宣布整网event可靠。两个网络脚本显式检测INVALID并返回失败，未将失败计时用于优化结论。保留整体wall-time ABBA为性能判断依据。
 
 工具check-event-timing.ps1、check-network-event-profile.ps1、check-network-event-serialized.ps1；编译探针：MinGW C++17/O2/static，include hip_api.h。日志release/HIP/event-timing-current.log、network-event-profile-current.log、network-event-serialized-current.log。本轮诊断，无生产代码/部署变化、无新增提速。
+
+
+### 2026-09-16：C512展开交换循环共用输入无稳定收益
+仅split_ffn_fused_fp8的F16展开阶段将j外层/k内层改为k外层/j内层，四个输出片段共用同一h8输入，保持各片K0/16/32/48累加顺序、half权重布局、激活与FP8收缩。COMGR编译通过。
+
+连续40帧ABBA基线19.312/19.361ms，候选19.328/19.318ms，最终FEEA9EF3…一致、首尾有限。候选HSACO SHA4DA96B4F…与基线73B5CBD3…不同，未见稳定帧时间收益，未扩大全帧/reset，不采用，源码恢复，游戏不变。
+
+补丁experiments/split-expand-share.patch、test-split-expand-share.ps1，编译HIP_ISA_HALF=1/HIP_PREPACKED_WEIGHTS=1，目标deep_fast-packed.hsaco。日志release/HIP/split-expand-share-test.log。
