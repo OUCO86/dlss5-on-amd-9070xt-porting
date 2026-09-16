@@ -20,6 +20,15 @@ namespace hip_reference { struct LayerBenchmark { static bool Check(Network&n){b
   n.api.Check(n.api.hipMemcpy(ya.data(),n.P(qa),ya.size(),2),"qkv");n.api.Check(n.api.hipMemcpy(yb.data(),n.P(qb),yb.size(),2),"qkv frag");
   size_t pd=0,td=0,qd=0,bad=0;for(size_t i=0;i<xa.size();i++){pd+=memcmp(&xa[i],&xb[i],4)!=0;size_t r=i/512,c=i%512;unsigned char exp=ExactWeightFp8(xa[i]);td+=x8[((r/16)*16+c/32)*512+(r%16)*32+c%32]!=exp;bad+=!std::isfinite(xa[i]);}
   for(size_t i=0;i<ya.size();i++)qd+=ya[i]!=yb[i];
+  /* attention projection: synthetic AV bytes, feature = projection output, crop (50x32 work grid, 46x28 valid at 2,2) and no crop, post 0 and 3 */
+  for(unsigned mode=0;mode<3;mode++){U workw=tokens==1600?50:tokens==960?40:60,workh=tokens/workw,cropw=mode==0?workw:workw-4,croph=mode==0?workh:workh-4,csx=mode==0?0:2,csy=csx,post=mode==2?3:0;
+   std::vector<unsigned char>avv(size_t(tokens)*512);for(size_t i=0;i<avv.size();i++){unsigned code=(i*31+i/19+pattern*7)%118;if(i%4==0)code|=128;avv[i]=(unsigned char)code;}
+   auto av=n.Upload(avv.data(),avv.size());size_t outn=(cropw?size_t(cropw)*croph:size_t(tokens))*512;auto oa=n.New(outn),ob=n.New(outn);
+   n.Run("mh_fast","mh_attention_crop",size_t(tokens)*512,n.P(av),n.P(pa),aw,n.P(oa),tokens,post,cropw,croph,workw,csx,csy,U(512));
+   n.Run("mh_fast","mh_attention_project_frag_c512",size_t(tokens)*512,n.P(av),n.P(pa),fw,n.P(ob),tokens,post,cropw,croph,workw,csx,csy);n.Synchronize();
+   std::vector<float>za(outn),zb(outn);n.api.Check(n.api.hipMemcpy(za.data(),n.P(oa),outn*4,2),"proj ref");n.api.Check(n.api.hipMemcpy(zb.data(),n.P(ob),outn*4,2),"proj frag");
+   size_t d=0,b2=0;for(size_t i=0;i<outn;i++){d+=memcmp(&za[i],&zb[i],4)!=0;b2+=!std::isfinite(za[i]);}
+   printf("block=%u tokens=%u pattern=%u attnproj mode=%u bitdiff=%zu invalid=%zu\n",block,tokens,pattern,mode,d,b2);ok=ok&&!d&&!b2;}
   printf("block=%u tokens=%u pattern=%u proj_bitdiff=%zu tile_bytediff=%zu qkv_bytediff=%zu invalid=%zu\n",block,tokens,pattern,pd,td,qd,bad);ok=ok&&!pd&&!td&&!qd&&!bad;
  }
  return ok;}}; }

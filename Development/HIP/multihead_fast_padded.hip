@@ -351,6 +351,22 @@ FASTWAVE void mh_qkv_normalize_frag_c512(const unsigned char*in8,const float*w,u
  for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint row=g*8+e,p=first+row,c=col+n*16+rc;if(p<tokens)out[p*N+c]=static_cast<unsigned char>(q8(F(acc[n][e]*raw[16*65+(n/2)*16+row])));}
 }
 
+// C512 attention projection in the same shape (host option c512_proj_frag): one wave = 16 tokens x 64 output columns,
+// A = the attention's E4M3 AV bytes (8 contiguous bytes per lane per K16), B = fragment-tiled E4M3 projection weights
+// (PackedMhWeightQkvFrag, region after the QKV rows), no LDS. Residual, epilogue (post 0 -> F(Hrtz), 3 -> Hrtz, 4 -> F)
+// and the crop mapping follow fast_dense<ByteInput,Crop> with matrix_residual=0 exactly.
+FASTWAVE void mh_attention_project_frag_c512(const unsigned char*av8,const float*feature,const float*w,float*out,uint tokens,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy){
+ const uint C=512;uint l=__builtin_amdgcn_workitem_id_x(),rc=l&15,g=l>>4,block=__builtin_amdgcn_workgroup_id_x(),first=block/8*16,col=block%8*64;if(first>=tokens)return;
+ const unsigned char*wb=reinterpret_cast<const unsigned char*>(w)+size_t(3)*C*C*4;const uint skip=4*C*C+(C/32)*4096+C/32;
+ f8 acc[4];for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint p=first+g*8+e,c=col+n*16+rc;acc[n][e]=p<tokens?Hrtz(feature[p*C+c]*w[skip+c]):0.f;}
+ bool live=first+rc<tokens;const unsigned char*arow=av8+(first+rc)*C+g*8;
+ for(uint k=0;k<C;k+=32){uint gs=k/32;
+  for(uint h=0;h<2;h++){i2 a{};if(live)__builtin_memcpy(&a,arow+k+h*16,8);
+   for(uint n=0;n<4;n++){uint n0=col+n*16+rc;i2 b;__builtin_memcpy(&b,wb+((n0/16)*16+gs)*512+((h*2+g)*16+n0%16)*8,8);acc[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[n]);}}}
+ for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint p=first+g*8+e,c=col+n*16+rc;if(p>=tokens)continue;float a=acc[n][e],v=post==3?Hrtz(a):post==4?F(a):F(Hrtz(a));uint dest=p*C+c;
+  if(cropw){uint x=p%workw,y=p/workw;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*C+c;}out[dest]=v;}
+}
+
 // One wave per pixel/head. Read every channel coalesced, but preserve the
 // production sequential FP32 addition order with scalar-lane extraction.
 // ABI matches normalize_fast; block256, grid ceil(tokens*heads/8).

@@ -32,6 +32,7 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV flag");o.ffn_qkv=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DUP_PREFIX"))o.dup_prefix=v;
   if(const char*v=std::getenv("DLSS5_HIP_DUP_COUNT")){o.dup_count=unsigned(strtoul(v,nullptr,10));if(o.dup_count<1||o.dup_count>8)throw std::runtime_error("dup count 1..8");}
+  if(const char*v=std::getenv("DLSS5_HIP_C512_PROJ_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("C512 fragment projection flag");o.c512_proj_frag=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_C512_QKV_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("C512 fragment QKV flag");o.c512_qkv_frag=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_MH_ATTN_W16")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("MH attention w16 flag");o.mh_attn_w16=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DECODER_H16W")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("decoder half weight flag");o.decoder_h16w=!strcmp(v,"1");}
