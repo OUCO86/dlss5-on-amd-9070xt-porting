@@ -2026,3 +2026,6 @@ split_mix_blocked +0.44（0.034/块）；split_ffn_fused_fp8 +0.22（0.017）；
 mh_qkv_normalize_wave_c512：128线程组把16 token的A按pack4打包进LDS一次，四个wave各算64列（两个头）K=512 FP8 MMA链，B直接读预打包[N][K]字节，行平方和按j=0..31顺序在wave私有LDS tile上做，输出q8(F(acc*inv))与fast_dense<Normalize>同式。选项qkv_norm_wave_c512（env DLSS5_HIP_QKV_WAVE_C512、CLI --qkv-wave-c512，默认关）。test_c512_qkv_wave.cpp：block23/40×1600/960/2160 token×两种输入全0差异。ABBA关19.277/19.231、开19.418/19.386，最终FEEA9EF3…一致，**+0.15更慢**。
 
 把今天六次null放一起看（ViT字节流/half流/N4、FFN-QKV批量归一、池化投影融合、C512 QKV wave级）：凡是"每16个token一个wave、B从全局重读"的设计都不比"64×64 tile经LDS共享A/B"的老核快，甚至更慢——权重每16 token重读一遍，L2流量是tile版的4倍（C512 QKV：78MB对20MB每次launch）。瓶颈是B的重读带宽，不是barrier数或转换指令。这也解释了HLSL为什么给ViT留了BLOCK_M=4版本（900p因token数不整除没用上）。方向应改为：加大每次权重加载覆盖的token数（M tile 32/64），同时控制累加器数量避免scratch（ViT expand M4就是栽在16个累加器上）。日志release/HIP/c512-qkv-test.log。
+
+### 2026-09-16 18:15：部署ViT三刀（native-vit-fused.addon64 + vit-expand-fm4-modules）
+游戏未运行。deploy-stellarblade-update.ps1 -AsyncSubmit 1 -BackupName before-vit-fused，安装DLL BE4568D566E8C59DD8AD97AE13F1B84B5EE4A2F999D89834E22AA2E644AE85C0与24模块并逐hash通过；旧DLL c8842686…+ffn-qkv-round-byte-release-modules备份在D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-fused（-Restore可回滚）。HIP_FAST默认含fused ViT attention/字节QKV/frag expand（离线−0.23ms，19.36→19.13）。今天下午新增的选项（byte/half stream、N4、FFN-QKV bn、pool fused、C512 wave QKV、dup诊断）全部默认关，不影响游戏。游戏实测FPS待Zero反馈。
