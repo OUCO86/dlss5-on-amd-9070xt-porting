@@ -2161,3 +2161,10 @@ c32h-modules三道全过：全40帧FEEA9EF3…、24帧reset 22C171FC…、seed12
 - `HIP_C32_LOCAL_FFN_SYNC=1 + HIP_C32_LOCAL_ATTN_SYNC=1`：第1轮HDR哈希变化（validate-hdr抛'HDR output changed'），与lane staging/prefetch组合后不再逐位一致，不再考虑；宏留0并在此记录为"当前不正确"。
 - `HIP_C32_DIAG_WEIGHTS=1`（链残差三段对角B片由host预算，核内load8+3×2×2次MMA替代逐元素scale_piece循环；VGPR 199）：15.833/15.852对15.687/15.683，**−0.16**（09-16只有−0.05在噪声边缘）。默认翻1，验证后部署。
 c32dg-modules三道全过（validate-modules.ps1：benchmark_pinline.exe默认flag，全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…），与native-pinline.addon64部署，备份before-c32dg。decoder的skip scale提升（`HIP_DEC_HOIST_SCALE`）ABBA 15.807/15.816对15.804/15.841，null，宏留0。日志release/HIP/c32nu-test.log、c32ls-test.log、c32dg-test.log、c32dg-validate.log、dech-test.log。**离线HIP≈15.5 / HLSL 16.8，反超≈1.3ms。**
+两个多头旧null复测（flag ABBA，c32dg-modules + benchmark_pinline.exe）：`DLSS5_HIP_MH_FFN_FRAG=1` 15.358/15.360对15.353/15.380，仍null；`DLSS5_HIP_TILED_FFN_SMALL=1` 15.372/15.407对15.719/15.682，仍+0.32。小通道FFN权重读法不是瓶颈这一条没变。日志release/HIP/ffnfrag2-test.log、tsmall2-test.log。
+`HIP_C32_LDS_VECTOR=1`第四次复测（c32lv对c32dg）：15.718/15.734对15.730/15.716，仍null（VGPR 199不变）。日志release/HIP/c32lv-test.log。
+
+### 2026-09-17 02:32起：多头FFN+QKV核残差/输入读法（ISA：8+12个load→wait）
+`mh_ffn_fused_c*_project_mapped_g128_qkv[_bytein_fb]`的ISA：投影残差初值`Hrtz(load_in(...)*w[9*C*C+..])`8个元素各一次条件load+等待，byte输入变体的协作staging（pack4）再12个。宏`HIP_FFN_HOIST_RES`：1=残差8个读改无分支（`ffn_input[8]_nb`：索引钳到窗内、无条件load、窗测试select，scale读一次）；2=staging的pack4也用无分支读。ABBA（对c32dg）：级1 15.688/15.699对15.658/15.669，**−0.03**；级2见下。
+级2（ffnh2对c32dg）：15.661/15.706对15.547/15.545，**−0.14**（VGPR 96/96/81，spill 0）。默认翻2，验证后部署。
+ffnh2-modules三道全过（validate-modules.ps1：全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…），与native-pinline.addon64部署，备份before-ffnh2。日志release/HIP/ffnh-test.log、ffnh2-test.log、ffnh2-validate.log。**离线HIP≈15.55（同批基线漂到15.7档时候选15.55）/ HLSL 16.8。今夜累计：16.90→15.5，−1.4ms，全部逐位一致。**
