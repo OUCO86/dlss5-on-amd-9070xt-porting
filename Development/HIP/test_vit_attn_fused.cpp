@@ -54,12 +54,25 @@ namespace hip_reference { struct LayerBenchmark { static bool Check(Network&n){b
   std::vector<unsigned char>ef4(e1.size());n.api.Check(n.api.hipMemcpy(ef4.data(),n.P(hf4),ef4.size(),2),"read expand frag m4");
   size_t f4diff=0;for(size_t i=0;i<e1.size();i++)f4diff+=e1[i]!=ef4[i];
   printf("tokens=%u pattern=%u expand_frag_m4_bytediff=%zu\n",tokens,pattern,f4diff);ok=ok&&!f4diff;
+  auto hf2=n.New(size_t(tokens)*1024);n.Run("deep","vit_expand_blocked_fp8_frag_bytein_m2",size_t(tokens)*4096,n.P(packed),fw2,n.P(hf2),tokens,U(1024),U(4096));n.Synchronize();
+  std::vector<unsigned char>ef2(e1.size());n.api.Check(n.api.hipMemcpy(ef2.data(),n.P(hf2),ef2.size(),2),"read expand frag m2");
+  size_t f2diff=0;for(size_t i=0;i<e1.size();i++)f2diff+=e1[i]!=ef2[i];
+  printf("tokens=%u pattern=%u expand_frag_m2_bytediff=%zu\n",tokens,pattern,f2diff);ok=ok&&!f2diff;
+  auto pt=n.New(size_t(tokens)*256),hft=n.New(size_t(tokens)*1024);
+  n.Run("deep","vit_pack_input_tiled",size_t(tokens)*256,n.P(cin),n.P(pt),U(tokens*1024));
+  n.Run("deep","vit_expand_blocked_fp8_frag_tiledin",size_t(tokens)*4096,n.P(pt),fw2,n.P(hft),tokens,U(1024),U(4096));n.Synchronize();
+  std::vector<unsigned char>eft(e1.size());n.api.Check(n.api.hipMemcpy(eft.data(),n.P(hft),eft.size(),2),"read expand tiledin");
+  size_t ftdiff=0;for(size_t i=0;i<e1.size();i++)ftdiff+=e1[i]!=eft[i];
+  printf("tokens=%u pattern=%u expand_tiledin_bytediff=%zu\n",tokens,pattern,ftdiff);ok=ok&&!ftdiff;
   /* byte stream: contract (byte skip in, byte out), QKV byte in, attention byte out, project byte in/out. Each stage is
      compared with the f32-stream kernel fed the equivalent f32 tensor; decoded bytes must match the f32 bits. */
   auto cw=n.PackedVitWeight(n.Block(31,"contract"),1024,4096,false);auto pw=n.PackedDeepWeight(n.Block(31,"projection"),1048576);
   auto cf=n.New(size_t(tokens)*1024),c8=n.New(size_t(tokens)*256);
   n.Run("deep","vit_contract_blocked_fp8",size_t(tokens)*1024,n.P(h1),cw,n.P(cin),n.P(cf),tokens,U(4096),U(1024));
   n.Run("deep","vit_contract_blocked_fp8_bstream",size_t(tokens)*1024,n.P(h1),cw,n.P(packed),n.P(c8),tokens,U(4096),U(1024));
+  auto cff=n.New(size_t(tokens)*1024);n.Run("deep","vit_ffn_fused",size_t(tokens)*1024,n.P(packed),fw2,cw,n.P(cin),n.P(cff),tokens);n.Synchronize();
+  {std::vector<float>xa(size_t(tokens)*1024),xb(xa.size());n.api.Check(n.api.hipMemcpy(xa.data(),n.P(cf),xa.size()*4,2),"read contract");n.api.Check(n.api.hipMemcpy(xb.data(),n.P(cff),xb.size()*4,2),"read fused ffn");
+   size_t d=0,bad=0;for(size_t i=0;i<xa.size();i++){d+=memcmp(&xa[i],&xb[i],4)!=0;bad+=!std::isfinite(xb[i]);}printf("tokens=%u pattern=%u ffn_fused_bitdiff=%zu invalid=%zu\n",tokens,pattern,d,bad);ok=ok&&!d&&!bad;}
   auto q8a=n.New(size_t(tokens)*768),q8b=n.New(size_t(tokens)*768);
   n.Run("deep","vit_qkv_project_normalize_fused_f16compact_fp8",size_t(tokens)*3072,n.P(cf),qw,n.P(q8a),tokens);
   n.Run("deep","vit_qkv_project_normalize_fused_f16compact_fp8_bytein",size_t(tokens)*3072,n.P(c8),qw,n.P(q8b),tokens);

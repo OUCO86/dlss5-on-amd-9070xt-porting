@@ -2029,3 +2029,14 @@ mh_qkv_normalize_wave_c512：128线程组把16 token的A按pack4打包进LDS一�
 
 ### 2026-09-16 18:15：部署ViT三刀（native-vit-fused.addon64 + vit-expand-fm4-modules）
 游戏未运行。deploy-stellarblade-update.ps1 -AsyncSubmit 1 -BackupName before-vit-fused，安装DLL BE4568D566E8C59DD8AD97AE13F1B84B5EE4A2F999D89834E22AA2E644AE85C0与24模块并逐hash通过；旧DLL c8842686…+ffn-qkv-round-byte-release-modules备份在D:\DLSSNR-Lab\hip-backend\stellarblade-hip\before-vit-fused（-Restore可回滚）。HIP_FAST默认含fused ViT attention/字节QKV/frag expand（离线−0.23ms，19.36→19.13）。今天下午新增的选项（byte/half stream、N4、FFN-QKV bn、pool fused、C512 wave QKV、dup诊断）全部默认关，不影响游戏。游戏实测FPS待Zero反馈。
+
+### 2026-09-16 18:36：游戏实测
+Zero进《剑星》实测约30FPS（native-vit-fused + vit-expand-fm4-modules，900p HIP路径）。
+
+### 2026-09-16 19:20：ViT expand M2与tile布局输入均无收益
+M2（vit_expand_blocked_fp8_frag_bytein_m2，86 VGPR无scratch）：关19.157/19.11、开19.148/19.189；tile布局输入（vit_pack_input_tiled + vit_expand_blocked_fp8_frag_tiledin，A片段整wave连续256B）：关19.218/19.161、开19.171/19.146。逐位一致，都在噪声内。选项vit_expand_m2/vit_input_tiled（env DLSS5_HIP_VIT_EXPAND_M2/DLSS5_HIP_VIT_INPUT_TILED）默认关。髒L2后空核launch探针（check_launch_flush）：device/host写入后首个空核1.0/2.7µs，无L2回写代价。至此ViT expand的权重重读、A散读、launch回写都排除；唯一给过收益的是核融合（attention三核合一−0.11）。日志release/HIP/vit-m2-test.log、vit-tiledin-test.log。
+
+### 2026-09-16 19:50：ViT expand+contract融合核逐位一致但慢0.55ms：并行度不够
+vit_ffn_fused（选项vit_ffn_fused，env DLSS5_HIP_VIT_FFN_FUSED，CLI --vit-ffn-fused，默认关）：16个wave管16个token，hidden按四段1024列进LDS（16.6KB，无scratch），每段contract部分和按vit_contract_blocked_body的顺序累加进total（初值H(skip*scale)），expand激活/byte_F与原核同式；expand权重frag布局、contract权重行主序。单元测试240/400/640 token×两种输入对vit_contract_blocked_fp8全0差异。ABBA关19.189/19.200、开19.763/19.711，最终FEEA9EF3…一致，**+0.55更慢**。原因：900p ViT只有400 token → 25个workgroup，64个CU大半空转；拆开的expand是1600个wave铺满全卡。HLSL自己的native_wave_vit_ffn_fused也没进生产（flags里VIT_SPLIT_K=1走split-K），同一原因。
+
+ViT一天的账：字节流/half/N4/M2/tile输入/融合FFN六刀全部逐位一致、全部无收益或更慢；唯一有效的是早上的attention三核合一（−0.11）。ViT这一级是"token太少"的问题：每个核几十微秒，按token tile的融合杀并行度，按列拆分又多launch。剩下能动的只有把整条8块链塞进一个持久化大核（原子计数做grid barrier）——把48次launch和尾巴一起消掉，但要保证workgroup全常驻，风险高。日志release/HIP/vit-ffn-test.log。

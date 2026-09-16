@@ -32,6 +32,9 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV flag");o.ffn_qkv=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DUP_PREFIX"))o.dup_prefix=v;
   if(const char*v=std::getenv("DLSS5_HIP_DUP_COUNT")){o.dup_count=unsigned(strtoul(v,nullptr,10));if(o.dup_count<1||o.dup_count>8)throw std::runtime_error("dup count 1..8");}
+  if(const char*v=std::getenv("DLSS5_HIP_VIT_FFN_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT fused FFN flag");o.vit_ffn_fused=!strcmp(v,"1");}
+  if(const char*v=std::getenv("DLSS5_HIP_VIT_INPUT_TILED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT tiled input flag");o.vit_input_tiled=!strcmp(v,"1");}
+  if(const char*v=std::getenv("DLSS5_HIP_VIT_EXPAND_M2")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT expand M2 flag");o.vit_expand_m2=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_QKV_WAVE_C512")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("C512 wave QKV flag");o.qkv_norm_wave_c512=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_POOL_PROJECT_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("pool project fused flag");o.pool_project_fused=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV_BN")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV batched norm flag");o.ffn_qkv_batched_norm=!strcmp(v,"1");}

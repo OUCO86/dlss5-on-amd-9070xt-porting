@@ -239,14 +239,26 @@ void vit_pack_input(const float*in,uint*out,uint count){
  uint b=uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(in[i+2],-448.f,448.f),clampf(in[i+3],-448.f,448.f),0,false));
  out[word]=(a&65535u)|((b&65535u)<<16);
 }
+// A-operand tile layout for the ViT expand input (host option vit_input_tiled): 16 tokens x 32 channels per 512-byte
+// tile, inside a tile byte ((k%32)/8)*128+(row%16)*8+k%8, so one wave's A fragment (lanes rc=row, gr=k half) is a
+// contiguous 256-byte load. Same bytes as vit_pack_input, only placed differently.
+DEV uint vit_tile_offset(uint row,uint k,uint channels){return ((row/16)*(channels/32)+k/32)*512+((k%32)/8)*128+(row%16)*8+k%8;}
+KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
+void vit_pack_input_tiled(const float*in,uint*out,uint count){
+ uint word=bid()*256+__builtin_amdgcn_workitem_id_x(),i=word*4;if(i>=count)return;uint row=i/1024,k=i%1024;
+ uint a=uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(in[i],-448.f,448.f),clampf(in[i+1],-448.f,448.f),0,false));
+ uint b=uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(in[i+2],-448.f,448.f),clampf(in[i+3],-448.f,448.f),0,false));
+ out[vit_tile_offset(row,k,1024)/4]=(a&65535u)|((b&65535u)<<16);
+}
 // One wave produces16x64, reusing A across four output-column fragments.
 DEV i2 vit_weight_fragment_native(const float*w,uint row,uint channels,uint k){i2 b;__builtin_memcpy(&b,reinterpret_cast<const unsigned char*>(w)+((row/16)*(channels/32)+k/32)*512+(((k%32)/16*2+gr())*16+row%16)*8,8);return b;}
-template<bool Tiled=false,bool ByteInput=false,bool Frag=false>
+template<bool Tiled=false,bool ByteInput=false,bool Frag=false,bool TiledInput=false>
 DEV void vit_expand_blocked_body(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){
  uint tiles=outputs/64,first=bid()/tiles*16,col=bid()%tiles*64;if(first>=tokens)return;
  const uint*pw=reinterpret_cast<const uint*>(w);f8 accum[4]{};
  for(uint k=0;k<inputs;k+=16){i2 a{};
-  if constexpr(ByteInput){const uint*p=reinterpret_cast<const uint*>(in);uint off=((first+rc())*inputs+k+gr()*8)/4;a={int(p[off]),int(p[off+1])};}
+  if constexpr(TiledInput){__builtin_memcpy(&a,reinterpret_cast<const unsigned char*>(in)+vit_tile_offset(first+rc(),k+gr()*8,inputs),8);}
+  else if constexpr(ByteInput){const uint*p=reinterpret_cast<const uint*>(in);uint off=((first+rc())*inputs+k+gr()*8)/4;a={int(p[off]),int(p[off+1])};}
   else for(uint e=0;e<8;e++)pack(a,e,in[(first+rc())*inputs+k+gr()*8+e]);
   for(uint n=0;n<4;n++){uint row=col+n*16+rc();i2 b;if constexpr(Frag)b=vit_weight_fragment_native(w,row,inputs,k);else b=vit_weight_fragment<Tiled>(w,row,inputs,k);accum[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum[n]);}
  }
@@ -277,6 +289,7 @@ DEV void vit_expand_blocked_body_m(const float*in,const float*w,float*out,uint t
   for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){float v=accum[m][n][e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);reinterpret_cast<unsigned char*>(out)[(row+gr()*8+e)*outputs+col+n*16+rc()]=byte_F(v*poly);}}}
 }
 WAVE void vit_expand_blocked_fp8_tiled_bytein_m4(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body_m<true,true,4>(in,w,out,tokens,inputs,outputs);}
+WAVE void vit_expand_blocked_fp8_frag_bytein_m2(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body_m<true,true,2,true>(in,w,out,tokens,inputs,outputs);}
 WAVE void vit_expand_blocked_fp8_frag_bytein_m4(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body_m<true,true,4,true>(in,w,out,tokens,inputs,outputs);}
 
 // ByteStream: the block input arrives as the E4M3 bytes the previous vit_project_bytein_bout stored (or vit_pack_input
@@ -301,6 +314,33 @@ WAVE void vit_contract_blocked_fp8_bstream(const float*in,const float*w,const fl
 WAVE void vit_contract_blocked_fp8_hstream(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,false,true,true>(in,w,skip,out,tokens);}
 WAVE void vit_contract_blocked_fp8_tiled_hstream(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,true,true,true>(in,w,skip,out,tokens);}
 WAVE void vit_contract_blocked_fp8_tiled_bstream(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,true,true>(in,w,skip,out,tokens);}
+// Fused ViT FFN (host option vit_ffn_fused): 16 waves own 16 tokens; hidden is produced in four 1024-column quarters
+// (each wave 64 hidden columns, full K=1024 expand chain, activation + byte_F as vit_expand_blocked_body) into LDS,
+// and each quarter's contract partial (each wave 64 output columns, K=1024 chain in ascending order) is added to the
+// running total exactly as vit_contract_blocked_body adds its four parts (total starts at H(skip*scale)). Two launches
+// become one and the 4096-byte hidden rows never leave the CU. Expand weights fragment-native, contract weights row-major.
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+void vit_ffn_fused(const float*in,const float*we,const float*wc,const float*skip,float*out,uint tokens){
+ uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=bid()*16;if(first>=tokens)return;
+ __attribute__((shared)) unsigned char hid[16*1040];
+ const uint*ip=reinterpret_cast<const uint*>(in),*cp=reinterpret_cast<const uint*>(wc);
+ f8 total[4];for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint c=wave*64+n*16+rc();total[n][e]=H(skip[(first+gr()*8+e)*1024+c]*wc[4194304+c]);}
+ for(uint q=0;q<4;q++){
+  f8 accum[4]{};
+  for(uint k=0;k<1024;k+=16){uint off=((first+rc())*1024+k+gr()*8)/4;i2 a={int(ip[off]),int(ip[off+1])};
+   for(uint n=0;n<4;n++){uint row=q*1024+wave*64+n*16+rc();i2 b=vit_weight_fragment_native(we,row,1024,k);accum[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum[n]);}
+  }
+  if(q)__builtin_amdgcn_s_barrier();
+  for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){float v=accum[n][e],g=clampf(v,-4.f,4.f),poly=__builtin_fmaf(g,absf(g)*(-.055908203125f)+.447265625f,.89453125f);hid[(gr()*8+e)*1040+wave*64+n*16+rc()]=byte_F(v*poly);}
+  __builtin_amdgcn_s_barrier();
+  f8 acc[4]{};
+  for(uint k=0;k<1024;k+=16){i2 a;__builtin_memcpy(&a,hid+rc()*1040+k+gr()*8,8);
+   for(uint n=0;n<4;n++){uint row=wave*64+n*16+rc(),wo=(row*4096+q*1024+k+gr()*8)/4;i2 b={int(cp[wo]),int(cp[wo+1])};acc[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[n]);}
+  }
+  for(uint n=0;n<4;n++)for(uint e=0;e<8;e++)total[n][e]+=acc[n][e];
+ }
+ for(uint n=0;n<4;n++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*1024+wave*64+n*16+rc()]=F(H(total[n][e]));
+}
 WAVE void vit_contract_blocked_fp8(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false>(in,w,skip,out,tokens);}
 WAVE void vit_contract_parts_blocked_fp8(const float*in,const float*w,float*out,uint tokens){vit_contract_blocked_body<true>(in,w,nullptr,out,tokens);}
 
@@ -313,6 +353,8 @@ WAVE void vit_expand_blocked_fp8_bytein(const float*in,const float*w,float*out,u
 WAVE void vit_expand_blocked_fp8_tiled_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body<true,true>(in,w,out,tokens,inputs,outputs);}
 // Fragment-native weight layout (FragmentPackedMatrix): one 8-byte load per B fragment instead of eight byte gathers.
 WAVE void vit_expand_blocked_fp8_frag_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body<true,true,true>(in,w,out,tokens,inputs,outputs);}
+// Tile-layout input (vit_pack_input_tiled) + fragment-native weights: both operands are contiguous 8-byte lane loads.
+WAVE void vit_expand_blocked_fp8_frag_tiledin(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs){vit_expand_blocked_body<true,true,true,true>(in,w,out,tokens,inputs,outputs);}
 
 WAVE void vit_contract_blocked_fp8_tiled(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){if(inputs==4096&&outputs==1024)vit_contract_blocked_body<false,true>(in,w,skip,out,tokens);}
 WAVE void vit_contract_parts_blocked_fp8_tiled(const float*in,const float*w,float*out,uint tokens){vit_contract_blocked_body<true,true>(in,w,nullptr,out,tokens);}
