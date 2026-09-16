@@ -110,7 +110,7 @@ public:
    // FAST PATH (DLSS5_BATCH_SUBMITS): one command list per ViT layer and per few decoder stages instead of one per chunk
    // (~100 lists/frame -> ~25); the in-list barriers already order the dispatches. CPU recording overhead, not GPU time.
    const bool batch=batch_submits>0;const UINT vit_per_list=batch_submits>=2?4u:1u,decoder_per_list=batch_submits>=2?(decoder.StageCount()+1)/2:3u;
-   auto record_vit=[&](ID3D12GraphicsCommandList*c,UINT b){auto&layer=vit[b];for(UINT stage=0;stage<5;stage++)for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++){layer.RecordStageChunk(c,stage,chunk);if(chunk+1==layer.StageChunks(stage))timestamps.Mark(c,"vit"+std::to_string(31+b)+"_stage"+std::to_string(stage));}};
+   auto record_vit=[&](ID3D12GraphicsCommandList*c,UINT b){auto&layer=vit[b];for(UINT stage=0;stage<5;stage++){for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++)layer.RecordStageChunk(c,stage,chunk);if(NativeDupVitStage(stage))for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++)layer.RecordStageChunk(c,stage,chunk);timestamps.Mark(c,"vit"+std::to_string(31+b)+"_stage"+std::to_string(stage));}};
    if(batch)for(UINT b0=0;b0<8;b0+=vit_per_list)record_list([&](ID3D12GraphicsCommandList*c){for(UINT b=b0;b<b0+vit_per_list;b++){if(NativeSkipBlock(31+b))NativeSkipCopy(c,vit[b].Input(),vit[b].Output(),31+b);else record_vit(c,b);}});
    else for(UINT b=0;b<8;b++){auto&layer=vit[b];
     for(UINT stage=0;stage<5;stage++)for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++)record_list([&](ID3D12GraphicsCommandList*c){layer.RecordStageChunk(c,stage,chunk);if(chunk+1==layer.StageChunks(stage))timestamps.Mark(c,"vit"+std::to_string(31+b)+"_stage"+std::to_string(stage));});}

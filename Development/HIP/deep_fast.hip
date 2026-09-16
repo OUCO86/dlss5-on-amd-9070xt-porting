@@ -529,6 +529,36 @@ WAVE void vit_qkv_project_normalize_fused_f16compact_fp8(const float*in,const fl
  }
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){float scale=part==0?5.65625f*w[1572864+row/32]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=byte_F(v);}
 }
+// Fragment-weight twins (host options vit_proj_frag / vit_qkv_frag): identical operands and accumulation order to
+// vit_project / vit_qkv_project_normalize_fused_f16compact_fp8, but every B fragment is one contiguous load from the
+// prepacked tile layout (FragmentPackedMatrix for the E4M3 projection, 16x16 f16 tiles for the QKV halves) instead of
+// 16 lanes touching 16 different weight rows.
+DEV f8 dot8_frag(const float*in,const unsigned char*wf,uint first,uint row,uint channels,uint begin,uint end,f8 a){
+ for(uint k=begin;k<end;k+=16){i2 x{},y{};
+  for(uint e=0;e<8;e++)pack(x,e,in[(first+rc())*channels+k+gr()*8+e]);
+  __builtin_memcpy(&y,wf+((row/16)*(channels/32)+k/32)*512+((((k%32)/16)*2+gr())*16+rc())*8,8);
+  a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);
+ }return a;
+}
+WAVE void vit_project_frag(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs){uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=tokens)return;f8 total{};
+ const unsigned char*wf=reinterpret_cast<const unsigned char*>(w);
+ if(inputs==4096){for(uint e=0;e<8;e++)total[e]=H(skip[(first+gr()*8+e)*outputs+row+rc()]*w[inputs*outputs+row+rc()]);for(uint p=0;p<4;p++){f8 a{};a=dot8_frag(in,wf,first,row,inputs,p*(inputs/4),(p+1)*(inputs/4),a);for(uint e=0;e<8;e++)total[e]+=a[e];}}
+ else{for(uint p=0;p<4;p++){f8 a{};if(!p)for(uint e=0;e<8;e++)a[e]=H(skip[(first+gr()*8+e)*outputs+row+rc()]*w[inputs*outputs+row+rc()]);a=dot8_frag(in,wf,first,row,inputs,p*(inputs/4),(p+1)*(inputs/4),a);for(uint e=0;e<8;e++)total[e]=p?total[e]+a[e]:a[e];}}
+ for(uint e=0;e<8;e++)out[(first+gr()*8+e)*outputs+row+rc()]=F(H(total[e]));
+}
+WAVE void vit_qkv_project_normalize_fused_f16compact_fp8_frag(const float*in,const float*w,unsigned char*out,uint tokens){
+ uint perpart=(tokens/16)*32,part=bid()/perpart,local=bid()%perpart,first=local/32*16,row=local%32*32;if(part>=3)return;f8 acc[2]{};
+ const _Float16*w16=reinterpret_cast<const _Float16*>(w)+part*1048576;
+ for(uint k=0;k<1024;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*1024+k+gr()*8+e];for(uint j=0;j<2;j++){h8 b{};__builtin_memcpy(&b,w16+(((row+j*16)/16)*64+k/16)*256+(gr()*16+rc())*8,16);acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
+ __attribute__((shared)) float raw[16*33];
+ f8 sum{};
+ if(part<2){
+  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++)raw[(gr()*8+e)*33+j*16+rc()]=acc[j][e];
+  __builtin_amdgcn_s_barrier();
+  for(uint k=0;k<32;k+=16){h8 x{},ones{};for(uint e=0;e<8;e++){float v=raw[rc()*33+k+gr()*8+e];x[e]=(_Float16)(v*v);ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,ones,sum);}
+ }
+ for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){float v=acc[j][e];if(part<2){float scale=part==0?5.65625f*w[1572864+row/32]:1.f;v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*scale;}out[(part*tokens+first+gr()*8+e)*1024+row+j*16+rc()]=byte_F(v);}
+}
 // Byte-input twin: the contract output arrives as E4M3 bytes (vit_contract_blocked_fp8*_bstream); each A fragment is two
 // dword loads decoded to the same half values (E4M3 is exact in F16) the f32 kernel converts from.
 WAVE void vit_qkv_project_normalize_fused_f16compact_fp8_bytein(const float*in,const float*w,unsigned char*out,uint tokens){

@@ -12,6 +12,10 @@ inline bool NativeSkipBlock(unsigned block){return NativeSkipBlocks().count(bloc
 // output, identical result), so the frame delta is that block's in-frame marginal cost. Never enable in the game build.
 inline const std::set<unsigned>&NativeDupBlocks(){static std::set<unsigned>s=[]{std::set<unsigned>r;if(const wchar_t*v=_wgetenv(L"DLSS5_DUP_BLOCKS")){std::wstring t(v);size_t p=0;while(p<t.size()){size_t q=t.find(L',',p);if(q==std::wstring::npos)q=t.size();if(q>p)r.insert(unsigned(wcstoul(t.substr(p,q-p).c_str(),nullptr,10)));p=q+1;}}return r;}();return s;}
 inline bool NativeDupBlock(unsigned block){return NativeDupBlocks().count(block)!=0;}
+// Diagnostic twin for the ViT stages (DLSS5_DUP_VIT_STAGE="0,3": expand/contract/qkv/attention/projection = 0..4): every ViT
+// layer records the listed stages twice back to back (same input, same output), so the frame delta is the in-frame stage cost.
+inline const std::set<unsigned>&NativeDupVitStages(){static std::set<unsigned>s=[]{std::set<unsigned>r;if(const wchar_t*v=_wgetenv(L"DLSS5_DUP_VIT_STAGE")){std::wstring t(v);size_t p=0;while(p<t.size()){size_t q=t.find(L',',p);if(q==std::wstring::npos)q=t.size();if(q>p)r.insert(unsigned(wcstoul(t.substr(p,q-p).c_str(),nullptr,10)));p=q+1;}}return r;}();return s;}
+inline bool NativeDupVitStage(unsigned stage){return NativeDupVitStages().count(stage)!=0;}
 // Copies src (in NON_PIXEL_SHADER_RESOURCE state) into dst and leaves both readable. dst starts in UAV state the first time.
 inline void NativeSkipCopy(ID3D12GraphicsCommandList*c,ID3D12Resource*src,ID3D12Resource*dst,unsigned block){
  static std::map<ID3D12Resource*,bool>touched;
