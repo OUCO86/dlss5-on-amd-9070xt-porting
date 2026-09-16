@@ -157,14 +157,31 @@ DEV i2 load8(const unsigned char*p){
  i2 result{};for(uint e=0;e<8;e++)put_bits(result,e,p[e]);return result;
 #endif
 }
+// Inline prefix (host option prefix_inline, block 0 only): dlss5_prefix_fast_fused_raster's per-token features and the
+// 16->32 f16 MMA projection run inside the input staging (HLSL DLSS5_INLINE_PREFIX shape): same RNG, roundings and MMA
+// operand order (both K tiles, the second all-zero, so signed zeros match), no W*H*32 f32 prefix buffer written or read.
+DEV uint production_pcg(uint s){uint w=((s>>((s>>28)+4))^s)*0x108ef2d9u;return (w>>22)^w;}
+DEV float production_uniform(uint s){uint w=((s>>((s>>28)+4))^s)*0x108ef2d9u;return float(((w>>30)^(w>>8))+1)*5.9604644775390625e-8f;}
+DEV void fused_prefix_values(const float*rgba,const float*history,uint p,uint width,uint seed,uint temporal,float*f){
+ uint tile=p/64,x=(tile%(width/8))*8+p%8,y=(tile/(width/8))*8+(p%64)/8,rgbp=y*width+x;
+ uint h=production_pcg((x*0x8da6b343u)^(y*0xd8163841u)^(seed*0x9e3779b9u)^0x243f6a88u);
+ float a=production_uniform(h*0xcaa5b80du+0x21dd796bu),b=production_uniform(h*0x2c9277b5u+0xac564b05u),c=production_uniform(h*0x83232c31u+0x3463e0acu),d=production_uniform(h*0xfa6dc5f9u+0x4712a88eu);
+ float r0=__builtin_amdgcn_sqrtf(-2.f*(__builtin_amdgcn_logf(a)*.6931471805599453f)),r1=__builtin_amdgcn_sqrtf(-2.f*(__builtin_amdgcn_logf(b)*.6931471805599453f));
+ float ct=(6.283185482025146f*c)*.15915494309189535f,dt=(6.283185482025146f*d)*.15915494309189535f;
+ float g0=Hrtz(r0*__builtin_amdgcn_cosf(ct)),g1=Hrtz(r1*__builtin_amdgcn_cosf(dt)),g2=Hrtz(r1*__builtin_amdgcn_sinf(dt));
+ float red=Hrtz(Hrtz(Hrtz(rgba[rgbp*4])-.5f)*.125f),green=Hrtz(Hrtz(Hrtz(rgba[rgbp*4+1])-.5f)*.125f),blue=Hrtz(Hrtz(Hrtz(rgba[rgbp*4+2])-.5f)*.125f);
+ float values[16]={g1,g2,green,blue,g0,1,.0078125f,1,red,green,1,1,blue,red,1,0};
+ if(temporal){uint q=(y*width+x)*4;values[13]=Hrtz(Hrtz(Hrtz(history[q])-.5f)*.125f);values[2]=Hrtz(Hrtz(Hrtz(history[q+1])-.5f)*.125f);values[3]=Hrtz(Hrtz(Hrtz(history[q+2])-.5f)*.125f);}
+ for(uint i=0;i<16;i++)f[i]=values[i];
+}
 template<bool Raw=false,bool Merge=false>
 DEV float mapped_c32_input(const float*in,uint window,uint token,uint channel,uint width,uint height,uint sx,uint sy,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr){uint ww=width+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);if(x<0||y<0||x>=int(width)||y>=int(height))return 0.f;
  if constexpr(Merge){uint i=(uint(y)*width+uint(x))*32+channel,q=((uint(y)/2)*(width/2)+uint(x)/2)*32+channel;float high=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[i]),0);return Hrtz(Hrtz(in[q]*scales[channel])+high*scales[32+channel]);}
  if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;return F(float(reinterpret_cast<const _Float16*>(in)[(tile*64+token0)*32+channel]));}
  return in[(uint(y)*width+uint(x))*32+channel];}
 
-template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false,bool RgbHead=false,bool Finish=false,bool Main8=false,bool DownCrop=false>
-DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f,float*main=nullptr,float*down=nullptr){
+template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false,bool RgbHead=false,bool Finish=false,bool Main8=false,bool DownCrop=false,bool Prefix=false>
+DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f,float*main=nullptr,float*down=nullptr,const float*rgba=nullptr,const float*hist=nullptr,uint seed=0,uint temporal=0){
  uint window=bid();if(window>=windows)return;uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=wave*16,base=window*64;
  union Scratch {float raw[64*33];_Float16 ex[64*66];unsigned char hidden[64*132];};
  __attribute__((shared)) Scratch scratch;
@@ -190,6 +207,17 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  // instead of 2048. The f16 copy (exact: every mapped source is H()-rounded) feeds the mode-0 residual.
  constexpr bool NeedIn16=Mapped&&!RawMapped;
  __attribute__((shared)) _Float16 in16[NeedIn16?64*34:1];
+ f8 pre_acc[2];pre_acc[0]=f8{};pre_acc[1]=f8{};
+ if constexpr(Prefix){uint l=tid%32;float*values=scratch.raw+wave*256;_Float16*pre16=reinterpret_cast<_Float16*>(scratch.raw+1024)+wave*512; // scratch is free until the FFN hidden writes
+  if(l<16){float f[16]{};fused_prefix_values(rgba,hist,base+first+l,sourcew,seed,temporal,f);for(uint k=0;k<16;k++)values[l*16+k]=f[k];}
+  sync_window();
+  for(uint tile=0;tile<2;tile++){h8 a{};for(uint e=0;e<8;e++){uint k=tile*16+gr()*8+e;a[e]=(_Float16)(k<16?values[rc()*16+k]:0.f);}
+   for(uint col=0;col<2;col++){h8 b{};for(uint e=0;e<8;e++){uint k=tile*16+gr()*8+e;b[e]=(_Float16)(k<16?fw[(col*16+rc())*16+k]:0.f);}pre_acc[col]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,pre_acc[col]);}}
+  for(uint col=0;col<2;col++)for(uint e=0;e<8;e++){float v=Hrtz(pre_acc[col][e]);pre_acc[col][e]=v;pre16[(gr()*8+e)*32+col*16+rc()]=(_Float16)v;}
+  sync_window();
+  #pragma unroll
+  for(uint j=0;j<16;j++)packed[(first+j)*36+l]=static_cast<unsigned char>(fp8(float(pre16[j*32+l])));
+ }else
  {uint l=tid%32;int mine=-1,mine2=-1;
   if constexpr(Mapped){if(l<16){uint token=first+l,ww=sourcew+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);
    if(x>=0&&y>=0&&x<int(sourcew)&&y<int(sourceh)){if constexpr(Merge){mine=int((uint(y)*sourcew+uint(x))*32);mine2=int(((uint(y)/2)*(sourcew/2)+uint(x)/2)*32);}else if constexpr(RawMapped){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;mine=int((tile*64+token0)*32);}else mine=int((uint(y)*sourcew+uint(x))*32);}}}
@@ -222,7 +250,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  f8 acc[2];acc[0]=f8{};acc[1]=f8{};
  if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();float x;
 #if HIP_C32_LANE_STAGE
-   if constexpr(NeedIn16)x=float(in16[row*34+c]);else x=Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c];
+   if constexpr(Prefix)x=pre_acc[ci][e];else if constexpr(NeedIn16)x=float(in16[row*34+c]);else x=Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c];
 #else
    x=Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c];
 #endif
@@ -372,6 +400,9 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half_finish_main8(const float*in,const float*fw,const float*w,float*main8,float*down,uint windows,uint mode,uint raw,uint width,uint height){c32_fused_body<true,false,false,false,false,true,true>(in,fw,w,nullptr,windows,mode,raw,width,height,0,0,0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,0.f,main8,down);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half_chain_finish(const float*in,const float*fw,const float*w,float*main,float*down,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true,false,false,true,false>(in,fw,w,nullptr,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy,nullptr,nullptr,nullptr,nullptr,nullptr,0.f,main,down);}
+// Block 0 with the prefix inlined (host option prefix_inline): rgba raster + history in, main8 bytes + down out, no prefix buffer.
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
+void c32_fast_ffn_attention_fused_half_prefix_finish_main8(const float*rgba,const float*hist,const float*fw,const float*w,float*main8,float*down,uint windows,uint mode,uint raw,uint width,uint height,uint seed,uint temporal){c32_fused_body<true,false,false,false,false,true,true,false,true>(nullptr,fw,w,nullptr,windows,mode,raw,width,height,0,0,0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,0.f,main8,down,rgba,hist,seed,temporal);}
 // Chain end with the down grid already cropped to (w/2)x(h/2) (host option down_crop_fused): no mh_shift_crop launch.
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half_chain_finish_dcrop(const float*in,const float*fw,const float*w,float*main,float*down,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true,false,false,true,false,true>(in,fw,w,nullptr,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy,nullptr,nullptr,nullptr,nullptr,nullptr,0.f,main,down);}
