@@ -2175,3 +2175,6 @@ C64 ffn 1.10+attn 0.87=1.97（HLSL 1.93）；C128 1.13+0.68=1.81（2.16）；C25
 
 ### 2026-09-17 03:27：Zero游戏实测900p 52 FPS（昨夜47）
 native-pinline.addon64 + ffnh2-modules在游戏里跑，900p由47帧到52帧；离线−1.4ms对应游戏里约−2ms/帧（游戏GPU满载时钟更低，核内省下的发射周期按比例放大）。画面无异常报告。
+
+### 2026-09-17 03:30：补量C512家族dup（ffnh2-modules，基线≈15.18）
+split_*（FFWD mix/expand/contract/projection）0.69 + mh_qkv_normalize_frag_c512 0.63 + mh_attention_project_frag_c512 0.25 = **1.57ms/13块 = 0.12/块**，对HLSL 0.134/块（1.74）。09-16时HIP 0.178/块的差距已由frag三刀收平并反超。至此dup表全部家族≤HLSL，逐位精确路线上没有家族级缺口了。脚本test-dup-c512b.ps1，日志release/HIP/dup-c512b.log。
