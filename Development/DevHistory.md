@@ -2200,3 +2200,4 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - 根README（中英）状态行、依赖行、版本表加0.20；HIP版不需要开发人员模式/Agility 721/SM6.10，只要驱动带amdhip64_7.dll（已验证预览驱动32.0.31007.2048，正式驱动未测——README如实写）。
 - **待Zero**：Magpie路径下的HIP DLL没在本机实测过（游戏内钩子已实玩52fps），发布前先在自己的Magpie上跑一次0.20整包；上传网盘后把链接填进README版本表。
 - 06:25 Zero在Magpie上试0.20（《鬼武者》900p窗口）INIT FAILED：oneshot日志`initialization_failed c32_prefix_reference.hsaco: hipErrorFileNotFound`。原因：`native_hip_network.h`在没有`DLSS5_HIP_MODULES`时默认`directory+"\HIP"`，而这个directory是资产目录（native-game-tiled-assets），游戏里一直靠flags里的绝对路径没踩到。改包不改DLL：两包的24个hsaco放到`native-game-tiled-assets\HIP\`（package-hip.ps1 Common()），README同步。重打：DLSS5-AMD-0.20.zip 250,646,612字节 SHA256 87736c42e0bdcb7cd72917ba316c468ec7271ec4c3a6c9613e02184fb2f3d9ca；Magpie-DLSS5-AMD-0.20.zip 354,831,865字节 SHA256 016b585d02bb881ceeeb1b87385d3d1700d5fb100d3ed354006ef480fe39b3d3。（首版两个zip的哈希作废。）
+- 06:44 Zero在Magpie（《鬼武者》900p窗口）实测0.20通过。整包上传夸克：https://pan.quark.cn/s/3c8b5329353c ，根README中英版本表加链接。
