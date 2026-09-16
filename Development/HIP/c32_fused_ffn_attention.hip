@@ -9,6 +9,17 @@
 #ifndef HIP_C32_DIAG_WEIGHTS
 #define HIP_C32_DIAG_WEIGHTS 0 /* chain residual diagonal B tiles prepacked after the FFN weights (byte 34944) */
 #endif
+#ifndef HIP_C32_WAVES_PER_EU
+#define HIP_C32_WAVES_PER_EU 0 /* >0: amdgpu_waves_per_eu occupancy target for the fused kernels (HLSL fast4 runs ~12 waves/SIMD at ~128 VGPRs; HIP chain is 190) */
+#endif
+#if HIP_C32_WAVES_PER_EU
+#define C32_OCC __attribute__((amdgpu_waves_per_eu(HIP_C32_WAVES_PER_EU,HIP_C32_WAVES_PER_EU)))
+#else
+#define C32_OCC
+#endif
+#ifndef HIP_C32_LOCAL_ATTN_SYNC
+#define HIP_C32_LOCAL_ATTN_SYNC 0 /* probabilities in the wave's own ex rows; attention-phase barriers become wave-local fences (HLSL fast4: two group syncs) */
+#endif
 #ifndef HIP_C32_LOCAL_FFN_SYNC
 #define HIP_C32_LOCAL_FFN_SYNC 0 /* staging/hidden rows are wave-private: wave-local fences instead of s_barrier */
 #endif
@@ -259,24 +270,45 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  sync_window(); // Attention reads K/V rows owned by all four waves.
 #endif
  // Q/K packed rows: 36-byte stride. Exponent values stored exactly as half bits.
+#if HIP_C32_LOCAL_ATTN_SYNC
+ // Wave-private from here on: scores/ex rows, probability rows (in the wave's own ex slice) and the AV bytes (own Q rows)
+ // are read only by the wave that wrote them; K/V rows were published by the group sync above.
+ unsigned char*prob=reinterpret_cast<unsigned char*>(scratch.ex)+first*132;
+#define ATTN_SYNC() sync_owned_rows()
+#else
+ unsigned char*prob=packed;
+#define ATTN_SYNC() sync_window()
+#endif
  for(uint key=0;key<64;key+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=load8(packed+(64+key+rc())*36+k);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);scratch.ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
  }
- sync_window();
+ ATTN_SYNC();
  // Scores no longer consume Q/K; their 4608 bytes become 64 probability rows of 68 bytes.
  {f8 sum{};for(uint kt=0;kt<4;kt++){h8 a{},ones{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;a[e]=scratch.ex[(first+rc())*66+k];ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,ones,sum);}
-  for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,k=key+rc();float v=float(scratch.ex[row*66+k])*(1.f/sum[e]);packed[row*68+k]=static_cast<unsigned char>(fp8(v));}
+#if HIP_C32_LOCAL_ATTN_SYNC
+  float pv[4][8];for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,k=key+rc();pv[key/16][e]=float(scratch.ex[row*66+k])*(1.f/sum[e]);}
+  ATTN_SYNC(); // every lane of this wave has read its ex values before the rows are reused for probabilities
+  for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++){uint row=gr()*8+e,k=key+rc();prob[row*68+k]=static_cast<unsigned char>(fp8(pv[key/16][e]));}
+#else
+  for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,k=key+rc();float v=float(scratch.ex[row*66+k])*(1.f/sum[e]);prob[row*68+k]=static_cast<unsigned char>(fp8(v));}
+#endif
  }
- sync_window();
+ ATTN_SYNC();
  // Both AV column fragments stay live until every wave has finished reading probability rows.
  f8 av[2];
  for(uint ci=0;ci<2;ci++){f8 acc{};uint col=ci*16;
-  for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*68+k]);put_bits(b,e,packed[(128+k)*36+col+rc()]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}av[ci]=acc;
+  for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;
+#if HIP_C32_LOCAL_ATTN_SYNC
+   put_bits(a,e,prob[rc()*68+k]);
+#else
+   put_bits(a,e,prob[(first+rc())*68+k]);
+#endif
+   put_bits(b,e,packed[(128+k)*36+col+rc()]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}av[ci]=acc;
  }
- sync_window();
+ ATTN_SYNC();
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)packed[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(av[ci][e]));
- sync_window();
+ ATTN_SYNC();
  for(uint col=0;col<32;col+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);}b=matrix8(w,3072+(col+rc())*32+kt*16+gr()*8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float residual;
@@ -289,16 +321,16 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  }
 }
 
-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw){c32_fused_body<false>(in,fw,w,out,windows,mode,raw);}
-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw){c32_fused_body<true>(in,fw,w,out,windows,mode,raw);}
 
-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half_mapped(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy){c32_fused_body<true,true>(in,fw,w,out,windows,mode,raw,width,height,sx,sy);}
 
-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half_chain(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true>(in,fw,w,out,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy);}
 
-KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_post_merge_fused_half(const float*low,const float*skip,const float*scales,const float*fw,const float*w,float*out,uint windows,uint width,uint height,uint sx,uint sy){c32_fused_body<true,true,false,true>(low,fw,w,out,windows,0,1,width,height,sx,sy,0,0,0,skip,scales);}

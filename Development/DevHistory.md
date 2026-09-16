@@ -2051,3 +2051,11 @@ ABBA（同runner、模块集交替）基线19.155/19.159、候选19.029/19.000�
 
 ### 2026-09-16 20:20：C32 lane staging进生产：全量模块集opt-lane-release-modules验证通过并部署
 build-opt-modules.ps1 -Name lane-release（当前源码，无额外编译选项，HIP_C32_LANE_STAGE默认1）编24模块；全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…全部匹配（validate-lane-release.ps1，日志release/HIP/lane-release-validate.log）。deploy-stellarblade-update.ps1 -BackupName before-c32-lane，DLL沿用BE4568D5…（纯核改动，host不变），24模块逐hash通过。离线：ViT三刀后19.13→lane staging后≈19.00。
+HIP_C32_LOCAL_ATTN_SYNC=1（概率行改写进本wave的ex行，attention段五次全组barrier降为wave局部fence；同时LOCAL_FFN_SYNC=1）：19.08/19.075对19.05/19.05，null，哈希一致。C32融合核不吃barrier数。宏默认0保留。日志release/HIP/c32-attn-test.log。
+HIP_C32_WAVES_PER_EU=10/12（amdgpu_waves_per_eu属性）：编译器未理会，VGPR仍192/223/168，ABBA 19.024/19.029对19.016/19.059，null。HLSL fast4约128 VGPR跑12 waves/SIMD对HIP 190跑8，占用率差距是真的，但得手工削寄存器，属性压不下来。日志release/HIP/c32-occ10-test.log。
+
+### 2026-09-16 21:30：C512 mix并入FFN核逐位一致但慢0.05；改做mix权重预打包half
+并排HLSL native_split.h：HLSL每块5次dispatch（ffwd_parallel把mix算在FFN核里、每组只算自己64列mixed）对HIP 6次。split_ffn_fused_fp8_mix（4个wave各算本组16列mixed，F(Hrtz)存半精度LDS，expand从LDS取A，其余同split_ffn_fused_fp8），选项split_mix_fused（env DLSS5_HIP_SPLIT_MIX_FUSED，CLI --split-mix-fused，默认关）。test_split_mix_fused.cpp block23/40×1600/960/2160×两种输入全0差异；ABBA关19.116、开19.190/19.160，慢0.05，null。省一次launch抵不过mix段搬进4-wave组后的损失。日志release/HIP/c512-mix-test.log。packed_weights.h补#include <cmath>（此前test/reference编不过、只有benchmark成功——c32-diag那轮的reference也没编出来）。
+
+### 2026-09-16 21:50：C512 mix权重预打包half −0.12ms，逐位一致，进生产并部署
+split_mix_blocked每wave对B做8次f32标量读+8次(_Float16)转换×32步×4列片（每wave1024次load/转换），1600 token的GEMM却占0.034/块。新增PackedSplitFfnWeightMixHalf（mix区[0,262144)按RoundWeightHalf——与设备(_Float16)转换同为RNE含次正规——就地打包成half，expand/contract区同PackedSplitFfnWeight），核split_mix_blocked_h16w每B片段一次16字节memcpy；选项split_mix_h16w（env DLSS5_HIP_SPLIT_MIX_H16W，CLI --split-mix-h16w）。test_split_mix_fused.cpp加mix_h16w对照全0差异；ABBA关19.078/19.014、开18.933/18.920，**−0.12ms**；全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…全部匹配。**HIP_FAST默认开**；DLL重编release/HIP/native-c512-mixw.addon64 SHA256 95117FD6ED6991A12ECBD787E44B08823A62DDEE65C56807F889507A1A304C31，与c512-mixw-modules（opt-lane-release+新deep_fast-packed）一起部署，备份before-c512-mixw。离线HIP≈18.93 / HLSL 16.8。日志release/HIP/c512-mixw-test.log、c512-mixw-validate.log。

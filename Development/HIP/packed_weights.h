@@ -3,6 +3,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <vector>
+#include <cmath>
 #include <utility>
 namespace hip_reference {
 // Lossless encoding only: reject weights requiring quantization or saturation.
@@ -19,6 +20,12 @@ inline uint8_t ExactWeightFp8(float value){
 // Lossless binary16 encoding; reject any weight that would require rounding.
 inline uint16_t ExactWeightHalf(float v){uint32_t b;std::memcpy(&b,&v,4);uint32_t a=b&0x7fffffffu;uint16_t sign=uint16_t((b>>16)&0x8000u);if(!a)return sign;if(a>=0x7f800000u)throw std::runtime_error("nonfinite half weight");int e=int(a>>23)-127;if(e>15)throw std::runtime_error("half weight overflow");if(e>=-14){if(a&8191u)throw std::runtime_error("weight not exact half");return uint16_t(sign|((e+15)<<10)|((a>>13)&1023u));}float x=v<0?-v:v,q=x*16777216.f;if(q<1||q>1023||q!=float(uint32_t(q)))throw std::runtime_error("weight not exact half subnormal");return uint16_t(sign|uint16_t(q));}
 inline void PackHalfMatrix(std::vector<float>&v,size_t count){if(count>v.size())throw std::runtime_error("half matrix shape");auto*bytes=reinterpret_cast<uint8_t*>(v.data());for(size_t i=0;i<count;i++){uint16_t h=ExactWeightHalf(v[i]);std::memcpy(bytes+i*2,&h,2);}}
+// Round-to-nearest-even binary16 (with subnormals), matching the device (_Float16) cast of an arbitrary f32 weight.
+inline uint16_t RoundWeightHalf(float x){uint32_t b;std::memcpy(&b,&x,4);uint32_t a=b&0x7fffffffu;uint16_t s=uint16_t((b>>16)&0x8000u);int e=int(a>>23)-127;
+ if(a>=0x7f800000u)return uint16_t(s|0x7c00u|((a&0x7fffffu)?0x200u:0u));if(e<-25)return s;
+ if(e<-14){uint32_t m=(a&0x7fffffu)|0x800000u;unsigned n=unsigned(-e-1);uint32_t q=m>>n,mask=(1u<<n)-1u,r=m&mask,mid=1u<<(n-1);q+=uint32_t(r>mid||(r==mid&&(q&1u)));return uint16_t(s|q);}
+ if(e>15)return uint16_t(s|0x7c00u);uint32_t h=((a+0xfffu+((a>>13)&1u))>>13)-0x1c000u;return uint16_t(s|(h>=0x7c00u?0x7c00u:h));}
+inline void PackHalfMatrixRounded(std::vector<float>&v,size_t begin,size_t count){if(begin+count>v.size())throw std::runtime_error("half matrix shape");auto*bytes=reinterpret_cast<uint8_t*>(v.data()+begin);std::vector<uint16_t>h(count);for(size_t i=0;i<count;i++)h[i]=RoundWeightHalf(v[begin+i]);std::memcpy(bytes,h.data(),count*2);}
 // C32 chain residual diagonals (kernel macro HIP_C32_DIAG_WEIGHTS): the per-channel residual scale fw[8704+c] is split
 // into three E4M3 pieces exactly as the device scale_piece() chain does, and each (part, column half, K half) B fragment
 // tile is stored as 512 bytes in the A/B lane order the kernel loads with matrix8 (lane gr*16+rc, 8 bytes = k gr*8..+7).

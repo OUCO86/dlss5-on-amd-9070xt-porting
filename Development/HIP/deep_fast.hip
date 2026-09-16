@@ -379,6 +379,13 @@ WAVE void split_mix_blocked(const float*in,const float*w,float*out,uint tokens){
  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+row+j*16+rc()]=F(Hrtz(acc[j][e]));
 }
 
+// split_mix_blocked with the mix weights prepacked as RNE half (PackedSplitFfnWeightMixHalf): one 16-byte load per B
+// fragment instead of eight f32 loads and casts; identical operands, so identical bits.
+WAVE void split_mix_blocked_h16w(const float*in,const float*w,float*out,uint tokens){
+ uint first=bid()/8*16,row=bid()%8*64;if(first>=tokens)return;f8 acc[4]{};const _Float16*w16=reinterpret_cast<const _Float16*>(w);
+ for(uint k=0;k<512;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*512+k+gr()*8+e];for(uint j=0;j<4;j++){h8 b;__builtin_memcpy(&b,w16+(row+j*16+rc())*512+k+gr()*8,16);acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+row+j*16+rc()]=F(Hrtz(acc[j][e]));
+}
 WAVE void split_projection_blocked(const float*in,const float*w,const float*skip,float*out,uint tokens){
  uint first=bid()/8*16,row=bid()%8*64;if(first>=tokens)return;f8 acc[4]{};
  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)acc[j][e]=H(skip[(first+gr()*8+e)*512+row+j*16+rc()]*w[262144+row+j*16+rc()]);
@@ -419,6 +426,31 @@ void split_ffn_fused_fp8(const float*in,const float*w,float*out,uint tokens){
  __attribute__((shared)) unsigned char hidden[16*260];
  f8 expanded[4]{};
  for(uint j=0;j<4;j++)for(uint k=0;k<64;k+=16){h8 a{},b{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*512+g*64+k+gr()*8+e];__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w+262144)+g*16384+(wave*64+j*16+rc())*64+k+gr()*8,16);expanded[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,expanded[j]);}
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){float v=Hrtz(expanded[j][e]),gate=clampf(v,-4.f,4.f),poly=gate*(absf(gate)*(-.055908203125f)+.447265625f)+.89453125f;hidden[(gr()*8+e)*260+wave*64+j*16+rc()]=byte_F(v*poly);}
+ __builtin_amdgcn_s_barrier();
+ f8 result{};
+ const uint*pw=reinterpret_cast<const uint*>(w);
+ for(uint k=0;k<256;k+=16){i2 a{};__builtin_memcpy(&a,hidden+rc()*260+k+gr()*8,8);uint off=393216+g*4096+((wave*16+rc())*256+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
+ for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+g*64+wave*16+rc()]=F(Hrtz(result[e]));
+}
+
+// Mix fused into the C512 FFN (host option split_mix_fused, HLSL ffwd_parallel shape): the four waves of a group each
+// compute 16 of the group's 64 mixed columns over K=512 (same F16 MMA chain and F(Hrtz()) as split_mix_blocked), park
+// them as exact halves in LDS, and the expand reads its A fragments from there. One launch instead of two; the mixed
+// tensor never leaves the CU. Weight buffer = PackedSplitFfnWeight (mix f32 at 0, expand F16 at 262144, contract E4M3 at 393216).
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+void split_ffn_fused_fp8_mix(const float*in,const float*w,float*out,uint tokens){
+ uint block=bid(),first=(block/8)*16,g=block%8,tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32;
+ if(first>=tokens)return;
+ __attribute__((shared)) unsigned char hidden[16*260];
+ __attribute__((shared)) _Float16 mixed16[16*72];
+ {f8 acc{};uint row=g*64+wave*16;
+  for(uint k=0;k<512;k+=16){h8 a{},b{};for(uint e=0;e<8;e++){a[e]=(_Float16)in[(first+rc())*512+k+gr()*8+e];b[e]=(_Float16)w[(row+rc())*512+k+gr()*8+e];}acc=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc);}
+  for(uint e=0;e<8;e++)mixed16[(gr()*8+e)*72+wave*16+rc()]=(_Float16)F(Hrtz(acc[e]));
+ }
+ __builtin_amdgcn_s_barrier();
+ f8 expanded[4]{};
+ for(uint j=0;j<4;j++)for(uint k=0;k<64;k+=16){h8 a{},b{};for(uint e=0;e<8;e++)a[e]=mixed16[rc()*72+k+gr()*8+e];__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(w+262144)+g*16384+(wave*64+j*16+rc())*64+k+gr()*8,16);expanded[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,expanded[j]);}
  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){float v=Hrtz(expanded[j][e]),gate=clampf(v,-4.f,4.f),poly=gate*(absf(gate)*(-.055908203125f)+.447265625f)+.89453125f;hidden[(gr()*8+e)*260+wave*64+j*16+rc()]=byte_F(v*poly);}
  __builtin_amdgcn_s_barrier();
  f8 result{};
