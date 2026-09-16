@@ -331,6 +331,26 @@ void mh_qkv_normalize_wave_c512(const float*in,const float*w,float*out,uint toke
  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){uint row=g*8+e,p=first+row,n=col+j*16+rc;if(p<tokens)reinterpret_cast<unsigned char*>(out)[p*N+n]=static_cast<unsigned char>(q8(F(acc[j][e]*raw[16*65+(j/2)*16+row])));}
 }
 
+// C512 QKV+normalize in the HLSL native_wave_qkv_normalize shape (host option c512_qkv_frag): one wave = 16 tokens x
+// 64 output columns (two heads of one part); A comes straight from the projection's 512-byte [16 token][32 k] E4M3
+// tiles, B from fragment-tiled E4M3 QKV weights (FragmentPackedMatrix: 512-byte tile per (column tile, k32), 8
+// contiguous bytes per lane) -- no LDS and no barrier in the K loop. Row sums keep the sequential j=0..31 order in a
+// wave-private LDS tile; the store is q8(F(acc*inv)) exactly as fast_dense<Normalize>.
+FASTWAVE void mh_qkv_normalize_frag_c512(const unsigned char*in8,const float*w,unsigned char*out,uint tokens){
+ const uint C=512,N=1536;uint l=__builtin_amdgcn_workitem_id_x(),rc=l&15,g=l>>4,block=__builtin_amdgcn_workgroup_id_x(),first=block/24*16,col=block%24*64;if(first>=tokens)return;
+ const unsigned char*wb=reinterpret_cast<const unsigned char*>(w);f8 acc[4]{};
+ for(uint gs=0;gs<16;gs++){const unsigned char*atile=in8+((first/16)*16+gs)*512+rc*32+g*8;
+  for(uint h=0;h<2;h++){i2 a;__builtin_memcpy(&a,atile+h*16,8);
+   for(uint n=0;n<4;n++){uint n0=col+n*16+rc;i2 b;__builtin_memcpy(&b,wb+((n0/16)*16+gs)*512+((h*2+g)*16+n0%16)*8,8);acc[n]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[n]);}}}
+ __attribute__((shared)) float raw[17*65];
+ for(uint n=0;n<4;n++)for(uint e=0;e<8;e++)raw[(g*8+e)*65+n*16+rc]=acc[n][e];
+ __builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");
+ uint part=col/C,head0=(col%C)/32,scale=4*C*C+(C/32)*4096;
+ {uint row=l%16,h=l/16;float inv=1.f;if(first+row<tokens&&part<2){float ss=0.f;for(uint j=0;j<32;j++){float v=raw[row*65+h*32+j];ss+=v*v;}inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?w[scale+head0+h]:1.f);}raw[16*65+l]=inv;}
+ __builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");
+ for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint row=g*8+e,p=first+row,c=col+n*16+rc;if(p<tokens)out[p*N+c]=static_cast<unsigned char>(q8(F(acc[n][e]*raw[16*65+(n/2)*16+row])));}
+}
+
 // One wave per pixel/head. Read every channel coalesced, but preserve the
 // production sequential FP32 addition order with scalar-lane extraction.
 // ABI matches normalize_fast; block256, grid ceil(tokens*heads/8).

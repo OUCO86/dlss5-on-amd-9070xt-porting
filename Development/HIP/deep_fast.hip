@@ -402,6 +402,20 @@ WAVE void split_projection_blocked(const float*in,const float*w,const float*skip
  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)out[(first+gr()*8+e)*512+row+j*16+rc()]=F(H(acc[j][e]));
 }
 
+// split_projection_blocked with a second, E4M3 tiled store (host option c512_qkv_frag): the F(H(acc)) values are also
+// written as 16-token x 32-channel row-major 512-byte tiles (HLSL stream8 layout) for mh_qkv_normalize_frag_c512.
+WAVE void split_projection_blocked_t8(const float*in,const float*w,const float*skip,float*out,unsigned char*out8,uint tokens){
+ uint first=bid()/8*16,row=bid()%8*64;if(first>=tokens)return;f8 acc[4]{};
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)acc[j][e]=H(skip[(first+gr()*8+e)*512+row+j*16+rc()]*w[262144+row+j*16+rc()]);
+ for(uint k=0;k<512;k+=16){i2 a{};for(uint e=0;e<8;e++)pack(a,e,in[(first+rc())*512+k+gr()*8+e]);for(uint j=0;j<4;j++){i2 b{};
+#ifdef HIP_PREPACKED_WEIGHTS
+  const uint*pw=reinterpret_cast<const uint*>(w);uint off=((row+j*16+rc())*512+k+gr()*8)/4;b={int(pw[off]),int(pw[off+1])};
+#else
+  for(uint e=0;e<8;e++)pack(b,e,w[(row+j*16+rc())*512+k+gr()*8+e]);
+#endif
+  acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[j]);}}
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){uint r=first+gr()*8+e,c=row+j*16+rc();float v=F(H(acc[j][e]));out[r*512+c]=v;out8[((r/16)*16+c/32)*512+(r%16)*32+c%32]=static_cast<unsigned char>(__builtin_amdgcn_cvt_pk_fp8_f32(v,0.f,0,false));}
+}
 WAVE void vit_qkv_project_blocked(const float*in,const float*w,float*out,uint tokens){
  uint perpart=(tokens/16)*32,part=bid()/perpart,local=bid()%perpart,first=local/32*16,row=local%32*32;if(part>=3)return;f8 acc[2]{};
  for(uint k=0;k<1024;k+=16){h8 a{};for(uint e=0;e<8;e++)a[e]=(_Float16)in[(first+rc())*1024+k+gr()*8+e];for(uint j=0;j<2;j++){h8 b{};for(uint e=0;e<8;e++)b[e]=(_Float16)w[part*1048576+(row+j*16+rc())*1024+k+gr()*8+e];acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,acc[j]);}}
