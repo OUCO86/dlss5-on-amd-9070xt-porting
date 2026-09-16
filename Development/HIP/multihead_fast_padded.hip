@@ -474,6 +474,13 @@ TILE void mh_qkv_normalize_fused(const float*in,const float*w,float*out,uint tok
 // Fused MH FFN:16 tokens/group, C/16 waves, hidden FP8 stays in LDS.
 // External input is f32 carrying FP8 values; weights use existing packed regions.
 template<uint C,bool Mapped> DEV float ffn_input(const float*in,uint p,uint c,uint width,uint height,uint workw,uint sx,uint sy){if constexpr(Mapped){int x=int(p%workw)-int(sx),y=int(p/workw)-int(sy);return x>=0&&y>=0&&x<int(width)&&y<int(height)?in[(uint(y)*width+uint(x))*C+c]:0.f;}return in[p*C+c];}
+#ifndef HIP_FFN_PK_ACT
+#define HIP_FFN_PK_ACT 0 /* expand activation epilogue: 1 exact byte pairing per cvt_pk, 2 packed-f16 polynomial (relaxed, PSNR-gated) */
+#endif
+using h2=_Float16 __attribute__((ext_vector_type(2)));using f2=float __attribute__((ext_vector_type(2)));
+#ifndef HIP_FFN_ABLATE_ACT
+#define HIP_FFN_ABLATE_ACT 0 /* timing-only: skip the expand activation polynomial */
+#endif
 #ifndef HIP_FFN_HOIST_RES
 #define HIP_FFN_HOIST_RES 2 /* 2026-09-17: level 1 -0.03, level 2 -0.14, bit-exact. 1: the FFN+QKV kernels' 8 residual input reads are issued branch-free (clamped index, select after) and the scale once; ISA of the conditional form: 8 x (global_load -> s_wait_loadcnt 0) per lane */
 #endif
@@ -618,7 +625,22 @@ DEV void mh_ffn_qkv_body(const float*in,const float*w,unsigned char*out,uint tok
  // Every wave must finish reading input before its storage becomes hidden.
  __builtin_amdgcn_s_barrier();
 #endif
+#if HIP_FFN_ABLATE_ACT
+ for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e++)hidden[(group*8+e)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>(q8(expand[tile][e])); // timing only
+#elif HIP_FFN_PK_ACT==1
+ // Exact pairing: two activated values per v_cvt_pk_fp8_f32 (same clamp/RNE per element), the canonical-zero select on the bytes.
+ for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e+=2){float x[2];for(uint j=0;j<2;j++){float a=expand[tile][e+j],g=clampf(a,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,poly=g*q+.89453125f;x[j]=a*poly;}
+  uint two=uint(__builtin_amdgcn_cvt_pk_fp8_f32(__builtin_fminf(__builtin_fmaxf(x[0],-448.f),448.f),__builtin_fminf(__builtin_fmaxf(x[1],-448.f),448.f),0,false));
+  for(uint j=0;j<2;j++)hidden[(group*8+e+j)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>((bits(x[j])&0x7fffffffu)?(two>>(8*j))&255u:0u);}
+#elif HIP_FFN_PK_ACT==2
+ // Relaxed (PSNR-gated): the activation polynomial in packed f16 (v_pk_*), two lanes of the 8-vector per instruction;
+ // the product a*poly is formed in f16 before the E4M3 cast (f32 in the exact chain), so the byte can differ by one ulp.
+ for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e+=2){h2 a=__builtin_convertvector(f2{expand[tile][e],expand[tile][e+1]},h2);h2 g=__builtin_elementwise_min(__builtin_elementwise_max(a,h2{-4.f,-4.f}),h2{4.f,4.f});h2 q=__builtin_elementwise_abs(g)*h2{-.055908203125f,-.055908203125f}+h2{.447265625f,.447265625f};h2 o=a*(g*q+h2{.89453125f,.89453125f});f2 x=__builtin_convertvector(o,f2);
+  uint two=uint(__builtin_amdgcn_cvt_pk_fp8_f32(__builtin_fminf(__builtin_fmaxf(x[0],-448.f),448.f),__builtin_fminf(__builtin_fmaxf(x[1],-448.f),448.f),0,false));
+  for(uint j=0;j<2;j++)hidden[(group*8+e+j)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>((bits(x[j])&0x7fffffffu)?(two>>(8*j))&255u:0u);}
+#else
  for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e++){float a=expand[tile][e],g=clampf(a,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,poly=g*q+.89453125f;hidden[(group*8+e)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>(q8_fused_round(a*poly));}
+#endif
  __builtin_amdgcn_s_barrier();
  f8 accum{};
  const uint first_k=Grouped?(wave/2)*128:0,last_k=Grouped?first_k+128:4*C;

@@ -2178,3 +2178,16 @@ native-pinline.addon64 + ffnh2-modules在游戏里跑，900p由47帧到52帧；�
 
 ### 2026-09-17 03:30：补量C512家族dup（ffnh2-modules，基线≈15.18）
 split_*（FFWD mix/expand/contract/projection）0.69 + mh_qkv_normalize_frag_c512 0.63 + mh_attention_project_frag_c512 0.25 = **1.57ms/13块 = 0.12/块**，对HLSL 0.134/块（1.74）。09-16时HIP 0.178/块的差距已由frag三刀收平并反超。至此dup表全部家族≤HLSL，逐位精确路线上没有家族级缺口了。脚本test-dup-c512b.ps1，日志release/HIP/dup-c512b.log。
+
+### 2026-09-17 03:31起：Zero授权路线1（PSNR门）与路线2（launch间隙）；先做PSNR验收与C32相位消融
+- PSNR验收：validate-psnr.ps1（三道同样的检查但不锁hash，输出 X-p-full.f16 / X-p-reset.f16 / X-p-history.f32）+ tools/psnr-check.sh（scp回来与逐位golden ffnh2-full/reset/history-check比PSNR、最大绝对误差、逐位相同比例）。自检：精确配置三项inf dB、100%逐位。HDR输出峰值29.75。
+- C32相位消融（HIP_C32_ABLATE=1/2/3，仅计时，test-abl.ps1不验hash，基线ffnh2）：跳FFN −1.08、跳注意力 −1.61、跳投影 −0.41（10个C32核合计）。注意力最重。
+- V转置布局（`HIP_C32_VT`：V在QKV阶段写成[col][key] 68字节行的独立LDS数组，AV的B片一次8字节读，字节不变）：ABBA（c32vt对ffnh2）15.551/15.604对15.565/15.549，**null**，哈希一致。与LDS_VECTOR四次null同一结论：C32核的LDS字节凑片不是瓶颈。宏留0。日志release/HIP/c32vt-test.log。
+- 多头注意力核同款V转置（`HIP_MH_VT`，V字节staging时按[col][key]写进同一2304字节区域）：ABBA（mhvt对ffnh2）15.557/15.591对15.559/15.519，−0.03在噪声内，哈希一致；宏留0。两处都说明：fp8 MMA的A/B片从LDS按字节凑不是这些核的瓶颈，issue预算花在别处（消融看是softmax阶段的标量尾巴）。日志release/HIP/mhvt-test.log。
+- 多头FFN激活消融（`HIP_FFN_ABLATE_ACT`，仅计时）：15.570/15.561对15.215/15.217，**激活多项式尾巴值0.35ms**（36块；ISA里med3 104/add 70/mul 77/cndmask 112/cvt_pk 74 ≈ 该核1752条的25%）。两个候选：`HIP_FFN_PK_ACT=1`精确——两元素共用一条v_cvt_pk_fp8_f32、零选择在字节上；`=2`放宽——多项式改packed f16（v_pk_*），a*poly在f16里成形再转E4M3（PSNR门）。
+结果（对ffnh2）：`PK_ACT=1`精确配对 15.540/15.557对15.538/15.552，null，哈希一致；`PK_ACT=2` packed f16 15.554/15.547对15.643/15.622，**+0.08更慢**（多出的f32↔f16转换抵掉了pk指令省的一半VALU）。消融能省0.35但两种重写都拿不到——这段尾巴的成本不在多项式本身的算术量，更像是32个ds_write_b8与后面barrier前的依赖尾巴。两宏留0。日志release/HIP/ffnabl-test.log、pkact1-test.log、pkact2-test.log。
+
+### 2026-09-17 03:41：路线1/2今夜结论
+- 路线1（改累加顺序/放宽精确）：验收工具就位（validate-psnr.ps1 + psnr-check.sh），但试的第一刀（FFN激活packed f16）反而更慢；C32注意力相位1.61ms里LDS凑片（VT）、LDS向量读都不是瓶颈，剩下的是softmax标量尾巴+3道barrier，放宽精度改不动结构。没有找到值得越过PSNR门的刀。
+- 路线2（launch间隙）：当前每帧约200次launch，稳态1.2–1.5µs/次≈0.3ms硬成本；可合的相邻核（C512 projection+QKV、ViT各段）每处<0.1ms且要重排workgroup分解，性价比低，不做。
+- 今夜净收益全部来自逐位精确路线：16.90→≈15.5ms，游戏900p 47→52 FPS。生产=native-pinline.addon64 + ffnh2-modules。

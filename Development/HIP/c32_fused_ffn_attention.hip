@@ -31,6 +31,12 @@
 #ifndef HIP_C32_STAGE_PREFETCH
 #define HIP_C32_STAGE_PREFETCH 1 /* 2026-09-17: -0.68ms together with BRANCHLESS_F, bit-exact. lane staging issues all 16 token loads before any conversion (ISA showed load -> s_wait_loadcnt 0 -> branchy F per token, 16 serialized latencies per wave) */
 #endif
+#ifndef HIP_C32_ABLATE
+#define HIP_C32_ABLATE 0 /* timing-only ablation, never production: 1 skip FFN expand+contract, 2 skip scores/softmax/AV, 3 skip projection+output */
+#endif
+#ifndef HIP_C32_VT
+#define HIP_C32_VT 0 /* 1: V stored transposed in its own LDS array so the AV B fragments load as 8 contiguous bytes; same bytes */
+#endif
 #ifndef HIP_C32_HOIST_PW
 #define HIP_C32_HOIST_PW 1 /* 2026-09-17: -0.05ms, bit-exact. projection scale w[8193+col] read once per lane instead of 16 aliasing-forced reloads in the output loop */
 #endif
@@ -203,6 +209,9 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  union Scratch {float raw[64*33];_Float16 ex[64*66];unsigned char hidden[64*132];};
  __attribute__((shared)) Scratch scratch;
  __attribute__((shared)) unsigned char packed[3*64*36];
+#if HIP_C32_VT
+ __attribute__((shared)) unsigned char vt[32*68]; // V transposed [col][key]: the AV B fragment is 8 contiguous bytes (the [key][col] rows needed 8 byte gathers per fragment)
+#endif
 #if HIP_C32_REGISTER_FFN
  h8 saved_ffn[2];
 #if HIP_C32_ALIAS_FFN_V
@@ -275,10 +284,13 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
 #else
  sync_window();
 #endif
+#if HIP_C32_ABLATE!=1
  C32_LOOP for(uint col=0;col<128;col+=16){f8 sum{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=matrix8(fw+512,(col+rc())*32+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
   for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
  }
+#endif
+
 #if HIP_C32_LOCAL_FFN_SYNC
  sync_owned_rows();
 #else
@@ -305,9 +317,12 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
     acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
   }}
 #endif
+#if HIP_C32_ABLATE!=1
  C32_LOOP for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=chunk*32+kt*16+gr()*8;a=load8(scratch.hidden+(first+rc())*132+k);b=matrix8(fw+4608,(ci*16+rc())*128+k);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
  }
+#endif
+
 #if HIP_C32_ALIAS_FFN_V && HIP_C32_REGISTER_FFN
  // Preserve the validated contraction-to-FFN phase boundary.
  sync_window();
@@ -336,7 +351,11 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
   }
   sync_owned_rows();f8 sum{};
   if(part<2)for(uint kt=0;kt<2;kt++){h8 a{},ones{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;float v=scratch.raw[(first+rc())*33+k];a[e]=(_Float16)(v*v);ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,ones,sum);}
-  for(uint col=0;col<32;col+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e;float v=scratch.raw[row*33+col+rc()];if(part<2)v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*(part==0?w[8192]:1.f);packed[(part*64+row)*36+col+rc()]=static_cast<unsigned char>(fp8(v));}
+  for(uint col=0;col<32;col+=16)for(uint e=0;e<8;e++){uint row=first+gr()*8+e;float v=scratch.raw[row*33+col+rc()];if(part<2)v*=__builtin_amdgcn_rsqf(maxf(sum[e],6.198883056640625e-5f))*(part==0?w[8192]:1.f);
+#if HIP_C32_VT
+   if(part==2)vt[(col+rc())*68+row]=static_cast<unsigned char>(fp8(v));else
+#endif
+   packed[(part*64+row)*36+col+rc()]=static_cast<unsigned char>(fp8(v));}
   sync_owned_rows();
  }
 #if HIP_C32_LOCAL_QKV_SYNC
@@ -352,6 +371,8 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  unsigned char*prob=packed;
 #define ATTN_SYNC() sync_window()
 #endif
+ f8 av[2];av[0]=f8{};av[1]=f8{};
+#if HIP_C32_ABLATE!=2
  C32_LOOP for(uint key=0;key<64;key+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=load8(packed+(64+key+rc())*36+k);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);scratch.ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
@@ -369,16 +390,23 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  }
  ATTN_SYNC();
  // Both AV column fragments stay live until every wave has finished reading probability rows.
- f8 av[2];
  for(uint ci=0;ci<2;ci++){f8 acc{};uint col=ci*16;
-  for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;
+  for(uint kt=0;kt<4;kt++){i2 a{},b{};
+#if HIP_C32_VT
+   __builtin_memcpy(&a,prob+(first+rc())*68+kt*16+gr()*8,8);__builtin_memcpy(&b,vt+(col+rc())*68+kt*16+gr()*8,8);
+#else
+   for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;
 #if HIP_C32_LOCAL_ATTN_SYNC
    put_bits(a,e,prob[rc()*68+k]);
 #else
    put_bits(a,e,prob[(first+rc())*68+k]);
 #endif
-   put_bits(b,e,packed[(128+k)*36+col+rc()]);}acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}av[ci]=acc;
+   put_bits(b,e,packed[(128+k)*36+col+rc()]);}
+#endif
+   acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}av[ci]=acc;
  }
+#endif
+
  ATTN_SYNC();
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)packed[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(av[ci][e]));
  ATTN_SYNC();
@@ -387,6 +415,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  // stores, so the compiler re-issued global_load + s_wait_loadcnt 0 for every one of the 16 outputs (ISA, 2026-09-17).
  const float pw0=w[8193+rc()],pw1=w[8193+16+rc()];
 #endif
+#if HIP_C32_ABLATE!=3
  C32_LOOP for(uint col=0;col<32;col+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);}b=matrix8(w,3072+(col+rc())*32+kt*16+gr()*8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float residual;
@@ -405,6 +434,8 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
    else if constexpr(RgbHead){}
    else if constexpr(HalfOutput)reinterpret_cast<_Float16*>(out)[i]=(_Float16)(raw_output?v:F(v));else out[i]=raw_output?v:F(v);}
  }
+#endif
+
  if constexpr(Finish){
   // c32_finish_crop_half / c32_finish_fast_half_main8 in the epilogue (HLSL DLSS5_C32_EPILOGUE finish shape): the wave's 16
   // tokens are two 8-pixel rows of the window, so both the cropped main (F of the half) and the 2x2 downsample (same
