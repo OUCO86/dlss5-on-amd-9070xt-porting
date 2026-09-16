@@ -32,6 +32,7 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV flag");o.ffn_qkv=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DUP_PREFIX"))o.dup_prefix=v;
   if(const char*v=std::getenv("DLSS5_HIP_DUP_COUNT")){o.dup_count=unsigned(strtoul(v,nullptr,10));if(o.dup_count<1||o.dup_count>8)throw std::runtime_error("dup count 1..8");}
+  if(const char*v=std::getenv("DLSS5_HIP_TILED_FFN_SMALL")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("tiled FFN small flag");o.tiled_ffn_small=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DOWN_CROP_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("down crop fused flag");o.down_crop_fused=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_POOL32_H16W")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("pool32 h16w flag");o.pool32_h16w=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_C32_FINISH_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("C32 finish fused flag");o.c32_finish_fused=!strcmp(v,"1");}

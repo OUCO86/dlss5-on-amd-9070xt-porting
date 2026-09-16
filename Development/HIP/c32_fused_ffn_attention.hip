@@ -9,6 +9,14 @@
 #ifndef HIP_C32_DIAG_WEIGHTS
 #define HIP_C32_DIAG_WEIGHTS 0 /* chain residual diagonal B tiles prepacked after the FFN weights (byte 34944) */
 #endif
+#ifndef HIP_C32_NO_UNROLL
+#define HIP_C32_NO_UNROLL 0 /* 1: keep the FFN/QKV/attention/projection loops rolled (fewer live accumulators -> lower VGPR count -> more waves per SIMD; HLSL fast4 ~128 VGPR) */
+#endif
+#if HIP_C32_NO_UNROLL
+#define C32_LOOP _Pragma("clang loop unroll(disable)")
+#else
+#define C32_LOOP
+#endif
 #ifndef HIP_C32_WAVES_PER_EU
 #define HIP_C32_WAVES_PER_EU 0 /* >0: amdgpu_waves_per_eu occupancy target for the fused kernels (HLSL fast4 runs ~12 waves/SIMD at ~128 VGPRs; HIP chain is 190) */
 #endif
@@ -202,7 +210,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
 #else
  sync_window();
 #endif
- for(uint col=0;col<128;col+=16){f8 sum{};
+ C32_LOOP for(uint col=0;col<128;col+=16){f8 sum{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=matrix8(fw+512,(col+rc())*32+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
   for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
  }
@@ -232,7 +240,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
     acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
   }}
 #endif
- for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
+ C32_LOOP for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=chunk*32+kt*16+gr()*8;a=load8(scratch.hidden+(first+rc())*132+k);b=matrix8(fw+4608,(ci*16+rc())*128+k);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
  }
 #if HIP_C32_ALIAS_FFN_V && HIP_C32_REGISTER_FFN
@@ -248,7 +256,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  }
  sync_window();
  // A single raw QKV plane is reused after its norm has been packed separately.
- for(uint part=0;part<3;part++){
+ C32_LOOP for(uint part=0;part<3;part++){
   for(uint col=0;col<32;col+=16){f8 acc{};
    for(uint kt=0;kt<2;kt++){i2 a{},b{};
 #if HIP_C32_REGISTER_FFN
@@ -279,7 +287,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  unsigned char*prob=packed;
 #define ATTN_SYNC() sync_window()
 #endif
- for(uint key=0;key<64;key+=16){f8 acc{};
+ C32_LOOP for(uint key=0;key<64;key+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=load8(packed+(64+key+rc())*36+k);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);scratch.ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
  }
@@ -309,7 +317,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  ATTN_SYNC();
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)packed[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(av[ci][e]));
  ATTN_SYNC();
- for(uint col=0;col<32;col+=16){f8 acc{};
+ C32_LOOP for(uint col=0;col<32;col+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);}b=matrix8(w,3072+(col+rc())*32+kt*16+gr()*8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float residual;
 #if HIP_C32_REGISTER_FFN
