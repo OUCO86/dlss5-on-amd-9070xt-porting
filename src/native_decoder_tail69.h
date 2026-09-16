@@ -45,7 +45,7 @@ public:
  void Record(ID3D12GraphicsCommandList*c,NativeNetworkTimestamps*timer=nullptr){
   if(!output)throw std::runtime_error("decoder tail not created");
   auto mark=[&](const char*name){if(timer)timer->Mark(c,name);};
-  auto run=[&](auto&layer,UINT block){if(NativeSkipBlock(block))NativeSkipCopy(c,layer.Input(),layer.Output(),block);else layer.Record(c);};
+  auto run=[&](auto&layer,UINT block){if(NativeSkipBlock(block))NativeSkipCopy(c,layer.Input(),layer.Output(),block);else{layer.Record(c);if(NativeDupBlock(block))layer.Record(c);}};
   for(UINT i=0;i<7;i++)run(c256[i],49+i);mark("tail49_55");project56.Record(c);mark("tail56_project");body56.Record(c);mark("tail56_body");
   for(UINT i=0;i<5;i++)run(c128[i],57+i);mark("tail57_61");project62.Record(c);mark("tail62_project");body62.Record(c);mark("tail62_body");
   for(UINT i=0;i<3;i++)run(c64[i],63+i);mark("tail63_65");project66.Record(c);mark("tail66_project");body66.Record(c);mark("tail66_body");

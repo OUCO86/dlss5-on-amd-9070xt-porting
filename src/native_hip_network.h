@@ -30,6 +30,8 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_VIT_QKV_FUSED")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT QKV fused flag");o.vit_qkv_fused=!strcmp(v,"1");}
   o.ffn_qkv=fast&&o.grouped_mh_contract;
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV flag");o.ffn_qkv=!strcmp(v,"1");}
+  if(const char*v=std::getenv("DLSS5_HIP_DUP_PREFIX"))o.dup_prefix=v;
+  if(const char*v=std::getenv("DLSS5_HIP_DUP_COUNT")){o.dup_count=unsigned(strtoul(v,nullptr,10));if(o.dup_count<1||o.dup_count>8)throw std::runtime_error("dup count 1..8");}
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV_BN")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV batched norm flag");o.ffn_qkv_batched_norm=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV_MAX_C")){char*end=nullptr;auto c=strtoul(v,&end,10);if(*end||(c!=64&&c!=128&&c!=256))throw std::runtime_error("FFN/QKV channel limit");o.ffn_qkv_max_c=unsigned(c);}
   const char*modules=std::getenv("DLSS5_HIP_MODULES");o.modules=modules&&*modules?std::string(modules):Utf8(directory+L"\\HIP");bridge.Create(q,o,noise);

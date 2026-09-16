@@ -99,12 +99,12 @@ public:
    auto record_list=[&](auto record){submit.Submit(record);};
 #endif
    record_list([&](ID3D12GraphicsCommandList*c){
-    timestamps.Mark(c,"start");pre.Record(c,seed,false,temporal_enabled,profile?&timestamps:nullptr,"preblock_detail");timestamps.Mark(c,"preblock");
-    for(UINT i=0;i<4;i++){c32[i].Record(c,profile&&i==0?&timestamps:nullptr);if(profile)timestamps.Mark(c,"enc_c32_"+std::to_string(i));}ds4.Record(c);timestamps.Mark(c,"encoder1_4");
-    auto run=[&](auto&layer,UINT block,NativeNetworkTimestamps*t){if(NativeSkipBlock(block))NativeSkipCopy(c,layer.Input(),layer.Output(),block);else layer.Record(c,t);};
-    for(UINT i=0;i<4;i++)run(c64[i],5+i,profile&&i==0?&timestamps:nullptr);ds8.Record(c);timestamps.Mark(c,"encoder5_8");
-    for(UINT i=0;i<6;i++)run(c128[i],9+i,nullptr);ds14.Record(c);timestamps.Mark(c,"encoder9_14");
-    for(UINT i=0;i<8;i++)run(c256[i],15+i,nullptr);ds22.Record(c);timestamps.Mark(c,"encoder15_22");
+    timestamps.Mark(c,"start");pre.Record(c,seed,false,temporal_enabled,profile?&timestamps:nullptr,"preblock_detail");if(NativeDupBlock(0))pre.Record(c,seed,false,temporal_enabled,nullptr,"preblock_detail");timestamps.Mark(c,"preblock");
+    for(UINT i=0;i<4;i++){c32[i].Record(c,profile&&i==0?&timestamps:nullptr);if(NativeDupBlock(1+i))c32[i].Record(c,nullptr);if(profile)timestamps.Mark(c,"enc_c32_"+std::to_string(i));}ds4.Record(c);if(NativeDupBlock(104))ds4.Record(c);timestamps.Mark(c,"encoder1_4");
+    auto run=[&](auto&layer,UINT block,NativeNetworkTimestamps*t){if(NativeSkipBlock(block))NativeSkipCopy(c,layer.Input(),layer.Output(),block);else{layer.Record(c,t);if(NativeDupBlock(block))layer.Record(c,nullptr);}};
+    for(UINT i=0;i<4;i++)run(c64[i],5+i,profile&&i==0?&timestamps:nullptr);ds8.Record(c);if(NativeDupBlock(108))ds8.Record(c);timestamps.Mark(c,"encoder5_8");
+    for(UINT i=0;i<6;i++)run(c128[i],9+i,nullptr);ds14.Record(c);if(NativeDupBlock(114))ds14.Record(c);timestamps.Mark(c,"encoder9_14");
+    for(UINT i=0;i<8;i++)run(c256[i],15+i,nullptr);ds22.Record(c);if(NativeDupBlock(122))ds22.Record(c);timestamps.Mark(c,"encoder15_22");
     for(UINT i=0;i<8;i++)run(split[i],23+i,profile&&i==0?&timestamps:nullptr);timestamps.Mark(c,"encoder23_30_body");head.Record(c);timestamps.Mark(c,"encoder_head");bridge.Record(c);timestamps.Mark(c,"encoder23_head");
    });
    // FAST PATH (DLSS5_BATCH_SUBMITS): one command list per ViT layer and per few decoder stages instead of one per chunk
@@ -116,7 +116,7 @@ public:
     for(UINT stage=0;stage<5;stage++)for(UINT chunk=0;chunk<layer.StageChunks(stage);chunk++)record_list([&](ID3D12GraphicsCommandList*c){layer.RecordStageChunk(c,stage,chunk);if(chunk+1==layer.StageChunks(stage))timestamps.Mark(c,"vit"+std::to_string(31+b)+"_stage"+std::to_string(stage));});}
    if(batch){const UINT n=decoder.StageCount();for(UINT s0=0;s0<n;s0+=decoder_per_list)record_list([&](ID3D12GraphicsCommandList*c){for(UINT stage=s0;stage<std::min(n,s0+decoder_per_list);stage++){if(stage==12)timestamps.Mark(c,"decoder_tail_begin");decoder.RecordStage(c,stage,profile?&timestamps:nullptr);timestamps.Mark(c,"decoder_stage"+std::to_string(stage));}});}
    else for(UINT stage=0;stage<decoder.StageCount();stage++)record_list([&](ID3D12GraphicsCommandList*c){if(stage==12)timestamps.Mark(c,"decoder_tail_begin");decoder.RecordStage(c,stage,profile?&timestamps:nullptr);timestamps.Mark(c,"decoder_stage"+std::to_string(stage));});
-   record_list([&](ID3D12GraphicsCommandList*c){post.Record(c,profile?&timestamps:nullptr);timestamps.Mark(c,"post70");timestamps.Resolve(c);});
+   record_list([&](ID3D12GraphicsCommandList*c){post.Record(c,profile?&timestamps:nullptr);if(NativeDupBlock(70))post.Record(c,nullptr);timestamps.Mark(c,"post70");timestamps.Resolve(c);});
 #ifdef DLSS5_BENCH_LIST_TIMING
    const double record_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-list_start).count();
    submit.Submit([&](ID3D12GraphicsCommandList*c){list_timings.Resolve(c);});submit.Flush();

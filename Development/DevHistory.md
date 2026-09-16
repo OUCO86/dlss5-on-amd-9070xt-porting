@@ -1989,3 +1989,27 @@ HIP侧补齐DLSS5_SKIP_BLOCKS：ParseSkipBlocks放开1–4/31–38/66–69；Vit
 读HIP mh_ffn_qkv_body与HLSL native_wave_qkv_normalize.hlsl：两边生产版都是每行32项顺序求和（HLSL的NATIVE_QKV_FAST2 MMA求和未编进生产cso），顺序决定逐位一致，不能改树形。HIP版每段各写raw、两道barrier、32线程串行求和；C64一块要4道barrier加两段串行。改法BatchNorm：先算Q/K/V三段累加器，两段raw一次写LDS（union raw加倍），2×16×(C/32)线程一道barrier后并行求各行和（每行顺序不变），再一道barrier写norm——每块少两道barrier、串行段减半。导出mh_ffn_fused_c{64,128}_project[_mapped]_g128_qkv_bn，C256不做（LDS会到38KB）。选项ffn_qkv_batched_norm，env DLSS5_HIP_FFN_QKV_BN，CLI --ffn-qkv-bn，默认关。
 
 test_ffn_qkv.cpp加bn对照，12组FFN逐位/QKV逐byte全0差异。ISA：C64 VGPR 55→95、LDS 5440→10816；C128 87→87、21568（原10816→21568）；private 0。ABBA关19.188/19.172、开19.314/19.275，最终FEEA9EF3…一致——**+0.11ms更慢**。VGPR/LDS都没到占用率门槛，慢在编译器对三段累加器同时存活的排布，没继续查。今天四次"按结构推理该更快"的改动（ViT字节流、half流N2、N4、QKV批量归一）全部不快或更慢：这批核的瓶颈不在barrier数、转换指令数或输入格式上，下一步不该再凭结构直觉改，要拿RGP抓HLSL与HIP同一核的真实指令占用/等待类型对照。脚本compile/test-ffn-qkv-bn.ps1，模块集ffn-qkv-bn-modules，日志release/HIP/ffn-qkv-bn-test.log。游戏与DLL未动。
+
+### 2026-09-16 09:10：编译器旋钮全局试验：默认-O3已是最优
+思路：同一份源码HIP比HLSL慢，而HLSL走驱动DXIL管线自带调度策略，HIP侧COMGR只给过-O3。rtc_compile.cpp新增RTC_EXTRA_OPTS（空格分隔，-mllvm用拼接形式`-mllvm=-amdgpu-...`，分开写会被COMGR错配吞掉-nogpulib），前端与codegen两段都追加；build-opt-modules.ps1按选项全量编24模块到opt-<name>-modules，test-opt-modules.ps1对opt-base（同编译器、无额外选项）ABBA。
+
+结果（哈希全FEEA9EF3…一致）：base 19.15–19.23；`-mcumode` 19.247/19.255（+0.08）；`-amdgpu-sched-strategy=max-ilp` 19.923/19.924（+0.74）；`max-memory-clause` 19.442/19.442（+0.25）；`-amdgpu-kernarg-preload-count=16` 编出的hsaco与base逐字节相同（选项未生效，gfx12/COMGR3这条路不通）。编译器层没有免费午餐。日志release/HIP/opt-modules-test.log（精简版：原日志因PowerShell `-Command "...; type 同一文件"` 自我追加涨到4.8GB，已删；**远端跑脚本一律用 -File，别在 -Command 里type自己的输出文件**）。工具rtc_compile_opts.exe（rtc_compile.cpp已含该功能，默认行为不变）。
+
+同时复核B：compare-mh-round-byte-current.log里block63/64本来就是HLSL fp8_stream变体（decoder段fp8_input=1）：隔离HLSL gpu 0.265–0.31ms（含input_pack 0.028）对HIP 0.27ms，持平；而帧内HLSL≈0.195–0.215/块、HIP 0.284/块。C64差距不在核本身，在帧内串接。
+
+### 2026-09-16 09:55：重复launch量HIP核的帧内边际成本：C64块≈隔离值+0.02/launch，核就是核
+Options新增dup_prefix（env DLSS5_HIP_DUP_PREFIX，诊断用）：Run()对名字前缀匹配的核连发两次——纯函数核重跑一遍输出逐位不变，帧时间增量=该核帧内真实边际成本（含launch/ramp/tail）。九轮（无/C64 FFN-QKV×2/C64 attn-project×2/C256 FFN-QKV×2 各两遍）哈希全FEEA9EF3…一致：基线19.284/19.235/19.248；C64 FFN-QKV 20.582/20.605（+1.34ms/8块=0.167/launch，隔离0.14）；C64 attn-project 20.136/20.164（+0.90/8=0.112，隔离0.10）；C256 FFN-QKV 20.873/20.931（+1.65/8=0.206）。
+
+结论：HIP C64块帧内=0.167+0.112=0.279，与跳块差分0.284一致；比隔离只多0.02/launch（launch+尾巴）。HIP侧账是平的。那HLSL帧内0.195–0.215/块却低于其隔离0.248——要么HLSL跳块差分被拷贝成本压低，要么D3D12帧内真有重叠。下一步给HLSL加同样的重复Record量它的帧内边际成本。日志release/HIP/dup-launch-test.log，脚本test-dup-launch.ps1，runner benchmark_dup.exe。
+
+### 2026-09-16 10:40：两后端"重复录制/launch"法重画帧内成本地图：MH+ViT只差0.74ms，1.7ms在MH之外
+HLSL侧对称加DLSS5_DUP_BLOCKS（native_block_skip.h NativeDupBlock；network70的run lambda、decoder_tail69的run、decoder69的split分支、encoder c32[i]都在Record后按需再Record一次——Record自带recorded状态回转，重录合法；ViT走record_vit未接）。HIP侧dup_prefix加DLSS5_HIP_DUP_COUNT。所有轮次哈希各自golden一致（HLSL C7C2F49D…、HIP FEEA9EF3…）。
+
+按块边际成本（ms/块；HIP=重复法，与跳块法互相印证；HLSL=重复法）：C64 HIP 0.167+0.112=0.279 对 HLSL 0.243（8块，+0.30）；C128 0.103+0.057=0.160 对 0.182（12块，−0.26）；C256 0.101+0.041=0.142（跳块0.152）对 0.169（16块，−0.35；此前一次把16块当8块除得出"0.247"是算术错误，×2/×3/跳块三方对照已澄清）；C512 HIP跳块0.178 对 HLSL 0.134（13块，+0.57）；ViT HIP 0.235 对 HLSL跳块0.175（8块，+0.48）。MH+ViT合计+0.74ms。整帧HIP 19.3对HLSL 16.86差2.4ms，**其余≈1.7ms在C32链（HIP 2.5ms/8块）、prefix/pre-block、post70、上下采样、gather、launch间隙里**。此前跳块法给HLSL的家族成本因跳块拷贝被压低（C64 1.56→实际1.94），把注意力误导到MH。
+
+日志release/HIP/dup-launch-test.log、dup-launch2{a,b}-test.log、dup-c256-test.log（HIP）、dup-hlsl{,2,3}-test.log（HLSL）；脚本test-dup-launch{,2}.ps1、test-dup-c256.ps1、test-dup-hlsl{,2,3}.ps1；runner benchmark_dup/dupc/hlsl_dup.exe。
+补C32：HLSL重复录制block1–4 +1.09ms/4=0.272/块（66–69走decoder_tail直接分支未接，无效）；HIP跳块0.33/0.31 → C32链8块约+0.4ms。至此MH+ViT+C32合计≈1.14ms，其余≈1.25ms在prefix/pre-block、post70、上下采样、gather、pool project、launch间隙。日志release/HIP/dup-hlsl4-test.log。
+HIP块外阶段（重复launch法，基线19.21）：prefix三核 +0.48；**post70（c32_post_merge_fused_half）+1.56**；mh_pool×4+mh_pool_project +0.63；decoder_project2x×5 +0.49；vit_gather×2 +0.06。post70一个核占帧8%。HLSL侧DLSS5_NETWORK_GPU_PROFILE=1那轮没打出network_gpu_interval（benchmark路径不回读），改用重复录制量HLSL的pre/post/ds。日志release/HIP/stage-remainder-test.log。
+HLSL块外（重复录制，基线16.83）：post70 +1.32/+1.25（≈1.30，HIP 1.56，+0.26）；pre-block +1.17（HIP prefix三核0.48，**HIP快0.7**）；ds4/8/14/22 +0.15（HIP mh_pool×4+pool_project 0.63，+0.45）。日志release/HIP/dup-hlsl5-test.log，脚本test-dup-hlsl5.ps1。
+
+**帧内差距全图（HIP−HLSL，ms）**：C512 +0.57 ｜ ViT +0.48 ｜ pool/ds +0.45 ｜ C32链 +0.4 ｜ C64 +0.30 ｜ post70 +0.26 ｜ up（HIP 0.49，HLSL未量）｜ launch间隙≈0.4 ｜ C128 −0.26 ｜ C256 −0.35 ｜ prefix −0.7。HIP不是全面慢：赢在prefix/C128/C256，输在C512、ViT、pool、C32、C64、post。先前把火力全压在MH（C64）是被跳块法的拷贝偏差误导。
