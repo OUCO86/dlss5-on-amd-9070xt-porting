@@ -267,6 +267,56 @@ FASTWAVE void mh_pool_project_production(const float* pooled,const float* weight
  for(uint e=0;e<8;e++){uint p=first+g*8+e;if(p<M)output[p*N+col+rc]=(valid_width&&(p%width>=valid_width||p/width>=valid_height))?0.f:F(acc[e]);}
 }
 
+// Fused 2x2 pool + channel-doubling projection (host option pool_project_fused, C=64/128/256): one wave produces 16
+// pooled tokens x 64 output columns; the pooled A fragments are computed once from raw (same H/F chain as mh_pool) and
+// reused across the four column tiles, weights arrive prepacked as F16 rows (one 16-byte load per B fragment). The
+// per-32-chunk f32 sum, H(acc+sum) chaining and F(acc) store follow mh_pool_project_production exactly.
+template<uint C>
+DEV void mh_pool_project_fused_body(const float*raw,const float*w,float*output,uint width,uint height,uint source_width,uint valid_width,uint valid_height){
+ const uint M=width*height,N=2*C,ncol=N/64;uint tile=__builtin_amdgcn_workgroup_id_x();if(tile>=((M+15)/16)*ncol)return;
+ uint first=tile/ncol*16,colg=tile%ncol*64,l=__builtin_amdgcn_workitem_id_x(),rc=l&15,g=l>>4;
+ const _Float16*w16=reinterpret_cast<const _Float16*>(w);
+ h8 a[C/16];uint p=first+rc;bool live=p<M&&!(valid_width&&(p%width>=valid_width||p/width>=valid_height));uint base=live?((p/width)*2*source_width+(p%width)*2)*C:0;
+ for(uint sidx=0;sidx<C/16;sidx++)for(uint e=0;e<8;e++){uint c=sidx*16+g*8+e;float v=0.f;if(live){float top=H(raw[base+c]+raw[base+C+c]),bottom=H(raw[base+source_width*C+c]+raw[base+(source_width+1)*C+c]);v=F(H(H(top+bottom)*.25f));}a[sidx][e]=(_Float16)v;}
+ f8 acc[4]{};
+ for(uint chunk=0;chunk<C/32;chunk++){f8 sum[4]{};
+  for(uint half=0;half<2;half++){uint sidx=chunk*2+half;for(uint j=0;j<4;j++){h8 b;__builtin_memcpy(&b,w16+(colg+j*16+rc)*C+sidx*16+g*8,16);sum[j]=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a[sidx],b,sum[j]);}}
+  for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)acc[j][e]=H(acc[j][e]+sum[j][e]);
+ }
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){uint q=first+g*8+e;if(q<M)output[q*N+colg+j*16+rc]=(valid_width&&(q%width>=valid_width||q/width>=valid_height))?0.f:F(acc[j][e]);}
+}
+FASTWAVE void mh_pool_project_fused_c64(const float*raw,const float*w,float*output,uint width,uint height,uint source_width,uint valid_width,uint valid_height){mh_pool_project_fused_body<64>(raw,w,output,width,height,source_width,valid_width,valid_height);}
+FASTWAVE void mh_pool_project_fused_c128(const float*raw,const float*w,float*output,uint width,uint height,uint source_width,uint valid_width,uint valid_height){mh_pool_project_fused_body<128>(raw,w,output,width,height,source_width,valid_width,valid_height);}
+FASTWAVE void mh_pool_project_fused_c256(const float*raw,const float*w,float*output,uint width,uint height,uint source_width,uint valid_width,uint valid_height){mh_pool_project_fused_body<256>(raw,w,output,width,height,source_width,valid_width,valid_height);}
+
+// C512 QKV+normalize without the 64x64 LDS-staged tile (host option qkv_norm_wave_c512): a 128-thread group packs the
+// 16-token A rows (pack4, as fast_dense) into LDS once, then each of its four waves owns 64 output columns (two heads)
+// and runs the K=512 FP8 MMA chain straight from LDS/A and the prepacked [N][K] weight bytes/B. Row sums stay the
+// sequential j=0..31 order over a per-wave LDS tile; the store is q8(F(acc*inv)) exactly as fast_dense<Normalize>.
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128)))
+void mh_qkv_normalize_wave_c512(const float*in,const float*w,float*out,uint tokens){
+ const uint C=512,N=1536,K=512;uint t=__builtin_amdgcn_workitem_id_x(),wave=t/32,l=t%32,rc=l&15,g=l>>4;
+ uint block=__builtin_amdgcn_workgroup_id_x(),first=block/6*16,colbase=block%6*256;if(first>=tokens)return;
+ union Shared{uint a[16*130];float raw[4*17*65];};__attribute__((shared)) Shared sh;
+ for(uint i=t;i<16*128;i+=128){uint row=i/128,word=i%128,p=first+row,k=word*4;uint v=0;if(p<tokens){uint off=p*K+k;v=pack4(in[off],in[off+1],in[off+2],in[off+3]);}sh.a[row*130+word]=v;}
+ __builtin_amdgcn_s_barrier();
+ const uint*pw=reinterpret_cast<const uint*>(w);uint col=colbase+wave*64;f8 acc[4]{};
+ for(uint k=0;k<K;k+=16){uint word0=(k+g*8)/4;i2 a={int(sh.a[rc*130+word0]),int(sh.a[rc*130+word0+1])};
+  for(uint j=0;j<4;j++){uint n=col+j*16+rc,off=(n*K+k+g*8)/4;i2 b={int(pw[off]),int(pw[off+1])};acc[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[j]);}
+ }
+ __builtin_amdgcn_s_barrier();
+ float*raw=sh.raw+wave*17*65;
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++)raw[(g*8+e)*65+j*16+rc]=acc[j][e];
+ __builtin_amdgcn_s_barrier();
+ uint part=col/C,head0=(col%C)/32,scale=4*C*C+(C/32)*4096;
+ float inv=1.f;{uint row=l%16,h=l/16;if(first+row<tokens&&part<2){float ss=0.f;for(uint j=0;j<32;j++){float v=raw[row*65+h*32+j];ss+=v*v;}inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(part==0?w[scale+head0+h]:1.f);}}
+ // inv lives in lane (h*16+row); the store needs inv[row=g*8+e][h=j/2]: read it back through the same LDS tile row 16..
+ __builtin_amdgcn_s_barrier();
+ raw[16*65+l]=inv;
+ __builtin_amdgcn_s_barrier();
+ for(uint j=0;j<4;j++)for(uint e=0;e<8;e++){uint row=g*8+e,p=first+row,n=col+j*16+rc;if(p<tokens)reinterpret_cast<unsigned char*>(out)[p*N+n]=static_cast<unsigned char>(q8(F(acc[j][e]*raw[16*65+(j/2)*16+row])));}
+}
+
 // One wave per pixel/head. Read every channel coalesced, but preserve the
 // production sequential FP32 addition order with scalar-lane extraction.
 // ABI matches normalize_fast; block256, grid ceil(tokens*heads/8).

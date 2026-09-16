@@ -2013,3 +2013,16 @@ HIP块外阶段（重复launch法，基线19.21）：prefix三核 +0.48；**post
 HLSL块外（重复录制，基线16.83）：post70 +1.32/+1.25（≈1.30，HIP 1.56，+0.26）；pre-block +1.17（HIP prefix三核0.48，**HIP快0.7**）；ds4/8/14/22 +0.15（HIP mh_pool×4+pool_project 0.63，+0.45）。日志release/HIP/dup-hlsl5-test.log，脚本test-dup-hlsl5.ps1。
 
 **帧内差距全图（HIP−HLSL，ms）**：C512 +0.57 ｜ ViT +0.48 ｜ pool/ds +0.45 ｜ C32链 +0.4 ｜ C64 +0.30 ｜ post70 +0.26 ｜ up（HIP 0.49，HLSL未量）｜ launch间隙≈0.4 ｜ C128 −0.26 ｜ C256 −0.35 ｜ prefix −0.7。HIP不是全面慢：赢在prefix/C128/C256，输在C512、ViT、pool、C32、C64、post。先前把火力全压在MH（C64）是被跳块法的拷贝偏差误导。
+
+### 2026-09-16 17:50：池化+投影融合核逐位一致但无收益；下采样家族真实差距不到0.2ms
+精确名匹配重复法（dup_prefix末尾`$`=精确）：mh_pool四次launch≈0，mh_pool_project_production五次+0.50。新核mh_pool_project_fused_c{64,128,256}（一个wave算16个池化token×64列，池化在核内从raw算一次复用四个列片，权重PackedDsWeight预打包F16，逐32块f32求和+H(acc+sum)+F(acc)与原核同序），选项pool_project_fused（env DLSS5_HIP_POOL_PROJECT_FUSED、CLI --pool-project-fused，默认关），C32/C512下采样仍走原路径。test_pool_project.cpp四种几何×两种输入全0差异（含1080p head有效矩形）；ABBA关19.25/19.267、开19.235/19.296，最终FEEA9EF3…一致，无收益。
+
+开着融合再拆：fused_c64单独+0.15（一次launch，26MB raw的带宽下限0.045，慢在A操作数按MMA行布局跨行读，每条load指令只用到每行64B里的8B），c32+c512两次production +0.12（c32那个52MB raw已接近带宽下限）。c128/c256可忽略。家族合计≈0.3对HLSL 0.15，差距<0.2，先前+0.45是两次噪声叠加。可做但不急：c64下采样改workgroup协同合并读入LDS再池化，预期省≈0.07。日志release/HIP/pool-project-test.log、dup-pool2-test.log。
+
+### 2026-09-16 18:20：C512块逐核帧内成本（重复法，13块，基线19.23）
+split_mix_blocked +0.44（0.034/块）；split_ffn_fused_fp8 +0.22（0.017）；split_projection_blocked +0.41（0.032）；**mh_qkv_normalize_fused +0.74（0.057）**；mh_attention_fused_fp8_out +0.21（0.016）；mh_attention前缀（fused+project）+0.53 → attention_project≈0.025。合计0.181/块，与跳块0.178一致；HLSL 0.134/块。C512每块只有1600 token（900p），六次launch里QKV归一化一个核占三成，先看它。日志release/HIP/dup-c512{a,b}-test.log，脚本test-dup-c512.ps1。
+
+### 2026-09-16 18:50：C512 QKV归一化wave级重写逐位一致但更慢；今日结论：这批核卡在权重的L2重读
+mh_qkv_normalize_wave_c512：128线程组把16 token的A按pack4打包进LDS一次，四个wave各算64列（两个头）K=512 FP8 MMA链，B直接读预打包[N][K]字节，行平方和按j=0..31顺序在wave私有LDS tile上做，输出q8(F(acc*inv))与fast_dense<Normalize>同式。选项qkv_norm_wave_c512（env DLSS5_HIP_QKV_WAVE_C512、CLI --qkv-wave-c512，默认关）。test_c512_qkv_wave.cpp：block23/40×1600/960/2160 token×两种输入全0差异。ABBA关19.277/19.231、开19.418/19.386，最终FEEA9EF3…一致，**+0.15更慢**。
+
+把今天六次null放一起看（ViT字节流/half流/N4、FFN-QKV批量归一、池化投影融合、C512 QKV wave级）：凡是"每16个token一个wave、B从全局重读"的设计都不比"64×64 tile经LDS共享A/B"的老核快，甚至更慢——权重每16 token重读一遍，L2流量是tile版的4倍（C512 QKV：78MB对20MB每次launch）。瓶颈是B的重读带宽，不是barrier数或转换指令。这也解释了HLSL为什么给ViT留了BLOCK_M=4版本（900p因token数不整除没用上）。方向应改为：加大每次权重加载覆盖的token数（M tile 32/64），同时控制累加器数量避免scratch（ViT expand M4就是栽在16个累加器上）。日志release/HIP/c512-qkv-test.log。
