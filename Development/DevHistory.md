@@ -2065,3 +2065,6 @@ split_mix_blocked每wave对B做8次f32标量读+8次(_Float16)转换×32步×4�
 
 ### 2026-09-16 22:45：decoder上采样投影权重预打包half −0.07ms，逐位一致，进生产并部署
 同一模式第四次：decoder_project2x的B是(_Float16)w[...]逐元素读（五处Up共0.49ms）。decoder_project2x_h16w只换B为16字节memcpy（PackedDecoderHalf：矩阵区RoundWeightHalf就地打包，末尾skip尺度float偏移不变）；选项decoder_h16w（env DLSS5_HIP_DECODER_H16W，CLI --decoder-h16w）。ABBA关18.769/18.758、开18.687/18.689，−0.07（两轮一致；09-16凌晨闇的decoder-halfweight同幅度但当时噪声更大被判无收益）；全40帧FEEA9EF3…、reset 22C171FC…、history 75B62D2F…匹配。**HIP_FAST默认开**；DLL release/HIP/native-dec-h16w.addon64 SHA256 63EC269D257FC4C1BFAEC602334EF85BC7CA9812E9F1F422394F4BECD7B888FD，与dec-h16w-modules一起部署，备份before-dec-h16w。离线HIP≈18.69 / HLSL 16.8。今晚四刀（C32 lane staging −0.14、C512 mix权重half −0.12、下采样权重half/fp8 −0.21、decoder权重half −0.07）合计约−0.55，全部逐位一致。生产路径已无逐元素读f32权重的核（prefix_fast三处wmma待核）。日志release/HIP/dec-h16w-test.log、dec-h16w-validate.log。
+
+### 2026-09-16 20:55：游戏实测
+Zero实测第四版（native-dec-h16w）仍约30FPS，"似乎更稳定些"。账：整帧≈33ms，网络≈18.7ms，今晚−0.55ms只占全帧1.7%，FPS分辨不出；即使追平HLSL 16.8也只到≈32FPS，剩余14ms是游戏渲染与编解码，不在网络优化范围内。
