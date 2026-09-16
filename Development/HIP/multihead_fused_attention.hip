@@ -32,7 +32,12 @@ DEV float H(float x){return from_half(half_bits(x));}
 #ifndef HIP_NATIVE_FP8_F
 #define HIP_NATIVE_FP8_F 1
 #endif
-#if HIP_NATIVE_FP8_F
+#ifndef HIP_BRANCHLESS_F
+#define HIP_BRANCHLESS_F 1 /* 2026-09-17: with deep_fast and the padded file -0.12ms, bit-exact. F()/fp8() as clamp+cvt(+cndmask) instead of a divergent branch pair per call (same values for every non-NaN input; NaN gives -448 instead of +-448) */
+#endif
+#if HIP_NATIVE_FP8_F && HIP_BRANCHLESS_F
+DEV float F(float x){uint a=bits(x)&0x7fffffffu;float c=__builtin_fminf(__builtin_fmaxf(x,-448.f),448.f);float r=__builtin_amdgcn_cvt_f32_fp8(__builtin_amdgcn_cvt_pk_fp8_f32(c,0.f,0,false),0);return a==0?0.f:r;}
+#elif HIP_NATIVE_FP8_F
 DEV float F(float x){
  uint b=bits(x),a=b&0x7fffffffu;
  if(a==0)return 0.f;
@@ -63,7 +68,11 @@ DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=
  if(e<-14)return from_half(sg|(((a&0x7fffffu)|0x800000u)>>uint(-e-1)));
  return from_half(sg|((a>>13)-0x1c000u));
 }
+#if HIP_BRANCHLESS_F
+DEV uint fp8(float f){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(__builtin_fminf(__builtin_fmaxf(f,-448.f),448.f),0.f,0,false))&255u;}
+#else
 DEV uint fp8(float f){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(f,-448.f,448.f),0.f,0,false))&255u;}
+#endif
 DEV void put(i2&v,uint e,float x){v[e/4]=int(uint(v[e/4])|(fp8(x)<<(8*(e%4))));}
 
 DEV void sync_window(){__builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");}

@@ -25,6 +25,12 @@
 #else
 #define C32_OCC
 #endif
+#ifndef HIP_C32_BRANCHLESS_F
+#define HIP_C32_BRANCHLESS_F 1 /* 2026-09-17: -0.19ms alone, bit-exact. F()/fp8() as clamp+cvt+cndmask (ISA showed every F() call site as a divergent branch pair with exec-mask save/restore: 16 per token stage + 16 per output; only NaN input differs, sign of the saturated value) */
+#endif
+#ifndef HIP_C32_STAGE_PREFETCH
+#define HIP_C32_STAGE_PREFETCH 1 /* 2026-09-17: -0.68ms together with BRANCHLESS_F, bit-exact. lane staging issues all 16 token loads before any conversion (ISA showed load -> s_wait_loadcnt 0 -> branchy F per token, 16 serialized latencies per wave) */
+#endif
 #ifndef HIP_C32_LOCAL_ATTN_SYNC
 #define HIP_C32_LOCAL_ATTN_SYNC 0 /* probabilities in the wave's own ex rows; attention-phase barriers become wave-local fences (HLSL fast4: two group syncs) */
 #endif
@@ -75,7 +81,11 @@ DEV float H(float x){return from_half(half_bits(x));}
 #ifndef HIP_NATIVE_FP8_F
 #define HIP_NATIVE_FP8_F 1
 #endif
-#if HIP_NATIVE_FP8_F
+#if HIP_NATIVE_FP8_F && HIP_C32_BRANCHLESS_F
+// Same values as the branchy form for every finite and infinite input (clamp to +-448 then RNE cast; +-448 converts exactly,
+// values in (447.75,448] already round to 448 in both), zero keeps the +0 result; a NaN input yields -448 instead of +-448.
+DEV float F(float x){uint a=bits(x)&0x7fffffffu;float c=__builtin_fminf(__builtin_fmaxf(x,-448.f),448.f);float r=__builtin_amdgcn_cvt_f32_fp8(__builtin_amdgcn_cvt_pk_fp8_f32(c,0.f,0,false),0);return a==0?0.f:r;}
+#elif HIP_NATIVE_FP8_F
 DEV float F(float x){
  uint b=bits(x),a=b&0x7fffffffu;
  if(a==0)return 0.f;
@@ -117,7 +127,11 @@ DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=
  return from_half(sg|((a>>13)-0x1c000u));
 }
 #endif
+#if HIP_C32_BRANCHLESS_F
+DEV uint fp8(float f){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(__builtin_fminf(__builtin_fmaxf(f,-448.f),448.f),0.f,0,false))&255u;}
+#else
 DEV uint fp8(float f){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(clampf(f,-448.f,448.f),0.f,0,false))&255u;}
+#endif
 DEV void put(i2&v,uint e,float x){v[e/4]=int(uint(v[e/4])|(fp8(x)<<(8*(e%4))));}
 
 DEV void sync_window(){__builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");}
@@ -221,6 +235,25 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  {uint l=tid%32;int mine=-1,mine2=-1;
   if constexpr(Mapped){if(l<16){uint token=first+l,ww=sourcew+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);
    if(x>=0&&y>=0&&x<int(sourcew)&&y<int(sourceh)){if constexpr(Merge){mine=int((uint(y)*sourcew+uint(x))*32);mine2=int(((uint(y)/2)*(sourcew/2)+uint(x)/2)*32);}else if constexpr(RawMapped){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;mine=int((tile*64+token0)*32);}else mine=int((uint(y)*sourcew+uint(x))*32);}}}
+#if HIP_C32_STAGE_PREFETCH
+  // Pass 1: every token's load is issued with a branch-free index (out-of-window tokens read element l of the buffer and
+  // are zeroed below), so the 16 loads overlap; pass 2 converts. Values identical to the single-pass form.
+  float lv[16];uint hb[16];int srcs[16];
+  #pragma unroll
+  for(uint j=0;j<16;j++){uint row=first+j;
+   if constexpr(!Mapped){lv[j]=raw_input[(base+row)*32+l];srcs[j]=0;hb[j]=0;}
+   else{int src=__builtin_amdgcn_readlane(mine,j);srcs[j]=src;uint idx=src>=0?uint(src):0u;hb[j]=0;
+    if constexpr(Merge){int src2=__builtin_amdgcn_readlane(mine2,j);uint idx2=src2>=0?uint(src2):0u;hb[j]=reinterpret_cast<const unsigned char*>(skip)[idx+l];lv[j]=raw_input[idx2+l];}
+    else if constexpr(RawMapped)lv[j]=float(reinterpret_cast<const _Float16*>(raw_input)[idx+l]);
+    else lv[j]=raw_input[idx+l];}}
+  #pragma unroll
+  for(uint j=0;j<16;j++){uint row=first+j;float v;
+   if constexpr(!Mapped)v=lv[j];
+   else{float c;if constexpr(Merge){float high=__builtin_amdgcn_cvt_f32_fp8(int(hb[j]),0);c=Hrtz(Hrtz(lv[j]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)c=F(lv[j]);else c=lv[j];v=srcs[j]>=0?c:0.f;}
+   packed[row*36+l]=static_cast<unsigned char>(fp8(v));
+   if constexpr(NeedIn16)in16[row*34+l]=(_Float16)v;
+  }}
+#else
   #pragma unroll
   for(uint j=0;j<16;j++){uint row=first+j;float v=0.f;
    if constexpr(!Mapped)v=raw_input[(base+row)*32+l];
@@ -228,6 +261,7 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
    packed[row*36+l]=static_cast<unsigned char>(fp8(v));
    if constexpr(NeedIn16)in16[row*34+l]=(_Float16)v;
   }}
+#endif
 #elif HIP_C32_INPUT_DWORD
  for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
 #else

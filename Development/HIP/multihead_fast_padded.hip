@@ -47,7 +47,12 @@ DEV float H(float x){if((bits(x)&0x7fffffffu)>=0x7f800000u)return x;return from_
 #ifndef HIP_NATIVE_FP8_F
 #define HIP_NATIVE_FP8_F 1
 #endif
-#if HIP_NATIVE_FP8_F
+#ifndef HIP_BRANCHLESS_F
+#define HIP_BRANCHLESS_F 1 /* 2026-09-17: with deep_fast and the fused attention file -0.12ms, bit-exact. F() as clamp+cvt+cndmask instead of a divergent branch pair per call (same values for every non-NaN input; NaN gives -448 instead of +-448) */
+#endif
+#if HIP_NATIVE_FP8_F && HIP_BRANCHLESS_F
+DEV float F(float x){uint a=bits(x)&0x7fffffffu;float c=__builtin_fminf(__builtin_fmaxf(x,-448.f),448.f);float r=__builtin_amdgcn_cvt_f32_fp8(__builtin_amdgcn_cvt_pk_fp8_f32(c,0.f,0,false),0);return a==0?0.f:r;}
+#elif HIP_NATIVE_FP8_F
 DEV float F(float x){
  uint b=bits(x),a=b&0x7fffffffu;
  if(a==0)return 0.f;
