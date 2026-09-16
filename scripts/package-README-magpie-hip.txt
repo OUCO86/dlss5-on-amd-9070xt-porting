@@ -22,7 +22,7 @@ DLSS5-AMD 0.20 · Magpie 版（HIP 后端）
   config\config.json             Magpie 便携模式配置（预设好的效果组和选项）
   dxgi.dll                       ReShade 6.8 加载器（原版，未修改；放在 Magpie.exe 旁边就会被加载）
   dlss5-amd.addon64              本移植的 DLL（.addon64 是 ReShade 的扩展名，不要改名）
-  DLSS5-AMD\                     权重、HIP 内核（HIP\ 里 24 个 .hsaco）、运行参数（必须和 dlss5-amd.addon64 在同一目录）
+  DLSS5-AMD\                     权重、HIP 内核（native-game-tiled-assets\HIP\ 里 24 个 .hsaco）、运行参数（必须和 dlss5-amd.addon64 在同一目录）
   SHA256SUMS.txt                 文件校验
 
 需要

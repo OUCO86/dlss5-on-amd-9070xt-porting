@@ -17,12 +17,13 @@ function Zip($stage){$zip="$stage.zip";if(Test-Path $zip){Remove-Item $zip};Add-
  try{$prefix=(Split-Path $stage -Leaf)+'/';$entries=@{};foreach($e in $archive.Entries){$entries[$e.FullName.Replace('\','/')]=$e}
   foreach($line in $lines){$hash=$line.Substring(0,64);$name=$line.Substring(66);$e=$entries[$prefix+$name];if(!$e){throw "missing archive entry $name"};$s=$e.Open();$sha=[Security.Cryptography.SHA256]::Create();try{$actual=([BitConverter]::ToString($sha.ComputeHash($s))).Replace('-','').ToLowerInvariant()}finally{$s.Dispose();$sha.Dispose()};if($actual -ne $hash){throw "archive hash mismatch $name"};$n++}}finally{$archive.Dispose()}
  $zh=(Get-FileHash $zip).Hash.ToLowerInvariant();[IO.File]::WriteAllText("$zip.sha256",$zh+'  '+(Split-Path $zip -Leaf)+"`n",$utf8);"$(Split-Path $zip -Leaf) files=$n bytes=$((Get-Item $zip).Length) sha256=$zh"}
-function Common($lab5,$flagsName){New-Item -ItemType Directory -Force "$lab5\HIP","$lab5\logs"|Out-Null;foreach($m in $mods){Copy-Item $m.FullName "$lab5\HIP\$($m.Name)" -Force}
+function Common($lab5,$flagsName){# The add-on resolves the module directory as <assets>\HIP when DLSS5_HIP_MODULES is absent (native_hip_network.h), so the kernels live under the asset folder.
+ Remove-Item "$lab5\HIP" -Recurse -Force -ErrorAction SilentlyContinue;New-Item -ItemType Directory -Force "$lab5\native-game-tiled-assets\HIP","$lab5\logs"|Out-Null;foreach($m in $mods){Copy-Item $m.FullName "$lab5\native-game-tiled-assets\HIP\$($m.Name)" -Force}
  Copy-Item "$r\$flagsName" "$lab5\native-game-flags.txt" -Force;foreach($n in 'continuous-every-frame.txt','temporal-history.txt'){[IO.File]::WriteAllText("$lab5\$n","1`n",$utf8)}
  Remove-Item "$lab5\enable-game-sdk721.txt" -ErrorAction SilentlyContinue;Get-ChildItem "$lab5\logs" -File|Remove-Item -Force;[IO.File]::WriteAllText("$lab5\logs\.keep","",$utf8)}
 if(!$VerifyOnly){
  # game edition
- $g="$lab\DLSS5-AMD-$Version";if(Test-Path $g){throw "$g exists; inspect before replacing"}
+ $g="$lab\DLSS5-AMD-$Version";if(Test-Path $g){Remove-Item $g -Recurse -Force}
  New-Item -ItemType Directory "$g\DLSS5-AMD"|Out-Null
  Copy-Item $loader "$g\d3d12.dll";Copy-Item $addon "$g\dlss5-amd.addon64"
  Copy-Item "$base\DLSS5-AMD\native-game-tiled-assets" "$g\DLSS5-AMD\native-game-tiled-assets" -Recurse
@@ -30,7 +31,7 @@ if(!$VerifyOnly){
  Copy-Item "$r\package-README-hip.txt" "$g\README.txt"
  foreach($lic in 'ReShade-LICENSE.txt','MinHook-LICENSE.txt'){$src=Get-ChildItem $lab -Recurse -Filter $lic -ErrorAction SilentlyContinue|Select-Object -First 1;if($src){Copy-Item $src.FullName "$g\$lic"}else{Write-Warning "$lic not found"}}
  # magpie edition
- $m="$lab\Magpie-DLSS5-AMD-$Version";if(Test-Path $m){throw "$m exists; inspect before replacing"}
+ $m="$lab\Magpie-DLSS5-AMD-$Version";if(Test-Path $m){Remove-Item $m -Recurse -Force}
  Copy-Item $base $m -Recurse
  Remove-Item "$m\DLSS5-D3D12-721" -Recurse -Force;Remove-Item "$m\SHA256SUMS.txt" -Force
  Get-ChildItem $m -Recurse -File|Where-Object{$_.Name -match '\.addon64\.|\.bak$|\.log$|^GpuDebuggingLog\.txt$|\.dmp$'}|Remove-Item -Force

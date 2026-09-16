@@ -25,8 +25,8 @@
   dlss5-amd.addon64                  本移植的 DLL（.addon64 是 ReShade 的扩展名，不要改名）
   DLSS5-AMD\                         网络权重、HIP 内核、运行参数和日志目录（约 600MB）
     native-game-flags.txt              运行参数，一行一个开关；一般不用改
-    HIP\                               24 个 gfx1201 HIP 内核（.hsaco）
     native-game-tiled-assets\          权重（.f16/.f32）、少量运行时着色器（.hlsl）、噪声表（noise.f32）
+      HIP\                             24 个 gfx1201 HIP 内核（.hsaco），必须在这个位置
     logs\                              运行日志写在这里
   ReShade-LICENSE.txt / MinHook-LICENSE.txt   第三方组件的许可
   SHA256SUMS.txt                     所有文件的校验和
