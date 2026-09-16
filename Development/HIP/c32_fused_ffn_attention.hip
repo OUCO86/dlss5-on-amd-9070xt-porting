@@ -7,7 +7,7 @@
 #define HIP_C32_LANE_STAGE 1 /* 2026-09-16: lane-broadcast input staging, -0.14ms, bit-exact */
 #endif
 #ifndef HIP_C32_DIAG_WEIGHTS
-#define HIP_C32_DIAG_WEIGHTS 0 /* chain residual diagonal B tiles prepacked after the FFN weights (byte 34944) */
+#define HIP_C32_DIAG_WEIGHTS 1 /* chain residual diagonal B tiles prepacked after the FFN weights (byte 34944); 2026-09-16 -0.05 (noise) on the old kernel, 2026-09-17 -0.16 once the kernel was no longer issue-bound, bit-exact */
 #endif
 #ifndef HIP_C32_NO_UNROLL
 #define HIP_C32_NO_UNROLL 0 /* 1: keep the FFN/QKV/attention/projection loops rolled (fewer live accumulators -> lower VGPR count -> more waves per SIMD; HLSL fast4 ~128 VGPR) */

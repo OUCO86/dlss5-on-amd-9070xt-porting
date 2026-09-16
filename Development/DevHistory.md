@@ -2154,3 +2154,10 @@ c32h-modules三道全过：全40帧FEEA9EF3…、24帧reset 22C171FC…、seed12
 用c32h-modules重跑家族dup表（test-dup-map2.ps1，基线≈15.78）：C64 ffn 1.22+attn 0.87=2.09（HLSL 1.93）；C128 1.27+0.69=1.96（HLSL 2.16）；C256 1.59+0.72=2.31（HLSL 2.70）；c32pre 1.19、prefix 0.43（HLSL preblock含prefix 1.15）；c32mapped 0.56；c32chain 1.24；c32finish 0.70；post 1.24（HLSL 1.27）；vit 1.58（HLSL 1.53）；pool 0.18；decoder 0.40。最大缺口变成pre+prefix合计1.62对1.15——就是HLSL内联prefix、不写不读W*H*32 f32缓冲那0.47。
 00:21时`prefix_inline`为null（+0.07）是因为block-0核当时发射受限（分支F+串行load），省下的带宽显不出来；现在核瘦了再测（同模块c32h，flag ABBA `DLSS5_HIP_PREFIX_INLINE=1`，test-flag-ab.ps1）：15.800/15.795对15.545/15.511，**−0.27**。三道全过（validate-pinline.ps1：全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…）。HIP_FAST默认加prefix_inline（src/native_hip_network.h），DLL release/HIP/native-pinline.addon64 SHA256 8D5A218FF26FC6E89B01DB77E1BEADC1B2C028C4DC4066D40D39AEC243270343，配套benchmark_pinline.exe用默认flag再过三道（validate-pinline-dll.ps1）后与c32h-modules部署，备份before-pinline。日志release/HIP/dup-map2-0/1.log、pinline2-test.log、pinline2-validate.log、pinline-dll-validate.log。**离线HIP≈15.53 / HLSL 16.8，反超≈1.3ms（7.5%）。**
 教训：null不是永久的——一刀的收益取决于当时的瓶颈；核换了瓶颈，旧null要重测。
+
+### 2026-09-17 02:27起：C32三个旧null复测 → 对角权重残差翻盘（−0.16），no-unroll更慢，局部同步现已不逐位
+核瘦身后按"旧null要重测"复测三个宏（compile-c32-retest.ps1，基线c32h-modules，ABBA各4轮）：
+- `HIP_C32_NO_UNROLL=1`（VGPR 192→84）：15.778/15.806对16.779/16.795，**+1.0更慢**（09-16是+0.64）。占用率彻底排除，展开的MMA流水就是这核的命。
+- `HIP_C32_LOCAL_FFN_SYNC=1 + HIP_C32_LOCAL_ATTN_SYNC=1`：第1轮HDR哈希变化（validate-hdr抛'HDR output changed'），与lane staging/prefetch组合后不再逐位一致，不再考虑；宏留0并在此记录为"当前不正确"。
+- `HIP_C32_DIAG_WEIGHTS=1`（链残差三段对角B片由host预算，核内load8+3×2×2次MMA替代逐元素scale_piece循环；VGPR 199）：15.833/15.852对15.687/15.683，**−0.16**（09-16只有−0.05在噪声边缘）。默认翻1，验证后部署。
+c32dg-modules三道全过（validate-modules.ps1：benchmark_pinline.exe默认flag，全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…），与native-pinline.addon64部署，备份before-c32dg。decoder的skip scale提升（`HIP_DEC_HOIST_SCALE`）ABBA 15.807/15.816对15.804/15.841，null，宏留0。日志release/HIP/c32nu-test.log、c32ls-test.log、c32dg-test.log、c32dg-validate.log、dech-test.log。**离线HIP≈15.5 / HLSL 16.8，反超≈1.3ms。**
