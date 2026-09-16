@@ -155,8 +155,8 @@ DEV float mapped_c32_input(const float*in,uint window,uint token,uint channel,ui
  if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;return F(float(reinterpret_cast<const _Float16*>(in)[(tile*64+token0)*32+channel]));}
  return in[(uint(y)*width+uint(x))*32+channel];}
 
-template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false,bool RgbHead=false>
-DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f){
+template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false,bool RgbHead=false,bool Finish=false,bool Main8=false>
+DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f,float*main=nullptr,float*down=nullptr){
  uint window=bid();if(window>=windows)return;uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=wave*16,base=window*64;
  union Scratch {float raw[64*33];_Float16 ex[64*66];unsigned char hidden[64*132];};
  __attribute__((shared)) Scratch scratch;
@@ -318,8 +318,23 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
    residual=float(ffn[(first+gr()*8+e)*34+col+rc()]);
 #endif
    float prod=residual*w[8193+col+rc()],v=Hrtz(acc[e]+prod);
-   if constexpr(RgbHead)scratch.ex[(first+gr()*8+e)*34+col+rc()]=(_Float16)v; // raw_output is 1 here: v is the half the head would have read back
+   if constexpr(RgbHead||Finish)scratch.ex[(first+gr()*8+e)*34+col+rc()]=(_Float16)v; // raw_output is 1 here: v is the half the finish/head would have read back
+   if constexpr(Finish){if(out)reinterpret_cast<_Float16*>(out)[i]=(_Float16)v;}
+   else if constexpr(RgbHead){}
    else if constexpr(HalfOutput)reinterpret_cast<_Float16*>(out)[i]=(_Float16)(raw_output?v:F(v));else out[i]=raw_output?v:F(v);}
+ }
+ if constexpr(Finish){
+  // c32_finish_crop_half / c32_finish_fast_half_main8 in the epilogue (HLSL DLSS5_C32_EPILOGUE finish shape): the wave's 16
+  // tokens are two 8-pixel rows of the window, so both the cropped main (F of the half) and the 2x2 downsample (same
+  // Hrtz order as the finish kernels) come from the wave's own LDS rows; the raw write is skipped when out is null.
+  sync_owned_rows();uint l=tid%32,ww=sourcew+2*sx,tx=(window%(ww/8))*8,ty=(window/(ww/8))*8;
+  if(main){
+   #pragma unroll
+   for(uint j=0;j<16;j++){uint tok=first+j;int x=int(tx+tok%8)-int(sx),y=int(ty+tok/8)-int(sy);if(x<0||y<0||x>=int(sourcew)||y>=int(sourceh))continue;uint i=(uint(y)*sourcew+uint(x))*32+l;float v=F(float(scratch.ex[tok*34+l]));
+    if constexpr(Main8)reinterpret_cast<unsigned char*>(main)[i]=static_cast<unsigned char>(fp8(v));else main[i]=v;}}
+  if(down){
+   #pragma unroll
+   for(uint k=0;k<4;k++){uint t0=first+2*k;float top=Hrtz(float(scratch.ex[t0*34+l])+float(scratch.ex[(t0+1)*34+l])),bottom=Hrtz(float(scratch.ex[(t0+8)*34+l])+float(scratch.ex[(t0+9)*34+l]));uint x=tx+t0%8,y=ty+t0/8;down[((y/2)*(ww/2)+x/2)*32+l]=F(Hrtz(Hrtz(top+bottom)*.25f));}}
  }
  if constexpr(RgbHead){
   // hip_post_head_fast_half in the epilogue (HLSL DLSS5_C32_EPILOGUE shape): no raw write/read-back, no head dispatch.
@@ -341,6 +356,12 @@ void c32_fast_ffn_attention_fused_half_mapped(const float*in,const float*fw,cons
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half_chain(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true>(in,fw,w,out,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy);}
 
+// Finish in the epilogue (host option c32_finish_fused). Block 0: unmapped input, main8 bytes + down over the w x h grid
+// (sourcew/sourceh carry w/h, no shift). Chain end: previous raw tiles in, cropped f32 main (+ down for block 4), no raw.
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
+void c32_fast_ffn_attention_fused_half_finish_main8(const float*in,const float*fw,const float*w,float*main8,float*down,uint windows,uint mode,uint raw,uint width,uint height){c32_fused_body<true,false,false,false,false,true,true>(in,fw,w,nullptr,windows,mode,raw,width,height,0,0,0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,0.f,main8,down);}
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
+void c32_fast_ffn_attention_fused_half_chain_finish(const float*in,const float*fw,const float*w,float*main,float*down,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true,false,false,true,false>(in,fw,w,nullptr,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy,nullptr,nullptr,nullptr,nullptr,nullptr,0.f,main,down);}
 // Post-merge C32 with the rgb head in the epilogue (host option post_head_fused): out unused; rgb = W*H*3 floats.
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_post_merge_head_half(const float*low,const float*skip,const float*scales,const float*fw,const float*w,const float*color,const float*headw,float*rgb,uint windows,uint width,uint height,uint sx,uint sy,float scale){c32_fused_body<true,true,false,true,true>(low,fw,w,nullptr,windows,0,1,width,height,sx,sy,0,0,0,skip,scales,color,headw,rgb,scale);}
