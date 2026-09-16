@@ -2172,3 +2172,6 @@ ffnh2-modules三道全过（validate-modules.ps1：全40帧FEEA9EF3…、24帧re
 
 ### 2026-09-17 02:37：末次家族dup表（ffnh2-modules + native-pinline，基线≈15.24，机器冷态）
 C64 ffn 1.10+attn 0.87=1.97（HLSL 1.93）；C128 1.13+0.68=1.81（2.16）；C256 1.50+0.66=2.16（2.70）；C32 mapped 0.55+chain 1.07+finish 0.58=2.20（HLSL前后两链≈2.18）；post 1.22（1.27）；ViT 1.53（1.53）；pool 0.12；decoder 0.37；pre/prefix已内联进block-0核（dup家族名不再匹配，记0）。每个家族都到了HLSL的水平或更好。精确逐位这条路上，ISA可见的问题已收完；再往下只剩改累加顺序（PSNR门）那条路。日志release/HIP/dup-map3-0/1.log。
+
+### 2026-09-17 03:27：Zero游戏实测900p 52 FPS（昨夜47）
+native-pinline.addon64 + ffnh2-modules在游戏里跑，900p由47帧到52帧；离线−1.4ms对应游戏里约−2ms/帧（游戏GPU满载时钟更低，核内省下的发射周期按比例放大）。画面无异常报告。
