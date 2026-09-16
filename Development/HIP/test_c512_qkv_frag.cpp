@@ -12,6 +12,17 @@ namespace hip_reference { struct LayerBenchmark { static bool Check(Network&n){b
   auto pa=n.New(size_t(tokens)*512),pb=n.New(size_t(tokens)*512),t8=n.New(size_t(tokens)*128);
   n.Run("deep","split_projection_blocked",size_t(tokens)*512,n.P(in),pw,n.P(skip),n.P(pa),tokens);
   n.Run("deep","split_projection_blocked_t8",size_t(tokens)*512,n.P(in),pw,n.P(skip),n.P(pb),n.P(t8),tokens);
+  /* tiled contract + fragment projection: contract f32 and tiles, then projection f32/tiles against split_projection_blocked_t8 */
+  {auto fw2=n.PackedSplitFfnWeight(n.Block(block,"ffwd"));auto ca=n.New(size_t(tokens)*512),cb=n.New(size_t(tokens)*512),c8=n.New(size_t(tokens)*128),pf=n.New(size_t(tokens)*512),pf8=n.New(size_t(tokens)*128);
+   n.Run("deep","split_ffn_fused_fp8",size_t(tokens)*512,n.P(in),fw2,n.P(ca),tokens);
+   n.Run("deep","split_ffn_fused_fp8_t8",size_t(tokens)*512,n.P(in),fw2,n.P(cb),n.P(c8),tokens);
+   n.Run("deep","split_projection_frag",size_t(tokens)*512,n.P(c8),n.PackedSplitProjectionFrag(n.Block(block,"ffwd-projection")),n.P(skip),n.P(pf),n.P(pf8),tokens);
+   auto pr=n.New(size_t(tokens)*512),pr8=n.New(size_t(tokens)*128);n.Run("deep","split_projection_blocked_t8",size_t(tokens)*512,n.P(ca),pw,n.P(skip),n.P(pr),n.P(pr8),tokens);n.Synchronize();
+   std::vector<float>fa(size_t(tokens)*512),fb(fa.size()),qa2(fa.size()),qb2(fa.size());std::vector<unsigned char>t1(fa.size()),t2(fa.size()),t3(fa.size());
+   n.api.Check(n.api.hipMemcpy(fa.data(),n.P(ca),fa.size()*4,2),"c");n.api.Check(n.api.hipMemcpy(fb.data(),n.P(cb),fb.size()*4,2),"c t8");n.api.Check(n.api.hipMemcpy(t1.data(),n.P(c8),t1.size(),2),"c tiles");
+   n.api.Check(n.api.hipMemcpy(qa2.data(),n.P(pr),qa2.size()*4,2),"p");n.api.Check(n.api.hipMemcpy(qb2.data(),n.P(pf),qb2.size()*4,2),"p frag");n.api.Check(n.api.hipMemcpy(t2.data(),n.P(pr8),t2.size(),2),"p tiles");n.api.Check(n.api.hipMemcpy(t3.data(),n.P(pf8),t3.size(),2),"p frag tiles");
+   size_t cd=0,ct=0,pd2=0,pt=0;for(size_t i=0;i<fa.size();i++){cd+=memcmp(&fa[i],&fb[i],4)!=0;size_t r=i/512,c=i%512;size_t ti=((r/16)*16+c/32)*512+(r%16)*32+c%32;ct+=t1[ti]!=ExactWeightFp8(fa[i]);pd2+=memcmp(&qa2[i],&qb2[i],4)!=0;pt+=t2[ti]!=t3[ti];}
+   printf("block=%u tokens=%u pattern=%u contract_bitdiff=%zu contract_tilediff=%zu projfrag_bitdiff=%zu projfrag_tilediff=%zu\n",block,tokens,pattern,cd,ct,pd2,pt);ok=ok&&!cd&&!ct&&!pd2&&!pt;}
   auto aw=n.PackedMhWeight(n.Block(block,"attention"),512,true),fw=n.PackedMhWeightQkvFrag(n.Block(block,"attention"),512);auto qa=n.New(size_t(tokens)*384),qb=n.New(size_t(tokens)*384);
   n.Run("mh_fast","mh_qkv_normalize_fused",size_t(tokens)*1536,n.P(pa),aw,n.P(qa),tokens,U(512));
   n.Run("mh_fast","mh_qkv_normalize_frag_c512",size_t(tokens)*1536,n.P(t8),fw,n.P(qb),tokens);n.Synchronize();
