@@ -197,6 +197,49 @@ DEV void c64_attention_project_body(const unsigned char*normalized,const float*w
  for(uint k=0;k<64;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*68+k+gr()*8,8);for(uint j=0;j<2;j++){uint col=head*32+j*16+rc(),off=3*64*64+(col*64+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=head*32+j*16+rc(),dest=p*64+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*64+col;}float v=result[j][e],o=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);if constexpr(ByteOut)out8[dest]=static_cast<unsigned char>(fp8(o));else out[dest]=o;}
 }
+// 16-wave window (host option mh_attn_w16, HLSL attention_direct shape): per head, four query tiles x two key sides; a
+// wave scores its 16 queries against its side's two key tiles (keys side*16..+16 and side*16+32..+16, the same two
+// partial-sum groups the 8-wave body forms), the two sides' row sums meet in LDS in the same p0+p1 order, and each wave
+// then owns one 16-column half of the head's AV and of the projection. Same operands and accumulation order per output,
+// so identical bits; every wave issues half the MMAs of the 8-wave body.
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+void c64_attention_project_w16(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){
+ const uint channels=64;
+ uint windows=(width/8)*(height/8),win=bid();if(width%8||height%8||win>=windows)return;
+ uint alltid=__builtin_amdgcn_workitem_id_x(),head=alltid/256,t=alltid%256,qr=t/64,side=(t/32)&1,first=qr*16;
+ __attribute__((shared)) _Float16 all_ex[2*64*66];
+ __attribute__((shared)) unsigned char all_packed[2*64*36];
+ __attribute__((shared)) float part_sum[2*2*64];
+ _Float16*ex=all_ex+head*64*66;unsigned char*packed=all_packed+head*64*36;float*psum=part_sum+head*128;
+ unsigned char*avbytes=reinterpret_cast<unsigned char*>(all_ex);
+ for(uint i=t;i<64*8;i+=256){uint tok=i/8,c=(i%8)*4,p=raster(win,tok,width),word;__builtin_memcpy(&word,normalized+(p*3+2)*channels+head*32+c,4);__builtin_memcpy(packed+tok*36+c,&word,4);}
+ sync_window();
+ for(uint j=0;j<2;j++){uint key=(side+j*2)*16;f8 acc{};
+  for(uint kt=0;kt<2;kt++){i2 a{},b{};uint qp=raster(win,first+rc(),width),kp=raster(win,key+rc(),width),off=kt*16+gr()*8;__builtin_memcpy(&a,normalized+qp*3*channels+head*32+off,8);__builtin_memcpy(&b,normalized+(kp*3+1)*channels+head*32+off,8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
+  for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4*channels*channels+head*4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
+ }
+ sync_window();
+ {f8 sum{};for(uint half=0;half<2;half++){h8 a{},ones{};for(uint e=0;e<8;e++){uint k=side*16+half*32+gr()*8+e;a[e]=ex[(first+rc())*66+k];ones[e]=(_Float16)1.f;}sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,ones,sum);}
+  for(uint e=0;e<8;e++)psum[side*64+first+gr()*8+e]=sum[e];}
+ sync_window();
+ uint pv[8]{};
+ #pragma unroll
+ for(uint j=0;j<2;j++){uint key=(side+j*2)*16;for(uint e=0;e<8;e++){uint row=first+gr()*8+e,k=key+rc();float inv=1.f/(psum[row]+psum[64+row]);pv[e]|=fp8(float(ex[row*66+k])*inv)<<(j*8);}}
+ sync_window();
+ unsigned char*prob=reinterpret_cast<unsigned char*>(ex);
+ #pragma unroll
+ for(uint j=0;j<2;j++){uint key=(side+j*2)*16;for(uint e=0;e<8;e++)prob[(first+gr()*8+e)*68+key+rc()]=static_cast<unsigned char>(pv[e]>>(j*8));}
+ sync_window();
+ f8 av{};{uint col=side*16;for(uint kt=0;kt<4;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,prob[(first+rc())*68+k]);put_bits(b,e,packed[k*36+col+rc()]);}av=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,av);}}
+ sync_window();
+ for(uint e=0;e<8;e++)avbytes[(first+gr()*8+e)*68+head*32+side*16+rc()]=static_cast<unsigned char>(fp8(F(av[e])));
+ sync_window();
+ f8 result{};
+ {uint col=head*32+side*16+rc();float remain=w[4*64*64+2*4096+2+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*64+col])),0);for(uint half=0;half<2;half++)result[e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[e]);}}}
+ const uint*pw=reinterpret_cast<const uint*>(w);
+ for(uint k=0;k<64;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*68+k+gr()*8,8);uint col=head*32+side*16+rc(),off=3*64*64+(col*64+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
+ for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=head*32+side*16+rc(),dest=p*64+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*64+col;}float v=result[e],o=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);out[dest]=o;}
+}
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
 void c64_attention_project(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<false,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))

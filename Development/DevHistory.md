@@ -2068,3 +2068,6 @@ split_mix_blocked每wave对B做8次f32标量读+8次(_Float16)转换×32步×4�
 
 ### 2026-09-16 20:55：游戏实测
 Zero实测第四版（native-dec-h16w）仍约30FPS，"似乎更稳定些"。账：整帧≈33ms，网络≈18.7ms，今晚−0.55ms只占全帧1.7%，FPS分辨不出；即使追平HLSL 16.8也只到≈32FPS，剩余14ms是游戏渲染与编解码，不在网络优化范围内。
+
+### 2026-09-16 21:25：C64 attention-project按HLSL attention_direct拆成16 wave：逐位一致，null
+隔离账：HIP FFN+proj+QKV融合核0.145对HLSL ffn+qkv 0.172（HIP赢），HIP attention-project 0.104（帧内0.112）对HLSL attention 0.058+projection 0.018（每块输0.035≈C64全部差距）。HLSL attention_direct每(window,head)一组8个wave，每wave 16 query×2个key tile，两侧部分和LDS合并——与HIP现有的部分和分组（keys 0-15∪32-47 / 16-31∪48-63）相同。c64_attention_project_w16：512线程/window，每wave 2次score MMA+2次求和MMA+4次AV+4次projection（原24次减半），part_sum LDS 1KB，VGPR 90、LDS 22528、无scratch。test_c64_attn_w16.cpp四种几何（含crop、post 0/3/4）×两种输入全0差异。ABBA关18.802、开18.785/18.828，null。选项mh_attn_w16（env DLSS5_HIP_MH_ATTN_W16，CLI --mh-attn-w16）默认关。日志release/HIP/c64-w16-test.log。

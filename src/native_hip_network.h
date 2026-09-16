@@ -32,6 +32,7 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV flag");o.ffn_qkv=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DUP_PREFIX"))o.dup_prefix=v;
   if(const char*v=std::getenv("DLSS5_HIP_DUP_COUNT")){o.dup_count=unsigned(strtoul(v,nullptr,10));if(o.dup_count<1||o.dup_count>8)throw std::runtime_error("dup count 1..8");}
+  if(const char*v=std::getenv("DLSS5_HIP_MH_ATTN_W16")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("MH attention w16 flag");o.mh_attn_w16=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DECODER_H16W")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("decoder half weight flag");o.decoder_h16w=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_POOL_PROJECT_H16W")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("pool project half weight flag");o.pool_project_h16w=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_SPLIT_MIX_H16W")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("split mix half weight flag");o.split_mix_h16w=!strcmp(v,"1");}
