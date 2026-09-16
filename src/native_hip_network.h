@@ -32,6 +32,7 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_FFN_QKV")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("FFN/QKV flag");o.ffn_qkv=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_DUP_PREFIX"))o.dup_prefix=v;
   if(const char*v=std::getenv("DLSS5_HIP_DUP_COUNT")){o.dup_count=unsigned(strtoul(v,nullptr,10));if(o.dup_count<1||o.dup_count>8)throw std::runtime_error("dup count 1..8");}
+  if(const char*v=std::getenv("DLSS5_HIP_MH_FFN_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("MH FFN frag flag");o.mh_ffn_frag=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_CONTRACT_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT contract frag flag");o.vit_contract_frag=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_PROJ_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT projection frag flag");o.vit_proj_frag=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_QKV_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT QKV frag flag");o.vit_qkv_frag=!strcmp(v,"1");}
