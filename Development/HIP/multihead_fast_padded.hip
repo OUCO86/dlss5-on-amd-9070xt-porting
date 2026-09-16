@@ -266,6 +266,20 @@ FASTWAVE void mh_pool_project_production(const float* pooled,const float* weight
  }
  for(uint e=0;e<8;e++){uint p=first+g*8+e;if(p<M)output[p*N+col+rc]=(valid_width&&(p%width>=valid_width||p/width>=valid_height))?0.f:F(acc[e]);}
 }
+// Prepacked-weight twin (host option pool_project_h16w): weights arrive as RNE half rows (c>=64) or E4M3 bytes (c==32)
+// exactly as the (_Float16)/pack() casts of the f32 kernel would produce them; one fragment load replaces eight casts.
+FASTWAVE void mh_pool_project_production_h16w(const float* pooled,const float* weights,float* output,uint width,uint height,uint valid_width,uint valid_height,uint channels){
+ uint M=width*height,N=2*channels,tile=__builtin_amdgcn_workgroup_id_x(),nt=N/16;
+ if(!valid_spatial(channels)||tile>=((M+15)/16)*nt)return;uint first=tile/nt*16,col=tile%nt*16,l=__builtin_amdgcn_workitem_id_x(),rc=l&15,g=l>>4;f8 acc{};
+ for(uint chunk=0;chunk<channels/32;chunk++){f8 sum{};
+  for(uint half=0;half<2;half++){
+   if(channels==32){i2 a{},b;for(uint e=0;e<8;e++){uint k=half*16+g*8+e,p=first+rc;pack(a,e,p<M?pooled[p*channels+k]:0.f);}__builtin_memcpy(&b,reinterpret_cast<const unsigned char*>(weights)+(col+rc)*32+half*16+g*8,8);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
+   else{h8 a{},b;for(uint e=0;e<8;e++){uint k=chunk*32+half*16+g*8+e,p=first+rc;a[e]=(_Float16)(p<M?pooled[p*channels+k]:0.f);}__builtin_memcpy(&b,reinterpret_cast<const _Float16*>(weights)+(col+rc)*channels+chunk*32+half*16+g*8,16);sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(a,b,sum);}
+  }
+  for(uint e=0;e<8;e++)acc[e]=channels==32?Hrtz(acc[e]+sum[e]):H(acc[e]+sum[e]);
+ }
+ for(uint e=0;e<8;e++){uint p=first+g*8+e;if(p<M)output[p*N+col+rc]=(valid_width&&(p%width>=valid_width||p/width>=valid_height))?0.f:F(acc[e]);}
+}
 
 // Fused 2x2 pool + channel-doubling projection (host option pool_project_fused, C=64/128/256): one wave produces 16
 // pooled tokens x 64 output columns; the pooled A fragments are computed once from raw (same H/F chain as mh_pool) and
