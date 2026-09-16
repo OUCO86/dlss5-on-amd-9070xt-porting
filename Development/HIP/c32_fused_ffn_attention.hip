@@ -31,6 +31,9 @@
 #ifndef HIP_C32_STAGE_PREFETCH
 #define HIP_C32_STAGE_PREFETCH 1 /* 2026-09-17: -0.68ms together with BRANCHLESS_F, bit-exact. lane staging issues all 16 token loads before any conversion (ISA showed load -> s_wait_loadcnt 0 -> branchy F per token, 16 serialized latencies per wave) */
 #endif
+#ifndef HIP_C32_HOIST_PW
+#define HIP_C32_HOIST_PW 1 /* 2026-09-17: -0.05ms, bit-exact. projection scale w[8193+col] read once per lane instead of 16 aliasing-forced reloads in the output loop */
+#endif
 #ifndef HIP_C32_LOCAL_ATTN_SYNC
 #define HIP_C32_LOCAL_ATTN_SYNC 0 /* probabilities in the wave's own ex rows; attention-phase barriers become wave-local fences (HLSL fast4: two group syncs) */
 #endif
@@ -379,6 +382,11 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  ATTN_SYNC();
  for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)packed[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(av[ci][e]));
  ATTN_SYNC();
+#if HIP_C32_HOIST_PW
+ // The projection scale is per column: read the lane's two values once. Inside the loop the reads sat between the out[]
+ // stores, so the compiler re-issued global_load + s_wait_loadcnt 0 for every one of the 16 outputs (ISA, 2026-09-17).
+ const float pw0=w[8193+rc()],pw1=w[8193+16+rc()];
+#endif
  C32_LOOP for(uint col=0;col<32;col+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);}b=matrix8(w,3072+(col+rc())*32+kt*16+gr()*8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint i=(base+first+gr()*8+e)*32+col+rc();float residual;
@@ -387,7 +395,11 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
 #else
    residual=float(ffn[(first+gr()*8+e)*34+col+rc()]);
 #endif
+#if HIP_C32_HOIST_PW
+   float prod=residual*(col==0?pw0:pw1),v=Hrtz(acc[e]+prod);
+#else
    float prod=residual*w[8193+col+rc()],v=Hrtz(acc[e]+prod);
+#endif
    if constexpr(RgbHead||Finish)scratch.ex[(first+gr()*8+e)*34+col+rc()]=(_Float16)v; // raw_output is 1 here: v is the half the finish/head would have read back
    if constexpr(Finish){if(out)reinterpret_cast<_Float16*>(out)[i]=(_Float16)v;}
    else if constexpr(RgbHead){}

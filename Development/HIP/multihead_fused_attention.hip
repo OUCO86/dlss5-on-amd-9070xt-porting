@@ -61,6 +61,12 @@ DEV uint rc(){return __builtin_amdgcn_workitem_id_x()&15;}
 DEV uint gr(){return (__builtin_amdgcn_workitem_id_x()&31)>>4;}
 DEV uint bid(){return __builtin_amdgcn_workgroup_id_x();}
 // D3D explicit f32tof16 maps to RTZ here; matrix Cast<F16> remains RNE.
+#ifndef HIP_MH_RTZ_ISA
+#define HIP_MH_RTZ_ISA 1 /* 2026-09-17: -0.02 alone, -0.16 with HIP_BRANCHLESS_Q8, bit-exact. Hrtz via v_cvt_pkrtz_f16_f32 (the C32/deep/padded files' production form) instead of the software bit path, which the ISA showed as a 4-deep nest of divergent branches per output element (32 instances per projection epilogue) */
+#endif
+#if HIP_MH_RTZ_ISA
+DEV float Hrtz(float x){uint h;float r;asm("v_cvt_pkrtz_f16_f32 %0, %1, %1" : "=v"(h) : "v"(x));asm("v_cvt_f32_f16 %0, %1" : "=v"(r) : "v"(h));return r;}
+#else
 DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=int(a>>23)-127;
  if(a>=0x7f800000u)return from_half(sg|0x7c00u|((a&0x7fffffu)?0x200u:0u));
  if(e>15)return from_half(sg|0x7bffu);
@@ -68,6 +74,7 @@ DEV float Hrtz(float x){uint b=bits(x),a=b&0x7fffffffu,sg=(b>>16)&0x8000u;int e=
  if(e<-14)return from_half(sg|(((a&0x7fffffu)|0x800000u)>>uint(-e-1)));
  return from_half(sg|((a>>13)-0x1c000u));
 }
+#endif
 #if HIP_BRANCHLESS_F
 DEV uint fp8(float f){return uint(__builtin_amdgcn_cvt_pk_fp8_f32(__builtin_fminf(__builtin_fmaxf(f,-448.f),448.f),0.f,0,false))&255u;}
 #else

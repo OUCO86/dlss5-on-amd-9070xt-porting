@@ -387,7 +387,17 @@ FASTWAVE void mh_qkv_normalize_frag_c512(const unsigned char*in8,const float*w,u
 FASTWAVE void mh_attention_project_frag_c512(const unsigned char*av8,const float*feature,const float*w,float*out,uint tokens,uint post,uint cropw,uint croph,uint workw,uint sx,uint sy){
  const uint C=512;uint l=__builtin_amdgcn_workitem_id_x(),rc=l&15,g=l>>4,block=__builtin_amdgcn_workgroup_id_x(),first=block/8*16,col=block%8*64;if(first>=tokens)return;
  const unsigned char*wb=reinterpret_cast<const unsigned char*>(w)+size_t(3)*C*C*4;const uint skip=4*C*C+(C/32)*4096+C/32;
- f8 acc[4];for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint p=first+g*8+e,c=col+n*16+rc;acc[n][e]=p<tokens?Hrtz(feature[p*C+c]*w[skip+c]):0.f;}
+ f8 acc[4];
+#if HIP_C512_HOIST_RES
+ // Residual init with the loads outside the per-element condition: the 4 column scales once per lane, the 32 feature
+ // values with a clamped row (row `first` is always < tokens), then the select. ISA of the conditional form: every
+ // element re-read w[skip+c] and waited (32 global_load + s_wait_loadcnt 0 pairs per wave).
+ {float ws[4];for(uint n=0;n<4;n++)ws[n]=w[skip+col+n*16+rc];
+  float fv[4][8];for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint p=first+g*8+e;uint pp=p<tokens?p:first;fv[n][e]=feature[pp*C+col+n*16+rc];}
+  for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint p=first+g*8+e;acc[n][e]=p<tokens?Hrtz(fv[n][e]*ws[n]):0.f;}}
+#else
+ for(uint n=0;n<4;n++)for(uint e=0;e<8;e++){uint p=first+g*8+e,c=col+n*16+rc;acc[n][e]=p<tokens?Hrtz(feature[p*C+c]*w[skip+c]):0.f;}
+#endif
  bool live=first+rc<tokens;const unsigned char*arow=av8+(first+rc)*C+g*8;
  for(uint k=0;k<C;k+=32){uint gs=k/32;
   for(uint h=0;h<2;h++){i2 a{};if(live)__builtin_memcpy(&a,arow+k+h*16,8);
@@ -541,7 +551,17 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512))) void mh_ffn_fused_c256_tiled_project_mapped_g128(const float*in,const float*w,unsigned char*out,uint tokens,uint width,uint height,uint workw,uint sx,uint sy){mh_ffn_fused_body<256,true,true,true,true>(in,w,out,tokens,width,height,workw,sx,sy);}
 
 // Byte result of q8(F(x)), preserving canonical zero and signed saturation.
+#ifndef HIP_C512_HOIST_RES
+#define HIP_C512_HOIST_RES 0 /* 1: mh_attention_project_frag_c512 residual init loads hoisted out of the p<tokens condition */
+#endif
+#ifndef HIP_BRANCHLESS_Q8
+#define HIP_BRANCHLESS_Q8 1 /* 2026-09-17: with HIP_MH_RTZ_ISA -0.16ms, bit-exact. q8_fused_round as clamp+cvt+select (ISA: every call was a divergent branch pair, 64 per FFN+QKV kernel); same byte for every non-NaN input */
+#endif
+#if HIP_BRANCHLESS_Q8
+DEV uint q8_fused_round(float x){uint a=bits(x)&0x7fffffffu;uint q=q8(__builtin_fminf(__builtin_fmaxf(x,-448.f),448.f));return a==0?0u:q;}
+#else
 DEV uint q8_fused_round(float x){uint b=bits(x),a=b&0x7fffffffu;if(!a)return 0;if(a>=0x43e00000u)return ((b>>24)&128u)|126u;return q8(x);}
+#endif
 // Byte residual stream (host option mh_byte_stream): the block input arrives as the E4M3 bytes the previous block's
 // attention-project stored; every input value the f32 path would read is exactly cvt_f32_fp8(byte), so decoding here and
 // feeding the unchanged f32 code is bit for bit the same computation. Padding outside the mapped window stays +0.
