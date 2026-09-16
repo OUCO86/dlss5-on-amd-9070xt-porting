@@ -19,6 +19,17 @@ inline uint8_t ExactWeightFp8(float value){
 // Lossless binary16 encoding; reject any weight that would require rounding.
 inline uint16_t ExactWeightHalf(float v){uint32_t b;std::memcpy(&b,&v,4);uint32_t a=b&0x7fffffffu;uint16_t sign=uint16_t((b>>16)&0x8000u);if(!a)return sign;if(a>=0x7f800000u)throw std::runtime_error("nonfinite half weight");int e=int(a>>23)-127;if(e>15)throw std::runtime_error("half weight overflow");if(e>=-14){if(a&8191u)throw std::runtime_error("weight not exact half");return uint16_t(sign|((e+15)<<10)|((a>>13)&1023u));}float x=v<0?-v:v,q=x*16777216.f;if(q<1||q>1023||q!=float(uint32_t(q)))throw std::runtime_error("weight not exact half subnormal");return uint16_t(sign|uint16_t(q));}
 inline void PackHalfMatrix(std::vector<float>&v,size_t count){if(count>v.size())throw std::runtime_error("half matrix shape");auto*bytes=reinterpret_cast<uint8_t*>(v.data());for(size_t i=0;i<count;i++){uint16_t h=ExactWeightHalf(v[i]);std::memcpy(bytes+i*2,&h,2);}}
+// C32 chain residual diagonals (kernel macro HIP_C32_DIAG_WEIGHTS): the per-channel residual scale fw[8704+c] is split
+// into three E4M3 pieces exactly as the device scale_piece() chain does, and each (part, column half, K half) B fragment
+// tile is stored as 512 bytes in the A/B lane order the kernel loads with matrix8 (lane gr*16+rc, 8 bytes = k gr*8..+7).
+inline float HostF(float x){uint32_t b;std::memcpy(&b,&x,4);uint32_t a=b&0x7fffffffu,sg=b&0x80000000u;if(!a)return 0.f;if(a>=0x43e00000u){uint32_t r=sg|0x43e00000u;float f;std::memcpy(&f,&r,4);return f;}
+ if(a<0x3c800000u){float m;std::memcpy(&m,&a,4);float scaled=m*512.f;uint32_t q=uint32_t(scaled);float r=scaled-float(q);q+=uint32_t(r>.5f||(r==.5f&&(q&1u)));float f=float(q)/512.f;return sg?-f:f;}
+ uint32_t r=(a+0x7ffffu+((a>>20)&1u))&0xfff00000u;if(r>0x43e00000u)r=0x43e00000u;r|=sg;float f;std::memcpy(&f,&r,4);return f;}
+inline float HostScalePiece(float v){float m=std::fabs(v);if(m<.015625f){float x=m*512.f;uint32_t q=uint32_t(x);float r=x-float(q);q+=uint32_t(r>.5f||(r==.5f&&(q&1u)));if(q>7)q=7;float f=float(q)/512.f;uint32_t b,fb;std::memcpy(&b,&v,4);std::memcpy(&fb,&f,4);fb|=b&0x80000000u;std::memcpy(&f,&fb,4);return f;}return HostF(v);}
+inline void AppendC32ResidualDiagonals(std::vector<float>&v){if(v.size()!=8736)throw std::runtime_error("C32 FFN weight shape for diagonals");v.resize(8736+1536,0.f);uint8_t*d=reinterpret_cast<uint8_t*>(v.data())+34944;
+ for(unsigned part=0;part<3;part++)for(unsigned ci=0;ci<2;ci++)for(unsigned kt=0;kt<2;kt++){uint8_t*tile=d+((part*2+ci)*2+kt)*512;
+  for(unsigned gr=0;gr<2;gr++)for(unsigned rc=0;rc<16;rc++){unsigned c=ci*16+rc;float remaining=v[8704+c],piece=0.f;for(unsigned j=0;j<=part;j++){piece=HostScalePiece(remaining);remaining-=piece;}
+   for(unsigned e=0;e<8;e++){unsigned k=kt*16+gr*8+e;tile[(gr*16+rc)*8+e]=k==c?ExactWeightFp8(piece):uint8_t(0);}}}}
 // Preserve float-region offsets for scales/bias and separate matrix regions.
 // Each matrix becomes row-major FP8 at its original starting byte address.
 inline void PackWeightRegions(std::vector<float>&values,const std::vector<std::pair<size_t,size_t>>&regions){

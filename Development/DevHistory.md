@@ -2040,3 +2040,14 @@ M2（vit_expand_blocked_fp8_frag_bytein_m2，86 VGPR无scratch）：关19.157/19
 vit_ffn_fused（选项vit_ffn_fused，env DLSS5_HIP_VIT_FFN_FUSED，CLI --vit-ffn-fused，默认关）：16个wave管16个token，hidden按四段1024列进LDS（16.6KB，无scratch），每段contract部分和按vit_contract_blocked_body的顺序累加进total（初值H(skip*scale)），expand激活/byte_F与原核同式；expand权重frag布局、contract权重行主序。单元测试240/400/640 token×两种输入对vit_contract_blocked_fp8全0差异。ABBA关19.189/19.200、开19.763/19.711，最终FEEA9EF3…一致，**+0.55更慢**。原因：900p ViT只有400 token → 25个workgroup，64个CU大半空转；拆开的expand是1600个wave铺满全卡。HLSL自己的native_wave_vit_ffn_fused也没进生产（flags里VIT_SPLIT_K=1走split-K），同一原因。
 
 ViT一天的账：字节流/half/N4/M2/tile输入/融合FFN六刀全部逐位一致、全部无收益或更慢；唯一有效的是早上的attention三核合一（−0.11）。ViT这一级是"token太少"的问题：每个核几十微秒，按token tile的融合杀并行度，按列拆分又多launch。剩下能动的只有把整条8块链塞进一个持久化大核（原子计数做grid barrier）——把48次launch和尾巴一起消掉，但要保证workgroup全常驻，风险高。日志release/HIP/vit-ffn-test.log。
+
+### 2026-09-16 19:40：C32融合核输入按lane分段（照HLSL ffn_fused骨架）−0.14ms，逐位一致
+把HIP c32_fused_body和HLSL native_c32_ffn_fused.hlsli并排对：HLSL每个wave只由16个lane各算一次自己token的映射源索引，再用WaveReadLaneAt广播，32个lane按通道连续读一行128字节；HIP按元素调mapped_c32_input，每个window算2048次（窗口/坐标/边界/除法），dword模式下更是每元素4次。新增编译宏HIP_C32_LANE_STAGE（默认0，实验模块编1）：lanes 0..15算一次索引（chain模式算raw tile索引、Merge算skip与low两个索引），`__builtin_amdgcn_readlane`广播，每token一次连续读；值与原路径相同（Raw用F(half)、Merge用同一Hrtz链）；mode 0的残差初值从新增的f16暂存in16读（所有映射源都是H()舍入值，f16精确；chain模式不需要，LDS不变）。ISA：chain 190 VGPR/15360 LDS不变，mapped 190→225/19712，post 170不变，均无scratch。
+
+ABBA（同runner、模块集交替）基线19.155/19.159、候选19.029/19.000，最终FEEA9EF3…一致，**−0.14ms**。全套验证见下一条。日志release/HIP/c32-lane-test.log，脚本compile-c32-lane.ps1、test-c32-lane.ps1，模块集c32-lane-modules（c32_fused_ffn_attention-packed SHA D2F713F6540981C6D103B0C8F9996AA1F1C6BBC286C6342A4A5E81085884B000）。方法论上今天最有用的一课：别按自己的直觉猜瓶颈，把两边同一个核的源码并排逐段对，找"做同一件事但做法不同"的段。
+验证：c32-lane-modules全40帧FEEA9EF3…、24帧每8帧reset 22C171FC…、seed123/history 75B62D2F…全部匹配（validate-c32-lane.ps1，日志release/HIP/c32-lane-validate.log）。**源码HIP_C32_LANE_STAGE默认改为1。**
+
+同核再两刀（对c32-lane-modules ABBA）：HIP_C32_LOCAL_FFN_SYNC=1（staging/hidden两处全组barrier改wave局部fence+残差A用load8）18.994/18.997对18.968/19.055，null；HIP_C32_DIAG_WEIGHTS=1（chain残差三段对角B片由host按scale_piece/F同式预算成12×512B追加在FFN权重字节34944处，核内load8+matrix8直接取，packed_weights.h AppendC32ResidualDiagonals；VGPR 190→200）19.021/18.995对19.097/19.028，−0.05在噪声边缘，哈希一致。两个宏默认0保留。日志release/HIP/c32-lane2-test.log、c32-diag-test.log。
+
+### 2026-09-16 20:20：C32 lane staging进生产：全量模块集opt-lane-release-modules验证通过并部署
+build-opt-modules.ps1 -Name lane-release（当前源码，无额外编译选项，HIP_C32_LANE_STAGE默认1）编24模块；全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…全部匹配（validate-lane-release.ps1，日志release/HIP/lane-release-validate.log）。deploy-stellarblade-update.ps1 -BackupName before-c32-lane，DLL沿用BE4568D5…（纯核改动，host不变），24模块逐hash通过。离线：ViT三刀后19.13→lane staging后≈19.00。

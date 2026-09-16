@@ -82,7 +82,7 @@ class Network {
   const std::string key=name+"@c32fp8";auto it=weights.find(key);
   if(it==weights.end()){auto v=ReadWeights(opt.assets+"/"+name);
    if(v.size()!=WeightElements(name))throw std::runtime_error("packed C32 weight shape");
-   if(attention)PackWeightRegions(v,{{0,4096}});else PackWeightRegions(v,{{512,4096},{4608,4096}});
+   if(attention)PackWeightRegions(v,{{0,4096}});else{PackWeightRegions(v,{{512,4096},{4608,4096}});AppendC32ResidualDiagonals(v);}
    it=weights.emplace(key,Upload(v.data(),v.size()*4,true)).first;
   }return P(it->second);
  }

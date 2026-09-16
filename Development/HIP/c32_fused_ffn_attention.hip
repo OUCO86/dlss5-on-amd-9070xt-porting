@@ -3,6 +3,15 @@
 #endif
 // Production C32 FAST4 attention precision, separate from exact reference.
 // All kernels flat grid ceil(work_items/256), block32; token count divisible64.
+#ifndef HIP_C32_LANE_STAGE
+#define HIP_C32_LANE_STAGE 1 /* 2026-09-16: lane-broadcast input staging, -0.14ms, bit-exact */
+#endif
+#ifndef HIP_C32_DIAG_WEIGHTS
+#define HIP_C32_DIAG_WEIGHTS 0 /* chain residual diagonal B tiles prepacked after the FFN weights (byte 34944) */
+#endif
+#ifndef HIP_C32_LOCAL_FFN_SYNC
+#define HIP_C32_LOCAL_FFN_SYNC 0 /* staging/hidden rows are wave-private: wave-local fences instead of s_barrier */
+#endif
 #ifndef HIP_C32_INPUT_DWORD
 #define HIP_C32_INPUT_DWORD 1
 #endif
@@ -155,22 +164,63 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
 #endif
  if(residual_mode!=0&&residual_mode!=3)return;
  // Stage input64x36 only; FFN matrices are loaded directly from global weights.
-#if HIP_C32_INPUT_DWORD
+#if HIP_C32_LANE_STAGE
+ // Lane staging (HLSL ffn_fused shape): each wave stages its own 16 tokens; lanes 0..15 compute the mapped source
+ // index of one token once, then for every token the 32 lanes load channel l of that token (one contiguous 128-byte
+ // row) with the index broadcast by readlane. Same values as mapped_c32_input, 64 index computations per window
+ // instead of 2048. The f16 copy (exact: every mapped source is H()-rounded) feeds the mode-0 residual.
+ constexpr bool NeedIn16=Mapped&&!RawMapped;
+ __attribute__((shared)) _Float16 in16[NeedIn16?64*34:1];
+ {uint l=tid%32;int mine=-1,mine2=-1;
+  if constexpr(Mapped){if(l<16){uint token=first+l,ww=sourcew+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);
+   if(x>=0&&y>=0&&x<int(sourcew)&&y<int(sourceh)){if constexpr(Merge){mine=int((uint(y)*sourcew+uint(x))*32);mine2=int(((uint(y)/2)*(sourcew/2)+uint(x)/2)*32);}else if constexpr(RawMapped){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;mine=int((tile*64+token0)*32);}else mine=int((uint(y)*sourcew+uint(x))*32);}}}
+  #pragma unroll
+  for(uint j=0;j<16;j++){uint row=first+j;float v=0.f;
+   if constexpr(!Mapped)v=raw_input[(base+row)*32+l];
+   else{int src=__builtin_amdgcn_readlane(mine,j);if(src>=0){if constexpr(Merge){int src2=__builtin_amdgcn_readlane(mine2,j);float high=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[uint(src)+l]),0);v=Hrtz(Hrtz(raw_input[uint(src2)+l]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)v=F(float(reinterpret_cast<const _Float16*>(raw_input)[uint(src)+l]));else v=raw_input[uint(src)+l];}}
+   packed[row*36+l]=static_cast<unsigned char>(fp8(v));
+   if constexpr(NeedIn16)in16[row*34+l]=(_Float16)v;
+  }}
+#elif HIP_C32_INPUT_DWORD
  for(uint i=tid;i<64*9;i+=128){uint row=i/9,k=(i%9)*4,word=0;if(k<32)for(uint e=0;e<4;e++)word|=(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k+e,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k+e])&255u)<<(e*8);__builtin_memcpy(packed+i*4,&word,4);}
 #else
  for(uint i=tid;i<64*36;i+=128){uint row=i/36,k=i%36;packed[i]=k<32?static_cast<unsigned char>(fp8(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,k,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+k])):0;}
 #endif
+#if HIP_C32_LOCAL_FFN_SYNC
+ sync_owned_rows();
+#else
  sync_window();
+#endif
  for(uint col=0;col<128;col+=16){f8 sum{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=kt*16+gr()*8;a=load8(packed+(first+rc())*36+k);b=matrix8(fw+512,(col+rc())*32+k);sum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,sum);}
   for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
  }
+#if HIP_C32_LOCAL_FFN_SYNC
+ sync_owned_rows();
+#else
  sync_window();
+#endif
  f8 acc[2];acc[0]=f8{};acc[1]=f8{};
- if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();acc[ci][e]=clampf(Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c],-448.f,448.f)*fw[8704+c];}}
+ if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();float x;
+#if HIP_C32_LANE_STAGE
+   if constexpr(NeedIn16)x=float(in16[row*34+c]);else x=Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c];
+#else
+   x=Mapped?mapped_c32_input<RawMapped,Merge>(raw_input,window,row,c,sourcew,sourceh,sx,sy,prevw,prevsx,prevsy,skip,scales):raw_input[(base+row)*32+c];
+#endif
+   acc[ci][e]=clampf(x,-448.f,448.f)*fw[8704+c];}}
+#if HIP_C32_DIAG_WEIGHTS
+ else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++)for(uint kt=0;kt<2;kt++){i2 a=load8(packed+(first+rc())*36+kt*16+gr()*8),b=matrix8(fw,34944+((part*2+ci)*2+kt)*512+(gr()*16+rc())*8);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}}
+#else
  else{for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++){uint c=ci*16+rc();float remaining=fw[8704+c],piece=0;for(uint j=0;j<=part;j++){piece=scale_piece(remaining);remaining-=piece;}
-   for(uint kt=0;kt<2;kt++){i2 a{},b{};for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,k==c?fp8(piece):0u);}acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
+   for(uint kt=0;kt<2;kt++){i2 a{},b{};
+#if HIP_C32_LOCAL_FFN_SYNC
+    a=load8(packed+(first+rc())*36+kt*16+gr()*8);for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(b,e,k==c?fp8(piece):0u);}
+#else
+    for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,packed[(first+rc())*36+k]);put_bits(b,e,k==c?fp8(piece):0u);}
+#endif
+    acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
   }}
+#endif
  for(uint chunk=0;chunk<4;chunk++)for(uint ci=0;ci<2;ci++){
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint k=chunk*32+kt*16+gr()*8;a=load8(scratch.hidden+(first+rc())*132+k);b=matrix8(fw+4608,(ci*16+rc())*128+k);acc[ci]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc[ci]);}
  }
