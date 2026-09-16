@@ -158,7 +158,7 @@ void mh_attention_fused_fp8_out(const unsigned char*normalized,const float*w,uns
 // ByteFeature: the FFN feature arrives as E4M3 bytes (the f32 path re-encodes the f32 copy of the same byte, so the decoded
 // value is identical). ByteOut: the block output F(...) (post 0/4, lattice-exact) is stored as its byte instead of f32;
 // post 3 (Hrtz, chain tail) is never byte. Host option mh_byte_stream selects the variants per chain position.
-template<bool ByteFeature,bool ByteOut>
+template<bool ByteFeature,bool ByteOut,bool Diag=false>
 DEV void c64_attention_project_body(const unsigned char*normalized,const float*w,const void*feature_any,void*out_any,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){
  const float*feature=static_cast<const float*>(feature_any);const unsigned char*feature8=static_cast<const unsigned char*>(feature_any);float*out=static_cast<float*>(out_any);unsigned char*out8=static_cast<unsigned char*>(out_any);
  const uint channels=64;
@@ -192,7 +192,10 @@ DEV void c64_attention_project_body(const unsigned char*normalized,const float*w
  for(uint col=0;col<32;col+=16)for(uint e=0;e<8;e++)avbytes[(first+gr()*8+e)*68+head*32+col+rc()]=static_cast<unsigned char>(fp8(F(av[col/16][e])));
  sync_window();
  f8 result[2]{};
- for(uint j=0;j<2;j++){uint col=head*32+j*16+rc();float remain=w[4*64*64+2*4096+2+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=ByteFeature?__builtin_amdgcn_cvt_f32_fp8(int(feature8[p*64+col]),0):__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*64+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
+ if constexpr(Diag){const unsigned char*diag=reinterpret_cast<const unsigned char*>(w)+4*(4*64*64+2*4096+2+64);uint p=raster(win,first+rc(),width);
+  for(uint j=0;j<2;j++){uint ct=head*2+j;i2 a{};if constexpr(ByteFeature)__builtin_memcpy(&a,feature8+p*64+ct*16+gr()*8,8);else for(uint e=0;e<8;e++)put_bits(a,e,fp8(feature[p*64+ct*16+gr()*8+e]));
+   for(uint part=0;part<3;part++){i2 b{};__builtin_memcpy(&b,diag+(part*4+ct)*512+(gr()*16+rc())*8,8);result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}}
+ else for(uint j=0;j<2;j++){uint col=head*32+j*16+rc();float remain=w[4*64*64+2*4096+2+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=ByteFeature?__builtin_amdgcn_cvt_f32_fp8(int(feature8[p*64+col]),0):__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*64+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
  const uint*pw=reinterpret_cast<const uint*>(w);
  for(uint k=0;k<64;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*68+k+gr()*8,8);for(uint j=0;j<2;j++){uint col=head*32+j*16+rc(),off=3*64*64+(col*64+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=head*32+j*16+rc(),dest=p*64+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*64+col;}float v=result[j][e],o=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);if constexpr(ByteOut)out8[dest]=static_cast<unsigned char>(fp8(o));else out[dest]=o;}
@@ -242,12 +245,15 @@ void c64_attention_project_w16(const unsigned char*normalized,const float*w,cons
 }
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
 void c64_attention_project(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<false,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+// Residual via prepacked diagonal fragment tiles (host option mh_proj_diag, PackedMhWeightDiag): three MMAs replace the scalar three-piece FMAs.
+KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
+void c64_attention_project_diag(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<false,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
 void c64_attention_project_fb(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<true,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
 void c64_attention_project_fb_bout(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 
-template<bool ByteFeature,bool ByteOut>
+template<bool ByteFeature,bool ByteOut,bool Diag=false>
 DEV void c128_attention_project_body(const unsigned char*normalized,const float*w,const void*feature_any,void*out_any,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){
  const float*feature=static_cast<const float*>(feature_any);const unsigned char*feature8=static_cast<const unsigned char*>(feature_any);float*out=static_cast<float*>(out_any);unsigned char*out8=static_cast<unsigned char*>(out_any);
  const uint channels=128;
@@ -281,19 +287,25 @@ DEV void c128_attention_project_body(const unsigned char*normalized,const float*
  for(uint col=0;col<32;col+=16)for(uint e=0;e<8;e++)avbytes[(first+gr()*8+e)*132+head*32+col+rc()]=static_cast<unsigned char>(fp8(F(av[col/16][e])));
  sync_window();
  f8 result[2]{};
- for(uint j=0;j<2;j++){uint col=head*32+j*16+rc();float remain=w[4*128*128+4*4096+4+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=ByteFeature?__builtin_amdgcn_cvt_f32_fp8(int(feature8[p*128+col]),0):__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*128+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
+ if constexpr(Diag){const unsigned char*diag=reinterpret_cast<const unsigned char*>(w)+4*(4*128*128+4*4096+4+128);uint p=raster(win,first+rc(),width);
+  for(uint j=0;j<2;j++){uint ct=head*2+j;i2 a{};if constexpr(ByteFeature)__builtin_memcpy(&a,feature8+p*128+ct*16+gr()*8,8);else for(uint e=0;e<8;e++)put_bits(a,e,fp8(feature[p*128+ct*16+gr()*8+e]));
+   for(uint part=0;part<3;part++){i2 b{};__builtin_memcpy(&b,diag+(part*8+ct)*512+(gr()*16+rc())*8,8);result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}}
+ else for(uint j=0;j<2;j++){uint col=head*32+j*16+rc();float remain=w[4*128*128+4*4096+4+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=ByteFeature?__builtin_amdgcn_cvt_f32_fp8(int(feature8[p*128+col]),0):__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*128+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
  const uint*pw=reinterpret_cast<const uint*>(w);
  for(uint k=0;k<128;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*132+k+gr()*8,8);for(uint j=0;j<2;j++){uint col=head*32+j*16+rc(),off=3*128*128+(col*128+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=head*32+j*16+rc(),dest=p*128+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*128+col;}float v=result[j][e],o=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);if constexpr(ByteOut)out8[dest]=static_cast<unsigned char>(fp8(o));else out[dest]=o;}
 }
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c128_attention_project(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<false,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+// Residual via prepacked diagonal fragment tiles (host option mh_proj_diag, PackedMhWeightDiag): three MMAs replace the scalar three-piece FMAs.
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+void c128_attention_project_diag(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<false,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c128_attention_project_fb(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<true,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c128_attention_project_fb_bout(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 
-template<bool ByteFeature,bool ByteOut>
+template<bool ByteFeature,bool ByteOut,bool Diag=false>
 DEV void c256_attention_project_body(const unsigned char*normalized,const float*w,const void*feature_any,void*out_any,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){
  const float*feature=static_cast<const float*>(feature_any);const unsigned char*feature8=static_cast<const unsigned char*>(feature_any);float*out=static_cast<float*>(out_any);unsigned char*out8=static_cast<unsigned char*>(out_any);
  const uint channels=256;
@@ -330,7 +342,10 @@ DEV void c256_attention_project_body(const unsigned char*normalized,const float*
  } // Complete both batches before projection.
  for(uint pair=0;pair<2;pair++){
  f8 result[2]{};
- for(uint j=0;j<2;j++){uint col=localhead*64+pair*32+j*16+rc();float remain=w[4*256*256+8*4096+8+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=ByteFeature?__builtin_amdgcn_cvt_f32_fp8(int(feature8[p*256+col]),0):__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*256+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
+ if constexpr(Diag){const unsigned char*diag=reinterpret_cast<const unsigned char*>(w)+4*(4*256*256+8*4096+8+256);uint p=raster(win,first+rc(),width);
+  for(uint j=0;j<2;j++){uint ct=localhead*4+pair*2+j;i2 a{};if constexpr(ByteFeature)__builtin_memcpy(&a,feature8+p*256+ct*16+gr()*8,8);else for(uint e=0;e<8;e++)put_bits(a,e,fp8(feature[p*256+ct*16+gr()*8+e]));
+   for(uint part=0;part<3;part++){i2 b{};__builtin_memcpy(&b,diag+(part*16+ct)*512+(gr()*16+rc())*8,8);result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}}
+ else for(uint j=0;j<2;j++){uint col=localhead*64+pair*32+j*16+rc();float remain=w[4*256*256+8*4096+8+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=ByteFeature?__builtin_amdgcn_cvt_f32_fp8(int(feature8[p*256+col]),0):__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*256+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
  const uint*pw=reinterpret_cast<const uint*>(w);
  for(uint k=0;k<256;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*260+k+gr()*8,8);for(uint j=0;j<2;j++){uint col=localhead*64+pair*32+j*16+rc(),off=3*256*256+(col*256+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=localhead*64+pair*32+j*16+rc(),dest=p*256+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*256+col;}float v=result[j][e],o=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);if constexpr(ByteOut)out8[dest]=static_cast<unsigned char>(fp8(o));else out[dest]=o;}
@@ -339,6 +354,9 @@ DEV void c256_attention_project_body(const unsigned char*normalized,const float*
 }
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c256_attention_project(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<false,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+// Residual via prepacked diagonal fragment tiles (host option mh_proj_diag, PackedMhWeightDiag): three MMAs replace the scalar three-piece FMAs.
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+void c256_attention_project_diag(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<false,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c256_attention_project_fb(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<true,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))

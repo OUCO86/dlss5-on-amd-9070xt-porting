@@ -37,6 +37,12 @@ inline void AppendC32ResidualDiagonals(std::vector<float>&v){if(v.size()!=8736)t
  for(unsigned part=0;part<3;part++)for(unsigned ci=0;ci<2;ci++)for(unsigned kt=0;kt<2;kt++){uint8_t*tile=d+((part*2+ci)*2+kt)*512;
   for(unsigned gr=0;gr<2;gr++)for(unsigned rc=0;rc<16;rc++){unsigned c=ci*16+rc;float remaining=v[8704+c],piece=0.f;for(unsigned j=0;j<=part;j++){piece=HostScalePiece(remaining);remaining-=piece;}
    for(unsigned e=0;e<8;e++){unsigned k=kt*16+gr*8+e;tile[(gr*16+rc)*8+e]=k==c?ExactWeightFp8(piece):uint8_t(0);}}}}
+// MH attention residual scales (floats at 4cc+heads*4096+heads+col) as three diagonal fragment B tiles per 16-column tile:
+// tile (part*(c/16)+ct) byte (gr*16+rc)*8+e holds piece[part] of column ct*16+rc at k=gr*8+e==rc, zero elsewhere.
+inline void AppendMhResidualDiagonals(std::vector<float>&v,unsigned c){size_t cc=size_t(c)*c,heads=c/32;if(v.size()!=4*cc+heads*4096+heads+c)throw std::runtime_error("MH attention weight shape for diagonals");size_t base=v.size();v.resize(base+size_t(c)*24,0.f);uint8_t*d=reinterpret_cast<uint8_t*>(v.data())+base*4;
+ for(unsigned part=0;part<3;part++)for(unsigned ct=0;ct<c/16;ct++){uint8_t*tile=d+(part*(c/16)+ct)*512;
+  for(unsigned gr=0;gr<2;gr++)for(unsigned rc=0;rc<16;rc++){unsigned col=ct*16+rc;float remaining=v[4*cc+heads*4096+heads+col],piece=0.f;for(unsigned j=0;j<=part;j++){piece=HostScalePiece(remaining);remaining-=piece;}
+   for(unsigned e=0;e<8;e++){unsigned k=gr*8+e;tile[(gr*16+rc)*8+e]=k==rc?ExactWeightFp8(piece):uint8_t(0);}}}}
 // Preserve float-region offsets for scales/bias and separate matrix regions.
 // Each matrix becomes row-major FP8 at its original starting byte address.
 inline void PackWeightRegions(std::vector<float>&values,const std::vector<std::pair<size_t,size_t>>&regions){
