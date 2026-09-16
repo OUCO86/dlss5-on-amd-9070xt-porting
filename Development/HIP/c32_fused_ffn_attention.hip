@@ -155,8 +155,8 @@ DEV float mapped_c32_input(const float*in,uint window,uint token,uint channel,ui
  if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;return F(float(reinterpret_cast<const _Float16*>(in)[(tile*64+token0)*32+channel]));}
  return in[(uint(y)*width+uint(x))*32+channel];}
 
-template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false>
-DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr){
+template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false,bool RgbHead=false>
+DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f){
  uint window=bid();if(window>=windows)return;uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,first=wave*16,base=window*64;
  union Scratch {float raw[64*33];_Float16 ex[64*66];unsigned char hidden[64*132];};
  __attribute__((shared)) Scratch scratch;
@@ -317,7 +317,16 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
 #else
    residual=float(ffn[(first+gr()*8+e)*34+col+rc()]);
 #endif
-   float prod=residual*w[8193+col+rc()],v=Hrtz(acc[e]+prod);if constexpr(HalfOutput)reinterpret_cast<_Float16*>(out)[i]=(_Float16)(raw_output?v:F(v));else out[i]=raw_output?v:F(v);}
+   float prod=residual*w[8193+col+rc()],v=Hrtz(acc[e]+prod);
+   if constexpr(RgbHead)scratch.ex[(first+gr()*8+e)*34+col+rc()]=(_Float16)v; // raw_output is 1 here: v is the half the head would have read back
+   else if constexpr(HalfOutput)reinterpret_cast<_Float16*>(out)[i]=(_Float16)(raw_output?v:F(v));else out[i]=raw_output?v:F(v);}
+ }
+ if constexpr(RgbHead){
+  // hip_post_head_fast_half in the epilogue (HLSL DLSS5_C32_EPILOGUE shape): no raw write/read-back, no head dispatch.
+  // 16 tokens x 3 rows = 48 tasks over the wave's 32 lanes; the 32-term dot runs in the same sequential f32 order.
+  sync_owned_rows();uint l=tid%32,ww=sourcew+2*sx;
+  for(uint task=l;task<48;task+=32){uint tok=first+task/3,row=task%3;int x=int((window%(ww/8))*8+tok%8)-int(sx),y=int((window/(ww/8))*8+tok/8)-int(sy);if(x<0||y<0||x>=int(sourcew)||y>=int(sourceh))continue;uint p=uint(y)*sourcew+uint(x);
+   float acc=0.f;for(uint j=0;j<32;j++)acc+=float(scratch.ex[tok*34+j])*headw[row*32+j];acc=Hrtz(acc);float centered=color[p*4+row]*.125f-.0625f,v=(acc*rgb_scale+centered)*8.f+.5f;rgb[p*3+row]=clampf(v,0.f,1.f);}
  }
 }
 
@@ -332,5 +341,8 @@ void c32_fast_ffn_attention_fused_half_mapped(const float*in,const float*fw,cons
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_fast_ffn_attention_fused_half_chain(const float*in,const float*fw,const float*w,float*out,uint windows,uint mode,uint raw,uint width,uint height,uint sx,uint sy,uint prevw,uint prevsx,uint prevsy){c32_fused_body<true,true,true>(in,fw,w,out,windows,mode,raw,width,height,sx,sy,prevw,prevsx,prevsy);}
 
+// Post-merge C32 with the rgb head in the epilogue (host option post_head_fused): out unused; rgb = W*H*3 floats.
+KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
+void c32_post_merge_head_half(const float*low,const float*skip,const float*scales,const float*fw,const float*w,const float*color,const float*headw,float*rgb,uint windows,uint width,uint height,uint sx,uint sy,float scale){c32_fused_body<true,true,false,true,true>(low,fw,w,nullptr,windows,0,1,width,height,sx,sy,0,0,0,skip,scales,color,headw,rgb,scale);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(128,128))) C32_OCC
 void c32_post_merge_fused_half(const float*low,const float*skip,const float*scales,const float*fw,const float*w,float*out,uint windows,uint width,uint height,uint sx,uint sy){c32_fused_body<true,true,false,true>(low,fw,w,out,windows,0,1,width,height,sx,sy,0,0,0,skip,scales);}
