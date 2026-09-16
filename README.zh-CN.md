@@ -6,6 +6,8 @@
 Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8（E4M3）的 HLSL 计算着色器，在 AMD RDNA 4
 显卡上跑起来，并通过 ReShade 插件钩住游戏的 FSR dispatch，对 1080p 画面做后处理。
 
+**现状（2026-09-17，`0.20`，HIP 后端）**：推理后端从 DirectX 12 Shader Model 6.10 wave matrix 换成 AMD HIP——网络的 24 个内核以 gfx1201 二进制（`.hsaco`）随包提供，由 AMD 驱动自带的 HIP 7 运行时（`amdhip64_7.dll`）执行。输出与 0.15 的 DX12 链逐位相同（40 帧输出哈希一致）；独立测试台 1600×900 每帧 16.8 → ≈15.5 ms，《剑星》游戏内 900p 47 → 52 fps。不再需要 Agility SDK 1.721 预览运行时、Shader Model 6.10 和 Windows 开发人员模式。下面的 DX12 链作为历史记录保留。
+
 **现状（2026-09-13，Magpie 整包 `0.15`）**：RX 9070 XT 上支持**宽不超过 1920、高不超过 1080** 的普通游戏窗口。窗口比 1080p 小几个像素也能自动适配，保持原有宽高比；处理后由 FSR4 放大到屏幕，保留 XeSS 帧生成（ZeroMV）。游戏不需要原生支持 FSR/DLSS。
 
 用户实玩《鬼武者》：1080p 窗口放大到 2K，保持约 **30 帧**。另用测试窗口在 4K 桌面验证，网络约 **29 fps**；这是两种场景，不是插帧前后的对比。
@@ -14,7 +16,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 便携预设为 **FSR3（由本插件接入 DLSS5）→ FSR4 充满屏幕 → XeSS 帧生成**。默认开启小窗口适配（`DLSS5_FIT_INPUT=1`）和网络帧率显示，FPS 数字至少间隔三秒刷新。
 
-需要 Windows 开发人员模式和 AMD 26.10.07.02 预览驱动。显存紧张会掉帧；《星刃》游戏内钩子版的贴图质量应选「高」或更低。`scripts/game-flags.txt` 和 `scripts/magpie-flags.txt` 分别记录两种运行配置，`scripts/bench.ps1` 编译配套 shader。安装方法见 [Magpie 包内说明](scripts/package-README-magpie.txt)。
+0.20（HIP）只要驱动带 `amdhip64_7.dll`（已在 AMD 32.0.31007.2048 上验证，就是之前那个预览驱动；正式版驱动若带这个文件理论可用，未实测）。0.15 及之前的 DX12 版需要 Windows 开发人员模式和 AMD 26.10.07.02 预览驱动。显存紧张会掉帧；《星刃》游戏内钩子版的贴图质量应选「高」或更低。`scripts/game-flags.txt` 和 `scripts/magpie-flags.txt` 分别记录两种运行配置，`scripts/bench.ps1` 编译配套 shader。安装方法见 [Magpie 包内说明](scripts/package-README-magpie.txt)。
 
 ## 仓库结构
 
@@ -87,6 +89,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | `0.14`（整包） | 09-12 | FPS 数字至少三秒刷新一次，不变的字条直接复用，贴字并入已有输出提交，去掉单独的同步提交。保留 XeSS FG ZeroMV 预设。整包清理备份 DLL、日志及 shader 缓存，重新生成文件校验清单。`Magpie-DLSS5-AMD-0.14.zip`，358,004,639 字节；SHA256 `14ccde3c752b40821cb9f30024579304627a2499e087e06e9aec399bfe734eed`。尚未打 0.14 tag。 | 编译通过；671 个包内文件校验通过；帧率收益未测 |
 | [0.15](https://pan.quark.cn/s/1601ca8f80ae) | 09-13 | 普通窗口宽≤1920、高≤1080 即可输入，按原宽高比适配固定网络尺寸，再还原窗口尺寸交给 FSR4。便携预设：FSR3（DLSS5 入口）→ FSR4 充满屏幕 → XeSS FG ZeroMV。默认 `DLSS5_FIT_INPUT=1`，保留三秒刷新 FPS。整包 `Magpie-DLSS5-AMD-0.15.zip`。  358,010,545 字节；SHA256 `9bb7a021d09d987986f96dbd920589018606c9800dbd08e007f4b309388e5909`。| 672 个包内文件校验通过；《鬼武者》中画质2K约30帧 |
 | [0.15-900P](https://pan.quark.cn/s/a5339e4c8549) | 09-14 | 固定1600×900内部计算（处理1600×1024、400个ViT位置），再经FSR4放大；仅第一项DLSS5/FSR3开启AMD光流。用户实玩：效果比720p更好、帧率较稳，1080p加插帧不稳。独立900p推理约16.71ms，不是游戏帧率。整包 `Magpie-DLSS5-AMD-0.15-900P.zip`，358,038,890字节，SHA256 `718d77941674d6e851e7babc14b40a596da52e86aec603f44f956b99ff6811d5`。 | 用户实玩900p通过；676个包内文件校验通过 |
+| `0.20`（HIP） | 09-17 | HIP 后端：COMGR 编译的 gfx1201 内核（`Development/HIP/`）、D3D12↔HIP 共享缓冲/围栏，与 DX12 链逐位一致。09-16/17 两天的核内工作（读 ISA 找病：转换函数去分支、load 连发、别名重载提出循环、残差对角片预打包、prefix 内联）把独立 900p 帧从 19.4 压到 ≈15.5 ms，比 DX12 链快 8%；游戏内 900p 52 fps。包：`DLSS5-AMD-0.20.zip`（游戏版）、`Magpie-DLSS5-AMD-0.20.zip`（Magpie 版，不含 Agility 运行时）。需要驱动自带 `amdhip64_7.dll`。|
 
 ## 权重
 

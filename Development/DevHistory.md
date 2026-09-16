@@ -2191,3 +2191,11 @@ split_*（FFWD mix/expand/contract/projection）0.69 + mh_qkv_normalize_frag_c51
 - 路线1（改累加顺序/放宽精确）：验收工具就位（validate-psnr.ps1 + psnr-check.sh），但试的第一刀（FFN激活packed f16）反而更慢；C32注意力相位1.61ms里LDS凑片（VT）、LDS向量读都不是瓶颈，剩下的是softmax标量尾巴+3道barrier，放宽精度改不动结构。没有找到值得越过PSNR门的刀。
 - 路线2（launch间隙）：当前每帧约200次launch，稳态1.2–1.5µs/次≈0.3ms硬成本；可合的相邻核（C512 projection+QKV、ViT各段）每处<0.1ms且要重排workgroup分解，性价比低，不做。
 - 今夜净收益全部来自逐位精确路线：16.90→≈15.5ms，游戏900p 47→52 FPS。生产=native-pinline.addon64 + ffnh2-modules。
+
+### 2026-09-17 06:14起：0.20 打包（HIP 后端，游戏版 + Magpie 版）
+Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以0.15-900P的暂存目录（权重已是精确f16）为底，`Development/HIP/package-hip.ps1`在AMD机上生成两包：
+- `D:\DLSSNR-Lab\DLSS5-AMD-0.20.zip`（游戏版）：d3d12.dll（ReShade，哈希与0.15的dxgi.dll同）+ dlss5-amd.addon64（=native-pinline 8D5A218F…）+ DLSS5-AMD\{native-game-flags.txt（`scripts/hip-game-flags.txt`：游戏现用flag去掉绝对路径的DLSS5_HIP_MODULES与DEBUG_DUMPS，模块目录按DLL默认取flags旁的HIP\）、HIP\24个hsaco（ffnh2-modules）、native-game-tiled-assets、logs\}+README（`scripts/package-README-hip.txt`）+两份许可。493文件，250,645,459字节，SHA256 2c620c1167f3dd150fbb236ce6b2c98c91a2b0797a0b548b017ad616bea9ca2e。
+- `D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.20.zip`（Magpie版）：0.15-900P整包去掉DLSS5-D3D12-721与enable-game-sdk721.txt，换DLL、加HIP\、flags用`scripts/hip-magpie-flags.txt`（游戏flag+CODEC_SRGB=1/HISTORY_GUARD/MOTION_MAX_PX/SNAPSHOT_FRAME），README`scripts/package-README-magpie-hip.txt`。698文件，354,830,682字节，SHA256 6228d43f652a8cc55184bf738d1933745a1de148e386c5e8803139a68d27d2f6。
+- 包内容验证：用游戏包里的f16权重目录+HIP目录+flags（拷成pkg020-modules/pkg020-flags.txt，validate-hdr-assets.ps1）跑40帧FEEA9EF3…、24帧reset 22C171FC…，与实验室f32资产逐位一致；每包SHA256SUMS逐条对zip内容校验通过，旁置.zip.sha256。
+- 根README（中英）状态行、依赖行、版本表加0.20；HIP版不需要开发人员模式/Agility 721/SM6.10，只要驱动带amdhip64_7.dll（已验证预览驱动32.0.31007.2048，正式驱动未测——README如实写）。
+- **待Zero**：Magpie路径下的HIP DLL没在本机实测过（游戏内钩子已实玩52fps），发布前先在自己的Magpie上跑一次0.20整包；上传网盘后把链接填进README版本表。
