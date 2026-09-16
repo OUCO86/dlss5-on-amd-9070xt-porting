@@ -9,6 +9,6 @@ if($LASTEXITCODE){throw 'c512 frag mismatch'}
 foreach($i in 0..3){
  $flags=if($i -in @(1,2)){'c512-ptile-on-flags.txt'}else{'c512-ptile-off-flags.txt'}
  Write-Output "ROUND=$i flags=$flags"
- & "$r\validate-hdr.ps1" -Runner benchmark_c512_frag.exe -Modules c512-ptile-modules -Name "c512-ptile-$i" -Flags $flags -EdgesOnly 1 -ExpectedHash FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58
+ & "$r\validate-hdr.ps1" -Runner benchmark_mh_fb.exe -Modules c512-ptile-modules -Name "c512-ptile-$i" -Flags $flags -EdgesOnly 1 -ExpectedHash FEEA9EF3A8FCBF0692DCE7A506B5CA877F6DAEF7E942292F9B9D85A3523D0E58
  if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Game started'}
 }
