@@ -2168,3 +2168,7 @@ c32dg-modules三道全过（validate-modules.ps1：benchmark_pinline.exe默认fl
 `mh_ffn_fused_c*_project_mapped_g128_qkv[_bytein_fb]`的ISA：投影残差初值`Hrtz(load_in(...)*w[9*C*C+..])`8个元素各一次条件load+等待，byte输入变体的协作staging（pack4）再12个。宏`HIP_FFN_HOIST_RES`：1=残差8个读改无分支（`ffn_input[8]_nb`：索引钳到窗内、无条件load、窗测试select，scale读一次）；2=staging的pack4也用无分支读。ABBA（对c32dg）：级1 15.688/15.699对15.658/15.669，**−0.03**；级2见下。
 级2（ffnh2对c32dg）：15.661/15.706对15.547/15.545，**−0.14**（VGPR 96/96/81，spill 0）。默认翻2，验证后部署。
 ffnh2-modules三道全过（validate-modules.ps1：全40帧FEEA9EF3…、24帧reset 22C171FC…、seed123/history 75B62D2F…），与native-pinline.addon64部署，备份before-ffnh2。日志release/HIP/ffnh-test.log、ffnh2-test.log、ffnh2-validate.log。**离线HIP≈15.55（同批基线漂到15.7档时候选15.55）/ HLSL 16.8。今夜累计：16.90→15.5，−1.4ms，全部逐位一致。**
+末次ISA扫描（c32dg/ffnh2/rtz/bfall-deep四个.s，阈值load→wait≥5或分支≥60）：生产核里剩下的只有C32链核的16个（residual_mode==0路径，链用mode 3，运行时不走）、C512投影残差33个（已测null）、ViT QKV frag的15个（scale重载，已测null）；其余命中的都是非生产变体。ISA能看见的串行/分支问题在生产路径上收完。
+
+### 2026-09-17 02:37：末次家族dup表（ffnh2-modules + native-pinline，基线≈15.24，机器冷态）
+C64 ffn 1.10+attn 0.87=1.97（HLSL 1.93）；C128 1.13+0.68=1.81（2.16）；C256 1.50+0.66=2.16（2.70）；C32 mapped 0.55+chain 1.07+finish 0.58=2.20（HLSL前后两链≈2.18）；post 1.22（1.27）；ViT 1.53（1.53）；pool 0.12；decoder 0.37；pre/prefix已内联进block-0核（dup家族名不再匹配，记0）。每个家族都到了HLSL的水平或更好。精确逐位这条路上，ISA可见的问题已收完；再往下只剩改累加顺序（PSNR门）那条路。日志release/HIP/dup-map3-0/1.log。
