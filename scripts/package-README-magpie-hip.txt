@@ -51,7 +51,8 @@ DLSS5-AMD 0.20 · Magpie 版（HIP 后端）
 
 已知
 ----
-  - 计算档位：native-game-flags.txt 中 DLSS5_NETWORK_HEIGHT=900（可改 720/900/1080，完全退出并重启 Magpie 生效）。
+  - 计算档位：native-game-flags.txt 中 DLSS5_NETWORK_HEIGHT=auto——按窗口自动选档：宽高不超过 1280x720 用 720 档，不超过 1600x900 用 900 档，其余（最大 1920x1080）用 1080 档；
+    比档位小的窗口按比例贴进画布。也可写死 720/900/1080。左上角帧率数字后面显示网络实际计算的分辨率（如 1600X900）。完全退出并重启 Magpie 生效。
   - 小窗口适配默认开启（DLSS5_FIT_INPUT=1），FPS 和 XeSS 帧生成也默认开启。
   - 输入是显示用的 8 位 sRGB 图；插件按 sRGB 直通处理（DLSS5_CODEC_SRGB=1），亮度和原图一致。
   - DLSS5（第一项 FSR3）的运动向量来自 Magpie 的光流估计（AMDOF）；超过 64 像素的向量当静止处理（DLSS5_MOTION_MAX_PX）。

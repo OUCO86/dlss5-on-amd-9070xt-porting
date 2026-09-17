@@ -163,6 +163,7 @@ public:
              const std::vector<float>&noise,const std::wstring&directory,ID3D12Resource*temporal_rgb=nullptr,const TemporalConfig*temporal_config=nullptr){
   std::lock_guard<std::mutex>guard(mutex);
   if(resources||!queue||!source)throw std::runtime_error("frame initialization contract");
+  {auto sd=source->GetDesc();NativeResolveNetworkGeometry(unsigned(sd.Width),sd.Height);}
   resources=new Resources;
   try{
    resources->submit.Create(queue);auto*d=resources->submit.Device();resources->queue=queue;
@@ -238,7 +239,7 @@ public:
  void UpdateFps(double ms){
   std::lock_guard<std::mutex>guard(mutex);if(!resources||!resources->show_fps||ms<=0)return;
   auto&r=*resources;const auto now=GetTickCount64();if(r.fps_text[0]&&now-r.fps_tick<3000)return;
-  snprintf(r.fps_text,sizeof r.fps_text,"DLSS5-AMD %.0f FPS (%.1f MS)",1000.0/ms,ms);r.fps_tick=now;
+  snprintf(r.fps_text,sizeof r.fps_text,"DLSS5-AMD %.0f FPS (%.1f MS) %uX%u",1000.0/ms,ms,r.geometry.valid_width,r.geometry.valid_height);r.fps_tick=now;
  }
  bool TemporalReady()const{return resources&&resources->temporal;}
  // Diagnostic: write the previous-output history buffer, the motion buffer and the current

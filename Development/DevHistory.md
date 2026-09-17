@@ -2231,3 +2231,10 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 ### 2026-09-17 12:20 计划收口
 
 - Zero：显存压紧不做（9070 显存够，GPU 核心才是瓶颈）；正式版驱动有用户反馈可用（README/包内说明改为"已有用户反馈"）；OptiScaler 路线不急——网络学习是核心，Magpie 对一般人够用，Magpie 光流在暗部出垃圾向量的问题记为已知限制。
+
+### 2026-09-17 12:30 网络档位按窗口自动选择 + 覆盖层显示实际分辨率
+
+- Zero："为啥不能根据分辨率自动适配？"网络本身任意尺寸都能算（补到 64 倍数），锁死的是宿主：`native_network_geometry.h` 只认 720/900/1080 三档，小窗口 letterbox、大窗口缩到画布。
+- 实现 `DLSS5_NETWORK_HEIGHT=auto`：frame Create 拿到输入贴图尺寸后先 `NativeResolveNetworkGeometry`（≤1280×720 → 720，≤1600×900 → 900，其余 1080；>1920×1080 仍在前面被拒），结果放进进程级槽，`NativeCurrentNetworkGeometry` 各处照旧读。固定值行为不变。FPS 覆盖层加档位：`DLSS5-AMD 52 FPS (19.2 MS) 1600X900`（覆盖层字库无小写，用大写 X）。
+- 验证：benchmark_auto.exe + ffnh2-modules，`DLSS5_NETWORK_HEIGHT=auto` 在 900 输入上三道 hash 全过（FEEA…/22C1…/75B6…）。
+- 部署：本机 Magpie-DLSS5-AMD-0.20 换成 native-auto.addon64（0f99f666…，旧 DLL 留 .pinline.bak），flag 改 auto，待 Zero 用不同窗口尺寸实测（720/900/1080 三档 + 覆盖层数字）。仓库 `scripts/hip-*-flags.txt` 改 auto，两份包内说明和 README 已写；《剑星》窗口本来就是 1600×900，auto 落 900，游戏侧 DLL 下个版本一起换。

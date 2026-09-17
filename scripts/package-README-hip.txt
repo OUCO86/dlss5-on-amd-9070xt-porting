@@ -38,7 +38,7 @@
   3. 如果该目录已有 d3d12.dll 或其他 ReShade/mod 加载器，先备份；不要在不了解的配置上直接覆盖。
      从 0.15 升级：删掉旧的 DLSS5-D3D12-721 文件夹和 DLSS5-AMD\enable-game-sdk721.txt（HIP 版不用它们），其余直接覆盖。
   4. 把本包里的全部内容（两个文件 + 一个文件夹）复制进 Win64。DLSS5-AMD 文件夹必须和 dlss5-amd.addon64 在同一目录。
-  5. 游戏设置：窗口 1600x900、AMD FSR 超分辨率（质量档）。本包固定按 1600x900 计算（native-game-flags.txt 里 DLSS5_NETWORK_HEIGHT=900）。
+  5. 游戏设置：窗口 1600x900、AMD FSR 超分辨率（质量档）。native-game-flags.txt 里 DLSS5_NETWORK_HEIGHT=auto 按窗口自动选档（≤1280x720 用 720，≤1600x900 用 900，其余用 1080），1600x900 窗口即 900 档；左上角帧率后面显示实际档位。
   6. 从 Steam 正常启动。主菜单里不会有任何变化——网络只在 3D 场景开始渲染（读档之后）时接管 FSR 的超分步骤，
      第一次接管要读权重、装载内核，约 3～5 秒，这段时间画面是原生 FSR，之后自动切换。
 
