@@ -2238,3 +2238,4 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - 实现 `DLSS5_NETWORK_HEIGHT=auto`：frame Create 拿到输入贴图尺寸后先 `NativeResolveNetworkGeometry`（≤1280×720 → 720，≤1600×900 → 900，其余 1080；>1920×1080 仍在前面被拒），结果放进进程级槽，`NativeCurrentNetworkGeometry` 各处照旧读。固定值行为不变。FPS 覆盖层加档位：`DLSS5-AMD 52 FPS (19.2 MS) 1600X900`（覆盖层字库无小写，用大写 X）。
 - 验证：benchmark_auto.exe + ffnh2-modules，`DLSS5_NETWORK_HEIGHT=auto` 在 900 输入上三道 hash 全过（FEEA…/22C1…/75B6…）。
 - 部署：本机 Magpie-DLSS5-AMD-0.20 换成 native-auto.addon64（0f99f666…，旧 DLL 留 .pinline.bak），flag 改 auto，待 Zero 用不同窗口尺寸实测（720/900/1080 三档 + 覆盖层数字）。仓库 `scripts/hip-*-flags.txt` 改 auto，两份包内说明和 README 已写；《剑星》窗口本来就是 1600×900，auto 落 900，游戏侧 DLL 下个版本一起换。
+- 16:40 Zero 实测（自动选档 + 覆盖层）：900p 窗口 52～54 fps，切到 1080p 窗口 37～38 fps，覆盖层随窗口显示 1600X900 / 1920X1080。1080 档像素 1.44 倍，网络约 22ms，与预期一致。《剑星》也已换成 native-auto.addon64（备份 before-auto，flag auto）。
