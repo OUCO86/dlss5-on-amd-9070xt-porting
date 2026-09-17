@@ -36,6 +36,7 @@ public:
   if(const char*v=std::getenv("DLSS5_HIP_VIT_CONTRACT_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT contract frag flag");o.vit_contract_frag=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_PROJ_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT projection frag flag");o.vit_proj_frag=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_QKV_FRAG")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT QKV frag flag");o.vit_qkv_frag=!strcmp(v,"1");}
+  if(const char*v=std::getenv("DLSS5_HIP_MH_PROJ_DIAG_FB")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("MH projection diagonal (byte feature) flag");o.mh_proj_diag_fb=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_VIT_SPLIT_K")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("ViT split-K flag");o.vit_split_k=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_SPARSE_WEIGHTS")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("sparse weights flag");o.sparse_weights=!strcmp(v,"1");}
   if(const char*v=std::getenv("DLSS5_HIP_PREFIX_INLINE")){if(strcmp(v,"0")&&strcmp(v,"1"))throw std::runtime_error("prefix inline flag");o.prefix_inline=!strcmp(v,"1");}

@@ -2261,3 +2261,10 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 
 - `package-hip.ps1 -Version 0.22 -Addon native-r960.addon64`（a707a873…）+ ffnh2-modules。产物 `DLSS5-AMD-0.22.zip`（493 文件，250,666,468 B，sha256 59226956694c1f90e2fb31483b2585e0ee9114e1e9d76a7c51a61fbaee5693d6）、`Magpie-DLSS5-AMD-0.22.zip`（698 文件，354,851,936 B，sha256 8186b67daca50f7d2ea6965fb535be1cbb1c72b288da3481c27f8b733f11926f）。包内说明加"0.22 与 0.21 的区别"（含 900w 回退方法）。
 - 包验证：游戏包 assets + HIP 模块 + flag（auto，测试台 1296×720 输入落到 900 档=960 行）在 benchmark_r960 上 40 帧 383FA5BC…、reset 698E1A39… 全过。包内 DLL a707a873…。
+
+### 2026-09-17 21:20 C64/C128 段拆分与注意力核 ISA
+
+- dup 拆分（4 块 C64 / 6 块 C128）：FFN+QKV 核 1.14 / 1.16ms，注意力+投影核 0.87 / 0.62ms。按 MMA 峰值算 C64 每块只需 0.05ms，实际 0.49，瓶颈在 MMA 之外。
+- ISA 统计（c64_attention_project_fb）：1815 条/22 wmma，28 个 s_cbranch，131 个 v_movrel（`result[j][e]` 被寄存器相对寻址），141 个 cvt——来源是字节特征版没有 diag 路径，残差缩放走逐元素标量 FMA + 带分支的舍入。
+- 加 `c64/c128/c256_attention_project_fb_diag`（Diag 模板已支持 ByteFeature，只补实例）+ 选项 `mh_proj_diag_fb`（env `DLSS5_HIP_MH_PROJ_DIAG_FB`，CLI `--mh-proj-diag-fb`）：指令 1815→1439，movrel 131→2，VGPR 72 无 scratch。ABBA（diagfb-modules，900w）：15.24/15.22 → 15.26/15.25，**空**，hash 一致。默认关。教训同昨晚：静态指令数≠时间，这核的时间在 LDS/barrier/全局字节读上。
+- 21:27 C64 注意力核相位消融（`HIP_MH_ABLATE`，test-abl 模块互换 ABBA，4 块合计，不看 hash）：跳过分数+softmax −0.08ms、跳过 AV −0.18、跳过投影 −0.12，三相加 0.38，而整核 0.87——**一半以上在三段计算之外**（V 字节进 LDS 的搬运、exp 写 LDS、5 次 barrier、输出散写、尾巴）。没有单一相位可打；这一级要动只能重构（每工作组两个窗口摊 barrier/装载，或 FFN+注意力按窗口合核去掉一次全局往返，C32 的 fused 版走的就是这条路）。今晚不做。

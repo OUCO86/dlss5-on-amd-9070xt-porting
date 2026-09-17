@@ -62,6 +62,9 @@ DEV uint gr(){return (__builtin_amdgcn_workitem_id_x()&31)>>4;}
 DEV uint bid(){return __builtin_amdgcn_workgroup_id_x();}
 // D3D explicit f32tof16 maps to RTZ here; matrix Cast<F16> remains RNE.
 #ifndef HIP_MH_VT
+#ifndef HIP_MH_ABLATE
+#define HIP_MH_ABLATE 0 /* diagnostic (c64 body only, breaks the hash): 1 skip scores+softmax, 2 skip AV, 3 skip projection */
+#endif
 #define HIP_MH_VT 0 /* 1: the window's V bytes are staged transposed ([col][key], 68-byte rows, in the same 2304-byte packed region) so every AV B fragment is one 8-byte LDS read instead of 8 byte gathers; same bytes */
 #endif
 #ifndef HIP_MH_RTZ_ISA
@@ -195,10 +198,14 @@ DEV void c64_attention_project_body(const unsigned char*normalized,const float*w
 #endif
  }
  sync_window();
+#if HIP_MH_ABLATE==1
+ for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++)ex[(first+gr()*8+e)*66+key+rc()]=(_Float16)1.f;
+#else
  for(uint key=0;key<64;key+=16){f8 acc{};
   for(uint kt=0;kt<2;kt++){i2 a{},b{};uint qp=raster(win,first+rc(),width),kp=raster(win,key+rc(),width),off=kt*16+gr()*8;__builtin_memcpy(&a,normalized+qp*3*channels+head*32+off,8);__builtin_memcpy(&b,normalized+(kp*3+1)*channels+head*32+off,8);acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}
   for(uint e=0;e<8;e++){uint q=first+gr()*8+e,k=key+rc();float score=acc[e]+w[4*channels*channels+head*4096+q*64+k],affine=clampf(score*.044921875f+1.30078125f,1.03125f,1.5693359375f);uint ah=(bits(affine)>>13)-0x1c000u;ushort hb=static_cast<ushort>(((ah<<5)+0x8000u)&65535u);ex[q*66+k]=__builtin_bit_cast(_Float16,hb);}
  }
+#endif
  sync_window();
  // MH production partial0 sums keys0..15,32..47; partial1 sums16..31,48..63.
  // Keep this distinct from C32 FAST4's sequential64-key accumulator.
@@ -212,6 +219,9 @@ DEV void c64_attention_project_body(const unsigned char*normalized,const float*w
  for(uint key=0;key<64;key+=16)for(uint e=0;e<8;e++)prob[(first+gr()*8+e)*68+key+rc()]=static_cast<unsigned char>(pv[e]>>(key/16*8));
  sync_window();
  f8 av[2]{};
+#if HIP_MH_ABLATE==2
+ for(uint col=0;col<32;col+=16)av[col/16]=f8{};
+#else
  for(uint col=0;col<32;col+=16){f8 acc{};for(uint kt=0;kt<4;kt++){i2 a{},b{};
 #if HIP_MH_VT
    __builtin_memcpy(&a,prob+(first+rc())*68+kt*16+gr()*8,8);__builtin_memcpy(&b,packed+(col+rc())*68+kt*16+gr()*8,8);
@@ -219,6 +229,7 @@ DEV void c64_attention_project_body(const unsigned char*normalized,const float*w
    for(uint e=0;e<8;e++){uint k=kt*16+gr()*8+e;put_bits(a,e,prob[(first+rc())*68+k]);put_bits(b,e,packed[k*36+col+rc()]);}
 #endif
    acc=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,acc);}av[col/16]=acc;}
+#endif
  sync_window();
  for(uint col=0;col<32;col+=16)for(uint e=0;e<8;e++)avbytes[(first+gr()*8+e)*68+head*32+col+rc()]=static_cast<unsigned char>(fp8(F(av[col/16][e])));
  sync_window();
@@ -228,7 +239,9 @@ DEV void c64_attention_project_body(const unsigned char*normalized,const float*w
    for(uint part=0;part<3;part++){i2 b{};__builtin_memcpy(&b,diag+(part*4+ct)*512+(gr()*16+rc())*8,8);result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}}
  else for(uint j=0;j<2;j++){uint col=head*32+j*16+rc();float remain=w[4*64*64+2*4096+2+col];for(uint part=0;part<3;part++){float component;if(absf(remain)<.015625f){float x=absf(remain)*512.f;uint q=uint(x);float r=x-float(q);q+=uint(r>.5f||(r==.5f&&(q&1)));q=q>7?7:q;component=(remain<0?-1.f:1.f)*float(q)/512.f;}else component=F(remain);remain-=component;for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width);float x=ByteFeature?__builtin_amdgcn_cvt_f32_fp8(int(feature8[p*64+col]),0):__builtin_amdgcn_cvt_f32_fp8(int(fp8(feature[p*64+col])),0);for(uint half=0;half<2;half++)result[j][e]=__builtin_fmaf(x,half==(col%32)/16?component:0.f,result[j][e]);}}}
  const uint*pw=reinterpret_cast<const uint*>(w);
+#if HIP_MH_ABLATE!=3
  for(uint k=0;k<64;k+=16){i2 a{};__builtin_memcpy(&a,avbytes+(first+rc())*68+k+gr()*8,8);for(uint j=0;j<2;j++){uint col=head*32+j*16+rc(),off=3*64*64+(col*64+k+gr()*8)/4;i2 b={int(pw[off]),int(pw[off+1])};result[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result[j]);}}
+#endif
  for(uint j=0;j<2;j++)for(uint e=0;e<8;e++){uint p=raster(win,first+gr()*8+e,width),col=head*32+j*16+rc(),dest=p*64+col;if(cropw){uint x=p%width,y=p/width;if(x<sx||y<sy||x>=sx+cropw||y>=sy+croph)continue;dest=((y-sy)*cropw+x-sx)*64+col;}float v=result[j][e],o=post==3?Hrtz(v):post==0?F(Hrtz(v)):F(v);if constexpr(ByteOut)out8[dest]=static_cast<unsigned char>(fp8(o));else out[dest]=o;}
 }
 // 16-wave window (host option mh_attn_w16, HLSL attention_direct shape): per head, four query tiles x two key sides; a
@@ -294,6 +307,9 @@ void c64_attention_project_diag(const unsigned char*normalized,const float*w,con
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
 void c64_attention_project_fb(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<true,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
+/* 2026-09-17: byte-feature twin with the residual scales as diagonal fragment B tiles (host option mh_proj_diag_fb): the scalar residual path compiled to per-element rounding branches and v_movrel register indexing. */
+void c64_attention_project_fb_diag(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<true,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
 void c64_attention_project_fb_bout(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 
 template<bool ByteFeature,bool ByteOut,bool Diag=false>
@@ -357,6 +373,9 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c128_attention_project_diag(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<false,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c128_attention_project_fb(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<true,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+/* 2026-09-17: byte-feature twin with the residual scales as diagonal fragment B tiles (host option mh_proj_diag_fb): the scalar residual path compiled to per-element rounding branches and v_movrel register indexing. */
+void c128_attention_project_fb_diag(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<true,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c128_attention_project_fb_bout(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 
@@ -426,5 +445,8 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c256_attention_project_diag(const unsigned char*normalized,const float*w,const float*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<false,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c256_attention_project_fb(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<true,false>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+/* 2026-09-17: byte-feature twin with the residual scales as diagonal fragment B tiles (host option mh_proj_diag_fb): the scalar residual path compiled to per-element rounding branches and v_movrel register indexing. */
+void c256_attention_project_fb_diag(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<true,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c256_attention_project_fb_bout(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
