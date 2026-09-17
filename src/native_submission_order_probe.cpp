@@ -299,6 +299,34 @@ static void STDMETHODCALLTYPE execute_native(ID3D12CommandQueue*q,UINT count,ID3
  }
  log("execute_native_begin",nullptr,q,count);
  if(lists&&count<=64)for(UINT i=0;i<count;i++)log("execute_native_item",lists[i],q,i);
+#if defined(NATIVE_ORDER_SNAPSHOT)&&defined(NATIVE_ORDER_NEURAL)
+ /* DLSS5_SPLIT_SUBMIT=1 (native-game-flags.txt; 2026-09-17, Black Myth: Wukong): engines that record the upscaler on one thread and
+    submit from another (UE5 RHI thread), with the upscaler's list in the middle of a batch whose later lists already consume its
+    output. The armed list is matched by identity anywhere in the batch, on any thread, up to two upscaler calls behind; the batch is
+    executed in two halves with the network between them, so the refined frame is what the rest of the batch reads. Off = the
+    Stellar Blade contract (same thread, last list of the batch, network after the whole batch). */
+ static const bool split_submit=[]{unsigned v=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f)){unsigned x;if(sscanf(line,"DLSS5_SPLIT_SUBMIT=%u",&x)==1)v=x;}fclose(f);}return v!=0;}();
+ if(split_submit&&!snapshot_active&&lists&&count&&count<=64){
+  PendingSnapshot job{};UINT at=count;
+  {std::lock_guard<std::mutex>guard(snapshot_mutex);
+   if(pending_snapshot.list&&frames.load()-pending_snapshot.frame>2){pending_snapshot.list->Release();pending_snapshot.source->Release();if(pending_snapshot.motion)pending_snapshot.motion->Release();pending_snapshot={};++dropped_pending;}
+   bool eligible=!snapshot_taken||neural_oneshot.WantsFrame()||neural_oneshot.Phase()==0||neural_oneshot.Phase()==5;
+   if(eligible&&pending_snapshot.list)for(UINT i=0;i<count;i++)if(reinterpret_cast<ID3D12CommandList*>(pending_snapshot.list)==lists[i]){at=i;break;}
+   if(at<count){job=pending_snapshot;pending_snapshot={};snapshot_taken=true;}
+  }
+  if(job.list){
+   static std::atomic<unsigned>split_logged{};if(split_logged.fetch_add(1)<8)if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=split_submit thread=%lu producer_thread=%lu frame=%u at=%u count=%u\n",GetCurrentProcessId(),GetCurrentThreadId(),job.thread,job.frame,unsigned(at),unsigned(count));fclose(f);}
+   original_execute(q,at+1,lists);
+   log("execute_native_return",nullptr,q,at+1);
+   snapshot_active=true;
+   ++neural_jobs;neural_oneshot.OnSubmitted(q,job.source,job.motion,job.reset,observed_motion_w.load(),observed_motion_h.load(),observed_render_w.load(),observed_render_h.load(),job.state);if(job.motion)job.motion->Release();
+   job.list->Release();job.source->Release();snapshot_active=false;
+   if(at+1<count)original_execute(q,count-at-1,lists+at+1);
+   draw_pending_notice(q);
+   return;
+  }
+ }
+#endif
  original_execute(q,count,lists);
  // This proves CPU submission returned, NOT GPU completion. No fence is added.
  log("execute_native_return",nullptr,q,count);
@@ -368,11 +396,15 @@ static DWORD WINAPI worker(void*){
  // A host that ships an FFX dll next to its exe (Magpie: libxess.dll is loaded at startup, the FFX loader only when the FSR3/FSR4 effect
  // starts) waits for the FFX one; XeSS is taken only when no FFX dll file is present (Rise of the Ronin). DLSS5_UPSCALER=ffx|xess overrides.
  bool wait_ffx=false;{wchar_t exe[MAX_PATH]{};GetModuleFileNameW(nullptr,exe,MAX_PATH);if(wchar_t*slash=wcsrchr(exe,L'\\'))slash[1]=0;std::wstring dir=exe;wait_ffx=GetFileAttributesW((dir+L"amd_fidelityfx_dx12.dll").c_str())!=INVALID_FILE_ATTRIBUTES||GetFileAttributesW((dir+L"amd_fidelityfx_loader_dx12.dll").c_str())!=INVALID_FILE_ATTRIBUTES;}
- if(const wchar_t*u=_wgetenv(L"DLSS5_UPSCALER")){if(!wcscmp(u,L"ffx"))wait_ffx=true;else if(!wcscmp(u,L"xess"))wait_ffx=false;}
+ /* DLSS5_UPSCALER=ffx|xess also from native-game-flags.txt (2026-09-18: Black Myth: Wukong ships FFX dlls but links its FSR3 upscaler
+    statically, so the FFX hook never fires there; the XeSS path is the one to take). The environment variable still wins. */
+ bool only_xess=false; /* an explicit xess choice ignores the FFX dlls even when they are loaded (Wukong loads them at start-up for frame generation) */
+ if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f)){char v[8]{};if(sscanf(line,"DLSS5_UPSCALER=%7s",v)==1){if(!strcmp(v,"ffx")){wait_ffx=true;only_xess=false;}else if(!strcmp(v,"xess")){wait_ffx=false;only_xess=true;}}}fclose(f);}
+ if(const wchar_t*u=_wgetenv(L"DLSS5_UPSCALER")){if(!wcscmp(u,L"ffx")){wait_ffx=true;only_xess=false;}else if(!wcscmp(u,L"xess")){wait_ffx=false;only_xess=true;}}
  /* weights into memory while we wait for the upscaler dll / the user's hotkey (see NativePrefetchWeights) */
  {std::wstring assets=NativeLabPath(L"native-game-tiled-assets");if(GetFileAttributesW(assets.c_str())!=INVALID_FILE_ATTRIBUTES)NativePrefetchWeights(assets);}
  /* No deadline: Magpie loads the FFX dll only when the user starts scaling, which can be any time after launch (the old 10-minute limit gave up before that). */
- HMODULE module=nullptr,xess=nullptr;for(unsigned i=0;!module&&!xess;i++){module=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");if(!module)module=GetModuleHandleW(L"amd_fidelityfx_loader_dx12.dll");if(!wait_ffx)xess=GetModuleHandleW(L"libxess.dll");if(!module&&!xess)Sleep(100);}if(!module&&!xess)return 1;
+ HMODULE module=nullptr,xess=nullptr;for(unsigned i=0;!module&&!xess;i++){if(!only_xess){module=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");if(!module)module=GetModuleHandleW(L"amd_fidelityfx_loader_dx12.dll");}if(!wait_ffx)xess=GetModuleHandleW(L"libxess.dll");if(!module&&!xess)Sleep(100);}if(!module&&!xess)return 1;
  auto target=module?GetProcAddress(module,"ffxDispatch"):GetProcAddress(xess,"xessD3D12Execute");if(!target)return 2;
  auto s=MH_Initialize();if(s!=MH_OK&&s!=MH_ERROR_ALREADY_INITIALIZED)return 3;
  if(module&&fit_small_input()){
