@@ -16,7 +16,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 便携预设为 **FSR3（由本插件接入 DLSS5）→ FSR4 充满屏幕 → XeSS 帧生成**。默认开启小窗口适配（`DLSS5_FIT_INPUT=1`）和网络帧率显示，FPS 数字至少间隔三秒刷新。
 
-0.20（HIP）只要驱动带 `amdhip64_7.dll`（已在 AMD 32.0.31007.2048 上验证，就是之前那个预览驱动；正式版驱动若带这个文件理论可用，未实测）。0.15 及之前的 DX12 版需要 Windows 开发人员模式和 AMD 26.10.07.02 预览驱动。显存紧张会掉帧；《星刃》游戏内钩子版的贴图质量应选「高」或更低。`scripts/game-flags.txt` 和 `scripts/magpie-flags.txt` 分别记录两种运行配置，`scripts/bench.ps1` 编译配套 shader。安装方法见 [Magpie 包内说明](scripts/package-README-magpie.txt)。
+0.20（HIP）只要驱动带 `amdhip64_7.dll`（已在 AMD 32.0.31007.2048 上验证，就是之前那个预览驱动；正式版驱动若带这个文件理论可用，未实测）。0.15 及之前的 DX12 版需要 Windows 开发人员模式和 AMD 26.10.07.02 预览驱动。HIP 插件 900p 实测占显存 1.2GB（权重 0.6GB、激活 0.3GB、共享缓冲 0.07GB 加运行时开销；`DLSS5_HIP_MEMORY=1` 会把明细写进 `logs\native-hip.txt`）。显存被顶满仍会掉帧且不恢复；《星刃》游戏内钩子版的贴图质量应选「高」或更低。`scripts/game-flags.txt` 和 `scripts/magpie-flags.txt` 分别记录两种运行配置，`scripts/bench.ps1` 编译配套 shader。安装方法见 [Magpie 包内说明](scripts/package-README-magpie.txt)。
 
 ## 仓库结构
 
