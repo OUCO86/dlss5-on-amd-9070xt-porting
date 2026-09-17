@@ -2239,3 +2239,8 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - 验证：benchmark_auto.exe + ffnh2-modules，`DLSS5_NETWORK_HEIGHT=auto` 在 900 输入上三道 hash 全过（FEEA…/22C1…/75B6…）。
 - 部署：本机 Magpie-DLSS5-AMD-0.20 换成 native-auto.addon64（0f99f666…，旧 DLL 留 .pinline.bak），flag 改 auto，待 Zero 用不同窗口尺寸实测（720/900/1080 三档 + 覆盖层数字）。仓库 `scripts/hip-*-flags.txt` 改 auto，两份包内说明和 README 已写；《剑星》窗口本来就是 1600×900，auto 落 900，游戏侧 DLL 下个版本一起换。
 - 16:40 Zero 实测（自动选档 + 覆盖层）：900p 窗口 52～54 fps，切到 1080p 窗口 37～38 fps，覆盖层随窗口显示 1600X900 / 1920X1080。1080 档像素 1.44 倍，网络约 22ms，与预期一致。《剑星》也已换成 native-auto.addon64（备份 before-auto，flag auto）。
+
+### 2026-09-17 16:45 tag 0.21：自动选档 + 文案，两个包
+
+- `package-hip.ps1 -Version 0.21 -Addon native-auto.addon64`（0F99F666…）+ ffnh2-modules，基底仍 Magpie-DLSS5-AMD-0.15-900P。产物 `D:\DLSSNR-Lab\DLSS5-AMD-0.21.zip`（493 文件，250,663,839 B，sha256 38e1518917b8f60b48791bccacf84800f87caf5766c454688f198d8879b08e6e）、`Magpie-DLSS5-AMD-0.21.zip`（698 文件，354,849,225 B，sha256 8eeee2ddebe2a0328be59b00c241963ab238e3c54229ab87e0adb06412b0e911）。flag 文件 `DLSS5_NETWORK_HEIGHT=auto`；包内说明加"0.21 与 0.20 的区别"。内核/权重与 0.20 相同。
+- 包验证：游戏包内 assets + HIP 模块 + flag（auto）在 benchmark_auto 上 40 帧 FEEA…、reset 22C1… 全过；Magpie 包 flag 带 CODEC_SRGB 等本就改输出，不拿它验（0.20 同法）。包内 DLL 0F99F666…。
