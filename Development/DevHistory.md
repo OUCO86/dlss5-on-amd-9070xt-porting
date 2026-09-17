@@ -2222,3 +2222,8 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 
 - 09-09 的跳块表：{42,43,46} 40.66dB（默认）；+{12,28,41,44,52,53} 九块 36.5dB（对全网络）。HIP 生产配置 ABBA（benchmark_pinline + ffnh2-modules，40 帧 edges-only 热中位）：off 15.25/15.28 → on 14.48/14.49，**−0.78ms（5.1%）**；对现行默认输出：40 帧 HDR 72.8dB（峰值 29.7，dB 虚高）、seed123 SDR history 检查 **30.6dB**、maxabs 0.147。
 - 不改代码：就是 `DLSS5_SKIP_BLOCKS=12,28,41,42,43,44,46,52,53`。写进两份包内说明和 README（三档：不写 / 默认三块 / 性能九块）。`test-flag-ab.ps1` 加 `-CheckHash 0`（非逐位实验用），`perf-tier.ps1` 一键计时 + PSNR 输出。
+
+### 2026-09-17 12:05 路线 2：hipGraph 在当前生产配置上复测——空
+
+- `DLSS5_HIP_GRAPH=1`（09-15 已有的整帧录制/重放）ABBA，benchmark_pinline + ffnh2-modules，40 帧 edges-only 热中位：off 15.26/15.27，on 15.26/15.25；graph_stats builds=1 replays=38，四轮 hash 全 FEEA…。**零收益**。09-15 是 +0.23ms（30ms 时代）；现在每帧约 200 次 launch 的 CPU 提交完全藏在 GPU 时间后面，图只省 CPU 侧，GPU 排队间隙本来就没有。默认保持 0。
+- 至此三条计划路线结果：1 显存——插件实测 1.2GB 非 3GB，README 已改；VMM 稀疏映射被驱动封死；真压紧（≈370MB，改全部内核偏移）与激活池重排（≈100MB）待 Zero 决定。3 性能档——已写进文档。2 hipGraph——空。
