@@ -2268,3 +2268,9 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - ISA 统计（c64_attention_project_fb）：1815 条/22 wmma，28 个 s_cbranch，131 个 v_movrel（`result[j][e]` 被寄存器相对寻址），141 个 cvt——来源是字节特征版没有 diag 路径，残差缩放走逐元素标量 FMA + 带分支的舍入。
 - 加 `c64/c128/c256_attention_project_fb_diag`（Diag 模板已支持 ByteFeature，只补实例）+ 选项 `mh_proj_diag_fb`（env `DLSS5_HIP_MH_PROJ_DIAG_FB`，CLI `--mh-proj-diag-fb`）：指令 1815→1439，movrel 131→2，VGPR 72 无 scratch。ABBA（diagfb-modules，900w）：15.24/15.22 → 15.26/15.25，**空**，hash 一致。默认关。教训同昨晚：静态指令数≠时间，这核的时间在 LDS/barrier/全局字节读上。
 - 21:27 C64 注意力核相位消融（`HIP_MH_ABLATE`，test-abl 模块互换 ABBA，4 块合计，不看 hash）：跳过分数+softmax −0.08ms、跳过 AV −0.18、跳过投影 −0.12，三相加 0.38，而整核 0.87——**一半以上在三段计算之外**（V 字节进 LDS 的搬运、exp 写 LDS、5 次 barrier、输出散写、尾巴）。没有单一相位可打；这一级要动只能重构（每工作组两个窗口摊 barrier/装载，或 FFN+注意力按窗口合核去掉一次全局往返，C32 的 fused 版走的就是这条路）。今晚不做。
+
+## 2026-09-17 22:15 遊戲內探針結果（DLSS5_GAME_PROBE=1，《劍星》1080p，11600 幀）
+
+pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.6 ms。插件 D3D12 側前後處理合計 0.75 ms，不是優化對象；網絡耗時與測試台一致。
+
+探針副作用：每幀一次 Flush 插進 ASYNC_SUBMIT 的提交鏈，1080p 掉到 33～35 幀，且地面出現透明（歷史幀錯位）。去掉 flag 後 37 幀、畫面正常。結論：GAME_PROBE 只當調試工具，不與 ASYNC_SUBMIT 同開；讀數只取 pre/post/network 分項，cpu_frame 含 Flush 代價不代表真實幀時間。遊戲 flag 已恢復（HIP_MEMORY / ASYNC_SUBMIT / NETWORK_HEIGHT=auto）。
