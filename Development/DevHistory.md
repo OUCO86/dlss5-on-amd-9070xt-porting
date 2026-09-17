@@ -2256,3 +2256,8 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - 20:55 Zero 定：主观看不出差别，"就這樣了"。960 行成为 900 档的正式实现（`FromHeight(900)` → 1600×960），auto 跟随；0.21 的 1024 布局保留为 `900w`，测试台默认仍 `900w`（远端 vitcf-on-flags.txt 改成 900w），老的三道黄金值继续用于内核验证。三轮复测 ABBA：15.81/15.90/15.93 → 14.84/14.91/14.85，−0.9～1.0ms。
 - 21:05 960 档三道黄金值（benchmark_r960 + ffnh2-modules + reference_g960 --960 input960）：full **383FA5BCF544860F40D55E15E390E4154EDE54E784FE07366FB0445CCD93BFC3**、reset **698E1A39AFDF6BA47F53AD1BE559837076FF291E72ADD743C5BF7999AD2DC9C1**、history seed123 **78AF52D3FEA5068EBFA28E00047437011B0DED73578C0A2BC206F658CF470998**，连跑两次一致；`validate-modules-960.ps1` 固化。新 runner 在 900w 下仍出 FEEA…。DX12 编译路径共用几何：DX12 版在 900 档现在也会拿到 960 行，没测（DX12 版已是历史）。
 - 部署：native-r960.addon64（a707a873…）进《剑星》（备份 before-r960，flag auto）和本机 Magpie-0.20 目录（flag auto）。
+
+### 2026-09-17 21:00 tag 0.22：900 档 960 行
+
+- `package-hip.ps1 -Version 0.22 -Addon native-r960.addon64`（a707a873…）+ ffnh2-modules。产物 `DLSS5-AMD-0.22.zip`（493 文件，250,666,468 B，sha256 59226956694c1f90e2fb31483b2585e0ee9114e1e9d76a7c51a61fbaee5693d6）、`Magpie-DLSS5-AMD-0.22.zip`（698 文件，354,851,936 B，sha256 8186b67daca50f7d2ea6965fb535be1cbb1c72b288da3481c27f8b733f11926f）。包内说明加"0.22 与 0.21 的区别"（含 900w 回退方法）。
+- 包验证：游戏包 assets + HIP 模块 + flag（auto，测试台 1296×720 输入落到 900 档=960 行）在 benchmark_r960 上 40 帧 383FA5BC…、reset 698E1A39… 全过。包内 DLL a707a873…。
