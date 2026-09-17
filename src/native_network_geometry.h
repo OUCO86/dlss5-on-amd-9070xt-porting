@@ -9,8 +9,8 @@ struct NativeNetworkGeometry {
  unsigned VitTokens()const{return valid_height==720?240u:valid_height==900?400u:640u;}
  static NativeNetworkGeometry FromHeight(unsigned height){
   if(height==720)return {1280,720,1280,768};
-  if(height==900)return {1600,900,1600,1024};
-  if(height==960)return {1600,900,1600,960}; /* experiment "900s": the 900 tier padded to 960 rows instead of 1024 (one zero token row instead of a reflected 64-pixel band) */
+  if(height==900)return {1600,900,1600,960}; /* 2026-09-17: the 900 tier pads to 960 rows (60 reflected rows + one zero token row, as the 1080 tier pads 30x18 -> 32x20 tokens); 1024 rows (124 reflected rows) was the 0.20/0.21 layout, -0.9 ms (6%) for the same kernels */
+  if(height==1024)return {1600,900,1600,1024}; /* "900w": the 0.21 layout, kept for the bench whose bit-exact goldens were recorded on it */
   if(height==1080)return {1920,1080,1920,1152};
   throw std::runtime_error("unsupported network height");
  }
@@ -25,10 +25,10 @@ struct NativeNetworkGeometry {
    known) and read by every stage through NativeCurrentNetworkGeometry. Fixed tiers resolve to themselves; "auto" needs the input. */
 inline NativeNetworkGeometry*NativeNetworkGeometrySlot(){static NativeNetworkGeometry g{};return &g;}
 inline bool&NativeNetworkGeometryResolved(){static bool resolved=false;return resolved;}
-inline int NativeNetworkHeightFlag(){ /* 720/900/1080 (960 = the "900s" experiment), 0 = auto, -1 = unset. Narrow getenv on every platform: the bench's flag loader
+inline int NativeNetworkHeightFlag(){ /* 720/900/1080 (1024 = "900w", the 0.21 layout of the 900 tier; "900s" is an alias of 900), 0 = auto, -1 = unset. Narrow getenv on every platform: the bench's flag loader
  only refreshes the narrow CRT environment, and every other DLSS5_HIP_* flag is read the same way. */
  if(const char*height=std::getenv("DLSS5_NETWORK_HEIGHT")){
-  if(!std::strcmp(height,"720"))return 720;if(!std::strcmp(height,"900"))return 900;if(!std::strcmp(height,"1080"))return 1080;if(!std::strcmp(height,"900s"))return 960;if(!std::strcmp(height,"auto"))return 0;
+  if(!std::strcmp(height,"720"))return 720;if(!std::strcmp(height,"900"))return 900;if(!std::strcmp(height,"1080"))return 1080;if(!std::strcmp(height,"900s"))return 900;if(!std::strcmp(height,"900w"))return 1024;if(!std::strcmp(height,"auto"))return 0;
   throw std::runtime_error("DLSS5_NETWORK_HEIGHT must be 720, 900, 1080 or auto");
  }
  const char*value=std::getenv("DLSS5_NETWORK_720P");

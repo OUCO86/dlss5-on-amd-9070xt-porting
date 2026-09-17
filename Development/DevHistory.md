@@ -2253,3 +2253,6 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - 结果：ABBA（benchmark_g960 + ffnh2-modules）900 15.20/15.19 → 900s **14.48/14.42，−0.75ms（4.9%）**，输出有限，参考链 1600×960 跑通。
 - 与 1024 版输出的差：HDR 40 帧 67.5dB（峰值 29.7 虚高，底边带 36.4dB）；seed123 SDR history 检查 **31.5dB，全图均匀**（0～99 行 31.1、800～899 行 31.7）——补边行通过 ViT 全局注意力影响整幅，不是局部。量级和跳九块（30.6dB）相当，但这里没有"谁对"：900 档本就是我们自定的几何，NVIDIA 只有 1080（1152 行，72 行反射 + 100 个零 token）；1024 版是 124 行反射（12% 假 token），960 版是 60 行反射 + 25 个零 token（6%）。只能看画面定。
 - 已部署到本机 Magpie-DLSS5-AMD-0.20（native-g960.addon64，flag 900s），Zero 用《鬼武者》900 窗口对比 900/900s 两种 flag。
+- 20:55 Zero 定：主观看不出差别，"就這樣了"。960 行成为 900 档的正式实现（`FromHeight(900)` → 1600×960），auto 跟随；0.21 的 1024 布局保留为 `900w`，测试台默认仍 `900w`（远端 vitcf-on-flags.txt 改成 900w），老的三道黄金值继续用于内核验证。三轮复测 ABBA：15.81/15.90/15.93 → 14.84/14.91/14.85，−0.9～1.0ms。
+- 21:05 960 档三道黄金值（benchmark_r960 + ffnh2-modules + reference_g960 --960 input960）：full **383FA5BCF544860F40D55E15E390E4154EDE54E784FE07366FB0445CCD93BFC3**、reset **698E1A39AFDF6BA47F53AD1BE559837076FF291E72ADD743C5BF7999AD2DC9C1**、history seed123 **78AF52D3FEA5068EBFA28E00047437011B0DED73578C0A2BC206F658CF470998**，连跑两次一致；`validate-modules-960.ps1` 固化。新 runner 在 900w 下仍出 FEEA…。DX12 编译路径共用几何：DX12 版在 900 档现在也会拿到 960 行，没测（DX12 版已是历史）。
+- 部署：native-r960.addon64（a707a873…）进《剑星》（备份 before-r960，flag auto）和本机 Magpie-0.20 目录（flag auto）。
