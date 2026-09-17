@@ -2244,3 +2244,12 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 
 - `package-hip.ps1 -Version 0.21 -Addon native-auto.addon64`（0F99F666…）+ ffnh2-modules，基底仍 Magpie-DLSS5-AMD-0.15-900P。产物 `D:\DLSSNR-Lab\DLSS5-AMD-0.21.zip`（493 文件，250,663,839 B，sha256 38e1518917b8f60b48791bccacf84800f87caf5766c454688f198d8879b08e6e）、`Magpie-DLSS5-AMD-0.21.zip`（698 文件，354,849,225 B，sha256 8eeee2ddebe2a0328be59b00c241963ab238e3c54229ab87e0adb06412b0e911）。flag 文件 `DLSS5_NETWORK_HEIGHT=auto`；包内说明加"0.21 与 0.20 的区别"。内核/权重与 0.20 相同。
 - 包验证：游戏包内 assets + HIP 模块 + flag（auto）在 benchmark_auto 上 40 帧 FEEA…、reset 22C1… 全过；Magpie 包 flag 带 CODEC_SRGB 等本就改输出，不拿它验（0.20 同法）。包内 DLL 0F99F666…。
+
+### 2026-09-17 18:35～19:10 900 档补边 1024 → 960 行（"900s"，实验，待 Zero 看画面）
+
+- 动机：900 档 1600×900 补到 1024 行，13.8% 的行是补边，且全网络每段都算它。硬约束是 ViT token 数须为 16 的倍数：1600 宽 25 列，1024 高 16 行 = 400；960 高 15 行 = 375 ✗。解法照抄 1080 档（30×18 真 token 补零到 32×20）：head 下采样输出 25×16，第 16 行为零 token（`mh_pool*` 的 valid 掩码本来就有）。
+- 代码：`hip_reference_network.h` token 网格规则泛化（非 1920 时 (vw*vh)%16 则 vh+1；Down(head) 按 ow*oh≠rw*rh 决定 valid 掩码）、几何白名单加 1600×960；`native_network_geometry.h` 新增 `DLSS5_NETWORK_HEIGHT=900s` → {1600,900,1600,960}；参考链 `--960`；`input960.rgba32f` = input900 裁前 960 行。
+- 两个坑：① 几何 flag 用 `_wgetenv` 读，测试台的 flag 加载只刷新窄环境 → 改成 `std::getenv`（游戏加载器两边都设，不受影响）；② `benchmark_live_capture.cpp` 加载 flag 后硬写 `DLSS5_NETWORK_HEIGHT=900` → 改成 flag 未写时才默认 900。**意味着此前测试台上的 `auto` 验证其实跑的是被硬写的 900，auto 只由 Zero 游戏内实测证明过。**
+- 结果：ABBA（benchmark_g960 + ffnh2-modules）900 15.20/15.19 → 900s **14.48/14.42，−0.75ms（4.9%）**，输出有限，参考链 1600×960 跑通。
+- 与 1024 版输出的差：HDR 40 帧 67.5dB（峰值 29.7 虚高，底边带 36.4dB）；seed123 SDR history 检查 **31.5dB，全图均匀**（0～99 行 31.1、800～899 行 31.7）——补边行通过 ViT 全局注意力影响整幅，不是局部。量级和跳九块（30.6dB）相当，但这里没有"谁对"：900 档本就是我们自定的几何，NVIDIA 只有 1080（1152 行，72 行反射 + 100 个零 token）；1024 版是 124 行反射（12% 假 token），960 版是 60 行反射 + 25 个零 token（6%）。只能看画面定。
+- 已部署到本机 Magpie-DLSS5-AMD-0.20（native-g960.addon64，flag 900s），Zero 用《鬼武者》900 窗口对比 900/900s 两种 flag。
