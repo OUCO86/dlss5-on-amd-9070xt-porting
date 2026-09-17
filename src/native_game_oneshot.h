@@ -160,7 +160,7 @@ public:
     phase=4;return;
    }
    auto before=NativeReadSubmittedFrame(q,source,state);Save(request,L"before",before);
-   auto input_desc=source->GetDesc();auto input_check=CheckNativeFrameInput(before,unsigned(input_desc.Width),input_desc.Height,NativeIsRgba8Unorm(input_desc.Format)?4:8);
+   auto input_desc=source->GetDesc();auto input_check=CheckNativeFrameInput(before,unsigned(input_desc.Width),input_desc.Height,NativeBytesPerPixel(input_desc.Format));
    if(input_check!=NativeFrameInputCheck::valid){Log("input_rejected",input_check==NativeFrameInputCheck::black?"black RGB; no neural write; new request required":"invalid input; no neural write; new request required");phase=2;return;}
    frame->RebindSourceAfterCompletion(source);
    Log("render_begin",frame->TemporalReady()?"seed=0 temporal path armed (history from previous processed frame)":"seed=0 history=0 explicit diagnostic reset");

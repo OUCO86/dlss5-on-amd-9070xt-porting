@@ -48,6 +48,16 @@ void Store(uint2 p,float4 v){
  OutputBits.Store(ByteOffset(p,4),q.x|(q.y<<8)|(q.z<<16)|(q.w<<24));
 #endif
 }
+#elif NATIVE_CODEC_R11_OUT
+// R11G11B10_FLOAT game textures (UE5 scene colour, Black Myth: Wukong): the three small floats packed into one 32-bit word per pixel in a
+// raw buffer (row pitch width*4), copied into the texture by the frame. f11 = half bits >> 4 (5-bit exponent, 6-bit mantissa), f10 = half
+// bits >> 5 (5-bit mantissa); negatives clamp to 0 (the format is unsigned), the range is that of FP16, no saturation.
+RWByteAddressBuffer OutputBits : register(u0);
+void Store(uint2 p,float4 v){
+ uint3 h=f32tof16(max(v.rgb,0.0));
+ uint r=(h.x>>4)&0x7FFu,g=(h.y>>4)&0x7FFu,b=(h.z>>5)&0x3FFu;
+ OutputBits.Store(ByteOffset(p,4),r|(g<<11)|(b<<22));
+}
 #elif NATIVE_CODEC_UINT_OUT
 // Typeless UNORM16 game textures (Rise of the Ronin): this driver device-removes on any non-float RGBA16 typed UAV, so the
 // UNORM bits go into a raw buffer (row pitch 1920*8) that the frame copies into the game texture with CopyTextureRegion.

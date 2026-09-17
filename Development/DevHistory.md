@@ -2290,3 +2290,10 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 坎 2：UE5 在錄製線程之外的 RHI 線程提交，且升採樣列表在批次中間（第 1/3、第 10/13）。加 `DLSS5_SPLIT_SUBMIT=1`（flag 文件）：按列表身份任意線程匹配、落後 ≤2 幀、**把 ExecuteCommandLists 從該列表後切成兩半**，網絡插中間。《劍星》不開 flag 行為不變。
 - 坎 3：走 XeSS：`DLSS5_UPSCALER=xess` 現在也認 flag 文件，且明確 xess 時**只等 libxess**（黑神話啟動就加載 FFX DLL，原邏輯 FFX 永遠先中）。鉤上後幀在流：輸出 1600×900 **DXGI 26 = R11G11B10_FLOAT**、輸入 1280×720、速度 R16G16F 1600×900。但 armed=0：XeSS 路還是《浪人》時代的合同——只認 1920×1080、只在第 120 幀武裝、無提示文字；且 codec 只收 RGBA16F/RGBA8（NativeIsGameColor），R11G11B10 要加一個轉換 pass（→RGBA16F 暫存跑網絡→寫回）。運動矢量符號（浪人是 −1）UE 也待驗。
 - 下一步（明天）：① XeSS 路對齊 FFX 路（supported_input / 相位 0、5 重武裝 / 提示文字）；② R11G11B10 轉換 pass；③ 黑神話上驗 split submit；通了再寫「遊戲通用包」教程（A 檔直接丟三樣，B 檔 OptiScaler）。DLL 現裝在黑神話目錄的是 e7d4371e（split + xess 選擇），《劍星》未動。
+
+## 2026-09-18 00:50 黑神話收尾：R11G11B10 + XeSS 對齊 + 延遲掛鉤已寫，實機沒驗；黑神話目錄已復原
+
+- 代碼（本次提交，都沒在遊戲裡驗過，《劍星》裝的 DLL 未動）：① `NativeIsR11G11B10` / `NativeBytesPerPixel`，codec 新增 `r11_out`（原始緩衝 4 B/像素，`NATIVE_CODEC_R11_OUT` 解碼分支打包 f11/f11/f10，幀按 footprint 拷回）；② XeSS 路對齊 FFX 路（supported_input、相位 0/5 重武裝、提示文字、UAV 狀態）；③ 鉤子推遲到 present 30 幀後再裝（避開啟動期加載器鎖的猜想——後來證明黑神話卡死與此無關）。提示層 `native_text_overlay.h` 的 CopyFormat 仍不認 R11，黑神話上黃字不會顯示，待補。
+- 黑神話啟動故障：UE 日誌 10 行、開檔後 62 秒 `Log file closed`，卡在 `Unreal.js started` 之後、EOS/Steam SDK 初始化之前；**把 dlss5-amd.addon64 停掉（ReShade 留著）照樣復現**，Windows 無崩潰事件，機器無殘留進程 → 遊戲/Steam 側的問題，不是插件。00:05 之前四次啟動全正常，之後越來越頻繁；Zero 決定不折騰。
+- 目錄已 Restore：ReShade、addon、DLSS5-AMD、before-opti 全刪，遊戲三個 FFX DLL 原版（1.0.1 / 2.1.0）。
+- OptiScaler 結論保留：對純 DLSS 遊戲要走 OptiScaler（dxgi.dll + FFX 輸出 + LoadReshade + 咱們三樣），黑神話因 FSR3 靜態鏈接屬於這類；沒驗證。工具留在 D:\DLSSNR-Lab\opti\、deploy-wukong*.ps1。

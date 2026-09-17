@@ -273,11 +273,26 @@ static int xess_execute(void*ctx,ID3D12GraphicsCommandList*list,const XessExecut
   }ReleaseSRWLockExclusive(&lock);}
  install_native_barriers(list);
  int result=original_xess(ctx,list,p);log("xess_end",list,nullptr,unsigned(result));
- if(result==0&&od.Width==1920&&od.Height==1080&&list&&(n==120||neural_oneshot.WantsFrame())){ /* frame 120 starts the background initialization, as on the FFX path */
+ /* 2026-09-18: the same contract as the FFX path (it used to be the Rise of the Ronin one: exactly 1920x1080, armed once at frame 120, no
+    on-screen notice) -- any supported input size, re-armed from the snapshot frame on while idle/failed, the notice text on the XeSS output. */
+ static const unsigned xess_snapshot_frame=[]{unsigned v=120;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f)){unsigned x;if(sscanf(line,"DLSS5_SNAPSHOT_FRAME=%u",&x)==1&&x>=1)v=x;}fclose(f);}return v;}();
+ static const unsigned xess_notice_mode=[]{unsigned v=2;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f)){unsigned x;if(sscanf(line,"DLSS5_NOTICE=%u",&x)==1)v=x;}fclose(f);}return v;}();
+ const bool size_ok=supported_input(unsigned(od.Width),od.Height);
+ if(xess_notice_mode&&list){
+  static std::atomic<bool>size_logged{false};char notice[80]{};
+  if(!size_ok){snprintf(notice,sizeof notice,fit_small_input()?"DLSS5-AMD: INPUT MAX 1920X1080 (NOW %uX%u)":"DLSS5-AMD: INPUT MUST BE 1920X1080 (NOW %uX%u)",unsigned(od.Width),od.Height);
+   if(!size_logged.exchange(true))if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-game-oneshot.txt").c_str(),L"ab")){fprintf(f,"pid=%lu tick=%llu event=input_size_unsupported detail=XeSS output %llux%u, expected within 1920x1080 with DLSS5_FIT_INPUT=1\n",GetCurrentProcessId(),GetTickCount64(),(unsigned long long)od.Width,od.Height);fclose(f);}}
+  else{const unsigned ph=neural_oneshot.Phase();if(ph==0)text_overlay.Prepare(out);
+   if(ph==1&&text_overlay.Ready())snprintf(notice,sizeof notice,"DLSS5-AMD: INITIALIZING...");else if(ph==5)snprintf(notice,sizeof notice,"DLSS5-AMD: INIT FAILED - SEE DLSS5-AMD\\LOGS");}
+  if(notice[0]&&xess_notice_mode>=2){std::lock_guard<std::mutex>g(notice_mutex);notice_text=notice;notice_state=D3D12_RESOURCE_STATE_UNORDERED_ACCESS;if(notice_target!=out){if(notice_target)notice_target->Release();notice_target=out;notice_target->AddRef();}notice_frame=n;}
+ }
+ const bool request=neural_oneshot.WantsFrame()||(n>=xess_snapshot_frame&&(neural_oneshot.Phase()==0||neural_oneshot.Phase()==5));
+ if(request&&result==0&&size_ok&&list){
   ID3D12GraphicsCommandList*native=nullptr;
   if(SUCCEEDED(static_cast<IUnknown*>(list)->QueryInterface(UnwrappedObject,reinterpret_cast<void**>(&native)))&&native){
    std::lock_guard<std::mutex>guard(snapshot_mutex);
-   if(!pending_snapshot.list){out->AddRef();if(frame_motion)frame_motion->AddRef();pending_snapshot={native,out,GetCurrentThreadId(),n,frame_motion,frame_reset};++armed_frames;}
+   const bool eligible=!snapshot_taken||neural_oneshot.WantsFrame()||neural_oneshot.Phase()==0||neural_oneshot.Phase()==5;
+   if(eligible&&!pending_snapshot.list){out->AddRef();if(frame_motion)frame_motion->AddRef();pending_snapshot={native,out,GetCurrentThreadId(),n,frame_motion,frame_reset,D3D12_RESOURCE_STATE_UNORDERED_ACCESS};++armed_frames;}
    else native->Release();
   }
  }
@@ -379,6 +394,11 @@ static void install_execute(reshade::api::command_queue*q){
 }
 static void close_list(reshade::api::command_list*c){log("close_api",c,nullptr);log("close_native",reinterpret_cast<void*>(c->get_native()),nullptr);}
 static void execute(reshade::api::command_queue*q,reshade::api::command_list*c){install_execute(q);log("before_execute_api",c,q);log("before_execute_native",reinterpret_cast<void*>(c->get_native()),reinterpret_cast<void*>(q->get_native()));}
+/* 2026-09-18: frames presented by the host. The upscaler hook waits for the first 30 of them: MinHook suspends every thread to patch the
+   export, and doing that while the title is still loading dlls (Black Myth: Wukong loads libxess.dll at start-up and keeps loading EOS/Steam
+   right after) deadlocked the loader on most launches -- the game then sat black for its 60 s watchdog and closed cleanly. */
+static std::atomic<unsigned>presents{};
+static void on_present(reshade::api::command_queue*,reshade::api::swapchain*,const reshade::api::rect*,const reshade::api::rect*,uint32_t,const reshade::api::rect*){++presents;}
 static bool compute(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t){log("dispatch_api",c,nullptr);return false;}
 static bool draw(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,uint32_t){log("draw_api",c,nullptr);return false;}
 static void barrier(reshade::api::command_list*c,uint32_t count,const reshade::api::resource*r,const reshade::api::resource_usage*before,const reshade::api::resource_usage*after){
@@ -406,6 +426,7 @@ static DWORD WINAPI worker(void*){
  /* No deadline: Magpie loads the FFX dll only when the user starts scaling, which can be any time after launch (the old 10-minute limit gave up before that). */
  HMODULE module=nullptr,xess=nullptr;for(unsigned i=0;!module&&!xess;i++){if(!only_xess){module=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");if(!module)module=GetModuleHandleW(L"amd_fidelityfx_loader_dx12.dll");}if(!wait_ffx)xess=GetModuleHandleW(L"libxess.dll");if(!module&&!xess)Sleep(100);}if(!module&&!xess)return 1;
  auto target=module?GetProcAddress(module,"ffxDispatch"):GetProcAddress(xess,"xessD3D12Execute");if(!target)return 2;
+ while(presents.load()<30)Sleep(100); /* past start-up dll loading: see on_present */
  auto s=MH_Initialize();if(s!=MH_OK&&s!=MH_ERROR_ALREADY_INITIALIZED)return 3;
  if(module&&fit_small_input()){
   /* Magpie unloads the FFX loader when scaling stops. Hook trampolines must remain executable across restarts. */
@@ -477,6 +498,7 @@ BOOL WINAPI DllMain(HINSTANCE h,DWORD reason,LPVOID){
   reshade::register_event<reshade::addon_event::dispatch>(compute);
   reshade::register_event<reshade::addon_event::draw>(draw);
   reshade::register_event<reshade::addon_event::barrier>(barrier);
+  reshade::register_event<reshade::addon_event::present>(on_present);
   HMODULE pinned=nullptr;if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(&worker),&pinned))return FALSE;
   HANDLE thread=CreateThread(nullptr,0,worker,nullptr,0,nullptr);if(!thread)return FALSE;CloseHandle(thread);
  }return TRUE;

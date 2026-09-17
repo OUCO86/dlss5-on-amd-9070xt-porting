@@ -12,7 +12,11 @@ inline bool NativeIsRgba16Float(DXGI_FORMAT f){DXGI_FORMAT v=NativeViewFormat(f)
 /* 8-bit game/host textures (Magpie's FSR3/FSR4 effect: shared R8G8B8A8_UNORM colour and output). Views are UNORM (0..1), the decoder writes
    UNORM8 bits through a raw buffer that the frame copies into the texture (same route as Ronin's UNORM16). */
 inline bool NativeIsRgba8Unorm(DXGI_FORMAT f){DXGI_FORMAT v=NativeViewFormat(f);return v==DXGI_FORMAT_R8G8B8A8_UNORM||v==DXGI_FORMAT_B8G8R8A8_UNORM||v==DXGI_FORMAT_R8G8B8A8_UNORM_SRGB||v==DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;}
-inline bool NativeIsGameColor(DXGI_FORMAT f){return NativeIsRgba16Float(f)||NativeIsRgba8Unorm(f);}
+/* R11G11B10_FLOAT scene colour (UE5 default, Black Myth: Wukong's XeSS output, 2026-09-18): read through a float SRV like FP16; written back as
+   packed 32-bit words through a raw buffer (the UNORM8 route with a different packing), 4 bytes per pixel. */
+inline bool NativeIsR11G11B10(DXGI_FORMAT f){return NativeViewFormat(f)==DXGI_FORMAT_R11G11B10_FLOAT;}
+inline bool NativeIsGameColor(DXGI_FORMAT f){return NativeIsRgba16Float(f)||NativeIsRgba8Unorm(f)||NativeIsR11G11B10(f);}
+inline unsigned NativeBytesPerPixel(DXGI_FORMAT f){return (NativeIsRgba8Unorm(f)||NativeIsR11G11B10(f))?4u:8u;}
 /* Motion-vector sign relative to the FSR contract (+1: FSR/Stellar Blade UV units; -1: XeSS titles whose velocity scale is (-w,-h)). Set by the hook before the frame is created. */
 inline float&NativeMotionSign(){static float s=1.f;return s;}
 /* Motion-vector unit as declared by the upscaler dispatch (FFX motionVectorScale): raster value * scale = pixels of the render grid. Set by the hook

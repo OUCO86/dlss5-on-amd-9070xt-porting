@@ -31,7 +31,7 @@ inline std::vector<unsigned char> NativeReadSubmittedFrame(ID3D12CommandQueue*q,
  });
  submit->Flush();
  /* bytes per pixel from the texture format: 8 for RGBA16, 4 for the 8-bit UNORM textures (Magpie); the rows are packed in the result */
- const size_t bpp=NativeIsRgba8Unorm(desc.Format)?4:8;
+ const size_t bpp=NativeBytesPerPixel(desc.Format);
  std::vector<unsigned char>result(size_t(desc.Width)*desc.Height*bpp);void*p=nullptr;D3D12_RANGE range{0,SIZE_T(bytes)};check(readback->Map(0,&range,&p));
  for(UINT y=0;y<desc.Height;y++)std::memcpy(result.data()+size_t(y)*size_t(desc.Width)*bpp,static_cast<unsigned char*>(p)+fp.Offset+size_t(y)*fp.Footprint.RowPitch,size_t(desc.Width)*bpp);
  D3D12_RANGE none{};readback->Unmap(0,&none);delete submit;readback->Release();source->Release();return result;
