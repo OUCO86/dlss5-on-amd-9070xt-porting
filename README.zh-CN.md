@@ -23,7 +23,8 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 | 目录 | 内容 |
 |---|---|
 | `src/` | 宿主代码：ReShade 插件（`native_submission_order_probe.cpp` + `native_game_*.h`）和离线测试台（`d3d12_native_network70_test.cpp`）；网络每一段一个头文件（`native_c64.h`、`native_preblock_runtime.h`、`native_vit_*.h`、`native_post70.h` 等）。 |
-| `shaders/` | 快速链的 HLSL 计算核。wave-matrix 核是 `native_wave_*.hlsl`，`NATIVE_*` 宏选择快速路径。 |
+| `shaders/` | 快速链的 HLSL 计算核（DX12 版）。wave-matrix 核是 `native_wave_*.hlsl`，`NATIVE_*` 宏选择快速路径。 |
+| `hip/` | 0.20 HIP 后端的内核：21 份 `.hip` 源码、`rtc_compile.cpp`（源码 → gfx1201 `.hsaco`，走驱动自带的 COMGR，不用 SDK）、`build-modules.ps1`（随包 24 个模块的配方）、`SHA256SUMS`。 |
 | `scripts/` | `build-addon.sh`（mingw-w64 交叉编译插件）、`build-bench.sh`、`bench.ps1`（用预览版 dxc 编译快速链全部着色器并跑测试台）、`deploy_fast.ps1` / `update-manifest.ps1`（装进游戏资产目录）、`game-flags.txt`（游戏当前使用的运行时 flag）。 |
 | `tools/` | `compare_fast_output.py`（对精确链算 PSNR）、`flicker_stats.py`（游戏内 dump 的帧间分析）。 |
 | `Development/` | 过程中产生的一切：逆向笔记、逐块参考实现与校验脚本、快速链长出来之前的 76 层嵌套实验 runner、计划和状态日志。`DevHistory.md` 是统一整理后的开发史（唯一持续更新的一份），各时期的原始文档在 `history/`。编译用不到。 |
@@ -43,6 +44,28 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
   对精确链校验。
 
 ## 编译
+
+### HIP 版（0.20）
+
+需要：Linux / WSL 上的 `x86_64-w64-mingw32-g++`、ReShade 6.8 插件头文件、MinHook 源码（编 DLL）；一台装着 AMD 驱动、System32
+里有 `amd_comgr_3.dll` 和 `amdhip64_7.dll` 的 Windows 机器（编内核；不用 HIP SDK、不用 DXC、不用开发人员模式）。插件的 DX12
+侧还有几个小的 HLSL（编解码、屏幕文字）在运行时用系统自带的 `d3dcompiler` 编，任何 Windows 都有。
+
+```bash
+bash scripts/build-addon.sh <minhook源码目录> <reshade的include目录> dlss5-amd.addon64 --hip   # 插件，HIP 后端
+x86_64-w64-mingw32-g++ -std=c++17 -O2 -static hip/rtc_compile.cpp -o hip/rtc_compile.exe   # 内核编译器
+```
+
+```powershell
+# AMD 机器上：全部 24 个模块 -> <out>\*.hsaco + modules.json + SHA256SUMS（约一分钟）
+powershell -ExecutionPolicy Bypass -File hip\build-modules.ps1 -OutputDir <out>
+```
+
+模块装到权重旁边的 `DLSS5-AMD\native-game-tiled-assets\HIP\`（或用 `DLSS5_HIP_MODULES` 指向目录）。
+`Development/HIP/validate-modules.ps1` 对一套模块跑三道逐位校验；`Development/HIP/package-hip.ps1` 组装游戏包和 Magpie 包。
+配方规则见 `hip/README.md`。
+
+### DX12 版（0.15 及之前）
 
 需要：Linux 上的 `x86_64-w64-mingw32-g++`（交叉编译）；Windows + RDNA 4 显卡 + 暴露 D3D12 wave matrix（linalg
 tier 10）的驱动；Shader Model 6.10 预览版 `dxc`（带 `dx/linalg.h`）；ReShade 6.8 插件头文件；MinHook 源码。
@@ -89,7 +112,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | `0.14`（整包） | 09-12 | FPS 数字至少三秒刷新一次，不变的字条直接复用，贴字并入已有输出提交，去掉单独的同步提交。保留 XeSS FG ZeroMV 预设。整包清理备份 DLL、日志及 shader 缓存，重新生成文件校验清单。`Magpie-DLSS5-AMD-0.14.zip`，358,004,639 字节；SHA256 `14ccde3c752b40821cb9f30024579304627a2499e087e06e9aec399bfe734eed`。尚未打 0.14 tag。 | 编译通过；671 个包内文件校验通过；帧率收益未测 |
 | [0.15](https://pan.quark.cn/s/1601ca8f80ae) | 09-13 | 普通窗口宽≤1920、高≤1080 即可输入，按原宽高比适配固定网络尺寸，再还原窗口尺寸交给 FSR4。便携预设：FSR3（DLSS5 入口）→ FSR4 充满屏幕 → XeSS FG ZeroMV。默认 `DLSS5_FIT_INPUT=1`，保留三秒刷新 FPS。整包 `Magpie-DLSS5-AMD-0.15.zip`。  358,010,545 字节；SHA256 `9bb7a021d09d987986f96dbd920589018606c9800dbd08e007f4b309388e5909`。| 672 个包内文件校验通过；《鬼武者》中画质2K约30帧 |
 | [0.15-900P](https://pan.quark.cn/s/a5339e4c8549) | 09-14 | 固定1600×900内部计算（处理1600×1024、400个ViT位置），再经FSR4放大；仅第一项DLSS5/FSR3开启AMD光流。用户实玩：效果比720p更好、帧率较稳，1080p加插帧不稳。独立900p推理约16.71ms，不是游戏帧率。整包 `Magpie-DLSS5-AMD-0.15-900P.zip`，358,038,890字节，SHA256 `718d77941674d6e851e7babc14b40a596da52e86aec603f44f956b99ff6811d5`。 | 用户实玩900p通过；676个包内文件校验通过 |
-| [0.20](https://pan.quark.cn/s/3c8b5329353c)（HIP） | 09-17 | HIP 后端：COMGR 编译的 gfx1201 内核（`Development/HIP/`）、D3D12↔HIP 共享缓冲/围栏，与 DX12 链逐位一致。09-16/17 两天的核内工作（读 ISA 找病：转换函数去分支、load 连发、别名重载提出循环、残差对角片预打包、prefix 内联）把独立 900p 帧从 19.4 压到 ≈15.5 ms，比 DX12 链快 8%；游戏内 900p 52 fps。包：`DLSS5-AMD-0.20.zip`（游戏版）、`Magpie-DLSS5-AMD-0.20.zip`（Magpie 版，不含 Agility 运行时）。需要驱动自带 `amdhip64_7.dll`。|
+| [0.20](https://pan.quark.cn/s/3c8b5329353c)（HIP） | 09-17 | HIP 后端：COMGR 编译的 gfx1201 内核（源码与构建配方在 `hip/`，实验在 `Development/HIP/`）、D3D12↔HIP 共享缓冲/围栏，与 DX12 链逐位一致。09-16/17 两天的核内工作（读 ISA 找病：转换函数去分支、load 连发、别名重载提出循环、残差对角片预打包、prefix 内联）把独立 900p 帧从 19.4 压到 ≈15.5 ms，比 DX12 链快 8%；游戏内 900p 52 fps。包：`DLSS5-AMD-0.20.zip`（游戏版）、`Magpie-DLSS5-AMD-0.20.zip`（Magpie 版，不含 Agility 运行时）。需要驱动自带 `amdhip64_7.dll`。|
 
 ## 权重
 

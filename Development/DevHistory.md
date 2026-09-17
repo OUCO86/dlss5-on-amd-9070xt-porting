@@ -2201,3 +2201,11 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - **待Zero**：Magpie路径下的HIP DLL没在本机实测过（游戏内钩子已实玩52fps），发布前先在自己的Magpie上跑一次0.20整包；上传网盘后把链接填进README版本表。
 - 06:25 Zero在Magpie上试0.20（《鬼武者》900p窗口）INIT FAILED：oneshot日志`initialization_failed c32_prefix_reference.hsaco: hipErrorFileNotFound`。原因：`native_hip_network.h`在没有`DLSS5_HIP_MODULES`时默认`directory+"\HIP"`，而这个directory是资产目录（native-game-tiled-assets），游戏里一直靠flags里的绝对路径没踩到。改包不改DLL：两包的24个hsaco放到`native-game-tiled-assets\HIP\`（package-hip.ps1 Common()），README同步。重打：DLSS5-AMD-0.20.zip 250,646,612字节 SHA256 87736c42e0bdcb7cd72917ba316c468ec7271ec4c3a6c9613e02184fb2f3d9ca；Magpie-DLSS5-AMD-0.20.zip 354,831,865字节 SHA256 016b585d02bb881ceeeb1b87385d3d1700d5fb100d3ed354006ef480fe39b3d3。（首版两个zip的哈希作废。）
 - 06:44 Zero在Magpie（《鬼武者》900p窗口）实测0.20通过。整包上传夸克：https://pan.quark.cn/s/3c8b5329353c ，根README中英版本表加链接。
+
+### 2026-09-17 10:00 生产内核搬进顶层 `hip/`（0.20 之后）
+
+- Zero 问：打 0.20 时 Development 之外的目录验证过编译没有？答：只编了 `--hip` 的 DLL；`shaders/` 三个 HLSL 自 09-14 900p 提交后没动、没重编（DX12 路线最后验证是 09-14 部署 0.15-900P）；补跑了一次不带 `--hip` 的 `build-addon.sh --tiled`，能编。Zero 的真正意思：HIP 的编译过程该像 `shaders/` 一样单独放一个正式目录。
+- 追链（子代理）：生产 `ffnh2-modules` 的 24 个 hsaco 没有一份能从仓库直接重建的配方——opt-lane-release → c512-mixw → … → c32dg → ffnh2 共 21 级，每级拷上一级再覆盖 1～3 个。结果：20 个来自 `build-modules.ps1`（只加 `HIP_ISA_HALF 1`，`-packed` 再加 `HIP_PREPACKED_WEIGHTS 1`），4 个单独覆盖：ffn_attention-packed +`HIP_C32_DIAG_WEIGHTS 1`（c32dg）、deep_fast-packed +`HIP_BRANCHLESS_F 1`（bfall）、multihead_fused_attention +`HIP_MH_RTZ_ISA 1`（rtz）、padded-wave-packed +`HIP_FFN_HOIST_RES 2`（ffnh2）。坑：`c32_fused_attention.hsaco` 编自 `c32_fused_attention_packed.hip`。
+- COMGR 确定性：同一份文本两次编译字节一致；文本变（哪怕只加默认关的宏）只改 `__hip_cuid_*` 符号，指令不变。所以校验标准 = 三道 hash + 去 cuid 的 `.hsaco.s` 对比。
+- 新目录 `hip/`：21 份生产源 + `rtc_compile.cpp`（git mv），`build-modules.ps1`（24 行配方，宏显式），`SHA256SUMS`，`README.md`。远端从 `hip/` 全量重编（10:07，hip020-modules）：三道 hash 全过（FEEA…/22C1…/75B6…）；17 个与 ffnh2-modules 字节一致，4 个生产加载的模块去 cuid 后指令零差，3 个非 packed 变体（只在关 packed_weights 时加载）跟上了源默认（分支消除），与 09-16 编的旧字节不同。
+- README 两版：目录表加 `hip/`，「编译」拆成 HIP 版（0.20）/ DX12 版（≤0.15）两节。`Development/HIP/build-modules.ps1` 加了指向说明。

@@ -1,3 +1,5 @@
+# 2026-09-17: superseded by ..\..\hip\build-modules.ps1 (production recipe, explicit defines). Kept for the experiment
+# scripts that call it; the kernel sources moved to hip\, so pass -SourceDir accordingly.
 param(
     [Parameter(Mandatory=$true)][string]$Compiler,
     [Parameter(Mandatory=$true)][string]$OutputDir,

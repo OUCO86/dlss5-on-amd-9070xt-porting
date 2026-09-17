@@ -25,7 +25,8 @@ The portable preset runs **FSR3 (DLSS5 through this add-on) → FSR4 filling the
 | Directory | Content |
 |---|---|
 | `src/` | Host code: the ReShade add-on (`native_submission_order_probe.cpp` + `native_game_*.h`) and the offline bench (`d3d12_native_network70_test.cpp`); one header per network stage (`native_c64.h`, `native_preblock_runtime.h`, `native_vit_*.h`, `native_post70.h`, …). |
-| `shaders/` | The HLSL compute kernels of the fast chain. Wave-matrix kernels are `native_wave_*.hlsl`; the `NATIVE_*` defines select the fast paths. |
+| `shaders/` | The HLSL compute kernels of the fast chain (DX12 editions). Wave-matrix kernels are `native_wave_*.hlsl`; the `NATIVE_*` defines select the fast paths. |
+| `hip/` | The HIP kernels of the 0.20 backend: 21 `.hip` sources, `rtc_compile.cpp` (source → gfx1201 `.hsaco` through the driver's COMGR, no SDK), `build-modules.ps1` (the recipe for the 24 shipped modules), `SHA256SUMS`. |
 | `scripts/` | `build-addon.sh` (mingw-w64 cross build of the add-on), `build-bench.sh`, `bench.ps1` (compiles every shader of the fast chain with the preview `dxc` and runs the bench), `deploy_fast.ps1` / `update-manifest.ps1` (install into the game's asset folder), `game-flags.txt` (the runtime flag set the game currently runs with). |
 | `tools/` | `compare_fast_output.py` (PSNR against the exact chain), `flicker_stats.py` (frame-to-frame analysis of the in-game dumps). |
 | `Development/` | Everything produced on the way: reverse-engineering notes, per-block reference implementations and validation scripts, the 76 nested experiment runners the fast chain grew out of, plans and state logs. `DevHistory.md` is the single consolidated development history; the original per-period documents are under `history/`. Not needed to build. |
@@ -47,6 +48,29 @@ The portable preset runs **FSR3 (DLSS5 through this add-on) → FSR4 filling the
   the fast chain relaxes it (f32 accumulation, hardware rounding) and is validated against the exact chain by PSNR.
 
 ## Building
+
+### HIP edition (0.20)
+
+Requirements: Linux / WSL with `x86_64-w64-mingw32-g++`, ReShade 6.8 add-on headers and MinHook sources (for the DLL);
+a Windows machine with an AMD driver that ships `amd_comgr_3.dll` and `amdhip64_7.dll` (for the kernels; no HIP SDK, no
+DXC, no developer mode). The add-on's DX12 side still compiles the small HLSL helpers (codec, text overlay) at runtime with
+the system `d3dcompiler`, which every Windows has.
+
+```bash
+bash scripts/build-addon.sh <minhook-src> <reshade-include> dlss5-amd.addon64 --hip   # the add-on, HIP backend
+x86_64-w64-mingw32-g++ -std=c++17 -O2 -static hip/rtc_compile.cpp -o hip/rtc_compile.exe   # the kernel compiler
+```
+
+```powershell
+# on the AMD machine: all 24 modules -> <out>\*.hsaco + modules.json + SHA256SUMS (about a minute)
+powershell -ExecutionPolicy Bypass -File hip\build-modules.ps1 -OutputDir <out>
+```
+
+Install the modules as `DLSS5-AMD\native-game-tiled-assets\HIP\` next to the weights (or point `DLSS5_HIP_MODULES` at the
+folder). `Development/HIP/validate-modules.ps1` runs the three bit-exact checks against a module set;
+`Development/HIP/package-hip.ps1` assembles the game and Magpie packages. See `hip/README.md` for the recipe rules.
+
+### DX12 editions (up to 0.15)
 
 Requirements: Linux / WSL with `x86_64-w64-mingw32-g++` (cross build), Windows with an RDNA 4 GPU and a driver exposing
 D3D12 wave matrices (linalg tier 10), the Shader Model 6.10 preview `dxc` (with `dx/linalg.h`), ReShade 6.8 add-on
@@ -103,7 +127,7 @@ chain's own output did not change by a single bit.
 | `0.14` (bundle) | 09-12 | FPS display: update at intervals of at least three seconds, reuse the unchanged text strip, and copy it at the end of the existing output submission instead of a separate synchronous submission. XeSS FG ZeroMV remains enabled in the preset. Remove backup DLLs, logs and shader caches from the bundle; regenerate file checksums. `Magpie-DLSS5-AMD-0.14.zip`, 358,004,639 bytes; SHA256 `14ccde3c752b40821cb9f30024579304627a2499e087e06e9aec399bfe734eed`. No 0.14 tag yet. | Build passed; 671 archive files verified; FPS gain not measured |
 | [0.15](https://pan.quark.cn/s/1601ca8f80ae) | 09-13 | Accept ordinary windows with width ≤1920 and height ≤1080; fit smaller inputs to the fixed network surface while preserving aspect ratio, then restore the source extent before FSR4 fills the screen. Portable preset: FSR3 (the DLSS5 entry point) → FSR4 fill screen → XeSS FG ZeroMV. `DLSS5_FIT_INPUT=1`; retain the three-second FPS display. Bundle `Magpie-DLSS5-AMD-0.15.zip`.  358,010,545 bytes; SHA256 `9bb7a021d09d987986f96dbd920589018606c9800dbd08e007f4b309388e5909`.| 672 archive files verified; Onimusha Medium at 2K ~30 fps |
 | [0.15-900P](https://pan.quark.cn/s/a5339e4c8549) | 09-14 | Fixed 1600×900 inference (1600×1024 processing, 400 ViT tokens), followed by FSR4 scaling; AMD optical flow enabled only on the DLSS5/FSR3 item. User reports better image quality than 720p and steadier frame rates than 1080p with FG. Isolated inference is about 16.71 ms, not game frame time. Bundle `Magpie-DLSS5-AMD-0.15-900P.zip`, 358,038,890 bytes; SHA256 `718d77941674d6e851e7babc14b40a596da52e86aec603f44f956b99ff6811d5`. | 900p gameplay tested by user; 676 archive files verified |
-| [0.20](https://pan.quark.cn/s/3c8b5329353c) (HIP) | 09-17 | HIP backend: COMGR-compiled gfx1201 kernels (`Development/HIP/`), D3D12↔HIP shared buffers/fences, bit-exact with the DX12 chain. Kernel-level work of 09-16/17 (ISA-driven: branchless conversions, batched loads, hoisted reloads, prepacked residual diagonals, inlined prefix) brought the isolated 900p frame from 19.4 to ≈15.5 ms, 8% faster than the DX12 chain; in-game 900p 52 fps. Packages `DLSS5-AMD-0.20.zip` (game) and `Magpie-DLSS5-AMD-0.20.zip` (Magpie, no Agility runtime). Requires `amdhip64_7.dll` from the AMD driver. |
+| [0.20](https://pan.quark.cn/s/3c8b5329353c) (HIP) | 09-17 | HIP backend: COMGR-compiled gfx1201 kernels (sources and build recipe in `hip/`, experiments in `Development/HIP/`), D3D12↔HIP shared buffers/fences, bit-exact with the DX12 chain. Kernel-level work of 09-16/17 (ISA-driven: branchless conversions, batched loads, hoisted reloads, prepacked residual diagonals, inlined prefix) brought the isolated 900p frame from 19.4 to ≈15.5 ms, 8% faster than the DX12 chain; in-game 900p 52 fps. Packages `DLSS5-AMD-0.20.zip` (game) and `Magpie-DLSS5-AMD-0.20.zip` (Magpie, no Agility runtime). Requires `amdhip64_7.dll` from the AMD driver. |
 
 ## Weights
 
