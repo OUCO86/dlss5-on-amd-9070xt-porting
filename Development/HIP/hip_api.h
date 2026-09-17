@@ -24,6 +24,9 @@ struct BufferDesc {unsigned long long offset,size;unsigned flags;unsigned reserv
 struct SemaphoreDesc {int type;union {int fd;struct {void*handle;const void*name;} win32;const void*nvSciSyncObj;} handle;unsigned flags;unsigned reserved[16];};
 struct SignalParams {struct {struct {unsigned long long value;} fence;union {void*fence;unsigned long long reserved;} nvSciSync;struct {unsigned long long key;} keyedMutex;unsigned reserved[12];} params;unsigned flags;unsigned reserved[16];};
 struct WaitParams {struct {struct {unsigned long long value;} fence;union {void*fence;unsigned long long reserved;} nvSciSync;struct {unsigned long long key;unsigned timeoutMs;} keyedMutex;unsigned reserved[10];} params;unsigned flags;unsigned reserved[16];};
+// Virtual memory management (sparse weight mappings): hipMemAllocationProp / hipMemAccessDesc of rocm-7.x.
+struct MemAllocationProp {unsigned type;unsigned requestedHandleType;struct {unsigned type;int id;} location;void*win32HandleMetaData;struct {unsigned char compressionType,gpuDirectRDMACapable;unsigned short usage;unsigned char reserved[4];} allocFlags;};
+struct MemAccessDesc {struct {unsigned type;int id;} location;unsigned flags;};
 static_assert(sizeof(MemoryDesc)==104&&sizeof(BufferDesc)==88&&sizeof(SemaphoreDesc)==96&&sizeof(SignalParams)==144&&sizeof(WaitParams)==144,"HIP external resource ABI");
 struct Api {
  HMODULE dll{};
@@ -38,6 +41,8 @@ struct Api {
  HIP_FN(hipStreamBeginCapture,(Handle,int));HIP_FN(hipStreamEndCapture,(Handle,Handle*));
  HIP_FN(hipGraphInstantiate,(Handle*,Handle,Handle*,char*,size_t));HIP_FN(hipGraphLaunch,(Handle,Handle));
  HIP_FN(hipGraphDestroy,(Handle));HIP_FN(hipGraphExecDestroy,(Handle));
+ // Optional VMM API (EnableVmm): address reservation + physical chunks mapped at chosen offsets.
+ HIP_FN(hipMemAddressReserve,(void**,size_t,size_t,void*,unsigned long long));HIP_FN(hipMemAddressFree,(void*,size_t));HIP_FN(hipMemCreate,(void**,size_t,const MemAllocationProp*,unsigned long long));HIP_FN(hipMemRelease,(void*));HIP_FN(hipMemMap,(void*,size_t,size_t,void*,unsigned long long));HIP_FN(hipMemUnmap,(void*,size_t));HIP_FN(hipMemSetAccess,(void*,size_t,const MemAccessDesc*,size_t));HIP_FN(hipMemGetAllocationGranularity,(size_t*,const MemAllocationProp*,unsigned));
  HIP_FN(hipModuleLoad,(Handle*,const char*));HIP_FN(hipModuleGetFunction,(Handle*,Handle,const char*));HIP_FN(hipModuleLaunchKernel,(Handle,unsigned,unsigned,unsigned,unsigned,unsigned,unsigned,unsigned,Handle,void**,void**));HIP_FN(hipModuleUnload,(Handle));
  #undef HIP_FN
  using ErrorNameFn=const char*(*)(int);ErrorNameFn hipGetErrorName{};
@@ -47,6 +52,7 @@ struct Api {
  LOAD(hipEventCreate);LOAD(hipEventRecord);LOAD(hipEventElapsedTime);LOAD(hipEventDestroy);LOAD(hipEventSynchronize);LOAD(hipHostMalloc);LOAD(hipInit);LOAD(hipRuntimeGetVersion);LOAD(hipGetDeviceCount);LOAD(hipDeviceGetName);LOAD(hipSetDevice);LOAD(hipMemGetInfo);LOAD(hipMalloc);LOAD(hipFree);LOAD(hipMemcpy);LOAD(hipMemcpyAsync);LOAD(hipMemsetAsync);LOAD(hipDeviceSynchronize);LOAD(hipStreamCreate);LOAD(hipStreamSynchronize);LOAD(hipStreamDestroy);LOAD(hipImportExternalMemory);LOAD(hipExternalMemoryGetMappedBuffer);LOAD(hipDestroyExternalMemory);LOAD(hipImportExternalSemaphore);LOAD(hipSignalExternalSemaphoresAsync);LOAD(hipWaitExternalSemaphoresAsync);LOAD(hipDestroyExternalSemaphore);LOAD(hipModuleLoad);LOAD(hipModuleGetFunction);LOAD(hipModuleLaunchKernel);LOAD(hipModuleUnload);LOAD(hipGetErrorName);
  #undef LOAD
  }
+ void EnableVmm(){Load(hipMemAddressReserve,"hipMemAddressReserve");Load(hipMemAddressFree,"hipMemAddressFree");Load(hipMemCreate,"hipMemCreate");Load(hipMemRelease,"hipMemRelease");Load(hipMemMap,"hipMemMap");Load(hipMemUnmap,"hipMemUnmap");Load(hipMemSetAccess,"hipMemSetAccess");Load(hipMemGetAllocationGranularity,"hipMemGetAllocationGranularity");}
  void EnableGraphs(){Load(hipStreamBeginCapture,"hipStreamBeginCapture");Load(hipStreamEndCapture,"hipStreamEndCapture");Load(hipGraphInstantiate,"hipGraphInstantiate");Load(hipGraphLaunch,"hipGraphLaunch");Load(hipGraphDestroy,"hipGraphDestroy");Load(hipGraphExecDestroy,"hipGraphExecDestroy");}
  void Check(int result,const char*what){if(result)throw std::runtime_error(std::string(what)+": "+hipGetErrorName(result)+" ("+std::to_string(result)+")");}
  // Keep runtime loaded until process teardown: driver-owned workers may outlive probe objects.

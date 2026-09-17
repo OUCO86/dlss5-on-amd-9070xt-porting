@@ -2209,3 +2209,11 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - COMGR 确定性：同一份文本两次编译字节一致；文本变（哪怕只加默认关的宏）只改 `__hip_cuid_*` 符号，指令不变。所以校验标准 = 三道 hash + 去 cuid 的 `.hsaco.s` 对比。
 - 新目录 `hip/`：21 份生产源 + `rtc_compile.cpp`（git mv），`build-modules.ps1`（24 行配方，宏显式），`SHA256SUMS`，`README.md`。远端从 `hip/` 全量重编（10:07，hip020-modules）：三道 hash 全过（FEEA…/22C1…/75B6…）；17 个与 ffnh2-modules 字节一致，4 个生产加载的模块去 cuid 后指令零差，3 个非 packed 变体（只在关 packed_weights 时加载）跟上了源默认（分支消除），与 09-16 编的旧字节不同。
 - README 两版：目录表加 `hip/`，「编译」拆成 HIP 版（0.20）/ DX12 版（≤0.15）两节。`Development/HIP/build-modules.ps1` 加了指向说明。
+
+### 2026-09-17 10:18–12:00 显存路线：先量，再试 VMM 稀疏映射（失败）
+
+- **先量**。加 `DLSS5_HIP_MEMORY=1` 诊断（第三帧后把权重按 key、激活池按块、共享缓冲、建网络前后 free 写进 logs\native-hip.txt）。900p 生产配置，测试台与游戏内读数一致：权重 607 MiB（237 份打包表）、激活池 291 MiB（14 块）、共享缓冲 69 MiB、gather 表 3 MiB、噪声 0（fast_prefix 不上传）；整个插件占用 = 建网络前后 free 之差 = **1.17 GB**（测试台 15958→14785，游戏内 14700→13523）。README 里"网络自己约 3 GB"是 DX12 时代的数字，HIP 版没重量过，待改。
+- **权重里 382 MiB 是死区**：`PackWeightRegions` 原地打包，E4M3 区只用前 1/4、f16 区只用前 1/2，上传却按 f32 原长度传（内核用 f32 布局的固定字节偏移读 tail 标量，所以不能简单截断）。估算活字节 225 MiB（ViT expand/contract 16 份 256 MiB → 69）。
+- **VMM 稀疏映射实验**（`opt.sparse_weights`，`DLSS5_HIP_SPARSE_WEIGHTS=1`，`--sparse-weights`）：保留原 f32 长度的虚拟地址，只给活页做物理映射，内核偏移不变。amdhip64_7 全套 VMM 导出都在，粒度 64 KiB，`vmm_probe.exe` 验证 hipMemcpy 读写正确、洞里写入报错、边际成本精确等于映射字节数（首次使用固定开销 12.75 MiB）。三个坑：(1) 一个保留区里混用不同大小的块 → `hipMemSetAccess` InvalidValue；等大小铺满任何尺寸都过（`vmm_probe.exe tile`）；改成一律 64 KiB 块后权重 607→236 MiB，但三道 hash 全变。(2) `vmm_kernel_probe.exe`（最小拷贝内核）：内核读单块=整个保留区的 VMM 内存正确；读 64 KiB 多块 → 设备挂死（sync 不返回）；读 2 MiB 多块 → hipErrorLaunchFailure；拷贝引擎（hipMemcpy）读都正常。(3) 一个物理块分段映射（`hipMemMap` offset≠0 或部分尺寸）→ InvalidValue。结论：这版驱动上内核只认"保留区==一个完整物理块"，无法跳洞。路线封死，代码留在 flag 后（默认关，注释标 DO NOT SHIP），新驱动可重测。
+- 剩下的显存路：真正压紧布局（改所有内核的字节偏移，逐位不变但工作量大，收益 ≈370 MiB）；激活池按峰值重排（≈100 MiB）。是否值得由 Zero 定——插件实际 1.2 GB，不是 3 GB。
+- 游戏目前装的是 native-mem.addon64（= 生产 + 内存诊断，flag 文件多一行 `DLSS5_HIP_MEMORY=1`），行为与 native-pinline 相同。
