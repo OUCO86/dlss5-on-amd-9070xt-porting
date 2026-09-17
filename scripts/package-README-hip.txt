@@ -16,8 +16,8 @@
 
 必须先满足的条件
   1. 显卡驱动带 HIP 7 运行时：C:\Windows\System32\amdhip64_7.dll 存在即可。
-     已验证的是 AMD 预览驱动 32.0.31007.2048（也就是 0.15 要求的那个）；正式版驱动只要 System32 里有 amdhip64_7.dll 理论上同样可用，
-     但本包还没有在正式版驱动上实测，若初始化失败请看 DLSS5-AMD\logs\native-game-oneshot.txt 里 HIP 相关的行并反馈。
+     作者在 AMD 预览驱动 32.0.31007.2048（0.15 要求的那个）上验证；正式版驱动同样带这个文件，已有用户反馈正式版可用。
+     若初始化失败请看 DLSS5-AMD\logs\native-game-oneshot.txt 里 HIP 相关的行并反馈。
   2. 显存 16GB。插件实测占 1.2GB（900p：权重 0.6GB + 激活 0.3GB + 共享缓冲 0.07GB + 运行时开销，见 logs\native-hip.txt 的 hip_memory 行）。
      《星刃》贴图「非常高」加上这 1.2GB 会把 16GB 顶满，帧率掉到 25 以下不恢复，**贴图质量建议「高」或更低**。
 

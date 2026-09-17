@@ -2227,3 +2227,7 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 
 - `DLSS5_HIP_GRAPH=1`（09-15 已有的整帧录制/重放）ABBA，benchmark_pinline + ffnh2-modules，40 帧 edges-only 热中位：off 15.26/15.27，on 15.26/15.25；graph_stats builds=1 replays=38，四轮 hash 全 FEEA…。**零收益**。09-15 是 +0.23ms（30ms 时代）；现在每帧约 200 次 launch 的 CPU 提交完全藏在 GPU 时间后面，图只省 CPU 侧，GPU 排队间隙本来就没有。默认保持 0。
 - 至此三条计划路线结果：1 显存——插件实测 1.2GB 非 3GB，README 已改；VMM 稀疏映射被驱动封死；真压紧（≈370MB，改全部内核偏移）与激活池重排（≈100MB）待 Zero 决定。3 性能档——已写进文档。2 hipGraph——空。
+
+### 2026-09-17 12:20 计划收口
+
+- Zero：显存压紧不做（9070 显存够，GPU 核心才是瓶颈）；正式版驱动有用户反馈可用（README/包内说明改为"已有用户反馈"）；OptiScaler 路线不急——网络学习是核心，Magpie 对一般人够用，Magpie 光流在暗部出垃圾向量的问题记为已知限制。

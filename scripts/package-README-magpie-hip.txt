@@ -29,8 +29,8 @@ DLSS5-AMD 0.20 · Magpie 版（HIP 后端）
 ----
   1. RX 9070 / 9070 XT（RDNA4）。内核只编了 gfx1201，RX 7000 不支持。
   2. 显卡驱动带 HIP 7 运行时：C:\Windows\System32\amdhip64_7.dll 存在即可。
-     已验证的是 AMD 预览驱动 32.0.31007.2048（0.15 要求的那个）；正式版驱动只要 System32 里有 amdhip64_7.dll 理论上同样可用，
-     但还没有实测。初始化失败时看 DLSS5-AMD\logs\native-game-oneshot.txt 里 HIP 相关的行。
+     作者在 AMD 预览驱动 32.0.31007.2048（0.15 要求的那个）上验证；正式版驱动同样带这个文件，已有用户反馈正式版可用。
+     初始化失败时看 DLSS5-AMD\logs\native-game-oneshot.txt 里 HIP 相关的行。
      不再需要开发人员模式，不需要装 HIP SDK、SM 6.10 编译器或任何 SDK。
   3. 游戏选择窗口模式，宽不超过 1920、高不超过 1080；普通窗口和无边框窗口都可以。
      若看到 "DLSS5-AMD: INPUT MAX 1920X1080 (NOW WxH)"，请减小游戏窗口，并确认效果组第一站 FSR3 没有提前放大。
