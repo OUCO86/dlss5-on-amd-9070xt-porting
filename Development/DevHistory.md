@@ -2217,3 +2217,8 @@ Zero定：不再追性能，打0.20并集成Magpie。那台机没有python，以
 - **VMM 稀疏映射实验**（`opt.sparse_weights`，`DLSS5_HIP_SPARSE_WEIGHTS=1`，`--sparse-weights`）：保留原 f32 长度的虚拟地址，只给活页做物理映射，内核偏移不变。amdhip64_7 全套 VMM 导出都在，粒度 64 KiB，`vmm_probe.exe` 验证 hipMemcpy 读写正确、洞里写入报错、边际成本精确等于映射字节数（首次使用固定开销 12.75 MiB）。三个坑：(1) 一个保留区里混用不同大小的块 → `hipMemSetAccess` InvalidValue；等大小铺满任何尺寸都过（`vmm_probe.exe tile`）；改成一律 64 KiB 块后权重 607→236 MiB，但三道 hash 全变。(2) `vmm_kernel_probe.exe`（最小拷贝内核）：内核读单块=整个保留区的 VMM 内存正确；读 64 KiB 多块 → 设备挂死（sync 不返回）；读 2 MiB 多块 → hipErrorLaunchFailure；拷贝引擎（hipMemcpy）读都正常。(3) 一个物理块分段映射（`hipMemMap` offset≠0 或部分尺寸）→ InvalidValue。结论：这版驱动上内核只认"保留区==一个完整物理块"，无法跳洞。路线封死，代码留在 flag 后（默认关，注释标 DO NOT SHIP），新驱动可重测。
 - 剩下的显存路：真正压紧布局（改所有内核的字节偏移，逐位不变但工作量大，收益 ≈370 MiB）；激活池按峰值重排（≈100 MiB）。是否值得由 Zero 定——插件实际 1.2 GB，不是 3 GB。
 - 游戏目前装的是 native-mem.addon64（= 生产 + 内存诊断，flag 文件多一行 `DLSS5_HIP_MEMORY=1`），行为与 native-pinline 相同。
+
+### 2026-09-17 11:40 路线 3：性能档（九块跳过）在 HIP 上重量，写进文档
+
+- 09-09 的跳块表：{42,43,46} 40.66dB（默认）；+{12,28,41,44,52,53} 九块 36.5dB（对全网络）。HIP 生产配置 ABBA（benchmark_pinline + ffnh2-modules，40 帧 edges-only 热中位）：off 15.25/15.28 → on 14.48/14.49，**−0.78ms（5.1%）**；对现行默认输出：40 帧 HDR 72.8dB（峰值 29.7，dB 虚高）、seed123 SDR history 检查 **30.6dB**、maxabs 0.147。
+- 不改代码：就是 `DLSS5_SKIP_BLOCKS=12,28,41,42,43,44,46,52,53`。写进两份包内说明和 README（三档：不写 / 默认三块 / 性能九块）。`test-flag-ab.ps1` 加 `-CheckHash 0`（非逐位实验用），`perf-tier.ps1` 一键计时 + PSNR 输出。

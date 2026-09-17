@@ -56,6 +56,7 @@ DLSS5-AMD 0.20 · Magpie 版（HIP 后端）
   - 输入是显示用的 8 位 sRGB 图；插件按 sRGB 直通处理（DLSS5_CODEC_SRGB=1），亮度和原图一致。
   - DLSS5（第一项 FSR3）的运动向量来自 Magpie 的光流估计（AMDOF）；超过 64 像素的向量当静止处理（DLSS5_MOTION_MAX_PX）。
   - 强度：native-game-flags.txt 里加一行 DLSS5_STRENGTH=<细节>,<颜色>（各 0～1，默认 1,1）。改完重启 Magpie 生效。
+  - 性能档（可选）：native-game-flags.txt 里 DLSS5_SKIP_BLOCKS=42,43,46 改成 DLSS5_SKIP_BLOCKS=12,28,41,42,43,44,46,52,53，网络每帧再快约 0.8ms（900p 15.25 → 14.48ms，约 5%），代价是相对默认输出 PSNR 约 30dB（细节、暗部有可见差别）。删掉这一行则不跳块，画质最高、慢约 1ms。
   - 停止缩放再激活，插件会重新接管（需要重新初始化）。
   - 日志：DLSS5-AMD\logs\native-game-oneshot.txt（初始化）、native-submission-order.txt（每帧观察）。
   - 屏幕提示不想要：加一行 DLSS5_NOTICE=0；帧率不想看：删掉 DLSS5_SHOW_FPS=1。
