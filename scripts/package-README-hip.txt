@@ -1,8 +1,12 @@
-《剑星》(Stellar Blade) DLSS 5 网络 AMD 移植 —— 用户运行包 0.22（HIP 后端）
+《剑星》(Stellar Blade) DLSS 5 网络 AMD 移植 —— 用户运行包 0.23（HIP 后端）
 
 这是把 DLSS 5（DLSSNR）的神经网络逐块移植到 AMD 显卡上的实验版本，不是 NVIDIA、AMD 或游戏厂商的官方产品。
 源码与开发记录：https://github.com/lmxxf/dlss5-on-amd-9070xt-porting
 公众号系列（中文）：微信搜索合集「DLSS5」
+
+0.23 与 0.22 的区别
+  - 修复带核显（AMD Radeon(TM) Graphics）或第二块显卡的机器上初始化失败（画面 INIT FAILED，日志 bridge currently requires exactly one HIP GPU）：
+    插件现在按游戏实际使用的显卡名字在 HIP 设备里选同名的那块，单卡机器行为不变。内核、权重、输出与 0.22 逐位相同。
 
 0.22 与 0.21 的区别
   - 900 档补边 1024 → 960 行（补法同 1080 档），同样的内核少算约 6%（网络 15.2 → 14.4ms，1600x900 窗口约 +3 帧）。输出与 0.21 不逐位相同但肉眼无差别；

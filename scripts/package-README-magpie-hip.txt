@@ -1,12 +1,16 @@
-DLSS5-AMD 0.22 · Magpie 版（HIP 后端）
+DLSS5-AMD 0.23 · Magpie 版（HIP 后端）
 ============================
-整包文件：Magpie-DLSS5-AMD-0.22.zip
+整包文件：Magpie-DLSS5-AMD-0.23.zip
 
 把 DLSS 5 的神经网络（DLSSNR）跑在 AMD RX 9070 XT（RDNA4）上，以 Magpie 窗口缩放器为载体：
 支持宽不超过 1920、高不超过 1080 的普通游戏窗口，不需要游戏自己支持 FSR 或 DLSS。
 本包固定用 1600x900 进行网络计算，建议游戏窗口设为 1600x900，再由 FSR4 放大到 2K/4K。
 游戏窗口 -> FSR3（本插件的 DLSS5 入口）-> FSR4 放大到屏幕 -> XeSS 帧生成 -> 显示。
 效果组里名叫 FSR3_SR 的那一项，就是本插件接入 DLSS5 的位置；界面名称仍是 FSR3，不用另外添加 DLSS5 滤镜。
+
+0.23 与 0.22 的区别
+  - 修复带核显（AMD Radeon(TM) Graphics）或第二块显卡的机器上初始化失败（画面 INIT FAILED，日志 bridge currently requires exactly one HIP GPU）：
+    插件按 Magpie 实际使用的显卡名字在 HIP 设备里选同名的那块；Magpie 的显卡选项请选 RX 9070 XT。单卡机器行为不变，内核、权重、输出与 0.22 逐位相同。
 
 0.22 与 0.21 的区别
   - 900 档把 1600x900 补到 960 行而不是 1024 行（补边方式和 1080 档一致），同样的内核少算约 6%：网络每帧约 15.2 → 14.4ms，900 窗口大约 +3 帧。
@@ -58,7 +62,7 @@ DLSS5-AMD 0.22 · Magpie 版（HIP 后端）
      左上角先显示 "DLSS5-AMD: INITIALIZING..."，接管后显示网络自己的 FPS 和耗时。
      若显示 "INIT FAILED - SEE DLSS5-AMD\LOGS"，先确认 System32 里有 amdhip64_7.dll。
      再按一次 Alt+Shift+A 停止缩放，可以对比原图。
-  从 0.21/0.20/0.15 升级：直接换整个目录；旧包的 DLSS5-D3D12-721 和 enable-game-sdk721.txt 在 0.20 起没有了，属正常。
+  从 0.22/0.21/0.20/0.15 升级：直接换整个目录；旧包的 DLSS5-D3D12-721 和 enable-game-sdk721.txt 在 0.20 起没有了，属正常。
 
 已知
 ----
