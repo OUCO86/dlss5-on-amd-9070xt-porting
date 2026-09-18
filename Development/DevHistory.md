@@ -2297,3 +2297,10 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 黑神話啟動故障：UE 日誌 10 行、開檔後 62 秒 `Log file closed`，卡在 `Unreal.js started` 之後、EOS/Steam SDK 初始化之前；**把 dlss5-amd.addon64 停掉（ReShade 留著）照樣復現**，Windows 無崩潰事件，機器無殘留進程 → 遊戲/Steam 側的問題，不是插件。00:05 之前四次啟動全正常，之後越來越頻繁；Zero 決定不折騰。
 - 目錄已 Restore：ReShade、addon、DLSS5-AMD、before-opti 全刪，遊戲三個 FFX DLL 原版（1.0.1 / 2.1.0）。
 - OptiScaler 結論保留：對純 DLSS 遊戲要走 OptiScaler（dxgi.dll + FFX 輸出 + LoadReshade + 咱們三樣），黑神話因 FSR3 靜態鏈接屬於這類；沒驗證。工具留在 D:\DLSSNR-Lab\opti\、deploy-wukong*.ps1。
+
+## 2026-09-18 17:50：多 GPU 主機初始化失敗修復（網友反饋）
+
+- 網友日誌：`event=initialization_failed detail=bridge currently requires exactly one HIP GPU`，畫面上 INIT FAILED。原因：`hip_d3d12_bridge.h` 的 `Create()` 要求 `hipGetDeviceCount()==1`，而 `Network` 構造又寫死 `hipSetDevice(0)`；帶核顯或第二塊卡的機器 HIP 數到 2 就拋錯。
+- 修法：橋接先取 D3D12 適配器名（DXGI 按 LUID 查），再枚舉 HIP 設備逐個 `hipDeviceGetName` 找同名的那塊（第一個匹配），`hipSetDevice(chosen)` 後才構造 `Network`；`Options` 新增 `device` 索引，`Network` 用它代替 0。沒有同名設備時報 `no HIP device matches D3D12 adapter '<名>' (HIP devices: 0:… | 1:…)`，日誌 `native-hip.txt` 多一行 `hip_device=<索引>`。單卡機器行為不變（chosen=0）。
+- 未覆蓋：兩塊同型號卡（按名字只能挑到第一塊；要精確得對 PCI bus id 與 LUID，這版沒做）。
+- 構建：`build-addon.sh --hip` → `native-multigpu.addon64`（sha256 fda2edab…，3595356 B）；`--tiled` 也重編通過。已拷到 9070 `D:\DLSSNR-Lab\native-multigpu.addon64`，部署腳本 `D:\DLSSNR-Lab\deploy-multigpu.ps1 -Action Install|Restore|Status`（《劍星》+ 本機 Magpie 目錄，備份 `*.before-multigpu`）。**未在單卡機上回歸、未給網友驗證**；下個 tag 打包前要先在《劍星》跑一次。
