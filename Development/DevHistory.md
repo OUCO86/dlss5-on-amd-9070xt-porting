@@ -2629,3 +2629,17 @@ C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗�
 compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV，44种生产D3DCompiler组合通过；旧shader负对照被正确拒绝。只备份/替换了游戏的这一个HLSL文字文件，DLL仍02b40319…，未动运行中DLL/HSACO；备份D:\DLSSNR-Lab\liesofp-before-r11-shader，工具fix-liesofp-codec.ps1。已请用户最高效果品质→原低档触发格式重建，shader-cache按源码变化自动失效；23:32已获用户画面恢复确认。
 
 两条打包脚本补上CodecDecodePath（默认D:\DLSSNR-Lab\native_codec_decode.hlsl），打包时同步当前解码shader并调用compile_fit_shaders.exe做44组合/绑定校验，防止再次直接继承旧资产；Magpie基底校验白名单允许该明确更新。当前shader与验证器已上传D:\DLSSNR-Lab，脚本PowerShell解析通过；已上传ZIP尚未重打，未回帖issue。
+
+
+## 2026-09-19 23:39起：Magpie与OptiScaler 0.26完整包
+
+按用户指定版本0.26，采用已编译/回归/《剑星》实玩通过的f5d3f734… DLL与c256-frag-production双架构48内核，开启MH_FFN_FRAG256=1及完整字节流/解码字节输出，保留FFN直接片段读取；未纳入C32 buffer或噪声消融。同步98a790d9…解码shader，包含《匹诺曹》已实测的低效果品质黑屏修复。DLL/HSACO沿用已验证产物，本轮无需重编；两份实际staging均跑过44种shader编译/反射绑定校验，随后从ZIP逐项读回所有有效载荷，再核对两套48内核、DLL、shader和配置。OptiScaler保持PRE_UPSCALE=1/ASYNC=1/FSR31；Magpie保持PRE_UPSCALE=0及原流水线。打包工具补齐FRAG256配方，package-026.ps1先核对源文件SHA再顺序打两包。中英文README及包内说明简述0.26优化与修复；两版下载链接待用户上传后补，不打tag、不改游戏安装。
+
+输出D:\給網友打包，旁置.zip.sha256：
+
+| 包 | 字节数 | 有效载荷数 | SHA256 |
+|---|---:|---:|---|
+| OptiScaler-DLSS5-AMD-0.26.zip | 387976939 | 538 | e008013b3c6dfa9ae1268a66fe5d4cf4170462e9bd9270cf550bf4b2a730f9a6 |
+| Magpie-DLSS5-AMD-0.26.zip | 356968661 | 722 | 9571fc0cda7ad78cb2e12312fdd0d0cc28e270109edad15301ec94fc007276f0 |
+
+机器可读清单Development/results/release-0.26.json。0.26 Magpie整包尚待用户实玩，9060/XT仍无本机硬件验证；原0.25归档保留。

@@ -1,7 +1,7 @@
-﻿param([string]$Version='0.25',[string]$Base='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23',
- [string]$Addon='D:\DLSSNR-Lab\dual-arch-src\native-dual-arch.addon64',
- [string]$AddonSha='02b4031994aca161098e4240e2a6782bc93cba19a6fd63f3a2b6bdea8ee14e31',
- [string]$Modules='D:\DLSSNR-Lab\dual-arch-modules',
+﻿param([string]$Version='0.26',[string]$Base='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23',
+ [string]$Addon='D:\DLSSNR-Lab\c256-frag-src\native-c256-fragment.addon64',
+ [string]$AddonSha='f5d3f7348e42f362a0db4233814e1b2d8c4842de0d1196620a40bbc299adde75',
+ [string]$Modules='D:\DLSSNR-Lab\c256-frag-production-modules',
  [string]$OutputDirectory='D:\給網友打包',[string]$CodecDecodePath='D:\DLSSNR-Lab\native_codec_decode.hlsl')
 $ErrorActionPreference='Stop';$utf8=New-Object Text.UTF8Encoding($false)
 $stage=Join-Path $OutputDirectory "Magpie-DLSS5-AMD-$Version"
@@ -37,7 +37,7 @@ foreach($rel in 'DLSS5-AMD\logs','DLSS5-AMD\native-game-tiled-assets\shader-cach
  if(Test-Path "$stage\$rel"){Remove-Item "$stage\$rel" -Recurse -Force}
 }
 $flag="$stage\DLSS5-AMD\native-game-flags.txt"
-$lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_ASYNC|_DEBUG)?=' -and $_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|DECODER_BYTE|VIT_BYTE_STREAM|MODULE_DIR)='})+@('DLSS5_PRE_UPSCALE=0','DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
+$lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_ASYNC|_DEBUG)?=' -and $_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|MH_FFN_FRAG256|DECODER_BYTE|VIT_BYTE_STREAM|MODULE_DIR)='})+@('DLSS5_PRE_UPSCALE=0','DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_MH_FFN_FRAG256=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
 [IO.File]::WriteAllLines($flag,$lines,$utf8)
 $allowed=@('DLSS5-AMD\native-game-tiled-assets\native_codec_decode.hlsl','HIP-API-LICENSE.txt','dlss5-amd.addon64','README.txt','DLSS5-AMD-VERSION.txt','DLSS5-AMD\native-game-flags.txt','SHA256SUMS.txt')
 foreach($f in Get-ChildItem $stage -Recurse -File){

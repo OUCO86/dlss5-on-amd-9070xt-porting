@@ -1,0 +1,25 @@
+{
+  "version": "0.26",
+  "directory": "D:\\給網友打包",
+  "addon_sha256": "f5d3f7348e42f362a0db4233814e1b2d8c4842de0d1196620a40bbc299adde75",
+  "decoder_sha256": "98a790d928e61c3eab905f43374dc9a1e560aff22946cd17b166cd0ca3e6c5f8",
+  "targets": [
+    "gfx1200",
+    "gfx1201"
+  ],
+  "modules_per_target": 24,
+  "packages": [
+    {
+      "file": "OptiScaler-DLSS5-AMD-0.26.zip",
+      "bytes": 387976939,
+      "sha256": "e008013b3c6dfa9ae1268a66fe5d4cf4170462e9bd9270cf550bf4b2a730f9a6",
+      "verified_payload_files": 538
+    },
+    {
+      "file": "Magpie-DLSS5-AMD-0.26.zip",
+      "bytes": 356968661,
+      "sha256": "9571fc0cda7ad78cb2e12312fdd0d0cc28e270109edad15301ec94fc007276f0",
+      "verified_payload_files": 722
+    }
+  ]
+}

@@ -53,7 +53,7 @@ if($Action -eq 'Release'){
  if($Optimized){
   if(!$ModulesPath -or !$AddonPath -or !$PreUpscale){throw 'Optimized package requires matched dual modules/addon and pre-upscale'}
   $flag="$stage\DLSS5-AMD\native-game-flags.txt"
-  $lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|DECODER_BYTE|VIT_BYTE_STREAM)='})+@('DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
+  $lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|MH_FFN_FRAG256|DECODER_BYTE|VIT_BYTE_STREAM)='})+@('DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_MH_FFN_FRAG256=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
   if($lines -match '^DLSS5_HIP_MODULES='){throw 'Package must not override architecture selection'}
   [IO.File]::WriteAllLines($flag,$lines,(New-Object Text.UTF8Encoding($false)))
  }
