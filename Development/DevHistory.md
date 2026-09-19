@@ -2494,3 +2494,8 @@ C64/C128/C256 attention-project借鉴C32：指数half保留h8寄存器，概率�
 另做隔离候选mh-byte-stream-diag.patch：为c64/128/256导出fb_bout_diag，并让host在byteout时也选择快速残差；仅在/tmp/mh-byte-diag-build副本编译benchmark_byte_diag/reference_streamdiag，生产源未改。默认输入1080相对局部方案20.253/20.2155→20.0495/20.029，约−0.195ms；900约−0.064ms。但扩展900 seed123真实输入首帧即不一致（1,057,029个half不同，maxabs0.1962；24帧末2,771,648个不同），停止采用，不当作可用提速。
 
 test_mh_byte_stream新增可选diag模式，48组独立FFN/QKV/投影/byteout检查全过；回测原有完整MH_BYTE_STREAM同样在此seed123输入上失败，说明此前默认输入/小单元检查未覆盖整链反例，不能归咎于新导出，也不能把局部特征方案牵连为失败。完整字节流继续关闭，下一步若追这条路应逐块定位首个偏差。测试patch/脚本与streamdiag CSV、单元日志、counterexample统计归档；大输入/输出仍在远端hip-backend/profile1080。
+
+
+## 2026-09-19 18:29：《剑星》安装局部字节特征方案及最新已验证内核
+
+用户要求实玩，确认游戏/Magpie退出。deploy-stellar-feature-byte.ps1备份到pre-upscale/before-feature-byte，更新三个已验证模块（C32普通0f3aff…、packed31e295…、MH dea239…），其余21模块与既有安装逐SHA一致；保留be9e82显示修复DLL。启用MH_FEATURE_BYTE=1、MH_PROJ_DIAG_FB=1，明确MH_BYTE_STREAM=0、VIT_BYTE_STREAM=0，排除未通过的完整流候选。auto、前置异步、FPS关闭保持；游戏图形设置/OptiScaler.ini/DLL前后SHA一致，未启动游戏。脚本-Action Restore回退本轮模块和flags。待用户同场景实测。
