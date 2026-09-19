@@ -1,0 +1,625 @@
+[
+  {
+    "stage": "block5",
+    "block": 5,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block6",
+    "block": 6,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block7",
+    "block": 7,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block8",
+    "block": 8,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block9",
+    "block": 9,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block10",
+    "block": 10,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block11",
+    "block": 11,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block12",
+    "block": 12,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block13",
+    "block": 13,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block14",
+    "block": 14,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block15",
+    "block": 15,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block16",
+    "block": 16,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block17",
+    "block": 17,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block18",
+    "block": 18,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block19",
+    "block": 19,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block20",
+    "block": 20,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block21",
+    "block": 21,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block22",
+    "block": 22,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block47",
+    "block": 47,
+    "unit": "float",
+    "elements": 768000,
+    "bitdiff": 0,
+    "numericdiff": 0,
+    "invalid": 0,
+    "maxabs": 0.0,
+    "first_indices": []
+  },
+  {
+    "stage": "block48-input",
+    "block": 48,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 2832,
+    "numericdiff": 2832,
+    "invalid": 0,
+    "maxabs": 9.25,
+    "first_indices": [
+      1504448,
+      1504449,
+      1504450,
+      1504451,
+      1504452,
+      1504453,
+      1504454,
+      1504455
+    ]
+  },
+  {
+    "stage": "block48-ffn",
+    "block": 48,
+    "unit": "byte",
+    "elements": 1703936,
+    "bitdiff": 10454,
+    "first_indices": [
+      1563648,
+      1563649,
+      1563650,
+      1563651,
+      1563653,
+      1563654,
+      1563655,
+      1563656
+    ]
+  },
+  {
+    "stage": "block48-norm",
+    "block": 48,
+    "unit": "byte",
+    "elements": 5111808,
+    "bitdiff": 34209,
+    "first_indices": [
+      4690944,
+      4690945,
+      4690946,
+      4690947,
+      4690948,
+      4690949,
+      4690950,
+      4690951
+    ]
+  },
+  {
+    "stage": "block48",
+    "block": 48,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 20268,
+    "numericdiff": 20268,
+    "invalid": 0,
+    "maxabs": 8.25,
+    "first_indices": [
+      1452033,
+      1452042,
+      1452050,
+      1452054,
+      1452056,
+      1452058,
+      1452061,
+      1452062
+    ]
+  },
+  {
+    "stage": "block49",
+    "block": 49,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 35855,
+    "numericdiff": 35855,
+    "invalid": 0,
+    "maxabs": 6.8125,
+    "first_indices": [
+      1348611,
+      1348613,
+      1348624,
+      1348628,
+      1348630,
+      1348639,
+      1348647,
+      1348653
+    ]
+  },
+  {
+    "stage": "block50",
+    "block": 50,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 49618,
+    "numericdiff": 49618,
+    "invalid": 0,
+    "maxabs": 5.8125,
+    "first_indices": [
+      1246208,
+      1246210,
+      1246212,
+      1246213,
+      1246216,
+      1246219,
+      1246220,
+      1246229
+    ]
+  },
+  {
+    "stage": "block51",
+    "block": 51,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 72455,
+    "numericdiff": 72455,
+    "invalid": 0,
+    "maxabs": 5.4375,
+    "first_indices": [
+      1142784,
+      1142786,
+      1142787,
+      1142796,
+      1142803,
+      1142806,
+      1142809,
+      1142811
+    ]
+  },
+  {
+    "stage": "block52",
+    "block": 52,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 92759,
+    "numericdiff": 92758,
+    "invalid": 0,
+    "maxabs": 4.5625,
+    "first_indices": [
+      1040384,
+      1040389,
+      1040391,
+      1040394,
+      1040405,
+      1040407,
+      1040411,
+      1040420
+    ]
+  },
+  {
+    "stage": "block53",
+    "block": 53,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 123003,
+    "numericdiff": 123001,
+    "invalid": 0,
+    "maxabs": 4.25,
+    "first_indices": [
+      936971,
+      936986,
+      936988,
+      937028,
+      937032,
+      937033,
+      937044,
+      937065
+    ]
+  },
+  {
+    "stage": "block54",
+    "block": 54,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 155770,
+    "numericdiff": 155769,
+    "invalid": 0,
+    "maxabs": 4.625,
+    "first_indices": [
+      834560,
+      834566,
+      834573,
+      834580,
+      834583,
+      834585,
+      834587,
+      834588
+    ]
+  },
+  {
+    "stage": "block55",
+    "block": 55,
+    "unit": "float",
+    "elements": 1536000,
+    "bitdiff": 196407,
+    "numericdiff": 196407,
+    "invalid": 0,
+    "maxabs": 4.5,
+    "first_indices": [
+      731138,
+      731151,
+      731161,
+      731162,
+      731168,
+      731171,
+      731172,
+      731181
+    ]
+  },
+  {
+    "stage": "block56",
+    "block": 56,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 446409,
+    "numericdiff": 446409,
+    "invalid": 0,
+    "maxabs": 6.0,
+    "first_indices": [
+      1447427,
+      1447438,
+      1447459,
+      1447461,
+      1447472,
+      1447487,
+      1447535,
+      1447586
+    ]
+  },
+  {
+    "stage": "block57",
+    "block": 57,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 509232,
+    "numericdiff": 509232,
+    "invalid": 0,
+    "maxabs": 6.0,
+    "first_indices": [
+      1344517,
+      1344519,
+      1344523,
+      1344545,
+      1344549,
+      1344550,
+      1344553,
+      1344554
+    ]
+  },
+  {
+    "stage": "block58",
+    "block": 58,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 570745,
+    "numericdiff": 570745,
+    "invalid": 0,
+    "maxabs": 6.0,
+    "first_indices": [
+      1242114,
+      1242115,
+      1242117,
+      1242125,
+      1242126,
+      1242128,
+      1242153,
+      1242165
+    ]
+  },
+  {
+    "stage": "block59",
+    "block": 59,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 632379,
+    "numericdiff": 632379,
+    "invalid": 0,
+    "maxabs": 8.0,
+    "first_indices": [
+      1139200,
+      1139201,
+      1139202,
+      1139212,
+      1139213,
+      1139222,
+      1139223,
+      1139226
+    ]
+  },
+  {
+    "stage": "block60",
+    "block": 60,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 687157,
+    "numericdiff": 687157,
+    "invalid": 0,
+    "maxabs": 8.0,
+    "first_indices": [
+      1036812,
+      1036813,
+      1036823,
+      1036835,
+      1036842,
+      1036846,
+      1036864,
+      1036870
+    ]
+  },
+  {
+    "stage": "block61",
+    "block": 61,
+    "unit": "float",
+    "elements": 3072000,
+    "bitdiff": 743109,
+    "numericdiff": 743107,
+    "invalid": 0,
+    "maxabs": 8.0,
+    "first_indices": [
+      934016,
+      934019,
+      934026,
+      934028,
+      934042,
+      934053,
+      934057,
+      934058
+    ]
+  },
+  {
+    "stage": "block62",
+    "block": 62,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 1488844,
+    "numericdiff": 1488844,
+    "invalid": 0,
+    "maxabs": 16.0,
+    "first_indices": [
+      1855489,
+      1855494,
+      1855500,
+      1855501,
+      1855506,
+      1855507,
+      1855515,
+      1855521
+    ]
+  },
+  {
+    "stage": "block63",
+    "block": 63,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 1565412,
+    "numericdiff": 1565412,
+    "invalid": 0,
+    "maxabs": 24.0,
+    "first_indices": [
+      1752866,
+      1752869,
+      1752870,
+      1752871,
+      1752874,
+      1752878,
+      1752879,
+      1752895
+    ]
+  },
+  {
+    "stage": "block64",
+    "block": 64,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 1738103,
+    "numericdiff": 1738103,
+    "invalid": 0,
+    "maxabs": 16.0,
+    "first_indices": [
+      1650436,
+      1650437,
+      1650438,
+      1650444,
+      1650445,
+      1650446,
+      1650447,
+      1650448
+    ]
+  },
+  {
+    "stage": "block65",
+    "block": 65,
+    "unit": "float",
+    "elements": 6144000,
+    "bitdiff": 1766067,
+    "numericdiff": 1766067,
+    "invalid": 0,
+    "maxabs": 24.0,
+    "first_indices": [
+      1547777,
+      1547785,
+      1547788,
+      1547792,
+      1547793,
+      1547794,
+      1547810,
+      1547811
+    ]
+  }
+]

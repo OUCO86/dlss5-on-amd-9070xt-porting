@@ -40,12 +40,12 @@ DEV uint group(){return __builtin_amdgcn_workitem_id_x()>>4;}
 DEV uint bid(){return __builtin_amdgcn_workgroup_id_x();}
 DEV float activation(float a){float g=clampf(a,-4.f,4.f);return F(H(a*H(g*H(absf(g)*(-.055908203125f)+.447265625f)+.89453125f)));}
 // K32 group sum begins at zero; round H(previous + group) only after BOTH K16 MMAs.
-DEV f8 dot(const float*a,const float*b,uint stride_a,uint stride_b,uint first,uint row,uint off_a,uint off_b,uint begin,uint end,f8 acc){
+DEV f8 dot(const float*a,const float*b,uint stride_a,uint stride_b,uint first,uint row,uint off_a,uint off_b,uint begin,uint end,f8 acc,uint valid_tokens=~0u){
  for(uint k=begin;k<end;k+=32){f8 sum{};
   #pragma unroll
   for(uint tile=0;tile<2;tile++){h8 av{},bv{};
    #pragma unroll
-   for(uint e=0;e<8;e++){uint j=k+tile*16+group()*8+e;av[e]=(_Float16)a[(first+rc())*stride_a+off_a+j];bv[e]=(_Float16)b[off_b+(row+rc())*stride_b+j];}
+   for(uint e=0;e<8;e++){uint j=k+tile*16+group()*8+e;av[e]=first+rc()<valid_tokens?(_Float16)a[(first+rc())*stride_a+off_a+j]:(_Float16)0;bv[e]=(_Float16)b[off_b+(row+rc())*stride_b+j];}
    sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(av,bv,sum);
   }
   #pragma unroll
@@ -81,12 +81,12 @@ WAVE void vit_qkv_project(const float*input,const float*weights,float*output,uin
  for(uint e=0;e<8;e++)output[(part*tokens+first+group()*8+e)*1024+row+rc()]=total[e];
 }
 WAVE void decoder_project2x(const float*input,const float*weights,const float*skip,float*output,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){uint tiles=outputs/16,first=bid()/tiles*16,row=bid()%tiles*16;if(first>=iw*ih)return;uint partitions=inputs==1024?4:1;f8 total{};
- for(uint p=0;p<partitions;p++){f8 a{};a=dot(input,weights,inputs,inputs,first,row,0,0,p*(inputs/partitions),(p+1)*(inputs/partitions),a);
+ for(uint p=0;p<partitions;p++){f8 a{};a=dot(input,weights,inputs,inputs,first,row,0,0,p*(inputs/partitions),(p+1)*(inputs/partitions),a,iw*ih);
   #pragma unroll
   for(uint e=0;e<8;e++)total[e]=p?H(total[e]+a[e]):a[e];
  }
  #pragma unroll
- for(uint e=0;e<8;e++){uint token=first+group()*8+e;
+ for(uint e=0;e<8;e++){uint token=first+group()*8+e;if(token>=iw*ih)continue;
   #pragma unroll
   for(uint dy=0;dy<2;dy++){
    #pragma unroll

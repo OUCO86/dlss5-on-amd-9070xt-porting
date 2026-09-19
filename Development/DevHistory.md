@@ -2498,4 +2498,13 @@ test_mh_byte_stream新增可选diag模式，48组独立FFN/QKV/投影/byteout检
 
 ## 2026-09-19 18:29：《剑星》安装局部字节特征方案及最新已验证内核
 
-用户要求实玩，确认游戏/Magpie退出。deploy-stellar-feature-byte.ps1备份到pre-upscale/before-feature-byte，更新三个已验证模块（C32普通0f3aff…、packed31e295…、MH dea239…），其余21模块与既有安装逐SHA一致；保留be9e82显示修复DLL。启用MH_FEATURE_BYTE=1、MH_PROJ_DIAG_FB=1，明确MH_BYTE_STREAM=0、VIT_BYTE_STREAM=0，排除未通过的完整流候选。auto、前置异步、FPS关闭保持；游戏图形设置/OptiScaler.ini/DLL前后SHA一致，未启动游戏。脚本-Action Restore回退本轮模块和flags。待用户同场景实测。
+用户要求实玩，确认游戏/Magpie退出。deploy-stellar-feature-byte.ps1备份到pre-upscale/before-feature-byte，更新三个已验证模块（C32普通0f3aff…、packed31e295…、MH dea239…），其余21模块与既有安装逐SHA一致；保留be9e82显示修复DLL。启用MH_FEATURE_BYTE=1、MH_PROJ_DIAG_FB=1，明确MH_BYTE_STREAM=0、VIT_BYTE_STREAM=0，排除未通过的完整流候选。auto、前置异步、FPS关闭保持；游戏图形设置/OptiScaler.ini/DLL前后SHA一致，未启动游戏。脚本-Action Restore回退本轮模块和flags。18:43用户实玩未见明显帧率差异，画面正常。
+
+
+## 2026-09-19 18:43起：逐块定位到900档解码尾部漏派发，修复回归中
+
+隔离探针按原字节格式抓中间张量，额外同步前后最终hash一致，未掩盖反例。编码器5～22、47全部逐位相同；48开始不同，底边最后几行集中。继续抓48输入/FFN/QKV，输入已不同，定位到47→48的Up而不是注意力/byteout。
+
+根因：900档Up输入50×30=1500 token，输出256通道。旧ceil(1500×256/256)=1500组，正确应ceil(1500/16)×(256/16)=1504组；最后4个通道tile没派发，留下48个输出像素×64通道=3072个float未写，缓冲复用改变了残留值。Run改为分别对token/通道分块；fast float/halfweight与WMMA decoder补尾token读取/写出保护。专门identity权重＋哨兵/guard测试：旧网格确切复现3072未写；修复后三内核×7尺寸/裁剪共21组全正确，guard不变。
+
+生产源码修改在hip_reference_network.h、deep_fast.hip、deep_wmma.hip；临时模块decoder-tail-modules，未部署。下一步整链对比、确认字节流反例消失及更新受影响900黄金；不能要求修复后继续匹配含未初始化值的旧900结果。诊断patch/脚本、test_decoder_tail.cpp与build-test-decoder-tail.ps1可复现。

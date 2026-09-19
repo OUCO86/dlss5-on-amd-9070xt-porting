@@ -150,7 +150,7 @@ class Network {
  template<class...A>void Run(const char*m,const char*name,size_t n,A...args){
   U count=Count(n),threads=256;unsigned groups=0;std::string module=m,kernel=name;
   static const std::set<std::string> accelerated={"c32_ffn_expand","c32_ffn_contract","c32_attn_qkv","c32_attn_scores","c32_attn_av","c32_attn_project","mh_ffn_expand","mh_ffn_contract","mh_ffn_project","mh_qkv","mh_scores_exp","mh_attention_av","mh_attention_project","mh_pool_project","split_mix","split_expand","split_contract","split_projection","vit_expand","vit_project","vit_qkv_project","decoder_project2x"};
-  if(opt.wmma&&accelerated.count(kernel)){if(count%256)throw std::runtime_error("WMMA tile count: "+kernel);module+="_wmma";if(module!="deep_wmma")kernel+="_wmma";threads=32;}
+  if(opt.wmma&&accelerated.count(kernel)){if(count%256&&kernel!="decoder_project2x")throw std::runtime_error("WMMA tile count: "+kernel);module+="_wmma";if(module!="deep_wmma")kernel+="_wmma";threads=32;}
   if(opt.tiled){std::string original=name;
    if(original=="c32_ffn_expand"||original=="c32_ffn_contract"||original=="c32_attn_qkv"||original=="c32_attn_project"){
     U columns=original=="c32_ffn_expand"?128:original=="c32_attn_qkv"?96:32,tokens=count/columns;
@@ -199,6 +199,12 @@ class Network {
   if(module=="c32_fast_ffn"){bool expand=kernel=="c32_ffn_expand_fast";U tokens=count/(expand?128:32);threads=expand?512:256;groups=((tokens+63)/64)*(expand?2:1);}
   if(module=="c32_fast_attention")threads=32;
   if(opt.wave&&(kernel=="c32_attn_normalize"||kernel=="c32_attn_probabilities"||kernel=="mh_normalize"||kernel=="mh_probabilities")){module="wave";kernel+="_wave";count=Count(size_t(count)*32);}
+  if((kernel=="decoder_project2x"||kernel=="decoder_project2x_h16w")&&(module=="deep_fast"||module=="deep_wmma")){
+   if constexpr(sizeof...(A)==10){auto tuple=std::make_tuple(args...);auto integer=[](auto x)->U{if constexpr(std::is_integral_v<decltype(x)>)return U(x);else return 0;};
+    const U columns=integer(std::get<9>(tuple));if(!columns||columns%16||count%columns)throw std::runtime_error("decoder tile ABI");
+    groups=Count(((size_t(count)/columns+15)/16)*(columns/16));
+   }else throw std::runtime_error("decoder argument count");
+  }
   if(opt.wall_profile)api.Check(api.hipStreamSynchronize(stream),"wall profile drain");
   auto wall_begin=opt.wall_profile?std::chrono::steady_clock::now():std::chrono::steady_clock::time_point{};
   Timing timing{kernel};if(opt.profile){api.Check(api.hipEventCreate(&timing.begin),"event create");api.Check(api.hipEventCreate(&timing.end),"event create");timings.push_back(timing);api.Check(api.hipEventRecord(timing.begin,stream),"event begin");}
