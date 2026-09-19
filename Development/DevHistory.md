@@ -2514,3 +2514,8 @@ HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe2
 用户反馈0.24.2帧率显示关不掉。确认NativePreUpscale::Process无条件绘制状态/FPS，未接SHOW_FPS/NOTICE。现从包内flags在首次使用时读取并缓存设置，避免背景初始化尚未应用环境变量的时序问题：NOTICE默认2，0/1均跳过overlay Prepare和Draw；SHOW_FPS默认0，仅非零且NOTICE>=2显示FPS数字，关闭FPS仍保留状态行。设置需重启游戏生效。
 
 HIP与DX12两种addon编译通过，git diff --check通过。HIP SHA BE9E82CEE99037EF92EB2BEC18ACC51C428EC3CD02CCF80A1FD1033B3A8C3119。独立补丁DLL及说明位于`D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2-overlay-fix`，上传后SHA核对一致；未替换运行中游戏文件、未重打已上传0.24.2整包。屏幕显示的游戏回归待做，不能把编译通过当作实测。
+
+
+### 2026-09-19 16:18：显示修复补丁ZIP与关闭FPS配置
+
+按用户要求生成D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2-overlay-fix.zip，1,037,812字节，SHA256 6f3ee2396c9acb32dbd30ca450bb142673105e90ad5758cf7eab535fe9bb9fe3；DLL/README逐项从zip读回验证，附校验表与zip.sha256。剑星PID25864仍运行且加载旧395dabfe DLL，未热替换。已备份游戏DLL及flags到pre-upscale/before-overlay-flags，仅将DLSS5_SHOW_FPS=1改0，保留默认NOTICE状态显示。待用户退出后部署be9e82修正版并重启验证；当前屏幕尚不会响应这一文件修改。
