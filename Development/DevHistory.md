@@ -2429,3 +2429,12 @@ OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscal
 实际候选 `c32-register-ex.patch`：生成指数half值时留在h8寄存器数组，归一化乘法复用，避免回读scratch.ex；原求和、数值与同步保持。首版动态数组索引令chain出现1814条cndmask，ABBA约21.12→36.47ms，private段仍0，不是spill。显式展开固定key/e循环后，选择指令降到49，代码体积478360→241944字节；ABBA基线21.113/21.103、候选20.9255/20.919，约−0.186ms（0.88%），最终输出hash不变。
 
 验证脚本 `test-c32-register-ex.ps1` / `validate-c32-register-ex.ps1`；720/900/1080档×连续历史/每8帧reset共6组，每版24帧全部有限、首尾half输出逐位匹配。仍是同一张1296×720真实HDR输入，尚未跨内容/seed扩验或游戏回归；候选保留独立patch/模块，生产源与游戏未改。数据并入Development/results/1080-20260919（regex-indexed为失败首版、regex为展开版、regex-validation为多档检查）；远端模块hip-backend/c32-register-ex-modules。下一步先补不同输入/seed以及900档性能，过关再决定生产采用；归一化数据传递继续是研究方向。
+
+
+## 2026-09-19 17:04起：C32寄存器复用扩验通过，纳入生产源码
+
+测试台新增可选seed/pattern参数，旧命令行为保持：pattern0真实抓帧，1合成HDR纹理（<8），2暗部/次正规half梯度。900/1080档×真实seed123、HDR seed123、暗部seed9876共6组，每版24帧全部有限、首尾输出逐位一致；此前720/900/1080×两种历史模式检查亦通过。900档ABBA基线14.229/14.2395，候选14.108/14.057，约−0.152ms；1080上一轮约−0.186ms。扩验及900性能数据在同一results/1080-20260919目录。
+
+将c32-register-ex.patch并入hip/c32_fused_ffn_attention.hip，补注释强调固定索引循环必须展开。正式build-modules.ps1配方重编两个受影响模块：普通版SHA145d3dd186db27ab13ae82b17a6690992fd93de8e97599552c6a454ff42aed1c，packed版71baedcc0486790c48c884917ab96faa722f781bf415d195e195928e651921de；hip/SHA256SUMS同步。其余22模块沿用基底，未重编无关内核。生产候选远端hip-backend/c32-regex-production-modules。
+
+旧黄金脚本先因过时资产目录报noise missing；为validate-hdr/validate-modules/validate-modules-960补Assets参数后，用0.23完整资产重跑，900w与960两套共六道黄金值全部匹配（40帧、每8帧reset、seed123参考历史）。主机DLL和发布包未变，尚未部署游戏；下次需要部署的是新的HSACO，不是重新编DLL。本轮收下约1%的确定收益，下一步仍可继续研究归一化的数据传递，不再重复已证伪的占用率捷径。
