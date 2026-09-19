@@ -2615,3 +2615,9 @@ C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗�
 追查固定seed=0的噪声是否值得缓存：独立双目标消融只把fused_prefix_values的g0/g1/g2置零，图像故意改变，绝不部署。入口VGPR169/LDS15360/WMMA74不变，log2/sqrt2/sin1/cos2消失；分别在原版和零噪声版测入口重复的边际成本，900 1.14575→1.12825（差0.0175ms），1080 1.6825→1.65275（差0.02975），与小漂移同量级，不把它当确定可兑现的提速；噪声缓存暂不追。patch c32-prefix-noise-ablation、measure-prefix-noise.ps1及prefix-noise数据归档，候选目录prefix-noise-ablate-build/hip-backend/prefix-noise-ablate-modules仅诊断。
 
 完整报告Development/results/1080-20260919/current-profile.md，由summarize-current-profile.py从current-map/current-detail/prefix-noise CSV生成。下一步优先C32高分辨率首尾的算术主干，以及ViT attention内部评分/归一化/AV细分；不重做已否定的buffer地址、小项pack/gather或噪声缓存。生产算法/游戏/发布包本轮未改。
+
+## 2026-09-19 23:11起：安装Lies of P，准备复现issue #1效果质量黑屏
+
+用户切换排查《匹诺曹的谎言》，目录C:\Program Files (x86)\Steam\steamapps\common\Lies of P；实际执行文件LiesofP\Binaries\Win64\LOP-Win64-Shipping.exe。issue https://github.com/lmxxf/dlss5-on-amd-9070xt-porting/issues/1 报告的是“效果质量”不设最高就黑屏，F6关闭恢复；附件https://github.com/user-attachments/files/32415774/default.zip（24093字节）已读，网友9070XT/gfx1201、runtime70260201，网络初始化/processed=1正常，并发生过render geometry changed；日志没有足够的像素/格式对照来确定根因，不判为架构或初始化问题。
+
+确认LOP/游戏/Magpie未运行。用公开OptiScaler 0.25完整包建立复现基线，安装到实际Shipping.exe旁；538个载荷逐文件验证，addon为02b40319…（不是《剑星》新候选f5d3…）。游戏已有6,609,624字节amd_fidelityfx_dx12.dll，保留原文件及SHA；OptiScaler自己的依赖放OptiScaler子目录，INI设置绝对OptiDllPath和FfxDx12Path指向子目录，dxgi/ReShade/addon/DLSS5-AMD/D3D12_Optiscaler留EXE旁。保留预上采样+auto及FSR31预设，FPS关闭，未改游戏画质。备份/安装清单D:\DLSSNR-Lab\liesofp-before-optiscaler-025；Development/tools/install-liesofp-optiscaler.ps1支持Install/Restore。未启动游戏，加载与问题复现待用户试玩；未回帖issue。
