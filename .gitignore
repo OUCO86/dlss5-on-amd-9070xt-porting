@@ -4,3 +4,5 @@ __pycache__/
 /release/
 Development/temp/
 third_party/
+AGENTS.md
+.claude
