@@ -75,6 +75,8 @@ inline bool Reverse(D3D12_RESOURCE_STATES s,uint32_t&out){
 }
 inline bool Capture(void**context,const Header*h,ID3D12GraphicsCommandList*native,unsigned frame){
  if(Fatal().load()||!Enabled()||Replaying()||!original||!native||native->GetType()!=D3D12_COMMAND_LIST_TYPE_DIRECT)return false;
+ // Return false so the caller records the original FFX dispatch in its own list.
+ if(Mode()==1&&neural_oneshot.Bypassed())return false;
  Description d{};void*ctx=nullptr;
  if(!Read(h,&d,sizeof d)||!Read(context,&ctx,sizeof ctx)||!ctx||!d.command_list){if(frame<=8)Log(frame,d,"capture rejected: descriptor/context read");return false;}
  if(d.header.next){if(frame<=8)Log(frame,d,"capture rejected: extension chain");return false;}
@@ -140,7 +142,7 @@ inline bool Process(ID3D12CommandQueue*q,Job&j){
   for(unsigned i=0;i<7;i++)if(d.resources[i].resource){replay_states[i]=j.states[i];if(!Reverse(j.states[i],d.resources[i].state))throw std::runtime_error("terminal resource state not representable by FFX");}
   auto*color=static_cast<ID3D12Resource*>(d.resources[0].resource);auto*motion=static_cast<ID3D12Resource*>(d.resources[2].resource);auto cd=color->GetDesc();
   bool supported=NativeInputGeometry::Supported(d.render[0],d.render[1])&&NativeIsGameColor(cd.Format)&&!(cd.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
-  if(Mode()==1&&supported){
+  if(Mode()==1&&supported&&!neural_oneshot.Bypassed()){
    bool same=s->low&&s->low->GetDesc().Width==d.render[0]&&s->low->GetDesc().Height==d.render[1]&&s->low->GetDesc().Format==cd.Format;
    if(!same&&s->low){if(neural_oneshot.ResetForNewSession("pre-upscale render geometry changed")){s->submit.Flush();s->low->Release();s->low=nullptr;}else supported=false;}
    if(supported&&!s->low){cd.Width=d.render[0];cd.Height=d.render[1];cd.Layout=D3D12_TEXTURE_LAYOUT_UNKNOWN;cd.Alignment=0;

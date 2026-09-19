@@ -182,6 +182,10 @@ static uint32_t dispatch(void**context,const Header*h){
 #ifdef NATIVE_ORDER_NEURAL
  if(NativePreUpscale::Enabled()){
   if(NativePreUpscale::Replaying())return original(context,h);
+  if(NativePreUpscale::Mode()==1&&neural_oneshot.Bypassed()){
+   if(n<5||n%100==0)log("ffx_passthrough_f6",list,nullptr,n);
+   return original(context,h);
+  }
   ID3D12GraphicsCommandList*native=nullptr;
   if(list&&SUCCEEDED(static_cast<IUnknown*>(list)->QueryInterface(UnwrappedObject,reinterpret_cast<void**>(&native)))&&native){
    install_native_barriers(list);

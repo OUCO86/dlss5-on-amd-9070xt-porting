@@ -2421,3 +2421,16 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 包 `D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.1.zip`；SHA256 `1E9EC72167D234BBC73C106B22E2EE392E254C9D031C823BF36EE9BA50B25BE3`，附.zip.sha256。513个文件从zip读回逐个哈希通过，24个HIP模块与基底一致。包内说明新增DLL子目录加载时回查游戏exe旁资产的修正，并明确《生化9》前置路径仍不兼容。未上传、未打tag；旧0.24包保留。
 
 - 13:44 Zero 已上传0.24.1： https://pan.quark.cn/s/4f73a54d0ff9 。中英文README追加版本行；公众号使用教程同步最新包名、链接和路径修正说明。
+
+
+## 2026-09-19 14:31～14:50：《剑星》主城低占用掉帧与F6真正旁路修复
+
+- 用户现场：主城比原场景慢，进入游戏内菜单立即恢复约48fps；F6关闭推理后主城仍约34fps，GPU显示Steam约25～45%、AMD约80%；关闭游戏垂直同步没有改变。不能直接据此归因OptiScaler、显存驱逐或单线程瓶颈。
+- 只读采样PID12504：主GPU专用约10.17GiB/16GiB，游戏约8.09GiB专用、0.36GiB共享，连续快照未增长；系统可用RAM约11.8GiB，ADL主adapter核心约2.6～3.0GHz、edge59°C、hotspot约73～80°C。F6关闭后WDDM只见约20%的3D活动；两秒线程CPU采样最高约单核35%，等待快照不能单独证明根因。
+- 当前前置链render1506×848→FSR2560×1440，network1600×960、async1。关闭前处理帧间隔由19～21ms变到31～32ms，中间40～41ms；这不是纯网络时间或含插帧显示FPS。F6日志确认OFF，随后pre-upscale仍processed=0/replayed。配置中游戏专用FrameLimit=60，通用FrameRateLimit=0；游戏自身FG保存为OFF，OptiScaler配置为auto，不能仅凭加载libxess_fg.dll认定正在插帧。用户关闭VSync后bUseVSync=False，但另一旧字段bVSync=True，文件不能代替实际Present验证。
+- 核对当前0.24.1代码：F6原本只让WantsFrame返回false，FFX仍被Capture延后，Process仍先复制低分辨率颜色，再重放FSR。OFF不是干净对照。`history_reset=1`日志字段虽是固定文本，当前mode1代码也确实每帧传reset=true；不能沿旧会话把它当完整时序网络。
+- 用户14:47明确退出游戏后授权继续修复。当前main基于8ef8e40（0.24.1），不是旧HIP优化分支。HIP在09-17已追平/超过HLSL，用户已停止追性能；本次只修接入旁路，旧“差几毫秒”的自动优化目标不再作为当前任务。
+- 新实现：F6按键边沿处理提取到共用PollBypassKeyLocked，入口Bypassed在直通期间仍轮询，支持按住不重复切换和再次启用。前置FFX钩子在QI/安装屏障跟踪/Capture之前直通原始FFX；Capture自身也有旁路保护。若F6关闭发生在捕获之后，那一帧保留必要的FFX重放，但跳过私有颜色分配/复制和神经处理，避免漏执行原FFX。未拆掉OptiScaler/ReShade或释放驻留网络，故这仍不是“无插件原版”的对照。
+- HIP addon编译SHA `b8e357411c925e7dc2a4ef6e2afbf64cd23e730a8cfd2c958dfa3ffed1460cbd`；DX12/tiled编译SHA `48885c25ab74136c0f91b3e01f15080f20f262cf2ad61992f7459bd38b3a3cfd`。`Development/pre-upscale-smoke.cpp`扩展到六帧，同步与异步两种模式均通过：关闭直通、重新开启延后、捕获后才关闭、合法upscaleSize=0；每帧FFX只执行一次，直通无额外提交/捕获任务，捕获后关闭不分配私有颜色，4096个half元素逐值全部一致。按键边沿/按住/重新启用检查通过。没有把烟测当主城性能验证。
+- 部署工具`Development/tools/f6-passthrough-stellarblade.ps1`，只替换剑星addon及已有同名_storage_缓存，安装前检查游戏退出、备份并逐SHA验证；备份`D:\DLSSNR-Lab\pre-upscale\before-f6-passthrough`。权重/24个HIP内核/游戏设置/OptiScaler.ini不变，0.24.1发布包未重打。等待同一主城位置F6 OFF/ON实际反馈；OFF日志应出现`ffx_passthrough_f6`，而非持续pre-upscale重放。
+- 记录入口纠正：本旧会话14:35误重新创建了已废弃context文件，仅含当天五行诊断，内容已并回本节并删除；以后只更新DevHistory。

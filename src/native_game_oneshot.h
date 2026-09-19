@@ -25,6 +25,9 @@ struct NativeDredPageFaultOutput{D3D12_GPU_VIRTUAL_ADDRESS va;const NativeDredAl
 struct NativeDredData:public IUnknown{virtual HRESULT STDMETHODCALLTYPE GetAutoBreadcrumbsOutput(NativeDredBreadcrumbsOutput*)=0;virtual HRESULT STDMETHODCALLTYPE GetPageFaultAllocationOutput(NativeDredPageFaultOutput*)=0;};
 static constexpr GUID NativeDredIid={0x98931D33,0x5AE8,0x4791,{0xAA,0x3C,0x1A,0x73,0xA2,0x93,0x4E,0x71}};
 class NativeGameOneShot {
+#ifdef NATIVE_BYPASS_TEST
+ friend struct NativeBypassTestAccess;
+#endif
  std::atomic<unsigned>phase{0}; // idle, initializing, ready, rendering, done, failed
  unsigned source_width{},source_height{},motion_width{},motion_height{},render_width{},render_height{};
  NativeGameFrame*frame{};ID3D12CommandQueue*queue{};
@@ -33,6 +36,9 @@ class NativeGameOneShot {
  static void Log(const char*event,const char*detail=""){
   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-game-oneshot.txt").c_str(),L"ab")){fprintf(f,"pid=%lu tick=%llu event=%s detail=%s\n",GetCurrentProcessId(),GetTickCount64(),event,detail);fclose(f);}
  }
+ // Called only with request_mutex held; polling from capture keeps F6 usable
+ // even when bypassed frames never reach WantsFrame/OnSubmitted.
+ void PollBypassKeyLocked(bool down){if(down&&!f6_down){bypass=!bypass;Log("toggle",bypass?"F6: neural override OFF (original upscaler passthrough)":"F6: neural override ON");}f6_down=down;}
  static void Save(unsigned long request,const wchar_t*label,const std::vector<unsigned char>&bytes){
   if(!_wgetenv(L"DLSS5_DEBUG_DUMPS"))return; /* diagnostic only */
 #ifdef NATIVE_GAME_TILED_VERIFICATION
@@ -76,12 +82,20 @@ class NativeGameOneShot {
   task->source->Release();delete task;return 0;
  }
 public:
+ bool Bypassed(){
+  std::lock_guard<std::mutex>guard(request_mutex);
+#ifdef NATIVE_GAME_TILED_VERIFICATION
+  const unsigned state=phase.load(std::memory_order_acquire);
+  if(state==2||state==4)PollBypassKeyLocked((GetAsyncKeyState(VK_F6)&0x8000)!=0);
+#endif
+  return bypass;
+ }
  bool WantsFrame(){
   std::lock_guard<std::mutex>guard(request_mutex);
   unsigned state=phase.load(std::memory_order_acquire);if(state!=2&&state!=4)return false;
 #ifdef NATIVE_GAME_TILED_VERIFICATION
   // F6 toggles the neural override (edge-triggered); while bypassed the game's own FSR output is shown.
-  {bool down=(GetAsyncKeyState(VK_F6)&0x8000)!=0;if(down&&!f6_down){bypass=!bypass;Log("toggle",bypass?"F6: neural override OFF (game FSR)":"F6: neural override ON");}f6_down=down;}
+  PollBypassKeyLocked((GetAsyncKeyState(VK_F6)&0x8000)!=0);
   if(bypass)return false;
   // Every-frame mode: replace every FSR frame synchronously (coherent picture at network speed).
   // Still resets history each frame; remove the file to fall back to the polled slow preview.
