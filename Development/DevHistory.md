@@ -2690,3 +2690,5 @@ CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P
 用户否定先超分再缩小的后置流程，要求关闭游戏超分、最大1080P，超范围报错且不工作。撤回RE9_POST_1440构建开关，统一外部帧上限1920×1080，超过显示ERROR MAX 1920X1080并在创建/执行HIP前返回；内部900P计算保持。新增原生设置要求：读取RE9 config.ini UpscalingAlgorithm=None，否则显示TURN OFF GAME UPSCALING、不执行HIP；另外只观察OptiScaler NGX Evaluate入口（原函数照常执行），有最近调用也禁用后置，覆盖尚未保存的DLSS开关。不会强行改变游戏的渲染调用；用户开启不支持设置时停用的是我们的处理。native_only.h、configure-native.ps1归档。
 
 候选c9873d7e…已编译/部署，CPU通用2073600尺寸与专用1080上限测试通过。准备验证2K拒绝、1080关闭超分可用，以及开启超分的错误提示。上条2K实测作为被撤回实验保留，后续专用包以本条契约为准。
+
+07:43实测：2K显示ERROR MAX 1920X1080并不处理；1080配置配无边框仍会产出桌面2K，因此配置脚本最终用WindowMode=Normal（两处）及NormalWindowResolution=(1920.000000,1080.000000)，不是无效的Windowed值。PID15276原生1920×1080/None下HIP连续2400帧以上，截图ON NET1600X900 OUT1920X1080。负对照仅临时把保存配置改DLSS（不声称实时切了游戏后端），画面显示ERROR TURN OFF GAME UPSCALING、计数暂停；恢复None后继续。NGX guard安装状态0。配置最后保留Native1080、DLSS5开启、F7信息可见；用户可直接试玩。证据present-native-20260920.txt，3440e9c实现提交；尚未打包。

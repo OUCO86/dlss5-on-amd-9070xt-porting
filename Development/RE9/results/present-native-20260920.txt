@@ -1,0 +1,23 @@
+pid=6436 tick=66696406 native-only NGX guard=0
+pid=6436 tick=66701687 mode=1
+pid=6436 tick=66701796 unsupported format/size/colorspace format=24 size=2560x1440 space=1
+pid=15276 tick=67075062 native-only NGX guard=0
+pid=15276 tick=67080265 mode=1
+pid=15276 tick=67080281 bridge ready 1920x1080
+pid=15276 tick=67080656 HIP ready
+pid=15276 tick=67082125 HIP processed=1
+pid=15276 tick=67082703 unsupported format/size/colorspace format=24 size=2560x1440 space=1
+pid=15276 tick=67089468 HIP processed=300
+pid=15276 tick=67094468 HIP processed=600
+pid=15276 tick=67099468 HIP processed=900
+pid=15276 tick=67104531 HIP processed=1200
+pid=15276 tick=67109625 HIP processed=1500
+pid=15276 tick=67114687 HIP processed=1800
+pid=15276 tick=67144156 HIP processed=2100
+pid=15276 tick=67149156 HIP processed=2400
+pid=15276 tick=67154250 HIP processed=2700
+pid=15276 tick=67159312 HIP processed=3000
+pid=15276 tick=67164375 HIP processed=3300
+pid=15276 tick=67169453 HIP processed=3600
+pid=15276 tick=67174515 HIP processed=3900
+pid=15276 tick=67179546 HIP processed=4200
