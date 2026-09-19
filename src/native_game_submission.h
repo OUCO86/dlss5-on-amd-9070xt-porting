@@ -1,5 +1,6 @@
 #pragma once
 #include "native_pinned_resource.h"
+#include "native_device_identity.h"
 #include <windows.h>
 #include <d3d12.h>
 #include <mutex>
@@ -14,7 +15,7 @@ class NativeGameSubmission {
  ID3D12Device*device{};ID3D12CommandQueue*queue{};
  ID3D12CommandAllocator*allocator{};ID3D12GraphicsCommandList*commands{};
  ID3D12Fence*fence{};HANDLE event{};UINT64 value{};
- bool poisoned{},submitted{},pending{};std::mutex mutex;
+ bool poisoned{},submitted{},pending{},unwrap_owned{};std::mutex mutex;
  ID3D12QueryHeap*timing_heap{};ID3D12Resource*timing_readback{};UINT64 timing_frequency{};
  // Deferred mode (DLSS5_TEST_ASYNC_SUBMIT=1): a ring of allocators/lists is
  // executed back to back and only the ring slot being reused is waited on.
@@ -24,6 +25,14 @@ class NativeGameSubmission {
  static constexpr UINT ring_slots=64;
  bool deferred{};ID3D12CommandAllocator*ring_allocators[ring_slots]{};ID3D12GraphicsCommandList*ring_lists[ring_slots]{};UINT64 ring_values[ring_slots]{};
  static void ck(HRESULT h){if(FAILED(h))throw std::runtime_error("game submission HRESULT="+std::to_string(unsigned(h)));}
+ void ExecuteOwned(ID3D12GraphicsCommandList*list){
+  if(!unwrap_owned){ID3D12CommandList*items[]={list};queue->ExecuteCommandLists(1,items);return;}
+  /* FFX created with a ReShade device owns wrapped descriptor heaps. Record through its device's list,
+     then unwrap only at the native queue submission boundary. Raw-device lists simply fail this QI. */
+  static constexpr GUID unwrapped={0x7f2c9a11,0x3b4e,0x4d6a,{0x81,0x2f,0x5e,0x9c,0xd3,0x7a,0x1b,0x42}};
+  ID3D12GraphicsCommandList*native=nullptr;list->QueryInterface(unwrapped,reinterpret_cast<void**>(&native));
+  ID3D12CommandList*items[]={native?native:list};queue->ExecuteCommandLists(1,items);if(native)native->Release();
+ }
  void WaitValue(UINT64 target,DWORD timeout_ms){
   if(fence->GetCompletedValue()>=target)return;
   ck(fence->SetEventOnCompletion(target,event));
@@ -45,17 +54,18 @@ public:
  }
  // allow_deferred=false: initialization-only users (resident weight copies) stay synchronous and skip the 64-slot ring.
  // The queue is DIRECT (the game's) or COMPUTE (the frame's own async queue, DLSS5_OVERLAP=1); the lists take the queue's type.
- void Create(ID3D12CommandQueue*q,bool allow_deferred=true){
+ void Create(ID3D12CommandQueue*q,bool allow_deferred=true,ID3D12Device*record_device=nullptr,bool force_deferred=false){
   if(queue||!q)throw std::runtime_error("queue required");
   const D3D12_COMMAND_LIST_TYPE type=q->GetDesc().Type;if(type!=D3D12_COMMAND_LIST_TYPE_DIRECT&&type!=D3D12_COMMAND_LIST_TYPE_COMPUTE)throw std::runtime_error("DIRECT or COMPUTE queue required");
   queue=q;queue->AddRef();ck(q->GetDevice(IID_PPV_ARGS(&device)));
+  if(record_device){if(!NativeSameDevice(device,record_device))throw std::runtime_error("recording device does not own queue");device->Release();device=record_device;device->AddRef();unwrap_owned=true;}
   ck(device->CreateCommandAllocator(type,IID_PPV_ARGS(&allocator)));
   ck(device->CreateCommandList(0,type,allocator,nullptr,IID_PPV_ARGS(&commands)));
   ck(device->CreateFence(0,D3D12_FENCE_FLAG_NONE,IID_PPV_ARGS(&fence)));
   event=CreateEventW(nullptr,FALSE,FALSE,nullptr);if(!event)throw std::runtime_error("submission event failed");
   const wchar_t*flag=_wgetenv(L"DLSS5_TEST_SUBMISSION_TIMING");if(flag&&wcscmp(flag,L"0")&&wcscmp(flag,L"1"))throw std::runtime_error("invalid submission timing flag");
   const wchar_t*async_flag=_wgetenv(L"DLSS5_TEST_ASYNC_SUBMIT");if(async_flag&&wcscmp(async_flag,L"0")&&wcscmp(async_flag,L"1"))throw std::runtime_error("invalid async submit flag");
-  deferred=allow_deferred&&async_flag&&!wcscmp(async_flag,L"1");
+  deferred=allow_deferred&&(force_deferred||(async_flag&&!wcscmp(async_flag,L"1")));
   if(deferred&&flag&&!wcscmp(flag,L"1"))throw std::runtime_error("per-submission timing requires synchronous submission");
   if(deferred)for(UINT i=0;i<ring_slots;i++){
    ck(device->CreateCommandAllocator(type,IID_PPV_ARGS(&ring_allocators[i])));
@@ -80,7 +90,7 @@ public:
     if(ring_values[slot])WaitValue(ring_values[slot],timeout_ms);
     auto*list=ring_lists[slot];ck(ring_allocators[slot]->Reset());ck(list->Reset(ring_allocators[slot],nullptr));
     record(list);ck(list->Close());ID3D12CommandList*lists[]={list};
-    ++value;pending=true;queue->ExecuteCommandLists(1,lists);ck(queue->Signal(fence,value));ring_values[slot]=value;
+    ++value;pending=true;ExecuteOwned(list);ck(queue->Signal(fence,value));ring_values[slot]=value;
     ck(device->GetDeviceRemovedReason());submitted=true;return;
    }
    if(submitted){ck(allocator->Reset());ck(commands->Reset(allocator,nullptr));}
@@ -88,7 +98,7 @@ public:
    record(commands);
    if(timing_heap){commands->EndQuery(timing_heap,D3D12_QUERY_TYPE_TIMESTAMP,1);commands->ResolveQueryData(timing_heap,D3D12_QUERY_TYPE_TIMESTAMP,0,2,timing_readback,0);}
    ck(commands->Close());ID3D12CommandList*lists[]={commands};
-   ++value;pending=true;queue->ExecuteCommandLists(1,lists);ck(queue->Signal(fence,value));
+   ++value;pending=true;ExecuteOwned(commands);ck(queue->Signal(fence,value));
    ck(fence->SetEventOnCompletion(value,event));
    if(WaitForSingleObject(event,timeout_ms)!=WAIT_OBJECT_0)throw std::runtime_error("game GPU submission timeout");
    ck(device->GetDeviceRemovedReason());auto done=fence->GetCompletedValue();

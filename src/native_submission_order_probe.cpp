@@ -66,6 +66,7 @@ static bool ffx_state_to_d3d12(uint32_t s,D3D12_RESOURCE_STATES&out){
   default:return false;
  }
 }
+#include "native_pre_upscale.h"
 static D3D12_RESOURCE_STATES notice_state=D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 static void draw_pending_notice(ID3D12CommandQueue*q){
  std::string text;ID3D12Resource*target=nullptr;
@@ -83,7 +84,13 @@ using Barriers=void(STDMETHODCALLTYPE*)(ID3D12GraphicsCommandList*,UINT,const D3
 static Barriers original_barriers{};
 static std::atomic<bool>barrier_install_attempted{};
 static void STDMETHODCALLTYPE native_barriers(ID3D12GraphicsCommandList*c,UINT count,const D3D12_RESOURCE_BARRIER*b){
+#ifdef NATIVE_ORDER_NEURAL
+ if(NativePreUpscale::FixPrivateBarriers(c,count,b,original_barriers))return;
+#endif
  original_barriers(c,count,b);
+#ifdef NATIVE_ORDER_NEURAL
+ if(NativePreUpscale::Enabled()&&!NativePreUpscale::Replaying())NativePreUpscale::ObserveBarrier(c,count,b);
+#endif
  if(!b)return;auto target=tracked_output.load();if(!target)return;
  for(UINT i=0;i<count;i++){
   const auto&v=b[i];
@@ -172,6 +179,19 @@ static uint32_t dispatch(void**context,const Header*h){
  void*list=nullptr;SIZE_T got=0;
  ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<const char*>(h)+16,&list,sizeof(list),&got);
  unsigned n=++frames;log("ffx_begin",got==sizeof(list)?list:nullptr,nullptr,n);
+#ifdef NATIVE_ORDER_NEURAL
+ if(NativePreUpscale::Enabled()){
+  if(NativePreUpscale::Replaying())return original(context,h);
+  ID3D12GraphicsCommandList*native=nullptr;
+  if(list&&SUCCEEDED(static_cast<IUnknown*>(list)->QueryInterface(UnwrappedObject,reinterpret_cast<void**>(&native)))&&native){
+   install_native_barriers(list);
+   const bool captured=NativePreUpscale::Capture(context,h,native,n);native->Release();
+   if(captured)return 0;
+  }
+  /* Unsupported descriptors run the original FSR unchanged, never the old post-upscale network. */
+  return original(context,h);
+ }
+#endif
  ResourcePayload output{};ID3D12Resource*frame_motion=nullptr;bool frame_reset=false;
  tracked_output.store(0); // Never attribute later barriers to an unreadable frame.
  SIZE_T output_bytes=0;
@@ -303,6 +323,9 @@ static int xess_execute(void*ctx,ID3D12GraphicsCommandList*list,const XessExecut
 }
 #endif
 static void STDMETHODCALLTYPE execute_native(ID3D12CommandQueue*q,UINT count,ID3D12CommandList*const*lists){
+#ifdef NATIVE_ORDER_NEURAL
+ if(NativePreUpscale::Enabled()&&!NativePreUpscale::Replaying()&&NativePreUpscale::Execute(q,count,lists,original_execute))return;
+#endif
  const unsigned batch=++native_batches;
  if(q&&batch<=8){
   auto desc=q->GetDesc();ID3D12Device*device=nullptr;auto hr=q->GetDevice(IID_PPV_ARGS(&device));
@@ -399,8 +422,14 @@ static void execute(reshade::api::command_queue*q,reshade::api::command_list*c){
    right after) deadlocked the loader on most launches -- the game then sat black for its 60 s watchdog and closed cleanly. */
 static std::atomic<unsigned>presents{};
 static void on_present(reshade::api::command_queue*,reshade::api::swapchain*,const reshade::api::rect*,const reshade::api::rect*,uint32_t,const reshade::api::rect*){++presents;}
-static bool compute(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t){log("dispatch_api",c,nullptr);return false;}
-static bool draw(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,uint32_t){log("draw_api",c,nullptr);return false;}
+static void pre_upscale_work(reshade::api::command_list*c){
+#ifdef NATIVE_ORDER_NEURAL
+ if(NativePreUpscale::Enabled())NativePreUpscale::ObserveWork(reinterpret_cast<ID3D12GraphicsCommandList*>(c->get_native()));
+#endif
+}
+static bool compute(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t){pre_upscale_work(c);log("dispatch_api",c,nullptr);return false;}
+static bool draw(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,uint32_t){pre_upscale_work(c);log("draw_api",c,nullptr);return false;}
+static bool draw_indexed(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,int32_t,uint32_t){pre_upscale_work(c);return false;}
 static void barrier(reshade::api::command_list*c,uint32_t count,const reshade::api::resource*r,const reshade::api::resource_usage*before,const reshade::api::resource_usage*after){
  if(!r||!before||!after)return;auto target=tracked_output.load();if(!target)return;
  for(uint32_t i=0;i<count;i++)if(r[i].handle==target&&events.fetch_add(1)<8192){
@@ -411,6 +440,9 @@ static void barrier(reshade::api::command_list*c,uint32_t count,const reshade::a
  }
 }
 static DWORD WINAPI worker(void*){
+#ifdef NATIVE_ORDER_NEURAL
+ NativePreUpscale::InstallExceptionTrace();
+#endif
  // Whichever upscaler dll the title loads first: the FFX SDK 1.x single dll (Stellar Blade), the FSR 4 SDK loader (Magpie's FSR3/FSR4
  // effects: amd_fidelityfx_loader_dx12.dll exports ffxDispatch and forwards to the provider dll) or XeSS (Rise of the Ronin; its FSR is linked into the exe).
  // A host that ships an FFX dll next to its exe (Magpie: libxess.dll is loaded at startup, the FFX loader only when the FSR3/FSR4 effect
@@ -449,6 +481,22 @@ static DWORD WINAPI worker(void*){
 // the game folder and enable the experimental shader-model feature so SM6.10 wave-matrix PSOs
 // can be created on the game device. Gated by D:\DLSSNR-Lab\enable-game-sdk721.txt.
 static bool on_create_device(reshade::api::device_api api,uint32_t&){
+#if defined(NATIVE_ORDER_NEURAL)&&NATIVE_HAVE_SDKLAYERS
+ if(api==reshade::api::device_api::d3d12&&NativePreUpscale::Enabled()){
+  unsigned enable=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_PRE_UPSCALE_DEBUG=%u",&enable);fclose(f);}
+  if(enable){
+   /* This machine has the matching SDK layers in the old diagnostic Agility directory, not in Windows. */
+   static bool sdk_attempted=false;if(!sdk_attempted){sdk_attempted=true;
+    const GUID clsid={0x7cda6aca,0xa03e,0x49c8,{0x94,0x58,0x03,0x34,0xd2,0x0e,0x07,0xce}};
+    using GetInterface=HRESULT(WINAPI*)(REFCLSID,REFIID,void**);auto module=GetModuleHandleW(L"d3d12.dll");auto get=module?reinterpret_cast<GetInterface>(GetProcAddress(module,"D3D12GetInterface")):nullptr;
+    ID3D12SDKConfiguration*cfg=nullptr;HRESULT hr=get?get(clsid,IID_PPV_ARGS(&cfg)):E_NOINTERFACE;
+    if(SUCCEEDED(hr)){hr=cfg->SetSDKVersion(721,".\\DLSS5-D3D12-721\\");cfg->Release();}
+    if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-pre-debug.txt").c_str(),L"ab")){fprintf(f,"diagnostic_sdk721=%08x\n",unsigned(hr));fclose(f);}
+   }
+   ID3D12Debug*debug=nullptr;auto hr=D3D12GetDebugInterface(IID_PPV_ARGS(&debug));if(SUCCEEDED(hr)){debug->EnableDebugLayer();debug->Release();}
+   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-pre-debug.txt").c_str(),L"ab")){fprintf(f,"debug_enable=%08x\n",unsigned(hr));fclose(f);}}
+ }
+#endif
 #ifdef DLSS5_USE_HIP
  (void)api;return false; // HIP kernels do not require SM6.10 or a private Agility runtime.
 #else
@@ -497,6 +545,7 @@ BOOL WINAPI DllMain(HINSTANCE h,DWORD reason,LPVOID){
   reshade::register_event<reshade::addon_event::execute_command_list>(execute);
   reshade::register_event<reshade::addon_event::dispatch>(compute);
   reshade::register_event<reshade::addon_event::draw>(draw);
+  reshade::register_event<reshade::addon_event::draw_indexed>(draw_indexed);
   reshade::register_event<reshade::addon_event::barrier>(barrier);
   reshade::register_event<reshade::addon_event::present>(on_present);
   HMODULE pinned=nullptr;if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(&worker),&pinned))return FALSE;

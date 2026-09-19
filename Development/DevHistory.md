@@ -2372,3 +2372,33 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - `MatheusGViana/dlss-5-amd-project` 当时是 OptiScaler fork 包装上面的闭源 DLL，提供多遍/顺序/颜色开关，网络本身无源码；`SAOG0721/Magpie` 是 NVIDIA DLL + 光流的截图后处理路线。以上都是当时版本观察，不当成永久产品状态。
 - OptiScaler 组合在黑神话未验通的历史，不能外推为接口不可用；09-19 已在《剑星》验通，并发现 0.9.4 的 fsr31/ffx 配置名问题，见同日记录。
 - 公众号 296/297/298/299/301/304 是早期 DLSS5 系列，304 是优化篇；0.11 安装教程位于 `wechat/dlss5-amd-0.11-安装教程.md`，0.20 教程为 `wechat/dlss5-amd-0.20-安装教程.md`。写作定位是学习笔记，实验结果与未验证推测分开记录。
+
+
+## 2026-09-19：OptiScaler 前置 DLSS5 候选（开发中，非发布版）
+
+- Zero 要求改成低分辨率 DLSS5 → FSR 3.x/4 → 2K/4K。HIP 需要 D3D12 队列提交边界，不能在游戏还没提交输入生产命令时直接调网络。候选沿《剑星》原有“超分列表后处理”的契约：拦下 FFX dispatch、保留描述与资源，到该列表提交后先运行低分辨率网络，再用自有列表重放 FFX，之后继续提交批次余下列表。没有关闭或重置游戏列表。仅适用超分调用后同列表无输出消费者的场景，不能宣传通用。
+- `src/native_pre_upscale.h`；flag `DLSS5_PRE_UPSCALE=2` 只延后 FFX（烟测），`=1` 私有颜色副本上跑 DLSS5 再交 FFX，默认0维持发布行为。保留全部资源与最后状态，输出文字画在最终输出，不混入 FSR 输入。异常关闭后续捕获，恢复原 FFX；已截获失败帧无法撤回。模式1暂时每帧reset DLSS5历史，原 FSR 的 jitter/reset 不改；低分辨率原始抖动输入的跨帧契约尚未验，不冒称时序完成。
+- `Development/pre-upscale-smoke.cpp`：AMD GPU 上三帧输入生产 → 延后模拟FFX复制 → 读回，全4096个half元素不同数均0，`PRE_UPSCALE_DEFER_SMOKE_PASS`。HIP候选与DX12构建已进行编译检查。后续补入 upscaleSize=0 用例。
+- 工具 `Development/tools/pre-upscale.ps1`（远端 `D:\DLSSNR-Lab\pre-upscale`）：Smoke / Install / Update / Mode / Restore / Status；所有部署检查游戏退出。原0.23 addon、flags、OptiScaler.ini备份 `before-pre-upscale`，发布包未改。
+- 第一轮游戏 PID15028：mode2已装，但没有捕获成功；查旧 FFX日志发现《剑星》合法使用upscaleSize=0（由context最大尺寸决定），候选误拒绝，故这轮仍走原始FSR，不能算烟测通过。源码已改为接受0，原描述原样保留；新候选等待退出游戏后再装。当前游戏仍开着旧候选，DLSS5未启动是mode2预期。
+
+- 12:01 退出後：補含upscaleSize=0的三幀GPU煙測全過。mode2修正版在遊戲成功捕獲並進入重放；首個進程13412退出，第二輪加入例外追蹤後PID25604存活，日誌顯示 original FFX replay返回0，但自有命令列表Submit報 E_INVALIDARG（2147942487），已自動關閉後續Capture並回落普通FSR。尚未跑通延期派發，更沒有開mode1。已編譯診斷版77321946…，新增DLSS5_PRE_UPSCALE_DEBUG=1開D3D12 debug layer、失敗記native-pre-debug.txt，待Zero退出後用pre-upscale.ps1 -Action Update -Mode 2 -GpuDebug部署。遊戲PID25604仍開著，未換正在載入的DLL。
+
+- 12:09 起續測：系統D3D12 debug interface返回887a002d（缺調試組件）；私有Agility721設置成功但調試層仍不可用。vectored exception捕到D3D12Core+2e9b22，FSR provider+5101上一條調用是命令列表vtable槽28 SetDescriptorHeaps。原因：OptiScaler/FSR持有ReShade包裝堆，候選用原生device創建的列表不能消費它。
+- 修法：NativeGameSubmission增加可選record_device，從FFX原命令列表GetDevice取得同一包裝設備來建自有列表；向原生queue提交前再QI取unwrapped list。普通既有路徑不啟用unwrap。mode2在PID600連續700+幀重放成功、沒有following-work警告。
+- mode1初次PID28516已生成一張低分辨率神經結果（pixels_changed），但交給FSR時Close再報E_INVALIDARG：OptiScaler的UE後端會把color按RT→SRV再還原RT，而私有紋理被建成Flags=NONE。保留原color創建flags，且只對私有color在FFX重放期間的barrier做狀態追蹤/校正，FFX後還原NS_SRV，遊戲資源不重寫。
+- 候選b9d63156…已部署，mode1、debug關；PID9036連續4200+幀processed=1/replay=0。實際流程1281×721私有色→900檔DLSS5（每幀reset）→FSR輸出1920×1080，菜單間隔約18.9ms，不當實玩幀率。截圖菜單出圖正常，但尚未收到實玩、2K/4K及移動畫質反饋；黄色新overlay在這張菜單截圖未見，待查輸出格式/可見性。正式包與教程未改，未提交。下一步Zero讀檔、切2560×1440+FSR質量；再測4K時內部render尺寸仍須≤1920×1080（性能/超級性能檔視遊戲實際尺寸）。
+- 自動菜單重啟工具：Development/tools/pre-upscale-close.ps1，交互任務dlss5preclose以CloseMainWindow正常關遊戲；也關閉Report Problem窗（不發送報告）。直接SSH的CloseMainWindow因會話隔離返回false，交互任務有效。崩潰後Report Problem窗不關會擋Steam再次啟動，別把這種情況當候選DLL啟動失敗。
+
+- 12:26 Zero 回報1080p實玩20～30fps，日誌PID9036對應每100幀27～40ms。同步候選每幀額外4次CPU等待（私有color copy、motion前後兩個pass、FFX），而reset模式不讀motion；先刪兩個空motion提交，再加 `DLSS5_PRE_UPSCALE_ASYNC=1` 用同隊列延遲提交。捕獲資源/命令列表按最後FFX fence保留到GPU完成，不能Submit返回就Release。NativeGameSubmission增加獨立force_deferred參數，不改舊預設；同步/異步兩種GPU煙測均三幀逐值全過。
+- 候選bc8d7f57…已部署，mode1+async1、debug關。遊戲此前已退出，重開PID18692讀到保存的2560×1440：render1707×961→DLSS5→FSR2560×1440，连续700+帧processed=1/replay=0，submit_cpu_ms約1.15～1.28，retained=1；菜單每幀約25ms（40fps），尚待同場景實玩確認，不能宣稱已修好低幀率。GPU菜單採樣compute81.9%、3D16.7%，總Dedicated約5.6GB，未頂滿16GB；Shared約523MB不能在未滿時直接當驅逐證據。Splashtop服務仍在，截屏測量要避開其影響。4K尚未驗證，原始jitter輸入仍每幀reset。
+
+
+## 2026-09-19 12:48：OptiScaler 0.24 前置版打包
+
+- Zero 实玩反馈：2560×1440输出下约34～35fps，观感“还行”；随后授权打新OptiScaler包。仍只验证《剑星》、前置DLSS5逐帧reset，4K与Magpie未回归。
+- `D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.zip`，SHA256 `2A46ADEB048EA93095472B2D03E1822B0F38282F8DD2A2AEE5F94FCFDFC8C15F`，旁置.zip.sha256。513个有效载荷文件从zip逐个读回哈希通过；24个HIP模块与0.23基底逐文件哈希一致。addon是已实玩的bc8d7f57…；网络权重/内核未变。
+- 打包配方扩展 `Development/tools/optiscaler-stellarblade.ps1 -Action Release -Version 0.24 -AddonPath D:\DLSSNR-Lab\pre-upscale\native-pre-upscale.addon64 -AddonSha BC8D7F57A589F9D9C517D98EA529875EAAE1081485386AF6873D4B312B1DC2B0 -PreUpscale`。包内开PRE_UPSCALE=1与PRE_UPSCALE_ASYNC=1、保留网络ASYNC_SUBMIT=1；不含GPU debug开关与本机路径。
+- 中文包内说明更新前置顺序、2K实测、4K需控制内部输入尺寸、三档适配、reset限制、回退方式和Magpie未回归范围。原0.23包保留，未改运行中的游戏文件，未打tag/未上传网盘。
+
+- 12:53 Zero 已上传0.24，网盘 https://pan.quark.cn/s/1f32ffbd2e96 。中英文README新增0.24行；公众号 `wechat/DLSS5-AMD@OptiScaler使用方法.md` 同步新链接、前置顺序、2K实测、内部输入尺寸限制与reset说明。

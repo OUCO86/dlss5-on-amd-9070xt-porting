@@ -241,6 +241,8 @@ public:
   auto&r=*resources;const auto now=GetTickCount64();if(r.fps_text[0]&&now-r.fps_tick<3000)return;
   snprintf(r.fps_text,sizeof r.fps_text,"DLSS5-AMD %.0f FPS (%.1f MS) %uX%u",1000.0/ms,ms,r.geometry.valid_width,r.geometry.valid_height);r.fps_tick=now;
  }
+ /* Pre-upscale integration draws its overlay on the final output, never into the color fed to FSR. */
+ void SuppressFps(){std::lock_guard<std::mutex>guard(mutex);if(resources){resources->show_fps=false;resources->fps_text[0]=0;}}
  bool TemporalReady()const{return resources&&resources->temporal;}
  // Diagnostic: write the previous-output history buffer, the motion buffer and the current
  // encoded color (RGBA16F) to files so motion-vector sign/units can be checked offline.

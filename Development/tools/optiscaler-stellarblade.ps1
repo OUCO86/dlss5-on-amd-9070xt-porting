@@ -1,5 +1,6 @@
 ﻿param([ValidateSet('Package','FixPackage','Release','Install','Restore','Status')][string]$Action='Status',
- [string]$OutputDirectory='D:\給網友打包')
+ [string]$OutputDirectory='D:\給網友打包',[string]$Version='0.23',
+ [string]$AddonPath='', [string]$AddonSha='', [switch]$PreUpscale)
 $ErrorActionPreference='Stop'
 $lab='D:\DLSSNR-Lab'
 $stage="$lab\OptiScaler-DLSS5-AMD-test"
@@ -8,7 +9,7 @@ $backup="$lab\stellarblade-before-optiscaler"
 function Closed { if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Close Stellar Blade first.'} }
 if($Action -eq 'Release'){
  $source=$stage
- $stage=Join-Path $OutputDirectory 'OptiScaler-DLSS5-AMD-0.23'
+ $stage=Join-Path $OutputDirectory "OptiScaler-DLSS5-AMD-$Version"
  if(Test-Path $stage){throw 'Release staging already exists.'}
  New-Item -ItemType Directory -Force $OutputDirectory|Out-Null
  Copy-Item $source $stage -Recurse
@@ -17,9 +18,24 @@ if($Action -eq 'Release'){
  }
  Copy-Item "$lab\package-README-optiscaler.txt" "$stage\README.txt"
  Copy-Item "$lab\OptiScaler-LICENSE.txt" "$stage\OptiScaler-LICENSE.txt"
+ if($AddonPath){
+  if(!$AddonSha -or (Get-FileHash $AddonPath).Hash -ne $AddonSha){throw 'Candidate addon hash mismatch'}
+  Copy-Item $AddonPath "$stage\dlss5-amd.addon64" -Force
+ }
+ if($PreUpscale){
+  if(!$AddonPath){throw 'Pre-upscale package needs an explicitly verified addon'}
+  $flag="$stage\DLSS5-AMD\native-game-flags.txt"
+  $lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_DEBUG|_ASYNC)?='})+@('DLSS5_PRE_UPSCALE=1','DLSS5_PRE_UPSCALE_ASYNC=1')
+  [IO.File]::WriteAllLines($flag,$lines,(New-Object Text.UTF8Encoding($false)))
+  if($lines -notcontains 'DLSS5_TEST_ASYNC_SUBMIT=1'){throw 'Network asynchronous submission is required'}
+ }
  $ini=Get-Content "$stage\OptiScaler.ini" -Raw
  if($ini -notmatch '(?m)^Dx12Upscaler=fsr31\s*$'){throw 'Incorrect backend configuration'}
- if((Get-FileHash "$stage\dlss5-amd.addon64").Hash -ne (Get-FileHash "$lab\DLSS5-AMD-0.23\dlss5-amd.addon64").Hash){throw 'Unexpected addon'}
+ $expected=if($AddonPath){$AddonSha}else{(Get-FileHash "$lab\DLSS5-AMD-0.23\dlss5-amd.addon64").Hash}
+ if((Get-FileHash "$stage\dlss5-amd.addon64").Hash -ne $expected){throw 'Unexpected addon'}
+ foreach($m in Get-ChildItem "$stage\DLSS5-AMD\native-game-tiled-assets\HIP\*.hsaco"){
+  if((Get-FileHash $m.FullName).Hash -ne (Get-FileHash "$source\DLSS5-AMD\native-game-tiled-assets\HIP\$($m.Name)").Hash){throw 'Network module changed'}
+ }
  if(@(Get-ChildItem "$stage\DLSS5-AMD\native-game-tiled-assets\HIP\*.hsaco").Count -ne 24){throw 'Expected 24 HIP modules'}
  if(Get-ChildItem "$stage\DLSS5-AMD\logs" -File|Where-Object{$_.Name -ne '.keep'}){throw 'Package contains runtime logs'}
 }

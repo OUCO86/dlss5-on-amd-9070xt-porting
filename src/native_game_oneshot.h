@@ -118,7 +118,7 @@ public:
   Log("session_reset",why);phase.store(0,std::memory_order_release);return true;
  }
  /* state: the D3D12 state the upscaler declared for its output (the frame transitions from it and back to it) */
- void OnSubmitted(ID3D12CommandQueue*q,ID3D12Resource*source,ID3D12Resource*motion=nullptr,bool reset=false,unsigned mw=0,unsigned mh=0,unsigned rw=0,unsigned rh=0,D3D12_RESOURCE_STATES state=D3D12_RESOURCE_STATE_UNORDERED_ACCESS){
+ void OnSubmitted(ID3D12CommandQueue*q,ID3D12Resource*source,ID3D12Resource*motion=nullptr,bool reset=false,unsigned mw=0,unsigned mh=0,unsigned rw=0,unsigned rh=0,D3D12_RESOURCE_STATES state=D3D12_RESOURCE_STATE_UNORDERED_ACCESS,bool external_overlay=false){
   {const unsigned state=phase.load();if(state==5||((state==2||state==4)&&queue&&q!=queue)){if(!ResetForNewSession(state==5?"previous initialization/render failed":"upscaler queue changed"))return;}}
   if(source&&(phase.load()==2||phase.load()==4)){
    auto desc=source->GetDesc();
@@ -141,6 +141,7 @@ public:
   {std::lock_guard<std::mutex>guard(request_mutex);request=armed_request;armed_request=0;}
   if(!request){phase=2;return;}
   try{
+   if(external_overlay)frame->SuppressFps();
    if(q!=queue)throw std::runtime_error("one-shot queue changed"); /* caught below -> phase 5 -> ResetForNewSession on the next dispatch */
    if(every_frame&&request>1){
     // Steady state: no readback, no files; one log line per 100 frames with the average interval.
