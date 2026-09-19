@@ -2476,3 +2476,12 @@ C64/C128/C256 attention-project借鉴C32：指数half保留h8寄存器，概率�
 概率按[row][key%16][key/16]存储，让每lane的pv整数一次写4byte，AV按新布局取原概率；LDS容量及数值不变。1080 ABBA基线20.701/20.756，候选20.7615/20.7305，无收益。C64 diag静态指令1803→1855，概率32个byte写变4个双地址DWORD写，但总指令增加；不采用。
 
 再针对当前c64/c128/c256 attention-project做AV双输出共用A片，保持每片K累加顺序（区别于09-16旧mh_attention_fused_fp8_out入口）。ABBA20.7545/20.788对20.7725/20.744，同样无稳定收益；C64 diag共享读写计数完全相同（ds_load_u8仍64），总指令仅1803→1801并有调度差异，不能说生成代码逐字相同，说明源码共读未减少实际读取。两候选COMGR/最终输出hash通过，不扩测或部署。mh-prob-dword、mh-project-av-pair的patch/脚本与mhprob/mhavpair数据归档，生产不变。
+
+
+## 2026-09-19 18:00起：跨核字节接口复测，局部特征字节＋快速残差组合有效
+
+当前mh-ex-production模块上，1080完整字节流仍慢：基线20.8135/20.851，MH21.0005、ViT21.3595、两者21.443ms，输出hash均同，不采用。查host路由：完整MH链的byteout不走diag快速残差；旧“字节流不值”的结论混合了存储/计算路径变化，不能泛化到所有局部接口。
+
+只启用DLSS5_HIP_MH_FEATURE_BYTE=1与DLSS5_HIP_MH_PROJ_DIAG_FB=1，FFN→attention特征按原FP8格点存byte，同时保留矩阵残差路径，链间输入/输出仍f32。1080 ABBA20.798/20.8645→20.2295/20.283，−0.575ms；900 13.975/13.983→13.769/13.744，−0.223ms。900/1080真实/HDR/暗部及seed123/9876六组、720连续历史/每8帧reset两组均24帧有限、首尾逐位匹配。720性能未单独测，不宣称提速幅度。
+
+代码已有两个开关，无需重写或重编内核；配套配置片段Development/HIP/feature-byte-flags.txt，须追加到完整flags，且使用含*_fb_diag入口的最新mh-ex-production-modules，不给旧包裸开。recheck-byte-stream-1080、recheck-feature-byte-1080、validate-feature-byte脚本与bytes1080/featurebyte结果归档。生产默认/游戏/发布包暂未改；下一次部署可将此组合与最新完整模块一起带上，再实玩回归。

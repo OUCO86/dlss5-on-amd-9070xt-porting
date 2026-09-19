@@ -1,14 +1,17 @@
-param([switch]$Extended,[string]$Candidate='c32-register-ex-modules',[string]$Baseline='', [string]$Tag='regex')
+param([switch]$Extended,[string]$Candidate='c32-register-ex-modules',[string]$Baseline='', [string]$Tag='regex',[string]$CandidateFlags='', [int]$OnlyHeight=0)
 $ErrorActionPreference='Stop'
 $r='D:\DLSSNR-Lab\hip-backend';$base='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23\DLSS5-AMD'
 $work="$r\profile1080";$rows=@()
 $cases=if($Extended){@(@(900,0,123,0),@(1080,0,123,0),@(900,8,123,1),@(1080,8,123,1),@(900,8,9876,2),@(1080,8,9876,2))}else{@(@(720,0,0,0),@(720,8,0,0),@(900,0,0,0),@(900,8,0,0),@(1080,0,0,0),@(1080,8,0,0))}
 foreach($case in $cases){
  $height,$reset,$seed,$pattern=$case
+ if($OnlyHeight -and $height -ne $OnlyHeight){continue}
  $flags=@(Get-Content "$base\native-game-flags.txt"|Where-Object{$_ -notmatch '^DLSS5_(NETWORK_HEIGHT|SHOW_FPS|NOTICE)='})+@("DLSS5_NETWORK_HEIGHT=$height",'DLSS5_SHOW_FPS=0','DLSS5_NOTICE=0')
  $f="$work\check-flags.txt";[IO.File]::WriteAllLines($f,$flags)
  $expected=''
  foreach($variant in 'base','candidate'){
+  $extra=if($variant -eq 'candidate' -and $CandidateFlags){@($CandidateFlags.Split(';'))}else{@()}
+  [IO.File]::WriteAllLines($f,($flags+$extra))
   if(Get-Process SB-Win64-Shipping,Magpie -ErrorAction SilentlyContinue){throw 'Game/Magpie running'}
   $m=if($variant -eq 'base'){$(if($Baseline){"$r\$Baseline"}else{"$base\native-game-tiled-assets\HIP"})}else{"$r\$Candidate"}
   $prefix="$work\$Tag-check-$height-$reset-$seed-$pattern-$variant"
