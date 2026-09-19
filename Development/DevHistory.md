@@ -2651,3 +2651,10 @@ compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV�
 核对官方0.9.4提交7534ad0源码，发现FfxApiProxy可直调upscaler provider，输入hook与后端同库时还会把内部函数指针换成Detours trampoline。当前加载_storage_的loader2.1.0.604/upscaler4.1.1.2740，bare dx12 2.3.0.2740文件存在但不在当前模块清单；root/_storage_对应文件hash一致，没有证据说是缓存旧版本。FSR31Feature在FFX后可能继续做RCAS/输出缩放/ImGui，所以旧following_work不能直接归为游戏本身，需观察实际路径。
 
 新版观察DLL加入provider入口＋OptiScaler NVSDK_NGX_D3D12_EvaluateFeature出口，记录list_type与前四个后续命令的模块/偏移栈；签名从NVNGX_DLSS_Dx12.cpp核对，限定前16次调用。编译SHA2bc1ee441c117c349bd30364789f8e23dc7f61d1354e010622fb227060f944e3，已放D:\DLSSNR-Lab\re9-opti\native-re9-observer.addon64；尚未覆盖游戏运行中的首版。已请求用户退出RE9，下一步install-observer.ps1 -Action Update同步root/_storage_再启动。Development/RE9保存源码、准备/安装脚本、研究说明；本次未实现新的DLSS5接入，不移除following_work、不关闭/重置游戏列表，不把无观察结果当安全证据。原0.26发布代码未动。
+
+
+## 2026-09-20 00:45起：RE9真实NGX出口确认同列表后续来自游戏
+
+用户退出后，按进程/校验保护把观察版2bc1ee44…同步root/_storage_，再启动RE9（PID32500）。NGX Evaluate出口hook成功；16次成功返回后列表均为DIRECT，随后同一列表有51～53次普通draw/dispatch（51×5、52×1、53×10）。前几条栈显示re9.exe+5865c16、draw +59098aa、draw_indexed +59099a3，经ReShade转发；这次明确是游戏自己的后续命令，不只是OptiScaler内部RCAS/菜单。没有追踪所有资源读写，不能将“后续命令”细化成已证明的具体纹理消费者，但现有尾部契约已经明确不满足。provider导出仍无调用日志，不把它当没执行；NGX外层证据独立成立。
+
+完整记录Development/RE9/results/ngx-following-work-20260920.txt及summary.json。已向用户询问后续路线：推荐先做后置兼容模式（FSR后处理成品画面，UI亦受处理，保持HIP）；若保留前置则继续找引擎提交边界或新的原生D3D12接法。后置需先做Present时序及R10G10B10A2转换验证；现有HLSL RecordUnsubmitted明确保留了single-list device-hang保护，不能直接启用。游戏仍运行观察版，原DLSS5 .off；未宣称DLSS5已接通，等待用户路线选择。

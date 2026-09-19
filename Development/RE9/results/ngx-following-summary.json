@@ -1,0 +1,15 @@
+{
+  "pid": 32500,
+  "observer_sha256": "2bc1ee441c117c349bd30364789f8e23dc7f61d1354e010622fb227060f944e3",
+  "ngx_completed": 16,
+  "ffx_completed": 0,
+  "list_types": [
+    "0"
+  ],
+  "following_counts": {
+    "51": 5,
+    "52": 1,
+    "53": 10
+  },
+  "scope": "Title menu, ordinary draw/dispatch callbacks only; resource consumption not traced"
+}

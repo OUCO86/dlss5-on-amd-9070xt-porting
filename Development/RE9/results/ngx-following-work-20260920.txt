@@ -1,0 +1,610 @@
+ngx_hook slot=0 status=0 module=c:\program files (x86)\steam\steamapps\common\resident evil requiem biohazard requiem\_storage_\dxgi.dll target=00007ffa92e1c9e0
+frame=1 after_original_ngx list=00000001c259afb0 list_type=0 result=00000001
+frame=1 following=1 kind=draw list=00000001c259afb0 thread=30580
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=1 following=2 kind=draw_indexed list=00000001c259afb0 thread=30580
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=1 following=3 kind=draw_indexed list=00000001c259afb0 thread=30580
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=1 following=4 kind=draw_indexed list=00000001c259afb0 thread=30580
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=1 close following_total=51 list=00000001c259afb0
+frame=2 after_original_ngx list=0000000184c79150 list_type=0 result=00000001
+frame=2 following=1 kind=dispatch list=0000000184c79150 thread=24568
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=2 following=2 kind=draw list=0000000184c79150 thread=24568
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=2 following=3 kind=draw_indexed list=0000000184c79150 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=2 following=4 kind=draw_indexed list=0000000184c79150 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=2 close following_total=51 list=0000000184c79150
+frame=3 after_original_ngx list=00000000f51f8420 list_type=0 result=00000001
+frame=3 following=1 kind=dispatch list=00000000f51f8420 thread=24568
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=3 following=2 kind=draw list=00000000f51f8420 thread=24568
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=3 following=3 kind=draw_indexed list=00000000f51f8420 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=3 following=4 kind=draw_indexed list=00000000f51f8420 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=3 close following_total=51 list=00000000f51f8420
+frame=4 after_original_ngx list=00000001bb4f66b0 list_type=0 result=00000001
+frame=4 following=1 kind=dispatch list=00000001bb4f66b0 thread=24568
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=4 following=2 kind=draw list=00000001bb4f66b0 thread=24568
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=4 following=3 kind=draw_indexed list=00000001bb4f66b0 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=4 following=4 kind=draw_indexed list=00000001bb4f66b0 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=4 close following_total=51 list=00000001bb4f66b0
+frame=5 after_original_ngx list=00000001c259afb0 list_type=0 result=00000001
+frame=5 following=1 kind=dispatch list=00000001c259afb0 thread=20612
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=5 following=2 kind=draw list=00000001c259afb0 thread=20612
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=5 following=3 kind=draw_indexed list=00000001c259afb0 thread=20612
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=5 following=4 kind=draw_indexed list=00000001c259afb0 thread=20612
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=5 close following_total=51 list=00000001c259afb0
+frame=6 after_original_ngx list=0000000184c79150 list_type=0 result=00000001
+frame=6 following=1 kind=dispatch list=0000000184c79150 thread=20612
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=6 following=2 kind=draw list=0000000184c79150 thread=20612
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=6 following=3 kind=draw_indexed list=0000000184c79150 thread=20612
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=6 following=4 kind=draw_indexed list=0000000184c79150 thread=20612
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=6 close following_total=52 list=0000000184c79150
+frame=7 after_original_ngx list=00000000f51f8420 list_type=0 result=00000001
+frame=7 following=1 kind=dispatch list=00000000f51f8420 thread=20612
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=7 following=2 kind=draw list=00000000f51f8420 thread=20612
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=7 following=3 kind=draw_indexed list=00000000f51f8420 thread=20612
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=7 following=4 kind=draw_indexed list=00000000f51f8420 thread=20612
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=7 close following_total=53 list=00000000f51f8420
+frame=8 after_original_ngx list=00000001bb4f66b0 list_type=0 result=00000001
+frame=8 following=1 kind=dispatch list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=8 following=2 kind=draw list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=8 following=3 kind=draw_indexed list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=8 following=4 kind=draw_indexed list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=8 close following_total=53 list=00000001bb4f66b0
+frame=9 after_original_ngx list=00000001c259afb0 list_type=0 result=00000001
+frame=9 following=1 kind=dispatch list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=9 following=2 kind=draw list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=9 following=3 kind=draw_indexed list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=9 following=4 kind=draw_indexed list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=9 close following_total=53 list=00000001c259afb0
+frame=10 after_original_ngx list=0000000184c79150 list_type=0 result=00000001
+frame=10 following=1 kind=dispatch list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=10 following=2 kind=draw list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=10 following=3 kind=draw_indexed list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=10 following=4 kind=draw_indexed list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=10 close following_total=53 list=0000000184c79150
+frame=11 after_original_ngx list=00000000f51f8420 list_type=0 result=00000001
+frame=11 following=1 kind=dispatch list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=11 following=2 kind=draw list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=11 following=3 kind=draw_indexed list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=11 following=4 kind=draw_indexed list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=11 close following_total=53 list=00000000f51f8420
+frame=12 after_original_ngx list=00000001bb4f66b0 list_type=0 result=00000001
+frame=12 following=1 kind=dispatch list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=12 following=2 kind=draw list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=12 following=3 kind=draw_indexed list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=12 following=4 kind=draw_indexed list=00000001bb4f66b0 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=12 close following_total=53 list=00000001bb4f66b0
+frame=13 after_original_ngx list=00000001c259afb0 list_type=0 result=00000001
+frame=13 following=1 kind=dispatch list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=13 following=2 kind=draw list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=13 following=3 kind=draw_indexed list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=13 following=4 kind=draw_indexed list=00000001c259afb0 thread=24568
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5571a77
+  re9.exe+24d40c
+  re9.exe+581da2e
+  re9.exe+132d3b09
+  re9.exe+595e7a
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=13 close following_total=53 list=00000001c259afb0
+frame=14 after_original_ngx list=0000000184c79150 list_type=0 result=00000001
+frame=14 following=1 kind=dispatch list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=14 following=2 kind=draw list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=14 following=3 kind=draw_indexed list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=14 following=4 kind=draw_indexed list=0000000184c79150 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=14 close following_total=53 list=0000000184c79150
+frame=15 after_original_ngx list=00000000f51f8420 list_type=0 result=00000001
+frame=15 following=1 kind=dispatch list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=15 following=2 kind=draw list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=15 following=3 kind=draw_indexed list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=15 following=4 kind=draw_indexed list=00000000f51f8420 thread=8256
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=15 close following_total=53 list=00000000f51f8420
+frame=16 after_original_ngx list=00000001bb4f66b0 list_type=0 result=00000001
+frame=16 following=1 kind=dispatch list=00000001bb4f66b0 thread=30580
+  re9-ffx-observer.addon64+7acc
+  reshade64.dll+12e860
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=16 following=2 kind=draw list=00000001bb4f66b0 thread=30580
+  re9-ffx-observer.addon64+7a7c
+  reshade64.dll+12e621
+  re9.exe+59098aa
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=16 following=3 kind=draw_indexed list=00000001bb4f66b0 thread=30580
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=16 following=4 kind=draw_indexed list=00000001bb4f66b0 thread=30580
+  re9-ffx-observer.addon64+7a3c
+  reshade64.dll+12e73f
+  re9.exe+59099a3
+  re9.exe+5865c16
+  re9.exe+af4048
+  KERNEL32.DLL+2cdf7
+  ntdll.dll+7ee4c
+frame=16 close following_total=53 list=00000001bb4f66b0
