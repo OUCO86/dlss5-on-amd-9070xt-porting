@@ -2578,8 +2578,14 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 
 采用直接FP8片段方案，合入hip/multihead_fast_padded.hip；正式双目标重编packed/unpacked四模块、完整48模块目录D:\DLSSNR-Lab\ffn-load-production-modules。gfx1200 unpacked 9C901B31…/packed 17F1B31F…，gfx1201 unpacked DB9B7B08…/packed C33DA4F6…。SHA表更新四项，完整目录自动选架构及900w/960六道黄金通过；9060仍仅编译验证。无需换DLL，游戏/已上传0.25包未动。中英文changelog加“未发布”简述；归档ffnload-*与ffn-input-staging-isa.json。第一候选未采用；后续优先考察矩阵权重片段读取的地址计算/依赖，入口同步这条路已有明确结果，不再盲删barrier。
 
-## 2026-09-19 21:32起：C256预读变慢，转测权重连续片段
+## 2026-09-19 21:32起：C256预读变慢，权重连续片段省约0.26～0.32/0.40ms
 
 先看当前ffn-load-production ISA：C64 expand的20次global load全部在第一条MMA前发出，C128为34/40，已有编译器预读；C256仍循环读取/拼接32个权重字节后做4次MMA。只对C256 ByteIn tiled做下一批预读（ffn-c256-prefetch.patch），双目标COMGR通过；VGPR79→87，private0。80帧ABBA：900基线13.552/13.545、候选13.613/13.620（+0.068ms）；1080基线19.8005/19.7985、候选19.877/19.890（+0.084）。输出hash一致但更慢，不采用；ISA仍等下一批拼接完才发当前MMA，没形成有效重叠。
 
 进一步发现09-17的MH FFN fragment-layout失败实验只覆盖C64/C128。C256旧tiled布局每个B片段读8个分散字节，可以用现成FragmentPackedMatrix初始化重排，再由frag_b一次读8字节。隔离host暂把MH_FFN_FRAG仅路由C256、优先选_frag名，新增6个C256导出（mapped/identity × float/fb/bytein_fb）；计算顺序不变。双目标编译成功，独立benchmark_c256frag.exe；测试脚本test-c256-fragment.ps1。C256 VGPR79→101，LDS21568/private0不变。首轮80帧ABBA：900 13.611→13.294ms（−0.317）；1080 19.81275→19.40975（−0.403），输出hash一致。完整12组正确性与倒序复核进行中；候选patch c256-ffn-fragment，生产源码、游戏/发布包未改。若通过，正式版需独立C256开关，保留旧小通道实验语义，并配套新DLL/模块。
+
+C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗部，首尾逐位相同、每组全部24帧有限；120帧BAAB复核900 13.61925→13.3575（−0.26175ms），1080 19.877→19.4755（−0.4015），与首轮方向一致。收益相对已含FFN直接输入片段的ffn-load-production基线，不相加推算游戏FPS。
+
+正式接入使用独立Options.mh_ffn_frag256、环境DLSS5_HIP_MH_FFN_FRAG256=1及CLI --mh-ffn-frag256，默认0，只在C256＋融合FFN/QKV＋字节feature接口启用；小通道实验开关不复用。六个新C256_frag导出、FFN/QKV权重初始化时FragmentPackedMatrix重排、_frag命名优先于_tiled。新HIP DLL release/HIP/native-c256-fragment.addon64，SHA256 f5d3f7348e42f362a0db4233814e1b2d8c4842de0d1196620a40bbc299adde75；远端D:\DLSSNR-Lab\c256-frag-src同名文件。生产benchmark_c256frag_production.exe/reference_c256frag.exe重编，独立正式开关与完整双架构目录自动选择、900w/960六道黄金全部通过。
+
+正式四模块重编：gfx1200 unpacked AE28609A…/packed 5A91FB9A…，gfx1201 unpacked 1D0CAC28…/packed FD24B2FF…；完整48模块D:\DLSSNR-Lab\c256-frag-production-modules，hip/SHA256SUMS更新。full-byte-flags.txt已标注新DLL/模块并加FRAG256=1，后续部署/打包需同步这组配置；已上传0.25和游戏安装未动。README中英文“未发布”简述输入直读＋C256权重预排。源码/候选/脚本/CSV均归档；未做9060实机测试。预读尝试不采用；下一步仍可查C32输入映射与输出的32位地址，权重预读不再盲做。
