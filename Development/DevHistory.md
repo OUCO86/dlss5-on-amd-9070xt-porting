@@ -2624,8 +2624,8 @@ C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗�
 
 ## 2026-09-19 23:20起：Lies of P黑屏复现，发现打包遗漏R11写回shader
 
-用户稳定复现，进程30760、render1506×848→2560×1440，网络正常processed=1，F6开关可用。定位到确定的资产版本不匹配：游戏随0.25安装的native_codec_decode.hlsl SHA977c2d52…仍是旧版，没有NATIVE_CODEC_R11_OUT分支，而DLL的NativeGameCodec已为R11G11B10选择raw buffer输出。旧shader在该宏下仍编成RWTexture2D，与DLL绑定的raw UAV不匹配；源码09-18已补R11分支，但包沿用了旧资产目录。当前源SHA98a790d928e61c3eab905f43374dc9a1e560aff22946cd17b166cd0ca3e6c5f8，相比旧文件仅多R11写回分支。黑屏与该遗漏高度吻合，具体画面恢复待用户切换品质验证。
+用户稳定复现，进程30760、render1506×848→2560×1440，网络正常processed=1，F6开关可用。定位到确定的资产版本不匹配：游戏随0.25安装的native_codec_decode.hlsl SHA977c2d52…仍是旧版，没有NATIVE_CODEC_R11_OUT分支，而DLL的NativeGameCodec已为R11G11B10选择raw buffer输出。旧shader在该宏下仍编成RWTexture2D，与DLL绑定的raw UAV不匹配；源码09-18已补R11分支，但包沿用了旧资产目录。当前源SHA98a790d928e61c3eab905f43374dc9a1e560aff22946cd17b166cd0ca3e6c5f8，相比旧文件仅多R11写回分支。23:32用户按最高→原低档切换后确认“出來畫面了”，替换这一shader即可恢复，支持打包遗漏为本次黑屏根因。
 
-compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV，44种生产D3DCompiler组合通过；旧shader负对照被正确拒绝。只备份/替换了游戏的这一个HLSL文字文件，DLL仍02b40319…，未动运行中DLL/HSACO；备份D:\DLSSNR-Lab\liesofp-before-r11-shader，工具fix-liesofp-codec.ps1。已请用户最高效果品质→原低档触发格式重建，shader-cache按源码变化自动失效；仍待用户反馈，不声称已获画面验证。
+compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV，44种生产D3DCompiler组合通过；旧shader负对照被正确拒绝。只备份/替换了游戏的这一个HLSL文字文件，DLL仍02b40319…，未动运行中DLL/HSACO；备份D:\DLSSNR-Lab\liesofp-before-r11-shader，工具fix-liesofp-codec.ps1。已请用户最高效果品质→原低档触发格式重建，shader-cache按源码变化自动失效；23:32已获用户画面恢复确认。
 
 两条打包脚本补上CodecDecodePath（默认D:\DLSSNR-Lab\native_codec_decode.hlsl），打包时同步当前解码shader并调用compile_fit_shaders.exe做44组合/绑定校验，防止再次直接继承旧资产；Magpie基底校验白名单允许该明确更新。当前shader与验证器已上传D:\DLSSNR-Lab，脚本PowerShell解析通过；已上传ZIP尚未重打，未回帖issue。
