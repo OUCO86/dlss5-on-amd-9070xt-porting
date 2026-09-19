@@ -1,10 +1,11 @@
 // DLSS5-AMD on-screen notice (native_text_overlay.h): a 5x7 bitmap font drawn by a compute pass into a raw buffer laid out like a
-// strip of the host texture (row pitch `pitch` bytes, pixel format `mode`: 0 RGBA8, 1 BGRA8, 2 RGBA16F, 3 RGBA16 UNORM), which the
+// strip of the host texture (row pitch `pitch` bytes, pixel format `mode`: 0 RGBA8, 1 BGRA8, 2 RGBA16F, 3 RGBA16 UNORM, 4 RGB10A2), which the
 // frame then copies into the upscaler's output with CopyTextureRegion (a UAV on the host's own texture crashes D3D12Core in Magpie).
 // Text arrives as 4 chars per uint (ASCII 32..95, upper case), drawn `scale` times enlarged on a black box.
 RWByteAddressBuffer OutputBits : register(u0);
 cbuffer Notice : register(b0) { uint4 text[4]; uint scale, count, mode, pitch; uint pad0, pad1, pad2, pad3; };
 void Store(uint2 p,float4 v){
+ if(mode==4){uint4 q=uint4(round(saturate(v)*float4(1023,1023,1023,3)));OutputBits.Store(p.y*pitch+p.x*4,q.x|(q.y<<10)|(q.z<<20)|(q.w<<30));return;}
  if(mode==2){OutputBits.Store2(p.y*pitch+p.x*8,uint2(f32tof16(v.x)|(f32tof16(v.y)<<16),f32tof16(v.z)|(f32tof16(v.w)<<16)));return;}
  if(mode==3){uint4 q=uint4(round(saturate(v)*65535.0));OutputBits.Store2(p.y*pitch+p.x*8,uint2(q.x|(q.y<<16),q.z|(q.w<<16)));return;}
  uint4 q=uint4(round(saturate(v)*255.0));

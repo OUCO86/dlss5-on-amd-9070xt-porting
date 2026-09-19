@@ -2668,3 +2668,11 @@ compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV�
 修正候选1d8ac806f5150e11e3ae313091e372dfb8c4fcb945069bbdf9cd57ec4b02dccb已安装root/_storage_并启动PID25852：只转换模式成功，启动中1920×1080→2560×1440（超范围绕过）→1920×1080正常。切mode1后HIP初始化成功，gfx1201/LUID匹配，900P网络；菜单连续1200帧（约30fps菜单上限）无提交错误，截图正常。首帧私有RGBA16F前后均全有限，RGB均值0.23444→0.23708，99.65%分量改变，MAE0.01777；此读回仅证明实际处理且无非有限值/整屏黑，不代替视觉质量验收。统计results/present-first-frame.json；原始诊断在游戏logs和D:\DLSSNR-Lab\re9-opti。用户进游戏测试尚待，当前不是前置路径、无运动矢量历史、HDR/大于1080P输出会绕过。
 
 01:59补查F6：日志确认bypass后停止增加处理计数，再次F6 enabled后恢复，累计2400帧。游戏留在菜单、后置HIP开启供用户实玩，保持现有1080P SDR设置。证据present-menu-20260920.txt；阶段提交b54b05f（实现及往返测试），本次补实测记录。
+
+## 2026-09-20 07:02起：RE9接回信息层，准备用户第二轮试玩
+
+用户已实玩并退出，要求先接回信息层再测，确认后独立打0.26 OptiScaler-REFramework包。后置插件增加独立信息绘制：有效NET/OUT尺寸、ON/OFF/初始化/失败/超范围提示，以及Present回调FPS（不冒充插帧后帧率）；右上角避开REFramework菜单。F6切换处理，F7隐藏/恢复所有信息；SHOW_FPS/NOTICE每秒热读分别控制两行。默认取消首帧完整读回写盘，诊断需RE9_SNAPSHOT=1。NativeTextOverlay/字体shader增加R10G10B10A2 raw打包分支，信息在HIP之后绘制，不进入模型输入。900P显示1600×900有效区域，而非1600×960填充画布。
+
+编译通过，初版3c81f00c…已在游戏显示文字并处理2100帧；发现左侧REFramework面板遮住信息，最终改右上角。当前候选4d31484f276cbc144c717da6e13996ac5674204ac3ac8d6bf165c34b8448441c与字体shader8d20c7f5…在退出后同步root/_storage_；before-info备份原DLL/配置/shader。待完成开关实测，尚未打包。
+
+07:07实测最终候选PID5248，菜单累计3900帧以上无处理错误。截图确认右上有效1600×900→1920×1080、ON/FPS文字正常；F7隐藏/恢复成功，F6 OFF提示及恢复处理成功；SHOW_FPS=0、NOTICE=0热改后两行完全消失。结束恢复SHOW_FPS=1/NOTICE=2、F6 ON、F7可见，游戏留菜单供用户第二轮实玩。日志results/present-info-20260920.txt。通用0.26包及其他游戏安装未改；专用包等用户本轮确认再打。

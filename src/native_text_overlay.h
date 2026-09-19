@@ -18,6 +18,7 @@ class NativeTextOverlay {
  /* host format -> (copy footprint format, shader pixel mode, bytes per pixel); DXGI_FORMAT_UNKNOWN = unsupported */
  static DXGI_FORMAT CopyFormat(DXGI_FORMAT f,UINT&mode,UINT&bpp){
   switch(f){
+   case DXGI_FORMAT_R10G10B10A2_UNORM:mode=4;bpp=4;return DXGI_FORMAT_R10G10B10A2_UNORM;
    case DXGI_FORMAT_R8G8B8A8_UNORM:case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:case DXGI_FORMAT_R8G8B8A8_TYPELESS:mode=0;bpp=4;return DXGI_FORMAT_R8G8B8A8_UNORM;
    case DXGI_FORMAT_B8G8R8A8_UNORM:case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:case DXGI_FORMAT_B8G8R8A8_TYPELESS:mode=1;bpp=4;return DXGI_FORMAT_B8G8R8A8_UNORM;
    case DXGI_FORMAT_R16G16B16A16_FLOAT:mode=2;bpp=8;return DXGI_FORMAT_R16G16B16A16_FLOAT;

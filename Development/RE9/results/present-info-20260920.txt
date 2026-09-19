@@ -1,0 +1,26 @@
+pid=5248 tick=64891187 mode=1
+pid=5248 tick=64891187 bridge ready 1920x1080
+pid=5248 tick=64891281 unsupported format/size/colorspace format=24 size=2560x1440 space=1
+pid=5248 tick=64891546 HIP ready
+pid=5248 tick=64894093 bridge ready 1920x1080
+pid=5248 tick=64894265 HIP ready
+pid=5248 tick=64895500 HIP processed=1
+pid=5248 tick=64900640 HIP processed=300
+pid=5248 tick=64905734 HIP processed=600
+pid=5248 tick=64910906 HIP processed=900
+pid=5248 tick=64916296 HIP processed=1200
+pid=5248 tick=64921796 HIP processed=1500
+pid=5248 tick=64923312 info hidden
+pid=5248 tick=64927296 HIP processed=1800
+pid=5248 tick=64932796 HIP processed=2100
+pid=5248 tick=64938328 HIP processed=2400
+pid=5248 tick=64943843 HIP processed=2700
+pid=5248 tick=64949328 HIP processed=3000
+pid=5248 tick=64949484 info shown
+pid=5248 tick=64950906 F6 bypass
+pid=5248 tick=64974218 F6 enabled
+pid=5248 tick=64978187 HIP processed=3300
+pid=5248 tick=64983671 HIP processed=3600
+pid=5248 tick=64989140 HIP processed=3900
+pid=5248 tick=64994609 HIP processed=4200
+pid=5248 tick=65000140 HIP processed=4500

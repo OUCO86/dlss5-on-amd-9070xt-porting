@@ -35,3 +35,9 @@ NGX出口钩子成功，16次Evaluate返回均为成功、列表类型DIRECT(0)�
 初版调用ReShade的resource返回接口崩溃，改为原生DXGI GetBuffer（COM输出参数）；当前游戏验证结果见DevHistory最后一项。此候选尚未进入0.26发布包。
 
 01:58实测：修正后的1d8ac806…已在RE9菜单跑通后置HIP，首帧前后均全有限且输出改变，连续超过2100帧，F6绕过成功。保持1080P输出、900P网络、SDR；菜单30fps上限不作为性能对比，实际游戏质量待用户测试。
+
+## 信息层（07:02起）
+
+右上角显示后置ON/OFF/初始化/失败状态、有效网络尺寸与输出尺寸，第二行显示本插件Present回调频率（不是插帧后的显示器帧率）。900档显示有效1600×900，内部补齐到960行不作为画面分辨率。F6切换处理；F7在本次运行中隐藏/恢复全部信息。`DLSS5_SHOW_FPS=0`关闭帧率行，`DLSS5_NOTICE=0`关闭状态/尺寸行，两项每秒热读，均为0时不绘制。初始化期间也有提示；HDR绕过时不往HDR画面画SDR文字。
+
+信息在推理/写回完成后用独立列表绘制；NativeTextOverlay增加RGB10A2输出模式，其他格式分支不变。必须连同新版native_text_overlay.hlsl部署，`install-info.ps1`会备份旧DLL/字体shader/配置、更新并开启两行。首帧诊断读回默认关闭，需要时在flags中设置`DLSS5_RE9_SNAPSHOT=1`。测试后再制作独立0.26 OptiScaler-REFramework包，本轮不重打通用包。
