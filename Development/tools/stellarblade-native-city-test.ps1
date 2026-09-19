@@ -1,4 +1,4 @@
-param([ValidateSet('Native','Restore','Status')][string]$Action='Status')
+param([ValidateSet('Native','OptiScalerOnly','Restore','Status')][string]$Action='Status')
 $ErrorActionPreference='Stop'
 $game='C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64'
 $original='D:\DLSSNR-Lab\stellarblade-before-optiscaler'
@@ -40,9 +40,40 @@ if($Action -eq 'Native'){
   'native'|Set-Content "$backup\state.txt"
   "NATIVE_READY disabled_binaries=$($records.Count-1) original_fsr_sha=$originalHash settings_unchanged=1 backup=$backup"
  }catch{RestoreFiles $records;throw}
+}elseif($Action -eq 'OptiScalerOnly'){
+ Closed
+ if((Get-Content "$backup\state.txt" -Raw).Trim() -ne 'native'){throw 'OptiScaler-only step requires the verified native state'}
+ if(Test-Path "$game\d3d12.dll"){throw 'Unexpected local D3D12 proxy'}
+ foreach($name in @('ReShade64.dll','dlss5-amd.addon64')){if(Test-Path "$game\$name"){throw 'Unexpected addon loader still present'}}
+ $m=Get-Content "$backup\manifest.json" -Raw|ConvertFrom-Json
+ if((Get-FileHash "$original\amd_fidelityfx_dx12.dll").Hash -ne $m.originalFsrSha){throw 'Original FSR backup changed'}
+ $records=@($m.files|Where-Object{$_.name -notin @('ReShade64.dll','dlss5-amd.addon64')})
+ $iniPath="$game\OptiScaler.ini";$ini=Get-Content $iniPath -Raw
+ if([regex]::Matches($ini,'(?m)^\s*LoadReshade\s*=').Count -ne 1){throw 'Expected one LoadReshade setting'}
+ $snapshot="$backup\OptiScaler.before-only.ini"
+ if(Test-Path $snapshot){throw 'OptiScaler-only settings backup already exists'}
+ Copy-Item $iniPath $snapshot
+ $settings=Join-Path $env:LOCALAPPDATA 'SB\Saved\Config\WindowsNoEditor\GameUserSettings.ini'
+ $settingsHash=(Get-FileHash $settings).Hash
+ try{
+  RestoreFiles $records
+  $ini=[regex]::Replace($ini,'(?m)^(\s*LoadReshade\s*=\s*)[^\r\n]*','${1}false')
+  [IO.File]::WriteAllText($iniPath,$ini,(New-Object Text.UTF8Encoding($false)))
+  if((Get-Content $iniPath -Raw) -notmatch '(?m)^\s*LoadReshade\s*=\s*false\s*$'){throw 'ReShade disable verification failed'}
+  if((Get-FileHash $settings).Hash -ne $settingsHash){throw 'Game graphics settings changed'}
+  'optiscaler-only'|Set-Content "$backup\state.txt"
+  "OPTISCALER_ONLY_READY restored_binaries=$($records.Count) LoadReshade=false addon_absent=1 settings_unchanged=1"
+ }catch{
+  Closed
+  foreach($r in $records){if(Test-Path "$game\$($r.name)"){Remove-Item -LiteralPath "$game\$($r.name)"}}
+  Copy-Item "$original\amd_fidelityfx_dx12.dll" "$game\amd_fidelityfx_dx12.dll" -Force
+  Copy-Item $snapshot $iniPath -Force
+  throw
+ }
 }elseif($Action -eq 'Restore'){
  $m=Get-Content "$backup\manifest.json" -Raw|ConvertFrom-Json
  RestoreFiles @($m.files)
+ if(Test-Path "$backup\OptiScaler.before-only.ini"){Copy-Item "$backup\OptiScaler.before-only.ini" "$game\OptiScaler.ini" -Force}
  'restored'|Set-Content "$backup\state.txt"
  'PLUGIN_CHAIN_RESTORED; current game graphics settings preserved'
 }else{

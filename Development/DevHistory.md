@@ -2448,3 +2448,10 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 ### 2026-09-19 15:10：原生主城对照保持60fps
 
 用户回同一主城对照后报告始终60fps（此前整套链F6关闭：城外60、城内30；开启：城外43、城内31）。只读核对新PID23256：加载系统dxgi.dll及已恢复的原生amd_fidelityfx_dx12.dll，没有ReShade/addon/fakenvapi匹配模块。支持问题在整套插件或替换超分后端的差异范围内，不能单独点名OptiScaler本体，也不能排除此前驻留推理资源/接入钩子影响。下一步逐层加回：先OptiScaler且LoadReshade=false，再ReShade无DLSS5 addon，最后加addon以F6关闭对照。需用户退出后才改文件；当前仍为原生游戏环境。
+
+
+### 2026-09-19 15:11：准备仅OptiScaler的主城对照
+
+用户再次退出后，扩展stellarblade-native-city-test.ps1增加OptiScalerOnly阶段，要求当前已验证native状态且游戏关闭。从before-native-city-test中校验并恢复11个OptiScaler/附带后端二进制，ReShade64.dll与dlss5-amd.addon64保持移出；OptiScaler.ini仅改LoadReshade=false，其修改前原件另存OptiScaler.before-only.ini，完整Restore会还原它。Dx12Upscaler仍fsr31，其余插件配置未改。GameUserSettings.ini操作前后SHA一致。
+
+当前state=optiscaler-only，尚未启动；待用户在同一地点/视角测城内外FPS。这一步同时包含OptiScaler与其替换FSR后端，若掉帧仍不能直接区分两者，但能排除未加载的ReShade/DLSS5。这一轮不使用F6，因为addon未加载。
