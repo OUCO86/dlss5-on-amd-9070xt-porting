@@ -2524,3 +2524,8 @@ HIP与DX12两种addon编译通过，git diff --check通过。HIP SHA BE9E82CEE99
 ### 2026-09-19 16:21：按用户要求重打0.24.2完整包
 
 用户明确网友不使用补丁，要求完整包。旧完整包/目录/sha256移到D:\DLSSNR-Lab\pre-upscale\before-0242-overlay-repack留档；正式位置重新生成OptiScaler-DLSS5-AMD-0.24.2.zip，包含be9e82显示开关修正版DLL，包内说明同步。513个有效载荷逐项从zip读回哈希通过，24个HIP模块与基底一致。新完整包385,886,558字节，SHA256 91cc2ce444edef687dba7236867a1b343836c1bc4dba151eb864f422d52e21a8，旁置校验文件。原网盘链接仍为此前上传版，README明确重打包链接待更新。没有部署运行中的剑星，关闭显示的画面回归仍待进行。
+
+
+### 2026-09-19 16:27：更新0.24.2重打包下载链接
+
+用户已上传含显示开关修复的完整包，新链接：https://pan.quark.cn/s/f74aaa5c7f9a 。中英文README的0.24.2 OptiScaler链接同步替换，移除待更新说明。此前1MB overlay-fix补丁及目录已从发布目录移至D:\DLSSNR-Lab\pre-upscale\overlay-patch-archive，避免与完整包混淆。
