@@ -2495,3 +2495,8 @@ HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe2
 用户要求打包0.24.2。使用已编译、同步/异步GPU smoke通过并由用户主城实测49fps的395dabfe… addon，包含F6真实旁路和无待处理任务时的绘制/屏障快速跳过。更新包内说明及中英文README版本表；未编造下载链接。
 
 成品：`D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2.zip`，385,887,973字节；SHA256 `B40175165A8A73120F53CE25EB0061D79CD54F7C65A2E85BC35C56D1DB7B9834`，旁置.zip.sha256。Release配方从zip读回513个有效载荷逐文件哈希通过，24个HIP模块与基底逐文件一致。额外对比0.24.1完整文件树，无增删，只有dlss5-amd.addon64、README.txt和SHA256SUMS.txt变化；权重/模块/默认配置及附带组件完全一致。打包未触碰正在运行的游戏文件，未上传网盘或打tag。
+
+
+### 2026-09-19 15:33：0.24.2网盘下载链接
+
+用户已上传OptiScaler-DLSS5-AMD-0.24.2.zip，提供夸克链接：https://pan.quark.cn/s/32eec4b3f1f3 。已挂到中英文README的0.24.2版本号，未放到文首；本地发布包不变。
