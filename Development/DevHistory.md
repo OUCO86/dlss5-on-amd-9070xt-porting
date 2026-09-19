@@ -2457,3 +2457,10 @@ OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscal
 多头注意力与C32指数范围相同，保留其两路partial sum，只替换最终倒数；ViT融合注意力指数范围不同（单项[0.0040283203125,1.640625]、最多640keys），扩大倒数穷举到[1/256,1050]：151,207,937个float全同，记录normalize-rcp-exhaustive-1050.txt。生产源码未改，独立mh-normalize-rcp.patch/vit-normalize-rcp.patch及测试脚本留Development/HIP。
 
 相对已采用C32倒数的基线：MH 1080初轮约−0.030ms，80帧ABBA基线20.9225/20.971对20.9085/20.937，约−0.024ms且有漂移；900基线14.0555/14.0405对14.0165/14.0005，约−0.040ms。ViT 1080基线20.8095/20.8385对20.8125/20.8025，差约0.017ms，与波动相当，暂不采用。所有计时轮次最终输出hash相同。数据在同一1080结果目录（mhrcp、mhrcp-long、mhrcp900、vitrcp）。没有部署/重打包；下一步优先研究MH概率/指数中间量的数据传递，倒数优化的剩余收益已很薄。
+
+
+## 2026-09-19 17:42起：多头指数half寄存器复用，整组约−0.08～0.10ms
+
+C64/C128/C256 attention-project借鉴C32：指数half保留h8寄存器，概率计算免回读ex，固定key/e循环显式展开；保留MH原来的双partial sum和同步，未混入上一轮未采用的MH倒数。初轮1080约−0.066ms；逐形状对称拆测无明确单项收益（C64略慢），因此追加100帧ABBA：基线20.983/21.0005，整组20.875/20.9175，约−0.096ms。900基线14.0585/14.0835，整组13.985/13.9935，约−0.082ms。仅确认整组实测收益，不将单项时间相加或宣称已解释原因；无scratch溢出。
+
+900/1080×真实/HDR/暗部、seed123/9876六组24帧均有限、首尾逐位匹配；正式配方重编后900w/960六道黄金全过。源码并入hip/multihead_fused_attention.hip，SHA256SUMS更新multihead_fused_attention.hsaco为dea239e4aaa36825884ca052aeea045bb1ba368afa738f728b758a1930c7ba6c。最新完整模块目录hip-backend/mh-ex-production-modules，包含已采用的C32复用/倒数；游戏与发布包未动。实验mh-register-ex.patch、test/split-mh-register-ex.ps1和mhex系列CSV归档。下一步可看Q/K全局读取复用，但需评估额外LDS对并行度的代价，不机械推广缓存。
