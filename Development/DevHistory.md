@@ -2643,3 +2643,11 @@ compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV�
 | Magpie-DLSS5-AMD-0.26.zip | 356968661 | 722 | 9571fc0cda7ad78cb2e12312fdd0d0cc28e270109edad15301ec94fc007276f0 |
 
 机器可读清单Development/results/release-0.26.json。0.26 Magpie整包尚待用户实玩，9060/XT仍无本机硬件验证；原0.25归档保留。
+
+## 2026-09-20 00:04起：RE9重新调查，准备provider/NGX双观察点
+
+重读上次日志：OptiScaler+REFramework基线可进菜单，DLSS5因FFX后同列表draw/dispatch被拒；根目录/_storage_的旧addon均.off。官方OptiScaler兼容表仍列RE9需REFramework。制作只转发原始FFX、记录后续普通draw/dispatch调用栈的隔离观察版，首版54aa65b6…部署为re9-ffx-observer.addon64并启动RE9（PID3212），原DLSS5保持.off。截图确认可见菜单，OptiScaler为DLSS→FSR4.1.1、约1130×636→1920×1080；新loader hook_status=0但没有FFX调用记录。使用Insert隐藏REFramework时同时打开了OptiScaler菜单，Enter未进入游戏；未更改图形参数。
+
+核对官方0.9.4提交7534ad0源码，发现FfxApiProxy可直调upscaler provider，输入hook与后端同库时还会把内部函数指针换成Detours trampoline。当前加载_storage_的loader2.1.0.604/upscaler4.1.1.2740，bare dx12 2.3.0.2740文件存在但不在当前模块清单；root/_storage_对应文件hash一致，没有证据说是缓存旧版本。FSR31Feature在FFX后可能继续做RCAS/输出缩放/ImGui，所以旧following_work不能直接归为游戏本身，需观察实际路径。
+
+新版观察DLL加入provider入口＋OptiScaler NVSDK_NGX_D3D12_EvaluateFeature出口，记录list_type与前四个后续命令的模块/偏移栈；签名从NVNGX_DLSS_Dx12.cpp核对，限定前16次调用。编译SHA2bc1ee441c117c349bd30364789f8e23dc7f61d1354e010622fb227060f944e3，已放D:\DLSSNR-Lab\re9-opti\native-re9-observer.addon64；尚未覆盖游戏运行中的首版。已请求用户退出RE9，下一步install-observer.ps1 -Action Update同步root/_storage_再启动。Development/RE9保存源码、准备/安装脚本、研究说明；本次未实现新的DLSS5接入，不移除following_work、不关闭/重置游戏列表，不把无观察结果当安全证据。原0.26发布代码未动。

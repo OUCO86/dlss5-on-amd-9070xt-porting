@@ -1,0 +1,98 @@
+--- a/src/native_submission_order_probe.cpp
++++ b/src/native_submission_order_probe.cpp
+@@ -30,7 +30,7 @@
+ static bool cross_thread_submit{}; /* set for the XeSS path (Rise of the Ronin submits from a different thread than the one recording the upscaler) */
+ #endif
+ #ifdef NATIVE_ORDER_NEURAL
+-extern "C" __declspec(dllexport) const char*NAME="DLSS5 AMD single-frame verification";
++extern "C" __declspec(dllexport) const char*NAME="RE9 FFX ordering observer";
+ extern "C" __declspec(dllexport) const char*DESCRIPTION="Background initialization then one reset-history neural frame; not a completed temporal renderer.";
+ #else
+ extern "C" __declspec(dllexport) const char*NAME="Native FFX submission order observer";
+@@ -67,6 +67,9 @@
+  }
+ }
+ #include "native_pre_upscale.h"
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++#include "../Development/RE9/re9_ffx_tail_trace.h"
++#endif
+ static D3D12_RESOURCE_STATES notice_state=D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+ static void draw_pending_notice(ID3D12CommandQueue*q){
+  std::string text;ID3D12Resource*target=nullptr;
+@@ -164,6 +167,9 @@
+  return result;
+ }
+ static uint32_t dispatch(void**context,const Header*h){
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++ {static std::atomic<unsigned>seen{};if(seen.fetch_add(1)<8){Header value{};SIZE_T n=0;ReadProcessMemory(GetCurrentProcess(),h,&value,sizeof value,&n);if(FILE*f=_wfopen(NativeLabPath(L"logs\\re9-ffx-tail.txt").c_str(),L"ab")){fprintf(f,"provider_dispatch type=%llx readable=%zu\n",(unsigned long long)value.type,size_t(n));fclose(f);}}}
++#endif
+  if(!h||(h->type&0x00ffffffu)!=0x00010001u)return original(context,h);
+  /* Select the first upscaler context until it is destroyed (including its size-error notice). A following FSR4 (even when its output
+     also fits 1080p) must not replace the input stage's motion, pending work or status text. */
+@@ -179,6 +185,13 @@
+  void*list=nullptr;SIZE_T got=0;
+  ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<const char*>(h)+16,&list,sizeof(list),&got);
+  unsigned n=++frames;log("ffx_begin",got==sizeof(list)?list:nullptr,nullptr,n);
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++ // Record the original FFX work normally; only arm observation after it returns.
++ auto trace_result=original(context,h);ID3D12GraphicsCommandList*native=nullptr;
++ if(list&&SUCCEEDED(static_cast<IUnknown*>(list)->QueryInterface(UnwrappedObject,reinterpret_cast<void**>(&native)))&&native){Re9FfxTrace::Arm(native,n,h);native->Release();}
++ return trace_result;
++#endif
++
+ #ifdef NATIVE_ORDER_NEURAL
+  if(NativePreUpscale::Enabled()){
+   if(NativePreUpscale::Replaying())return original(context,h);
+@@ -419,7 +432,11 @@
+  if(s==MH_OK)s=MH_EnableHook(target);
+  log("execute_hook_status",target,native,unsigned(s));
+ }
+-static void close_list(reshade::api::command_list*c){log("close_api",c,nullptr);log("close_native",reinterpret_cast<void*>(c->get_native()),nullptr);}
++static void close_list(reshade::api::command_list*c){
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++ Re9FfxTrace::Close(reinterpret_cast<void*>(c->get_native()));
++#endif
++log("close_api",c,nullptr);log("close_native",reinterpret_cast<void*>(c->get_native()),nullptr);}
+ static void execute(reshade::api::command_queue*q,reshade::api::command_list*c){install_execute(q);log("before_execute_api",c,q);log("before_execute_native",reinterpret_cast<void*>(c->get_native()),reinterpret_cast<void*>(q->get_native()));}
+ /* 2026-09-18: frames presented by the host. The upscaler hook waits for the first 30 of them: MinHook suspends every thread to patch the
+    export, and doing that while the title is still loading dlls (Black Myth: Wukong loads libxess.dll at start-up and keeps loading EOS/Steam
+@@ -431,9 +448,21 @@
+  if(NativePreUpscale::HasPendingJobs())NativePreUpscale::ObserveWork(reinterpret_cast<ID3D12GraphicsCommandList*>(c->get_native()));
+ #endif
+ }
+-static bool compute(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t){pre_upscale_work(c);log("dispatch_api",c,nullptr);return false;}
+-static bool draw(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,uint32_t){pre_upscale_work(c);log("draw_api",c,nullptr);return false;}
+-static bool draw_indexed(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,int32_t,uint32_t){pre_upscale_work(c);return false;}
++static bool compute(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t){
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++ Re9FfxTrace::Work(reinterpret_cast<void*>(c->get_native()),"dispatch");
++#endif
++pre_upscale_work(c);log("dispatch_api",c,nullptr);return false;}
++static bool draw(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,uint32_t){
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++ Re9FfxTrace::Work(reinterpret_cast<void*>(c->get_native()),"draw");
++#endif
++pre_upscale_work(c);log("draw_api",c,nullptr);return false;}
++static bool draw_indexed(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t,int32_t,uint32_t){
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++ Re9FfxTrace::Work(reinterpret_cast<void*>(c->get_native()),"draw_indexed");
++#endif
++pre_upscale_work(c);return false;}
+ static void barrier(reshade::api::command_list*c,uint32_t count,const reshade::api::resource*r,const reshade::api::resource_usage*before,const reshade::api::resource_usage*after){
+  if(!r||!before||!after)return;auto target=tracked_output.load();if(!target)return;
+  for(uint32_t i=0;i<count;i++)if(r[i].handle==target&&events.fetch_add(1)<8192){
+@@ -460,10 +489,13 @@
+  /* weights into memory while we wait for the upscaler dll / the user's hotkey (see NativePrefetchWeights) */
+  {std::wstring assets=NativeLabPath(L"native-game-tiled-assets");if(GetFileAttributesW(assets.c_str())!=INVALID_FILE_ATTRIBUTES)NativePrefetchWeights(assets);}
+  /* No deadline: Magpie loads the FFX dll only when the user starts scaling, which can be any time after launch (the old 10-minute limit gave up before that). */
+- HMODULE module=nullptr,xess=nullptr;for(unsigned i=0;!module&&!xess;i++){if(!only_xess){module=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");if(!module)module=GetModuleHandleW(L"amd_fidelityfx_loader_dx12.dll");}if(!wait_ffx)xess=GetModuleHandleW(L"libxess.dll");if(!module&&!xess)Sleep(100);}if(!module&&!xess)return 1;
++ HMODULE module=nullptr,xess=nullptr;for(unsigned i=0;!module&&!xess;i++){if(!only_xess){module=GetModuleHandleW(L"amd_fidelityfx_upscaler_dx12.dll");}if(!wait_ffx)xess=GetModuleHandleW(L"libxess.dll");if(!module&&!xess)Sleep(100);}if(!module&&!xess)return 1;
+  auto target=module?GetProcAddress(module,"ffxDispatch"):GetProcAddress(xess,"xessD3D12Execute");if(!target)return 2;
+  while(presents.load()<30)Sleep(100); /* past start-up dll loading: see on_present */
+  auto s=MH_Initialize();if(s!=MH_OK&&s!=MH_ERROR_ALREADY_INITIALIZED)return 3;
++#ifdef NATIVE_RE9_OBSERVE_ONLY
++ Re9FfxTrace::InstallNgx();
++#endif
+  if(module&&fit_small_input()){
+   /* Magpie unloads the FFX loader when scaling stops. Hook trampolines must remain executable across restarts. */
+   HMODULE pinned=nullptr;
