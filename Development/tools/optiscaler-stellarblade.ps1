@@ -1,6 +1,6 @@
 ﻿param([ValidateSet('Package','FixPackage','Release','Repack','Install','Restore','Status')][string]$Action='Status',
  [string]$OutputDirectory='D:\給網友打包',[string]$Version='0.23',
- [string]$AddonPath='', [string]$AddonSha='', [switch]$PreUpscale,[string]$ModulesPath='',[switch]$Optimized)
+ [string]$AddonPath='', [string]$AddonSha='', [switch]$PreUpscale,[string]$ModulesPath='',[switch]$Optimized,[string]$CodecDecodePath='D:\DLSSNR-Lab\native_codec_decode.hlsl')
 $ErrorActionPreference='Stop'
 $lab='D:\DLSSNR-Lab'
 $stage="$lab\OptiScaler-DLSS5-AMD-test"
@@ -60,6 +60,12 @@ if($Action -eq 'Release'){
  if(Get-ChildItem "$stage\DLSS5-AMD\logs" -File|Where-Object{$_.Name -ne '.keep'}){throw 'Package contains runtime logs'}
 }
 function Archive {
+ # Runtime shader assets must follow the DLL, not the archived package baseline.
+ $assetDir=Join-Path $stage 'DLSS5-AMD\native-game-tiled-assets'
+ if(!(Test-Path $CodecDecodePath)){throw 'Upload current shaders/native_codec_decode.hlsl before packaging'}
+ Copy-Item $CodecDecodePath "$assetDir\native_codec_decode.hlsl" -Force
+ & "$lab\compile_fit_shaders.exe" $assetDir
+ if($LASTEXITCODE){throw 'Runtime shader compile/reflection validation failed'}
  $cache=Join-Path $stage 'DLSS5-AMD\native-game-tiled-assets\shader-cache'
  if(Test-Path $cache){Remove-Item $cache -Recurse -Force}
  $sums=if($Action -in @('Release','Repack')){'SHA256SUMS.txt'}else{'SHA256SUMS-test.txt'}

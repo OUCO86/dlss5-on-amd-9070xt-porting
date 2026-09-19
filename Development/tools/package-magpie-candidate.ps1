@@ -2,11 +2,12 @@
  [string]$Addon='D:\DLSSNR-Lab\dual-arch-src\native-dual-arch.addon64',
  [string]$AddonSha='02b4031994aca161098e4240e2a6782bc93cba19a6fd63f3a2b6bdea8ee14e31',
  [string]$Modules='D:\DLSSNR-Lab\dual-arch-modules',
- [string]$OutputDirectory='D:\給網友打包')
+ [string]$OutputDirectory='D:\給網友打包',[string]$CodecDecodePath='D:\DLSSNR-Lab\native_codec_decode.hlsl')
 $ErrorActionPreference='Stop';$utf8=New-Object Text.UTF8Encoding($false)
 $stage=Join-Path $OutputDirectory "Magpie-DLSS5-AMD-$Version"
 if((Test-Path $stage) -or (Test-Path "$stage.zip")){throw 'Output already exists'}
 if((Get-FileHash $Addon).Hash -ne $AddonSha){throw 'Candidate hash mismatch'}
+if(!(Test-Path $CodecDecodePath)){throw 'Upload current shaders/native_codec_decode.hlsl before packaging'}
 # Validate the archived baseline before copying; never read a live Magpie installation.
 foreach($line in [IO.File]::ReadAllLines("$Base\SHA256SUMS.txt")){
  if((Get-FileHash (Join-Path $Base $line.Substring(66))).Hash -ne $line.Substring(0,64)){throw 'Baseline checksum mismatch'}
@@ -14,6 +15,7 @@ foreach($line in [IO.File]::ReadAllLines("$Base\SHA256SUMS.txt")){
 New-Item -ItemType Directory -Force $OutputDirectory|Out-Null
 Copy-Item $Base $stage -Recurse
 Copy-Item $Addon "$stage\dlss5-amd.addon64" -Force
+Copy-Item $CodecDecodePath "$stage\DLSS5-AMD\native-game-tiled-assets\native_codec_decode.hlsl" -Force
 Copy-Item 'D:\DLSSNR-Lab\package-README-magpie-hip.txt' "$stage\README.txt" -Force
 [IO.File]::WriteAllText("$stage\DLSS5-AMD-VERSION.txt","DLSS5-AMD $Version Magpie (HIP gfx1200/gfx1201) addon sha256 $AddonSha`n",$utf8)
 $hip='DLSS5-AMD\native-game-tiled-assets\HIP'
@@ -37,7 +39,7 @@ foreach($rel in 'DLSS5-AMD\logs','DLSS5-AMD\native-game-tiled-assets\shader-cach
 $flag="$stage\DLSS5-AMD\native-game-flags.txt"
 $lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_ASYNC|_DEBUG)?=' -and $_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|DECODER_BYTE|VIT_BYTE_STREAM|MODULE_DIR)='})+@('DLSS5_PRE_UPSCALE=0','DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
 [IO.File]::WriteAllLines($flag,$lines,$utf8)
-$allowed=@('HIP-API-LICENSE.txt','dlss5-amd.addon64','README.txt','DLSS5-AMD-VERSION.txt','DLSS5-AMD\native-game-flags.txt','SHA256SUMS.txt')
+$allowed=@('DLSS5-AMD\native-game-tiled-assets\native_codec_decode.hlsl','HIP-API-LICENSE.txt','dlss5-amd.addon64','README.txt','DLSS5-AMD-VERSION.txt','DLSS5-AMD\native-game-flags.txt','SHA256SUMS.txt')
 foreach($f in Get-ChildItem $stage -Recurse -File){
  $rel=$f.FullName.Substring($stage.Length+1)
  if($rel -notlike "$hip\*" -and $rel -notin $allowed -and (Get-FileHash $f.FullName).Hash -ne (Get-FileHash (Join-Path $Base $rel)).Hash){throw "Unexpected changed payload $rel"}
@@ -50,5 +52,7 @@ function Zip($stage){New-Item -ItemType Directory -Force $OutputDirectory|Out-Nu
   foreach($line in $lines){$hash=$line.Substring(0,64);$name=$line.Substring(66);$e=$entries[$prefix+$name];if(!$e){throw "missing archive entry $name"};$s=$e.Open();$sha=[Security.Cryptography.SHA256]::Create();try{$actual=([BitConverter]::ToString($sha.ComputeHash($s))).Replace('-','').ToLowerInvariant()}finally{$s.Dispose();$sha.Dispose()};if($actual -ne $hash){throw "archive hash mismatch $name"};$n++}}finally{$archive.Dispose()}
  $zh=(Get-FileHash $zip).Hash.ToLowerInvariant();[IO.File]::WriteAllText("$zip.sha256",$zh+'  '+(Split-Path $zip -Leaf)+"`n",$utf8);"$(Split-Path $zip -Leaf) files=$n bytes=$((Get-Item $zip).Length) sha256=$zh"}
 
+& 'D:\DLSSNR-Lab\compile_fit_shaders.exe' "$stage\DLSS5-AMD\native-game-tiled-assets"
+if($LASTEXITCODE){throw 'Runtime shader compile/reflection validation failed'}
 Sums $stage
 Zip $stage

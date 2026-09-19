@@ -2621,3 +2621,11 @@ C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗�
 用户切换排查《匹诺曹的谎言》，目录C:\Program Files (x86)\Steam\steamapps\common\Lies of P；实际执行文件LiesofP\Binaries\Win64\LOP-Win64-Shipping.exe。issue https://github.com/lmxxf/dlss5-on-amd-9070xt-porting/issues/1 报告的是“效果质量”不设最高就黑屏，F6关闭恢复；附件https://github.com/user-attachments/files/32415774/default.zip（24093字节）已读，网友9070XT/gfx1201、runtime70260201，网络初始化/processed=1正常，并发生过render geometry changed；日志没有足够的像素/格式对照来确定根因，不判为架构或初始化问题。
 
 确认LOP/游戏/Magpie未运行。用公开OptiScaler 0.25完整包建立复现基线，安装到实际Shipping.exe旁；538个载荷逐文件验证，addon为02b40319…（不是《剑星》新候选f5d3…）。游戏已有6,609,624字节amd_fidelityfx_dx12.dll，保留原文件及SHA；OptiScaler自己的依赖放OptiScaler子目录，INI设置绝对OptiDllPath和FfxDx12Path指向子目录，dxgi/ReShade/addon/DLSS5-AMD/D3D12_Optiscaler留EXE旁。保留预上采样+auto及FSR31预设，FPS关闭，未改游戏画质。备份/安装清单D:\DLSSNR-Lab\liesofp-before-optiscaler-025；Development/tools/install-liesofp-optiscaler.ps1支持Install/Restore。未启动游戏，加载与问题复现待用户试玩；未回帖issue。
+
+## 2026-09-19 23:20起：Lies of P黑屏复现，发现打包遗漏R11写回shader
+
+用户稳定复现，进程30760、render1506×848→2560×1440，网络正常processed=1，F6开关可用。定位到确定的资产版本不匹配：游戏随0.25安装的native_codec_decode.hlsl SHA977c2d52…仍是旧版，没有NATIVE_CODEC_R11_OUT分支，而DLL的NativeGameCodec已为R11G11B10选择raw buffer输出。旧shader在该宏下仍编成RWTexture2D，与DLL绑定的raw UAV不匹配；源码09-18已补R11分支，但包沿用了旧资产目录。当前源SHA98a790d928e61c3eab905f43374dc9a1e560aff22946cd17b166cd0ca3e6c5f8，相比旧文件仅多R11写回分支。黑屏与该遗漏高度吻合，具体画面恢复待用户切换品质验证。
+
+compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV，44种生产D3DCompiler组合通过；旧shader负对照被正确拒绝。只备份/替换了游戏的这一个HLSL文字文件，DLL仍02b40319…，未动运行中DLL/HSACO；备份D:\DLSSNR-Lab\liesofp-before-r11-shader，工具fix-liesofp-codec.ps1。已请用户最高效果品质→原低档触发格式重建，shader-cache按源码变化自动失效；仍待用户反馈，不声称已获画面验证。
+
+两条打包脚本补上CodecDecodePath（默认D:\DLSSNR-Lab\native_codec_decode.hlsl），打包时同步当前解码shader并调用compile_fit_shaders.exe做44组合/绑定校验，防止再次直接继承旧资产；Magpie基底校验白名单允许该明确更新。当前shader与验证器已上传D:\DLSSNR-Lab，脚本PowerShell解析通过；已上传ZIP尚未重打，未回帖issue。
