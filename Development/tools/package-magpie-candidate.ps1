@@ -1,6 +1,7 @@
-﻿param([string]$Version='0.24.2',[string]$Base='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23',
- [string]$Addon='D:\DLSSNR-Lab\pre-upscale\native-idle-tracking.addon64',
- [string]$AddonSha='395DABFE20261832FAC8A43188EB69661BAA52EB140C8A99655D8B7F4E4AC75D',
+﻿param([string]$Version='0.25',[string]$Base='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23',
+ [string]$Addon='D:\DLSSNR-Lab\dual-arch-src\native-dual-arch.addon64',
+ [string]$AddonSha='02b4031994aca161098e4240e2a6782bc93cba19a6fd63f3a2b6bdea8ee14e31',
+ [string]$Modules='D:\DLSSNR-Lab\dual-arch-modules',
  [string]$OutputDirectory='D:\給網友打包')
 $ErrorActionPreference='Stop';$utf8=New-Object Text.UTF8Encoding($false)
 $stage=Join-Path $OutputDirectory "Magpie-DLSS5-AMD-$Version"
@@ -14,16 +15,33 @@ New-Item -ItemType Directory -Force $OutputDirectory|Out-Null
 Copy-Item $Base $stage -Recurse
 Copy-Item $Addon "$stage\dlss5-amd.addon64" -Force
 Copy-Item 'D:\DLSSNR-Lab\package-README-magpie-hip.txt' "$stage\README.txt" -Force
-[IO.File]::WriteAllText("$stage\DLSS5-AMD-VERSION.txt","DLSS5-AMD $Version Magpie test (HIP gfx1201) addon sha256 $AddonSha`n",$utf8)
+[IO.File]::WriteAllText("$stage\DLSS5-AMD-VERSION.txt","DLSS5-AMD $Version Magpie (HIP gfx1200/gfx1201) addon sha256 $AddonSha`n",$utf8)
+$hip='DLSS5-AMD\native-game-tiled-assets\HIP'
+Remove-Item "$stage\$hip" -Recurse -Force
+New-Item -ItemType Directory -Force "$stage\$hip"|Out-Null
+foreach($arch in 'gfx1200','gfx1201'){
+ New-Item -ItemType Directory -Force "$stage\$hip\$arch"|Out-Null
+ Copy-Item "$Modules\$arch\*.hsaco" "$stage\$hip\$arch"
+}
+Copy-Item 'D:\DLSSNR-Lab\HIP-API-LICENSE.txt' "$stage\HIP-API-LICENSE.txt"
+foreach($arch in 'gfx1200','gfx1201'){
+ if(@(Get-ChildItem "$stage\$hip\$arch\*.hsaco").Count -ne 24){throw "Expected 24 modules for $arch"}
+}
+foreach($f in Get-ChildItem $Modules -Recurse -File -Filter *.hsaco){
+ $rel=$f.FullName.Substring($Modules.Length+1)
+ if((Get-FileHash $f.FullName).Hash -ne (Get-FileHash "$stage\$hip\$rel").Hash){throw 'Module copy mismatch'}
+}
+foreach($rel in 'DLSS5-AMD\logs','DLSS5-AMD\native-game-tiled-assets\shader-cache'){
+ if(Test-Path "$stage\$rel"){Remove-Item "$stage\$rel" -Recurse -Force}
+}
 $flag="$stage\DLSS5-AMD\native-game-flags.txt"
-$lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_ASYNC|_DEBUG)?='})+@('DLSS5_PRE_UPSCALE=0')
+$lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_ASYNC|_DEBUG)?=' -and $_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|DECODER_BYTE|VIT_BYTE_STREAM|MODULE_DIR)='})+@('DLSS5_PRE_UPSCALE=0','DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
 [IO.File]::WriteAllLines($flag,$lines,$utf8)
-$allowed=@('dlss5-amd.addon64','README.txt','DLSS5-AMD-VERSION.txt','DLSS5-AMD\native-game-flags.txt','SHA256SUMS.txt')
+$allowed=@('HIP-API-LICENSE.txt','dlss5-amd.addon64','README.txt','DLSS5-AMD-VERSION.txt','DLSS5-AMD\native-game-flags.txt','SHA256SUMS.txt')
 foreach($f in Get-ChildItem $stage -Recurse -File){
  $rel=$f.FullName.Substring($stage.Length+1)
- if($rel -notin $allowed -and (Get-FileHash $f.FullName).Hash -ne (Get-FileHash (Join-Path $Base $rel)).Hash){throw "Unexpected changed payload $rel"}
+ if($rel -notlike "$hip\*" -and $rel -notin $allowed -and (Get-FileHash $f.FullName).Hash -ne (Get-FileHash (Join-Path $Base $rel)).Hash){throw "Unexpected changed payload $rel"}
 }
-if(@(Get-ChildItem "$stage\DLSS5-AMD\native-game-tiled-assets\HIP\*.hsaco").Count -ne 24){throw 'Expected 24 HIP modules'}
 if((Get-FileHash "$stage\dlss5-amd.addon64").Hash -ne $AddonSha){throw 'Staged addon mismatch'}
 function Sums($stage){$lines=@(Get-ChildItem $stage -Recurse -File|Where-Object{$_.Name -ne 'SHA256SUMS.txt'}|Sort-Object FullName|ForEach-Object{(Get-FileHash $_.FullName).Hash.ToLowerInvariant()+'  '+$_.FullName.Substring($stage.Length+1).Replace('\','/')});[IO.File]::WriteAllLines("$stage\SHA256SUMS.txt",$lines,$utf8);$lines.Count}
 function Zip($stage){New-Item -ItemType Directory -Force $OutputDirectory|Out-Null;$zip=Join-Path $OutputDirectory ((Split-Path $stage -Leaf)+'.zip');if(Test-Path $zip){Remove-Item $zip};Add-Type -AssemblyName System.IO.Compression.FileSystem;[IO.Compression.ZipFile]::CreateFromDirectory($stage,$zip,[IO.Compression.CompressionLevel]::Fastest,$true)

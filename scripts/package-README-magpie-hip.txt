@@ -1,6 +1,6 @@
-DLSS5-AMD 0.24.2 · Magpie 版（HIP 后端）
+DLSS5-AMD 0.25 · Magpie 版（HIP 后端）
 ============================
-整包文件：Magpie-DLSS5-AMD-0.24.2.zip
+整包文件：Magpie-DLSS5-AMD-0.25.zip
 
 把 DLSS 5 的神经网络（DLSSNR）跑在 AMD RX 9070 XT（RDNA4）上，以 Magpie 窗口缩放器为载体：
 支持宽不超过 1920、高不超过 1080 的普通游戏窗口，不需要游戏自己支持 FSR 或 DLSS。
@@ -8,10 +8,13 @@ DLSS5-AMD 0.24.2 · Magpie 版（HIP 后端）
 游戏窗口 -> FSR3（本插件的 DLSS5 入口）-> FSR4 放大到屏幕 -> XeSS 帧生成 -> 显示。
 效果组里名叫 FSR3_SR 的那一项，就是本插件接入 DLSS5 的位置；界面名称仍是 FSR3，不用另外添加 DLSS5 滤镜。
 
-0.24.2 测试版
-  - 更新共用addon：没有前置任务时跳过绘制/屏障跟踪，日志配额耗尽后减少计数争用。
-  - Magpie仍走原有接入路径，明确设置DLSS5_PRE_UPSCALE=0；配置和FSR3→FSR4→XeSS流水线沿用0.23。
-  - 网络权重与24个HIP内核不变。DLL已编译并通过游戏前置路径GPU检查；本包Magpie启动、画面与帧率待实测，不能套用《剑星》主城49fps结果。
+0.25 更新
+  - 同一份源码编译 gfx1200 / gfx1201 两套内核，按实际显卡自动选择；优先通过 LUID 匹配设备。
+    RX 9070系列已在本机验证；RX 9060/9060 XT已完成编译与包检查，运行效果待网友反馈。
+  - 带上C32/MH指数复用、有界倒数、完整MH字节流、解码字节输出和完整tile快路径；修复900档解码尾部漏写。
+  - HIP内核和权重改用Unicode路径读取，修复中文目录下HIP文件存在却提示找不到的问题。
+  - Magpie仍走原有接入路径，DLSS5_PRE_UPSCALE=0；FSR3→FSR4→XeSS配置沿用0.23。
+    配套DLL已编译、网络回归通过；0.25整包的Magpie启动、画面与帧率待实测。
 
 0.23 与 0.22 的区别
   - 修复带核显（AMD Radeon(TM) Graphics）或第二块显卡的机器上初始化失败（画面 INIT FAILED，日志 bridge currently requires exactly one HIP GPU）：
@@ -34,7 +37,7 @@ DLSS5-AMD 0.24.2 · Magpie 版（HIP 后端）
   由显卡驱动自带的 HIP 运行时执行，输出与 0.15 逐位相同（同一输入、同一种子、同一历史帧，40 帧输出哈希完全一致）。
   因此不再需要：预览驱动的 Shader Model 6.10、DirectX Agility SDK 1.721 预览运行时、Windows 开发人员模式。
   速度：独立测试台 1600x900 每帧约 15.5ms（0.15 为 16.8ms）；《剑星》游戏内 900p 实测约 52 fps（0.15 约 47）。
-  上述为历史版本结果；0.24.2 Magpie路径等待本次实测。
+  上述为历史版本结果；0.25 Magpie路径等待本次实测。
 
 本包内容
 --------
@@ -42,22 +45,22 @@ DLSS5-AMD 0.24.2 · Magpie 版（HIP 后端）
   config\config.json             Magpie 便携模式配置（预设好的效果组和选项）
   dxgi.dll                       ReShade 6.8 加载器（原版，未修改；放在 Magpie.exe 旁边就会被加载）
   dlss5-amd.addon64              本移植的 DLL（.addon64 是 ReShade 的扩展名，不要改名）
-  DLSS5-AMD\                     权重、HIP 内核（native-game-tiled-assets\HIP\ 里 24 个 .hsaco）、运行参数（必须和 dlss5-amd.addon64 在同一目录）
+  DLSS5-AMD\                     权重、HIP 内核（native-game-tiled-assets\HIP\ 下两个架构目录，各24个 .hsaco）、运行参数（必须和 dlss5-amd.addon64 在同一目录）
   SHA256SUMS.txt                 文件校验
 
 需要
 ----
-  1. RX 9070 / 9070 XT（RDNA4）。内核只编了 gfx1201，RX 7000 不支持。
+  1. RX 9070 / 9070 XT（gfx1201），或 RX 9060 / 9060 XT（gfx1200，待实机反馈）。RX 7000 不支持。
   2. 显卡驱动带 HIP 7 运行时：C:\Windows\System32\amdhip64_7.dll 存在即可。
      作者在 AMD 预览驱动 32.0.31007.2048（0.15 要求的那个）上验证；正式版驱动同样带这个文件，已有用户反馈正式版可用。
-     初始化失败时看 DLSS5-AMD\logs\native-game-oneshot.txt 里 HIP 相关的行。
+     初始化失败时看 DLSS5-AMD\logs\native-game-oneshot.txt 里 HIP 相关的行，以及 native-hip-device.txt 里的架构和模块路径。
      不再需要开发人员模式，不需要装 HIP SDK、SM 6.10 编译器或任何 SDK。
   3. 游戏选择窗口模式，宽不超过 1920、高不超过 1080；普通窗口和无边框窗口都可以。
      若看到 "DLSS5-AMD: INPUT MAX 1920X1080 (NOW WxH)"，请减小游戏窗口，并确认效果组第一站 FSR3 没有提前放大。
 
 安装（整包版：Magpie 本体已经在里面，解压即用）
 ----
-  1. 解压到任意目录（路径别带中文），运行 Magpie.exe。便携配置随包，选择效果组 "DLSS5-AMD" 即可。
+  1. 完整解压到独立目录，运行 Magpie.exe。便携配置随包，选择效果组 "DLSS5-AMD" 即可。
      已预设 FSR3_SR -> FSR4_SR -> XeSS_FrameGeneration_x2_ZeroMV。
      光流默认只在第一项 FSR3（DLSS5）开启 AMDOF；FSR4 和 XeSS 插帧的 Optical Flow Method 均选 None。
      如果自己调整效果组：FSR3 的缩放选相对于输入尺寸、水平/垂直均 1 倍；FSR4 选充满屏幕。不要把 FSR3 设成适应屏幕。
@@ -80,7 +83,7 @@ DLSS5-AMD 0.24.2 · Magpie 版（HIP 后端）
   - 性能档（可选）：native-game-flags.txt 里 DLSS5_SKIP_BLOCKS=42,43,46 改成 DLSS5_SKIP_BLOCKS=12,28,41,42,43,44,46,52,53，网络每帧再快约 0.8ms（900p 15.25 → 14.48ms，约 5%），代价是相对默认输出 PSNR 约 30dB（细节、暗部有可见差别）。删掉这一行则不跳块，画质最高、慢约 1ms。
   - 停止缩放再激活，插件会重新接管（需要重新初始化）。
   - 日志：DLSS5-AMD\logs\native-game-oneshot.txt（初始化）、native-submission-order.txt（每帧观察）。
-  - 屏幕提示不想要：加一行 DLSS5_NOTICE=0；帧率不想看：删掉 DLSS5_SHOW_FPS=1。
+  - 屏幕提示不想要：加一行 DLSS5_NOTICE=0；帧率数字不想看：设 DLSS5_SHOW_FPS=0；整行文字（含分辨率）不想看：设 DLSS5_NOTICE=0。修改后完全退出并重启Magpie。
   - F6 是本插件的开关键（全局）；如果同一台机器上游戏里也装了本插件的游戏版，两边会一起切。
 
 卸载

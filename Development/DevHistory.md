@@ -2549,3 +2549,9 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 验证：9070 XT自动选gfx1201，match=luid/runtime=70260201；900w＋修正960六道黄金通过。中文发布路径与英文路径加载完整网络，8帧结果逐位同（B4F66E9D…）。gfx1200无本机硬件，仅编译/目标/打包校验，README明确9060/XT待网友实测。HIP DLL SHA02b4031994aca161098e4240e2a6782bc93cba19a6fd63f3a2b6bdea8ee14e31，DX12亦编译通过。
 
 成品`D:\給網友打包\OptiScaler-DLSS5-AMD-0.25.zip`，387,840,134字节，SHA256 `d5d4c8fdf26d20767d10abf5a7308267ddf4c4d279441ff461f0c4e225a8cfd9`，旁置.sha256；538个有效载荷逐个从zip读回校验，含48个目标内核。清掉Unicode回归产生的shader-cache，保留HIP API MIT许可。Release工具支持ModulesPath/Optimized及Repack，后续打包需传双架构根目录。20:35用户已上传完整包：https://pan.quark.cn/s/636691131c5f ，中英文README链接挂在0.25的OptiScaler标签上。20:40按用户要求部署到《剑星》：确认游戏/Magpie退出，安装同一02b40319… DLL（含_storage_副本）与双架构48模块，逐文件SHA核对；沿用auto/FPS关闭及游戏、OptiScaler设置，启用完整MH流和解码字节输出。备份pre-upscale/before-0.25，deploy-stellar-025.ps1 -Action Restore可回退，待用户试玩；未打tag。
+
+## 2026-09-19 20:43起：Magpie 0.25完整包
+
+按用户要求补齐Magpie包，以校验过的0.23归档为底，使用0.25同一02b40319… DLL及gfx1200/gfx1201各24模块；开启局部/完整MH字节流、解码字节输出，ViT流关闭。保留Magpie的PRE_UPSCALE=0、auto档、sRGB输入、FSR3→FSR4→XeSS配置，未读取/覆盖正在使用的安装目录。附HIP API许可，更新中文路径/架构支持/关闭整行显示说明，移除旧日志及shader缓存；内核目录仅装48个hsaco，不带开发汇编/源码。
+
+成品`D:\給網友打包\Magpie-DLSS5-AMD-0.25.zip`，356,831,870字节，SHA256 `a253fa1331e5d0bc6d8983dccc482d64045fb650671e4d068550f2d2f90507fb`，旁置.sha256；722个有效载荷从ZIP逐项读回哈希通过，模块逐个与生产双架构目录核对。复用已编译并通过网络回归的0.25产物，未另跑GPU测试、未启动Magpie；此整包画面/帧率待用户试玩，上传链接待补。工具package-magpie-candidate.ps1默认更新双目标0.25。
