@@ -2381,6 +2381,8 @@ OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscal
 
 候选结论：ViT M2无收益；M4 ABBA基线21.1305/21.1335对21.134/21.050，差异小且不稳定，暂不采用；小通道tiled FFN慢约0.41ms，关闭；W16+diag组合缺所需内核入口，停止该项，未计性能。成功轮次最终输出均逐位一致。**本阶段无生产变更；下一步优先分析C32内部阶段/占用率，再看ViT。** 源码/结果提交65c711a。
 
+16:41续测：先回读旧结果，no-unroll虽降低VGPR却慢0.64～1ms，局部同步与新lane staging组合还曾破坏逐位，故不再盲试占用率/删barrier。新C32概率配对FP8转换（独立patch，未改生产）COMGR通过、1080最终hash不变，ABBA基线21.1055/21.2255、候选21.109/21.1705ms，无稳定收益，暂不采用。当前源的1080相位消融：基线21.1255/21.125，跳FFN19.6545（−1.47）、跳注意力19.053（−2.07）、跳投影20.6465（−0.48）；消融会改变输出，只定位阶段，不能部署或把差值当可直接取得的收益。脚本/patch为 `test-c32-pair-prob.ps1`、`c32-pair-prob.patch`、`ablate-c32-1080.ps1`，结果并入同一1080结果目录；完整远端模块在hip-backend/c32-1080-ablate{1,2,3}。下一步细分注意力的分数生成/归一化/概率写入与AV，找数据传递和指令依赖开销；这轮没有新生产优化。
+
 ### 运维入口与工作约定
 
 - AMD 机：`ssh amd9070`，实验根 `D:\DLSSNR-Lab`，《剑星》`C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64`。5090：`ssh rtx5090`，《剑星》`D:\SteamLibrary\steamapps\common\StellarBlade\SB\Binaries\Win64`。每次操作前读实际文件与进程，历史 DLL 名、目录名不等于当前安装。
