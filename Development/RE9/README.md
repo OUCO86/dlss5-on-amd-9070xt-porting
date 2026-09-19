@@ -33,3 +33,5 @@ NGX出口钩子成功，16次Evaluate返回均为成功、列表类型DIRECT(0)�
 `build-present.sh [输出]`编译独立插件，`test_present_bridge.cpp`独立GPU往返校验18组逐位一致。`install-present.ps1`有进程保护与首次备份（before-present），Update只更新DLL；中断安装可Resume。`set-present-mode.ps1 -Mode 0/1/2`为只转换/推理/绕过，运行时每秒读取；F6切换绕过。首次HIP帧前后诊断输出到DLSS5-AMD/logs/re9-present-{before,after}.rgba16f，普通帧不读回。初始化失败/提交失败会停止处理并保留可能在途的资源，不自动循环重试。
 
 初版调用ReShade的resource返回接口崩溃，改为原生DXGI GetBuffer（COM输出参数）；当前游戏验证结果见DevHistory最后一项。此候选尚未进入0.26发布包。
+
+01:58实测：修正后的1d8ac806…已在RE9菜单跑通后置HIP，首帧前后均全有限且输出改变，连续超过2100帧，F6绕过成功。保持1080P输出、900P网络、SDR；菜单30fps上限不作为性能对比，实际游戏质量待用户测试。

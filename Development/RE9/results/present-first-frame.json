@@ -1,0 +1,18 @@
+{
+  "before": {
+    "finite": true,
+    "rgb_min": 0.0,
+    "rgb_max": 0.99072265625,
+    "rgb_mean": 0.23444245755672455,
+    "nonzero_rgb_fraction": 0.9996174125514403
+  },
+  "after": {
+    "finite": true,
+    "rgb_min": 0.0,
+    "rgb_max": 0.96728515625,
+    "rgb_mean": 0.23707981407642365,
+    "nonzero_rgb_fraction": 0.9996365419238683
+  },
+  "changed_rgb_fraction": 0.9965118634259259,
+  "rgb_mae": 0.017770735546946526
+}

@@ -2664,3 +2664,7 @@ compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV�
 用户授权直接退出游戏并继续兼容，由助手处理退出/启动，无需反复请用户退出。先做独立ReShade present插件：游戏提交后、ReShade效果前，用自有列表复制R10G10B10A2后缓冲→FP16私有纹理→HIP→raw buffer打包R10并写回，保持PRESENT状态，不关闭/重置游戏列表。范围暂限SDR、R10、≤1920×1080，900P网络，UI也会处理。mode文件0只转换/1推理/2绕过，F6绕过；后台初始化，首次推理前后私有FP16诊断读回；失败停止处理并保留可能在途资源。
 
 独立test_present_bridge在9070上完成17×9、128×32、1920×1080，两种位型图案各三次，共18次GPU往返逐位一致。第一版66b6aa74…进入游戏时在ReShade get_back_buffer调用内崩溃，尚未做转换/推理；汇编定位返回点+75e7。改用IDXGISwapChain3原生GetBuffer避免跨编译器的resource返回接口；需继续游戏验证。备份D:\DLSSNR-Lab\re9-opti\before-present，旧observer已.off；同步c256-frag-production双架构48模块与当前解码shader，原发布版本不变。新源码/编译/安装脚本均在Development/RE9；这阶段不能宣称已兼容。
+
+修正候选1d8ac806f5150e11e3ae313091e372dfb8c4fcb945069bbdf9cd57ec4b02dccb已安装root/_storage_并启动PID25852：只转换模式成功，启动中1920×1080→2560×1440（超范围绕过）→1920×1080正常。切mode1后HIP初始化成功，gfx1201/LUID匹配，900P网络；菜单连续1200帧（约30fps菜单上限）无提交错误，截图正常。首帧私有RGBA16F前后均全有限，RGB均值0.23444→0.23708，99.65%分量改变，MAE0.01777；此读回仅证明实际处理且无非有限值/整屏黑，不代替视觉质量验收。统计results/present-first-frame.json；原始诊断在游戏logs和D:\DLSSNR-Lab\re9-opti。用户进游戏测试尚待，当前不是前置路径、无运动矢量历史、HDR/大于1080P输出会绕过。
+
+01:59补查F6：日志确认bypass后停止增加处理计数，再次F6 enabled后恢复，累计2400帧。游戏留在菜单、后置HIP开启供用户实玩，保持现有1080P SDR设置。证据present-menu-20260920.txt；阶段提交b54b05f（实现及往返测试），本次补实测记录。

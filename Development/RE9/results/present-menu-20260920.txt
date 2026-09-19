@@ -1,0 +1,19 @@
+pid=30020 tick=46221437 mode=0
+pid=25852 tick=46361671 mode=0
+pid=25852 tick=46361703 bridge ready 1920x1080
+pid=25852 tick=46361703 conversion roundtrip presented
+pid=25852 tick=46361765 unsupported format/size/colorspace format=24 size=2560x1440 space=1
+pid=25852 tick=46364609 bridge ready 1920x1080
+pid=25852 tick=46404984 mode=1
+pid=25852 tick=46405531 HIP ready
+pid=25852 tick=46406765 HIP processed=1
+pid=25852 tick=46416687 HIP processed=300
+pid=25852 tick=46426687 HIP processed=600
+pid=25852 tick=46436687 HIP processed=900
+pid=25852 tick=46446687 HIP processed=1200
+pid=25852 tick=46456687 HIP processed=1500
+pid=25852 tick=46466687 HIP processed=1800
+pid=25852 tick=46476687 HIP processed=2100
+pid=25852 tick=46478375 F6 bypass
+pid=25852 tick=46507703 F6 enabled
+pid=25852 tick=46516015 HIP processed=2400
