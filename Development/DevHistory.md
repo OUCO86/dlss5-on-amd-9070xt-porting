@@ -2589,3 +2589,5 @@ C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗�
 正式接入使用独立Options.mh_ffn_frag256、环境DLSS5_HIP_MH_FFN_FRAG256=1及CLI --mh-ffn-frag256，默认0，只在C256＋融合FFN/QKV＋字节feature接口启用；小通道实验开关不复用。六个新C256_frag导出、FFN/QKV权重初始化时FragmentPackedMatrix重排、_frag命名优先于_tiled。新HIP DLL release/HIP/native-c256-fragment.addon64，SHA256 f5d3f7348e42f362a0db4233814e1b2d8c4842de0d1196620a40bbc299adde75；远端D:\DLSSNR-Lab\c256-frag-src同名文件。生产benchmark_c256frag_production.exe/reference_c256frag.exe重编，独立正式开关与完整双架构目录自动选择、900w/960六道黄金全部通过。
 
 正式四模块重编：gfx1200 unpacked AE28609A…/packed 5A91FB9A…，gfx1201 unpacked 1D0CAC28…/packed FD24B2FF…；完整48模块D:\DLSSNR-Lab\c256-frag-production-modules，hip/SHA256SUMS更新。full-byte-flags.txt已标注新DLL/模块并加FRAG256=1，后续部署/打包需同步这组配置；已上传0.25和游戏安装未动。README中英文“未发布”简述输入直读＋C256权重预排。源码/候选/脚本/CSV均归档；未做9060实机测试。预读尝试不采用；下一步仍可查C32输入映射与输出的32位地址，权重预读不再盲做。
+
+21:46按用户要求部署到《剑星》：现场确认游戏/Magpie退出，deploy-stellar-c256-fragment.ps1安装f5d3f734… DLL（同步_storage_副本）及c256-frag-production双架构48内核，按仓库SHA256SUMS逐个验证；启用MH_FFN_FRAG256=1，保留完整MH/decoder字节流、auto和FPS关闭，OptiScaler.ini未变。覆盖前完整备份DLL/内核/flags至D:\DLSSNR-Lab\pre-upscale\before-c256-fragment，脚本-Action Restore可回退。此安装包含0.25之后的输入字节直读与C256权重预排，待用户实玩反馈。
