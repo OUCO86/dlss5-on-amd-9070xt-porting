@@ -2510,3 +2510,8 @@ test_mh_byte_stream新增可选diag模式，48组独立FFN/QKV/投影/byteout检
 生产源码修改在hip_reference_network.h、deep_fast.hip、deep_wmma.hip；临时模块decoder-tail-modules，未部署。整链对比已确认字节流反例消失：900/1080不同输入与seed六组、720两组首尾全同；720/1080也与此前记录一致。900w三道旧黄金保持，960新黄金047c36e1…/b4f66e9d…/0e4afd83…，再用局部字节特征改变缓冲布局复核三道均一致，已更新validate-modules-960默认runner/模块/期望值；不再匹配含未初始化值的旧900结果。诊断patch/脚本、test_decoder_tail.cpp与build-test-decoder-tail.ps1可复现。
 
 修复交付：HIP DLL `release/HIP/native-decoder-tail.addon64` SHA174c78270b4a3ab7fd4e98b8933c87682f176688e25257760f3b370084c91d64，DX12构建53297ac9…；模块decoder-tail-modules中的deep_fast=a77c349b…、deep_fast-packed=104e2c84…、deep_wmma=b562c898…，hip/SHA256SUMS同步。须DLL＋内核配套，尚未部署/打包。完整字节流的额外diag导出/host路由仍仅在隔离副本，不能把诊断模块decoder-tail-stream-modules当生产包。下一步在修正后的基线上重测完整字节流收益；本轮首先是修复旧漏算，不是性能或精度档位变化。
+
+
+## 2026-09-19 19:17：《剑星》部署900档解码尾部修复
+
+用户要求试玩，确认游戏/Magpie退出后，deploy-stellar-decoder-tail.ps1安装174c7827… DLL与deep_fast/deep_fast-packed/deep_wmma三个配套模块，共4文件逐SHA验证；备份pre-upscale/before-decoder-tail，-Action Restore可回退。游戏画质、OptiScaler.ini、flags均未变：auto、FPS关闭、局部字节特征＋快速残差开启、完整MH/ViT字节流仍关闭。未启动游戏，待实玩回归。
