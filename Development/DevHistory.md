@@ -2450,3 +2450,10 @@ OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscal
 确认游戏/Magpie退出后继续。C32指数half范围[2^-14,9.75]，64项分母在[1/256,624]；原通用除法含div_scale/fmas/fixup。用硬件rcpf加两次FMA误差修正，chain静态指令行3669→3603、div系列32→0。`test-normalize-rcp.cpp/.hip`在gfx1201遍历该区间全部144,441,345个float，结果与原1.f/x逐位全同（记录normalize-rcp-exhaustive.txt）；限定本设备/编译路径的实测，不外推其他硬件。
 
 相对上一刀寄存器复用基线：1080 ABBA20.9115/20.9215→20.862/20.871（−0.050ms）；900 14.0755/14.0715→14.0225/14.006（−0.059ms）。900/1080×真实seed123/HDR seed123/暗部seed9876六组首尾逐位匹配、24帧均有限；正式配方重编后900w/960六道黄金也全过。源码纳入hip/c32_fused_ffn_attention.hip，SHA表同步：普通模块0f3aff3fb906bd493443b1c74440716969b780d39ff98c785412dd36112f042b，packed模块31e295cc7d90ce7f77accc7bb517562c8ecbbff44269a2587298135eb378f7a1。远端生产模块hip-backend/c32-normrcp-production-modules；未部署，剑星仍为上一刀。实验patch/脚本留Development/HIP，数据并入同一1080结果目录。下一步可评估相同有界倒数在多头注意力的适用范围与实际收益，不直接批量替换所有除法。
+
+
+## 2026-09-19 17:33起：有界倒数扩到多头/ViT，收益很小，暂留候选
+
+多头注意力与C32指数范围相同，保留其两路partial sum，只替换最终倒数；ViT融合注意力指数范围不同（单项[0.0040283203125,1.640625]、最多640keys），扩大倒数穷举到[1/256,1050]：151,207,937个float全同，记录normalize-rcp-exhaustive-1050.txt。生产源码未改，独立mh-normalize-rcp.patch/vit-normalize-rcp.patch及测试脚本留Development/HIP。
+
+相对已采用C32倒数的基线：MH 1080初轮约−0.030ms，80帧ABBA基线20.9225/20.971对20.9085/20.937，约−0.024ms且有漂移；900基线14.0555/14.0405对14.0165/14.0005，约−0.040ms。ViT 1080基线20.8095/20.8385对20.8125/20.8025，差约0.017ms，与波动相当，暂不采用。所有计时轮次最终输出hash相同。数据在同一1080结果目录（mhrcp、mhrcp-long、mhrcp900、vitrcp）。没有部署/重打包；下一步优先研究MH概率/指数中间量的数据传递，倒数优化的剩余收益已很薄。
