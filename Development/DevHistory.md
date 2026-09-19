@@ -2483,3 +2483,8 @@ HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe2
 用户确认退出，远端检查无剑星/Magpie进程后运行更新的pre-upscale-smoke，同步和异步两轮均通过：每轮6帧，F6边沿/直接旁路/捕获后关闭/恢复捕获均每帧只执行一次FFX，逐4096个half读回全部different=0；pending标记发布、消费后清除及有任务时following_work观察断言通过。
 
 部署工具增加AddonCandidate阶段，要求reshade-no-addon基线、无活动addon、候选SHA正确，逐一验证其余12个基线二进制。只复制native-idle-tracking.addon64为游戏dlss5-amd.addon64，SHA 395dabfe20261832fac8a43188eb69661baa52eb140c8a99655d8b7f4e4ac75d；游戏图形配置、OptiScaler/ReShade配置与预设、DLSS5 flags前后SHA一致。状态addon-idle-tracking-candidate，原addon备份仍在before-native-city-test/files。发布包未更新，主城实际FPS待用户测F6 OFF/ON。
+
+
+### 2026-09-19 15:29：用户确认空闲跟踪修正版恢复正常，49fps
+
+部署395dabfe候选后，用户反馈“现在正常了，49帧”。此前同一轮主城朝城内整套链约30～31fps，移除addon则60fps；此次仅加回修正后的addon即恢复，支持addon高频空闲回调开销是本次掉帧的重要原因。按连续测试语境理解49fps为DLSS5开启表现，但本条反馈未单独说明F6状态，也未给出修正后OFF帧率，不补记OFF60。候选同时减少配置查询/Jobs锁争用和日志原子递增，尚未分别测量各项贡献。当前保留该候选继续游戏，未改发布包。
