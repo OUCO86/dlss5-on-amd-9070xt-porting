@@ -38,6 +38,10 @@ F6关闭时直接走原始FSR派发，跳过新任务捕获和私有颜色复制
    如显示状态文字，DLSS5 ON表示网络已处理输入；INIT是初始化中，OFF是旁路，UNSUPPORTED表示输入超限或格式不支持。
    状态也可查DLSS5-AMD\logs\native-pre-upscale.txt，持续出现processed=1、replay=0表示网络处理和超分派发正常。
 
+屏幕显示（需使用显示开关修正版DLL）
+在DLSS5-AMD\native-game-flags.txt中设置DLSS5_SHOW_FPS=0，隐藏FPS数字；DLSS5_NOTICE=0隐藏整行状态提示。
+DLSS5_NOTICE=1同样不绘制屏幕提示；默认2显示状态。修改后完全退出游戏再启动。
+
 OptiScaler 设置
 按 Insert 打开面板；没有 Insert 键可用 Win+Ctrl+O 打开 Windows 屏幕键盘，点 Ins。
 本包默认 FSR 3.x/4。切换方法：左上选择后端 → Change Upscaler → Save Settings。

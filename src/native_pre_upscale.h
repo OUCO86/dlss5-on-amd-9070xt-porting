@@ -23,6 +23,19 @@ inline int Mode(){
  static int configured=[](){int mode=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f)){size_t n=strlen(line);while(n&&(line[n-1]=='\n'||line[n-1]=='\r'||line[n-1]==' '))line[--n]=0;if(!strcmp(line,"DLSS5_PRE_UPSCALE=1"))mode=1;else if(!strcmp(line,"DLSS5_PRE_UPSCALE=2"))mode=2;else if(!strcmp(line,"DLSS5_PRE_UPSCALE=0"))mode=0;}fclose(f);}return mode;}();return configured;
 }
 inline bool Enabled(){return Mode()!=0;}
+struct DisplaySettings {unsigned notice=2;unsigned fps=0;};
+inline const DisplaySettings&Display(){
+ // Read before the background initializer applies flags to the environment.
+ static const DisplaySettings settings=[](){DisplaySettings v;
+  if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){
+   char line[256];while(fgets(line,sizeof line,f)){unsigned n;
+    if(sscanf(line,"DLSS5_NOTICE=%u",&n)==1)v.notice=n;
+    if(sscanf(line,"DLSS5_SHOW_FPS=%u",&n)==1)v.fps=n;
+   }fclose(f);
+  }return v;
+ }();return settings;
+}
+
 inline bool Async(){
  if(const wchar_t*v=_wgetenv(L"DLSS5_PRE_UPSCALE_ASYNC"))return !wcscmp(v,L"1");
  static bool enabled=[](){unsigned v=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_PRE_UPSCALE_ASYNC=%u",&v);fclose(f);}return v==1;}();return enabled;
@@ -158,7 +171,7 @@ inline bool Process(ID3D12CommandQueue*q,Job&j){
      Transition(c,s->low,D3D12_RESOURCE_STATE_COPY_DEST,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);Transition(c,color,D3D12_RESOURCE_STATE_COPY_SOURCE,j.states[0]);});
     const bool wants=neural_oneshot.WantsFrame();const unsigned ph=neural_oneshot.Phase();
     if(wants||ph==0||ph==5){
-     if(ph==0||ph==5){NativeMotionVectorScale()[0]=d.motion_scale[0];NativeMotionVectorScale()[1]=d.motion_scale[1];s->overlay.Prepare(static_cast<ID3D12Resource*>(d.resources[6].resource));}
+     if(ph==0||ph==5){NativeMotionVectorScale()[0]=d.motion_scale[0];NativeMotionVectorScale()[1]=d.motion_scale[1];if(Display().notice>=2)s->overlay.Prepare(static_cast<ID3D12Resource*>(d.resources[6].resource));}
      /* reset=true means the network never samples motion/history in this prototype. */
      neural_oneshot.OnSubmitted(q,s->low,motion,true,d.resources[2].width,d.resources[2].height,d.render[0],d.render[1],D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,true);
      processed=wants&&neural_oneshot.Phase()==4;
@@ -175,10 +188,12 @@ inline bool Process(ID3D12CommandQueue*q,Job&j){
    if(processed){PrivateBarrierResource()=nullptr;Transition(c,s->low,PrivateBarrierState(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);}
    if(j.frame<5)Log(j.frame,d,"after original FFX replay",processed,result);
    for(unsigned i=0;i<7;i++)if(j.desc.resources[i].resource){bool duplicate=false;for(unsigned k=0;k<i;k++)duplicate|=j.desc.resources[k].resource==j.desc.resources[i].resource;if(!duplicate)Transition(c,static_cast<ID3D12Resource*>(j.desc.resources[i].resource),replay_states[i],j.states[i]);}
-   char text[96],fps[20]="";const double ms=neural_oneshot.AvgMs();if(processed&&ms>0)snprintf(fps,sizeof fps," %.1f FPS",1000.0/ms);
+   if(Mode()==1&&Display().notice>=2){
+   char text[96],fps[20]="";const double ms=neural_oneshot.AvgMs();if(Display().fps&&processed&&ms>0)snprintf(fps,sizeof fps," %.1f FPS",1000.0/ms);
    const unsigned phase=neural_oneshot.Phase();const char*status=processed?"ON":phase==1?"INIT":phase==5?"ERROR":!supported?"UNSUPPORTED":"OFF";
    snprintf(text,sizeof text,"DLSS5 %s %ux%u -> FSR %ux%u%s",status,d.render[0],d.render[1],d.upscale[0]?d.upscale[0]:d.resources[6].width,d.upscale[1]?d.upscale[1]:d.resources[6].height,fps);
-   if(Mode()==1)s->overlay.Draw(c,static_cast<ID3D12Resource*>(d.resources[6].resource),text,24,24,3,j.states[6]);
+   s->overlay.Draw(c,static_cast<ID3D12Resource*>(d.resources[6].resource),text,24,24,3,j.states[6]);
+   }
   });
   if(j.frame<5||j.frame%100==0||result)Log(j.frame,d,Mode()==2?"FFX-only smoke replay":"replayed",processed,result);
   s->cpu_ms+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-started).count();

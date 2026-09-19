@@ -2507,3 +2507,10 @@ HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe2
 用户要求打Magpie版自行测试。新增Development/tools/package-magpie-candidate.ps1，先逐文件验证0.23暂存包的SHA256SUMS，再复制到独立发布目录，换入已编译且剑星实测的395dabfe… addon，更新README/版本标记，flags仅明确追加DLSS5_PRE_UPSCALE=0（不沿用OptiScaler前置配置）。其余文件逐一与0.23对比一致，包括Magpie/ReShade、流水线config、权重与24个HIP模块；未修改正在运行的游戏或Magpie安装。
 
 成品`D:\給網友打包\Magpie-DLSS5-AMD-0.24.2.zip`，354,881,266字节，SHA256 `167a3dcaee84770cee505bf857a7614368846e505c229dc71944835ac989bccf`，旁置.zip.sha256。698个有效载荷从zip逐个读回哈希通过。包内明确Magpie启动/画面/性能仍待用户回归，不能套用剑星前置路径GPU smoke和49fps结果；本次未重复编译未变的网络内核或跑GPU测试台。README同时纠正旧“固定900”与实际auto配置矛盾。未上传网盘。
+
+
+### 2026-09-19 16:14后：修复OptiScaler前置路径显示开关失效
+
+用户反馈0.24.2帧率显示关不掉。确认NativePreUpscale::Process无条件绘制状态/FPS，未接SHOW_FPS/NOTICE。现从包内flags在首次使用时读取并缓存设置，避免背景初始化尚未应用环境变量的时序问题：NOTICE默认2，0/1均跳过overlay Prepare和Draw；SHOW_FPS默认0，仅非零且NOTICE>=2显示FPS数字，关闭FPS仍保留状态行。设置需重启游戏生效。
+
+HIP与DX12两种addon编译通过，git diff --check通过。HIP SHA BE9E82CEE99037EF92EB2BEC18ACC51C428EC3CD02CCF80A1FD1033B3A8C3119。独立补丁DLL及说明位于`D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2-overlay-fix`，上传后SHA核对一致；未替换运行中游戏文件、未重打已上传0.24.2整包。屏幕显示的游戏回归待做，不能把编译通过当作实测。
