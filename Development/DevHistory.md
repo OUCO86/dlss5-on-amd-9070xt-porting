@@ -2692,3 +2692,11 @@ CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P
 候选c9873d7e…已编译/部署，CPU通用2073600尺寸与专用1080上限测试通过。准备验证2K拒绝、1080关闭超分可用，以及开启超分的错误提示。上条2K实测作为被撤回实验保留，后续专用包以本条契约为准。
 
 07:43实测：2K显示ERROR MAX 1920X1080并不处理；1080配置配无边框仍会产出桌面2K，因此配置脚本最终用WindowMode=Normal（两处）及NormalWindowResolution=(1920.000000,1080.000000)，不是无效的Windowed值。PID15276原生1920×1080/None下HIP连续2400帧以上，截图ON NET1600X900 OUT1920X1080。负对照仅临时把保存配置改DLSS（不声称实时切了游戏后端），画面显示ERROR TURN OFF GAME UPSCALING、计数暂停；恢复None后继续。NGX guard安装状态0。配置最后保留Native1080、DLSS5开启、F7信息可见；用户可直接试玩。证据present-native-20260920.txt，3440e9c实现提交；尚未打包。
+
+## 2026-09-20 07:49起：允许上游超分，仅保留1080P输出限制
+
+用户重新决定超分仍有必要，保留游戏低分辨率渲染→FSR超分→DLSS5后置；撤回07:33“必须关闭超分”要求。删除原生配置检查、NGX观察和MinHook依赖，以及强制None配置脚本；保持后缓冲≤1920×1080、SDR R10、固定900P网络和F6/F7。超范围仍ERROR MAX 1920X1080并不处理。
+
+候选f7c10735b1447c7ed5ed29c92d3bc4e6a3a97a3583220a1e7ae515f4c0b6420a编译通过，游戏退出后同步root/_storage_；恢复UpscalingAlgorithm=DLSS，保留Balanced、1920×1080普通视窗。临时恢复脚本仅修改超分开关，备份before-restore-upscale.ini。待检查启动处理；用户实玩后才打专用0.26包。
+
+07:51验证PID3604：OptiScaler重新创建fsr31接口后端，HIP随后正常初始化并处理600帧以上；启动短暂2K时仍被尺寸保护拒绝，回到1920×1080后正常。日志present-upscale-restored-20260920.txt。游戏保留已开启超分/平衡档，后置与信息显示开启，待用户继续试玩；无原生超分禁用检查。

@@ -1,0 +1,10 @@
+pid=3604 tick=67603218 mode=1
+pid=3604 tick=67603218 bridge ready 1920x1080
+pid=3604 tick=67603609 HIP ready
+pid=3604 tick=67605031 HIP processed=1
+pid=3604 tick=67605593 unsupported format/size/colorspace format=24 size=2560x1440 space=1
+pid=3604 tick=67607687 bridge ready 1920x1080
+pid=3604 tick=67607875 HIP ready
+pid=3604 tick=67609046 HIP processed=1
+pid=3604 tick=67614062 HIP processed=300
+pid=3604 tick=67619062 HIP processed=600
