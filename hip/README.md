@@ -72,3 +72,5 @@ The missing tiles left 3072 latent floats unwritten. The old 960-row goldens the
 ## Corrected full MH byte stream (2026-09-19, unreleased)
 
 The new `*_fb_bout_diag` entry points retain the fast residual projection for byte outputs. With the decoder tail fix, the full MH stream passes the recorded cross-tier/input checks and both golden suites. Relative to local byte features, measured savings are ~0.05/0.07/0.16 ms at 720/900/1080. It remains opt-in: use `Development/HIP/full-byte-flags.txt` with the matching new host and module set; the ViT byte stream remains disabled.
+
+The halfweight decoder now selects a full-tile path once per workgroup; only the final partial tile performs per-token input/output bounds checks. Output-dimension cropping remains active in both paths. This preserves the tail fix while saving ~0.14 ms at 900 and ~0.34 ms at 1080 in the recorded ABBA tests.

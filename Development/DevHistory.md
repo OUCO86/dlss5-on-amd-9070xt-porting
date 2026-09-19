@@ -2522,3 +2522,10 @@ test_mh_byte_stream新增可选diag模式，48组独立FFN/QKV/投影/byteout检
 已确认游戏/Magpie退出，在decoder-tail修复基线上比较局部特征与完整MH流，80帧ABBA：720 9.067/9.0675→9.0285/9.011（−0.048ms）；900 13.961/13.9715→13.8895/13.903（−0.070）；1080 20.585/20.578→20.423/20.420（−0.160）。全部最终hash相同，之前修复后的八组输入/历史检查已通过。跨轮总耗时有时钟波动，只认同批对照。
 
 将mh-byte-stream-diag.patch并入生产host与HIP源：byteout也选diag残差，新增三个*_fb_bout_diag入口；正式配方重编MH模块SHA5038bab3f34fdd576a99f7f5e5a919b321dd4a938fabdbcf07eb789eefdf690a，包含修正解码器的完整模块集hip-backend/full-byte-modules。新benchmark/reference和正式模块跑过900w旧黄金＋960正确黄金共六道，均匹配。HIP DLL release/HIP/native-full-byte.addon64 SHA d8006df95da60e5f85cb756a649dc1016409a320d3b42c947f3dd4fc9e5a40e8，DX12构建8f402470…；启用片段Development/HIP/full-byte-flags.txt，必须配套新DLL/模块，VIT_BYTE_STREAM仍0。默认不开、尚未部署/打包；局部配置片段明确关闭完整流，便于回退。下一步可检查解码器的尾块保护能否只让尾组付出开销，完整组使用更简单的路径。
+
+
+## 2026-09-19 19:34起：解码完整tile快路径，保持尾部保护并省约0.14/0.34ms
+
+decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择，完整16-token组不做逐项token判断，尾组保留读取/写出保护；两条路径都保留输出尺寸裁剪和正确派发网格。21组identity/哨兵/guard测试通过。完整MH字节流配置下80帧ABBA：900 13.880/13.8935→13.7495/13.738（−0.143ms），1080 20.395/20.4155→20.0845/20.055（−0.336ms），最终hash一致。
+
+正式配方重编deep_fast/packed（SHA16676e10…/8009b86a…），900w＋修正后960六道黄金全过，720两组历史/重置首尾匹配；生产源码及SHA表更新。完整模块目录hip-backend/decoder-fast-path-modules，配native-full-byte.addon64即可，本刀不改DLL；游戏/发布包未动。decoder-full-tile.patch及test/build-golden脚本、fulltile与fastpath720结果归档。下一步可研究上采样输出直接用FP8字节交给下一块FFN，避免先扩成f32再量化；需保持decoder尾部修复及局部/完整流的接口约束。

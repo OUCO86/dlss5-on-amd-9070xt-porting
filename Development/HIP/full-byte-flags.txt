@@ -1,5 +1,6 @@
 # Append to a complete HIP configuration. Requires native-full-byte.addon64
-# and full-byte-modules, including the decoder tail fix and *_fb_bout_diag entries.
+# and a matched module set (latest: decoder-fast-path-modules), including
+# the decoder tail fix and *_fb_bout_diag entries.
 DLSS5_HIP_MH_FEATURE_BYTE=1
 DLSS5_HIP_MH_PROJ_DIAG_FB=1
 DLSS5_HIP_MH_BYTE_STREAM=1
