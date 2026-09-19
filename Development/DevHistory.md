@@ -2464,3 +2464,8 @@ OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscal
 C64/C128/C256 attention-project借鉴C32：指数half保留h8寄存器，概率计算免回读ex，固定key/e循环显式展开；保留MH原来的双partial sum和同步，未混入上一轮未采用的MH倒数。初轮1080约−0.066ms；逐形状对称拆测无明确单项收益（C64略慢），因此追加100帧ABBA：基线20.983/21.0005，整组20.875/20.9175，约−0.096ms。900基线14.0585/14.0835，整组13.985/13.9935，约−0.082ms。仅确认整组实测收益，不将单项时间相加或宣称已解释原因；无scratch溢出。
 
 900/1080×真实/HDR/暗部、seed123/9876六组24帧均有限、首尾逐位匹配；正式配方重编后900w/960六道黄金全过。源码并入hip/multihead_fused_attention.hip，SHA256SUMS更新multihead_fused_attention.hsaco为dea239e4aaa36825884ca052aeea045bb1ba368afa738f728b758a1930c7ba6c。最新完整模块目录hip-backend/mh-ex-production-modules，包含已采用的C32复用/倒数；游戏与发布包未动。实验mh-register-ex.patch、test/split-mh-register-ex.ps1和mhex系列CSV归档。下一步可看Q/K全局读取复用，但需评估额外LDS对并行度的代价，不机械推广缓存。
+
+
+## 2026-09-19 17:49起：多头Q/K缓存与预取三种尝试均不采用
+
+基于已采用MH指数寄存器复用的mh-ex-production-modules，尝试复用ex共享空间暂存Q/K，全部分数先留寄存器、全组同步后再写ex，LDS大小不增加但多一道同步。1080 ABBA基线20.695/20.7205，候选20.7485/20.7565，约+0.045ms更慢。只缓存K、Q沿原路径：基线20.696/20.7405对20.7295/20.729，变化在噪声内，无收益。最后把Q/K提前读到固定索引寄存器数组（不加共享缓存/同步）：20.734/20.727对20.710/20.7435，同样无稳定收益。三者COMGR通过、所有最终输出hash匹配；不以省读次数推断提速，不进生产。独立patch/脚本mh-qk-cache、mh-k-cache、mh-qk-prefetch留Development/HIP，mhqk/mhk/mhqkpre数据并入同一1080结果目录；游戏与包未动。
