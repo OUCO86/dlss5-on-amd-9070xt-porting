@@ -2556,8 +2556,12 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 
 成品`D:\給網友打包\Magpie-DLSS5-AMD-0.25.zip`，356,831,870字节，SHA256 `a253fa1331e5d0bc6d8983dccc482d64045fb650671e4d068550f2d2f90507fb`，旁置.sha256；722个有效载荷从ZIP逐项读回哈希通过，模块逐个与生产双架构目录核对。复用已编译并通过网络回归的0.25产物，未另跑GPU测试、未启动Magpie；20:57用户实测1080P Magpie只做DLSS5约37fps，与之前基本持平，未观察到帧率下降；已上传完整包：https://pan.quark.cn/s/09630ed99606 ，中英文README链接挂在0.25的Magpie标签上。工具package-magpie-candidate.ps1默认更新双目标0.25。
 
-## 2026-09-19 20:59起：FFN字节输入直接搬运候选，双目标编译通过，待退出Magpie验证
+## 2026-09-19 20:59起：FFN字节输入直接搬运，验证后合入小幅省时
 
 继续检查ByteIn FFN：合作式LDS staging原本把四个FP8字节逐个解码，再pack4重新编码。隔离候选ffn-direct-byte-word.patch直接memcpy四字节，mapped坐标仍钳到合法位置、窗口外选择正零；浮点输入和残差计算不变，有限输入生产约束不变。未改生产源/安装/发布包。双目标COMGR编译通过：gfx1200 E748DFC398382E89EF356D5D87168B2A1C4C4D822BCC74D58FA508EB1C939187，gfx1201 B15762DAD7741948763A96EE97320077EEBCD4474ADC0D948732D0A37634DF93，目录D:\DLSSNR-Lab\ffn-direct-build。汇编中C64/128/256 mapped bytein_fb各少两个静态v_cvt_pk_fp8_f32，global_load_b32数量相同，说明编译器原先已合并部分读取；不能据此声称加速。
 
 准备test_fp8_staging.cpp与fp8-staging-probe.hip：遍历256种编码（254种有限值含±0要求往返一致，NaN单独报告），C64/128/256映射窗口逐word对照原解码/重编码及CPU坐标结果。探针和exe编译完成；test-ffn-direct-word.ps1先测探针，再以同一0.25完整字节流配置做720/900/1080历史/重置及扩展HDR/暗部/种子共12组基线候选对照，-Timing另跑900/1080的80帧ABBA。每轮检查游戏/Magpie退出。当前Magpie PID22080仍运行，已请用户完全退出；没有运行GPU验证/计时，尚不知正确性与性能收益。待退出后先运行hip-backend/test-ffn-direct-word.ps1，通过再加-Timing；只有正确且有收益才并入生产。
+
+21:05用户退出后完成验证：254种有限FP8编码往返一致（含±0），C64/128/256映射窗口共64,512个word与原路径/CPU结果一致；NaN127会被旧转换规范为255，候选保留原码，但生产输入限定有限值。12组720/900/1080首尾逐位一致、全部24帧均有限，含历史/重置/不同种子/HDR/暗部。80帧ABBA平均中位数：900 13.700→13.66725ms（−0.03275），1080 20.005→19.9835（−0.0215）；120帧BAAB复核：900 13.7665→13.7515（−0.015），1080 20.0505→19.9865（−0.064）。结果全部hash一致；幅度小、跨轮漂移存在，只记两轮微小正收益，不换算游戏FPS。
+
+已将有限字节直搬合入hip/multihead_fast_padded.hip，正式双目标重编packed/unpacked四模块；完整48模块保存在D:\DLSSNR-Lab\ffn-direct-production-modules，hip/SHA256SUMS更新四项。gfx1200 unpacked CA52AC43…/packed C566F5B4…，gfx1201 unpacked 8F7AED4F…/packed C63249CD…。正式目录自动选gfx1201，900w及960六道黄金全过。无需重编DLL；游戏/Magpie安装和已上传0.25包保留原状。脚本build-golden-ffn-direct-word.ps1、recheck-ffn-direct-word.ps1与结果归档Development/results/1080-20260919/directword-*。下一步优先回到较大块的内存访问/同步开销；FFN激活配对、半精度多项式已在09-17测过无收益/更慢，避免重走。
