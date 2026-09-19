@@ -2519,3 +2519,8 @@ HIP与DX12两种addon编译通过，git diff --check通过。HIP SHA BE9E82CEE99
 ### 2026-09-19 16:18：显示修复补丁ZIP与关闭FPS配置
 
 按用户要求生成D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2-overlay-fix.zip，1,037,812字节，SHA256 6f3ee2396c9acb32dbd30ca450bb142673105e90ad5758cf7eab535fe9bb9fe3；DLL/README逐项从zip读回验证，附校验表与zip.sha256。剑星PID25864仍运行且加载旧395dabfe DLL，未热替换。已备份游戏DLL及flags到pre-upscale/before-overlay-flags，仅将DLSS5_SHOW_FPS=1改0，保留默认NOTICE状态显示。待用户退出后部署be9e82修正版并重启验证；当前屏幕尚不会响应这一文件修改。
+
+
+### 2026-09-19 16:21：按用户要求重打0.24.2完整包
+
+用户明确网友不使用补丁，要求完整包。旧完整包/目录/sha256移到D:\DLSSNR-Lab\pre-upscale\before-0242-overlay-repack留档；正式位置重新生成OptiScaler-DLSS5-AMD-0.24.2.zip，包含be9e82显示开关修正版DLL，包内说明同步。513个有效载荷逐项从zip读回哈希通过，24个HIP模块与基底一致。新完整包385,886,558字节，SHA256 91cc2ce444edef687dba7236867a1b343836c1bc4dba151eb864f422d52e21a8，旁置校验文件。原网盘链接仍为此前上传版，README明确重打包链接待更新。没有部署运行中的剑星，关闭显示的画面回归仍待进行。
