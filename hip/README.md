@@ -58,3 +58,5 @@ three unpacked variants (`c32_fused_ffn_attention`, `multihead-fast-padded-wave`
 ## Unreleased C32 update (2026-09-19)
 
 The fused C32 kernels retain half exponent values in registers for probability normalization. Fixed-index loops are explicitly unrolled to avoid expensive dynamic vector-array indexing. On the fixed-capture test bench this saves about 0.19 ms at the 1080 tier and 0.15 ms at the 900 tier, with matching outputs in the recorded checks. Published 0.24.2 archives still contain the preceding modules.
+
+A subsequent bounded-reciprocal change uses hardware reciprocal plus two FMA refinements for the positive normalization denominator. An exhaustive gfx1201 check of every float in [1/256, 624] matched `1.f/x` bit-for-bit (144,441,345 inputs). The fixed-capture ABBA tests show a further ~0.05 ms at 1080 and ~0.06 ms at 900. This is also unreleased.

@@ -2442,4 +2442,11 @@ OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscal
 
 ## 2026-09-19 17:15：《剑星》安装C32优化内核与显示修正版
 
-用户要求实玩测试；确认游戏/Magpie退出后，用Development/tools/deploy-stellar-c32-regex.ps1备份并替换两个C32 HSACO（145d3dd…/71baedc…）及此前待装的显示修复DLL be9e82…，共3文件逐SHA验证。备份pre-upscale/before-c32-regex，脚本-Action Restore可回退。flags前后SHA一致：auto、SHOW_FPS=0、PRE_UPSCALE=1、ASYNC=1；保持游戏图形设置，未启动游戏。待用户用Steam/AMD帧率显示比较，插件FPS应隐藏但状态行保留；整行隐藏另设NOTICE=0。
+用户要求实玩测试；确认游戏/Magpie退出后，用Development/tools/deploy-stellar-c32-regex.ps1备份并替换两个C32 HSACO（145d3dd…/71baedc…）及此前待装的显示修复DLL be9e82…，共3文件逐SHA验证。备份pre-upscale/before-c32-regex，脚本-Action Restore可回退。flags前后SHA一致：auto、SHOW_FPS=0、PRE_UPSCALE=1、ASYNC=1；保持游戏图形设置，未启动游戏。待用户用Steam/AMD帧率显示比较，插件FPS应隐藏但状态行保留；整行隐藏另设NOTICE=0。17:22用户确认同一地点49→50fps，小幅收益与离线方向一致。
+
+
+## 2026-09-19 17:24起：C32归一化有界倒数，追加约0.05～0.06ms收益
+
+确认游戏/Magpie退出后继续。C32指数half范围[2^-14,9.75]，64项分母在[1/256,624]；原通用除法含div_scale/fmas/fixup。用硬件rcpf加两次FMA误差修正，chain静态指令行3669→3603、div系列32→0。`test-normalize-rcp.cpp/.hip`在gfx1201遍历该区间全部144,441,345个float，结果与原1.f/x逐位全同（记录normalize-rcp-exhaustive.txt）；限定本设备/编译路径的实测，不外推其他硬件。
+
+相对上一刀寄存器复用基线：1080 ABBA20.9115/20.9215→20.862/20.871（−0.050ms）；900 14.0755/14.0715→14.0225/14.006（−0.059ms）。900/1080×真实seed123/HDR seed123/暗部seed9876六组首尾逐位匹配、24帧均有限；正式配方重编后900w/960六道黄金也全过。源码纳入hip/c32_fused_ffn_attention.hip，SHA表同步：普通模块0f3aff3fb906bd493443b1c74440716969b780d39ff98c785412dd36112f042b，packed模块31e295cc7d90ce7f77accc7bb517562c8ecbbff44269a2587298135eb378f7a1。远端生产模块hip-backend/c32-normrcp-production-modules；未部署，剑星仍为上一刀。实验patch/脚本留Development/HIP，数据并入同一1080结果目录。下一步可评估相同有界倒数在多头注意力的适用范围与实际收益，不直接批量替换所有除法。
