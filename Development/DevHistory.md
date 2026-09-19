@@ -2443,3 +2443,8 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 新工具`Development/tools/stellarblade-native-city-test.ps1`（Native/Restore/Status）；依据既有安装manifest，先备份并逐SHA验证当前相关DLL/addon，再从游戏根目录移出12个插件/附带后端二进制，恢复安装前备份的原amd_fidelityfx_dx12.dll，SHA `9C2BA6727683804242980BCDDC5C1EE4E16357B4BD17C8A93CE94614ED149780`。未恢复安装前的d3d12.dll，因为那是旧ReShade代理，恢复它会重新加载插件。
 - 当前游戏关闭、原生对照准备完成；GameUserSettings.ini前后SHA一致。OptiScaler.ini、DLSS5 flags、权重和HIP资产保留不动。当前插件文件备份位于`D:\DLSSNR-Lab\pre-upscale\before-native-city-test`，manifest与图形/插件配置快照在内。Restore只还原插件文件，保留用户测试期间的图形设置；必须先退出游戏。
 - 恢复命令：`powershell -NoProfile -ExecutionPolicy Bypass -File D:\DLSSNR-Lab\pre-upscale\stellarblade-native-city-test.ps1 -Action Restore`。此次未启动游戏，待用户回同一存档/位置，分别朝城内、城外测FPS；启动后可只读核对OptiScaler/ReShade/addon未加载。未把文件准备完成当成已确认掉帧根因。
+
+
+### 2026-09-19 15:10：原生主城对照保持60fps
+
+用户回同一主城对照后报告始终60fps（此前整套链F6关闭：城外60、城内30；开启：城外43、城内31）。只读核对新PID23256：加载系统dxgi.dll及已恢复的原生amd_fidelityfx_dx12.dll，没有ReShade/addon/fakenvapi匹配模块。支持问题在整套插件或替换超分后端的差异范围内，不能单独点名OptiScaler本体，也不能排除此前驻留推理资源/接入钩子影响。下一步逐层加回：先OptiScaler且LoadReshade=false，再ReShade无DLSS5 addon，最后加addon以F6关闭对照。需用户退出后才改文件；当前仍为原生游戏环境。
