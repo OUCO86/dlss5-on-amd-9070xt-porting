@@ -2565,3 +2565,5 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 21:05用户退出后完成验证：254种有限FP8编码往返一致（含±0），C64/128/256映射窗口共64,512个word与原路径/CPU结果一致；NaN127会被旧转换规范为255，候选保留原码，但生产输入限定有限值。12组720/900/1080首尾逐位一致、全部24帧均有限，含历史/重置/不同种子/HDR/暗部。80帧ABBA平均中位数：900 13.700→13.66725ms（−0.03275），1080 20.005→19.9835（−0.0215）；120帧BAAB复核：900 13.7665→13.7515（−0.015），1080 20.0505→19.9865（−0.064）。结果全部hash一致；幅度小、跨轮漂移存在，只记两轮微小正收益，不换算游戏FPS。
 
 已将有限字节直搬合入hip/multihead_fast_padded.hip，正式双目标重编packed/unpacked四模块；完整48模块保存在D:\DLSSNR-Lab\ffn-direct-production-modules，hip/SHA256SUMS更新四项。gfx1200 unpacked CA52AC43…/packed C566F5B4…，gfx1201 unpacked 8F7AED4F…/packed C63249CD…。正式目录自动选gfx1201，900w及960六道黄金全过。无需重编DLL；游戏/Magpie安装和已上传0.25包保留原状。脚本build-golden-ffn-direct-word.ps1、recheck-ffn-direct-word.ps1与结果归档Development/results/1080-20260919/directword-*。下一步优先回到较大块的内存访问/同步开销；FFN激活配对、半精度多项式已在09-17测过无收益/更慢，避免重走。
+
+21:16发布说明约定：每个版本changelog简要写明具体优化内容，不用“集成当前优化”代替；兼容/修复和实测效果一并简述，按实际随包内容写。中英文README的0.25已补C32/MH指数复用、有界倒数、FP8字节传递和解码完整分组快路径；21:05后的FFN直接搬运尚未发布，不计入0.25。
