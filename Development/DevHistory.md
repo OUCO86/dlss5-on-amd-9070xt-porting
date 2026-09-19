@@ -2485,3 +2485,12 @@ C64/C128/C256 attention-project借鉴C32：指数half保留h8寄存器，概率�
 只启用DLSS5_HIP_MH_FEATURE_BYTE=1与DLSS5_HIP_MH_PROJ_DIAG_FB=1，FFN→attention特征按原FP8格点存byte，同时保留矩阵残差路径，链间输入/输出仍f32。1080 ABBA20.798/20.8645→20.2295/20.283，−0.575ms；900 13.975/13.983→13.769/13.744，−0.223ms。900/1080真实/HDR/暗部及seed123/9876六组、720连续历史/每8帧reset两组均24帧有限、首尾逐位匹配。720性能未单独测，不宣称提速幅度。
 
 代码已有两个开关，无需重写或重编内核；配套配置片段Development/HIP/feature-byte-flags.txt，须追加到完整flags，且使用含*_fb_diag入口的最新mh-ex-production-modules，不给旧包裸开。recheck-byte-stream-1080、recheck-feature-byte-1080、validate-feature-byte脚本与bytes1080/featurebyte结果归档。生产默认/游戏/发布包暂未改；下一次部署可将此组合与最新完整模块一起带上，再实玩回归。
+
+
+## 2026-09-19 18:16起：局部特征方案黄金通过，完整字节流扩验发现旧反例
+
+局部MH_FEATURE_BYTE+MH_PROJ_DIAG_FB方案补过900w/960共六道黄金；脚本golden-feature-byte.ps1，参考runner从当前源重编。validate-modules支持Runner/Reference/Flags/Modules/ReferenceArgs，960脚本支持ExtraFlags/ReferenceArgs，避免旧runner忽略新增开关。局部方案保持已验证配置片段，默认/游戏/发布包未改，待与最新模块配套部署。
+
+另做隔离候选mh-byte-stream-diag.patch：为c64/128/256导出fb_bout_diag，并让host在byteout时也选择快速残差；仅在/tmp/mh-byte-diag-build副本编译benchmark_byte_diag/reference_streamdiag，生产源未改。默认输入1080相对局部方案20.253/20.2155→20.0495/20.029，约−0.195ms；900约−0.064ms。但扩展900 seed123真实输入首帧即不一致（1,057,029个half不同，maxabs0.1962；24帧末2,771,648个不同），停止采用，不当作可用提速。
+
+test_mh_byte_stream新增可选diag模式，48组独立FFN/QKV/投影/byteout检查全过；回测原有完整MH_BYTE_STREAM同样在此seed123输入上失败，说明此前默认输入/小单元检查未覆盖整链反例，不能归咎于新导出，也不能把局部特征方案牵连为失败。完整字节流继续关闭，下一步若追这条路应逐块定位首个偏差。测试patch/脚本与streamdiag CSV、单元日志、counterexample统计归档；大输入/输出仍在远端hip-backend/profile1080。

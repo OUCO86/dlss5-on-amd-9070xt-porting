@@ -1,4 +1,4 @@
-param([string]$Families='none',[int]$Frames=40,[string]$Tag='map',[string]$ExtraFlag='', [string]$Modules='', [switch]$TimingOnly)
+param([string]$Families='none',[int]$Frames=40,[string]$Tag='map',[string]$ExtraFlag='', [string]$Modules='', [switch]$TimingOnly,[string]$Runner='benchmark1080.exe')
 $ErrorActionPreference='Stop'
 $r='D:\DLSSNR-Lab\hip-backend'
 $base='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23\DLSS5-AMD'
@@ -13,7 +13,7 @@ foreach($family in $Families.Split(',')){
  if(Get-Process SB-Win64-Shipping,Magpie -ErrorAction SilentlyContinue){throw 'Game/Magpie running'}
  $prefix="$work\$Tag-$i-$family";$f="$work\flags.txt"
  [IO.File]::WriteAllLines($f,($flags+@("DLSS5_HIP_DUP_PREFIX=$($map[$family])",'DLSS5_HIP_DUP_COUNT=2')))
- & "$r\benchmark1080.exe" "$base\native-game-tiled-assets" $f "$r\live-menu-before.f16" $prefix $Frames 0 $Modules 0 1 > "$prefix.log"
+ & "$r\$Runner" "$base\native-game-tiled-assets" $f "$r\live-menu-before.f16" $prefix $Frames 0 $Modules 0 1 > "$prefix.log"
  if($LASTEXITCODE){throw "Benchmark failed $family"}
  if(Get-Process SB-Win64-Shipping,Magpie -ErrorAction SilentlyContinue){throw 'Game/Magpie started; discard timings'}
  $csv=@(Import-Csv "$prefix.csv");if($csv.Count -ne $Frames){throw 'Missing frames'}

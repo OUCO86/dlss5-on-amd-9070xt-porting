@@ -1,4 +1,4 @@
-param([switch]$Extended,[string]$Candidate='c32-register-ex-modules',[string]$Baseline='', [string]$Tag='regex',[string]$CandidateFlags='', [int]$OnlyHeight=0)
+param([switch]$Extended,[string]$Candidate='c32-register-ex-modules',[string]$Baseline='', [string]$Tag='regex',[string]$CandidateFlags='', [int]$OnlyHeight=0,[string]$Runner='benchmark1080.exe')
 $ErrorActionPreference='Stop'
 $r='D:\DLSSNR-Lab\hip-backend';$base='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23\DLSS5-AMD'
 $work="$r\profile1080";$rows=@()
@@ -15,7 +15,7 @@ foreach($case in $cases){
   if(Get-Process SB-Win64-Shipping,Magpie -ErrorAction SilentlyContinue){throw 'Game/Magpie running'}
   $m=if($variant -eq 'base'){$(if($Baseline){"$r\$Baseline"}else{"$base\native-game-tiled-assets\HIP"})}else{"$r\$Candidate"}
   $prefix="$work\$Tag-check-$height-$reset-$seed-$pattern-$variant"
-  & "$r\benchmark1080.exe" "$base\native-game-tiled-assets" $f "$r\live-menu-before.f16" $prefix 24 1 $m $reset 0 $seed $pattern > "$prefix.log"
+  & "$r\$Runner" "$base\native-game-tiled-assets" $f "$r\live-menu-before.f16" $prefix 24 1 $m $reset 0 $seed $pattern > "$prefix.log"
   if($LASTEXITCODE){throw 'Validation runner failed'}
   $csv=@(Import-Csv "$prefix.csv");if($csv.Count -ne 24 -or @($csv|Where-Object{[int]$_.invalid -ne 0 -or $_.checked -ne '1'}).Count){throw 'Missing/nonfinite frame'}
   $hash=(Get-FileHash "$prefix.f16").Hash;$first=(Get-FileHash "$prefix-first.f16").Hash
