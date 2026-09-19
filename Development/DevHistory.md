@@ -2434,3 +2434,12 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - HIP addon编译SHA `b8e357411c925e7dc2a4ef6e2afbf64cd23e730a8cfd2c958dfa3ffed1460cbd`；DX12/tiled编译SHA `48885c25ab74136c0f91b3e01f15080f20f262cf2ad61992f7459bd38b3a3cfd`。`Development/pre-upscale-smoke.cpp`扩展到六帧，同步与异步两种模式均通过：关闭直通、重新开启延后、捕获后才关闭、合法upscaleSize=0；每帧FFX只执行一次，直通无额外提交/捕获任务，捕获后关闭不分配私有颜色，4096个half元素逐值全部一致。按键边沿/按住/重新启用检查通过。没有把烟测当主城性能验证。
 - 部署工具`Development/tools/f6-passthrough-stellarblade.ps1`，只替换剑星addon及已有同名_storage_缓存，安装前检查游戏退出、备份并逐SHA验证；备份`D:\DLSSNR-Lab\pre-upscale\before-f6-passthrough`。权重/24个HIP内核/游戏设置/OptiScaler.ini不变，0.24.1发布包未重打。等待同一主城位置F6 OFF/ON实际反馈；OFF日志应出现`ffx_passthrough_f6`，而非持续pre-upscale重放。
 - 记录入口纠正：本旧会话14:35误重新创建了已废弃context文件，仅含当天五行诊断，内容已并回本节并删除；以后只更新DevHistory。
+
+
+## 2026-09-19 15:04～15:05：《剑星》主城视角对照与临时原生环境
+
+- 用户确认F6真正旁路修正版：朝城外OFF60fps/ON43fps，朝城内OFF30fps/ON31fps。城内约30fps限制在关闭神经推理时仍存在，不能据此区分游戏自身与OptiScaler/ReShade开销；ON/OFF相差1fps视为波动，不宣称推理加速游戏。
+- 用户正常退出后授权准备无整套插件的同地点对照。检查发现OptiScaler安装曾覆盖原游戏amd_fidelityfx_dx12.dll（当前26KB loader，安装前备份约6.6MB原库），仅停dxgi.dll不足以恢复原FSR后端。
+- 新工具`Development/tools/stellarblade-native-city-test.ps1`（Native/Restore/Status）；依据既有安装manifest，先备份并逐SHA验证当前相关DLL/addon，再从游戏根目录移出12个插件/附带后端二进制，恢复安装前备份的原amd_fidelityfx_dx12.dll，SHA `9C2BA6727683804242980BCDDC5C1EE4E16357B4BD17C8A93CE94614ED149780`。未恢复安装前的d3d12.dll，因为那是旧ReShade代理，恢复它会重新加载插件。
+- 当前游戏关闭、原生对照准备完成；GameUserSettings.ini前后SHA一致。OptiScaler.ini、DLSS5 flags、权重和HIP资产保留不动。当前插件文件备份位于`D:\DLSSNR-Lab\pre-upscale\before-native-city-test`，manifest与图形/插件配置快照在内。Restore只还原插件文件，保留用户测试期间的图形设置；必须先退出游戏。
+- 恢复命令：`powershell -NoProfile -ExecutionPolicy Bypass -File D:\DLSSNR-Lab\pre-upscale\stellarblade-native-city-test.ps1 -Action Restore`。此次未启动游戏，待用户回同一存档/位置，分别朝城内、城外测FPS；启动后可只读核对OptiScaler/ReShade/addon未加载。未把文件准备完成当成已确认掉帧根因。
