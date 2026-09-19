@@ -2684,3 +2684,9 @@ compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV�
 CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P网络/2K输出、非严格窗口尺寸与越界检查通过；GPU R10往返测试扩到2560×1440待运行。候选已编译，准备游戏退出后GPU验证/部署。用户尚未确认专用包，不打包。
 
 07:19验证完成：24组R10→FP16→R10 GPU往返全部逐位一致。候选f2c0aa4e4d0e33b0fc91497065472d275fb9c302f791ccc48393154d8f597b79已在退出后同步安装；启动保留用户Resolution=2560x1440、UpscalingQuality_DLSS=UltraPerformance。PID24140真实2K后缓冲创建/推理成功，连续2400帧，菜单截图显示ON NET1600X900 OUT2560X1440，画面正常。首帧是启动暗画面，2K读回前后全有限、22.75%分量变化，不能用它评价游戏场景质量；统计present-1440-first-frame.json，日志present-1440-20260920.txt。诊断RE9_SNAPSHOT恢复0，游戏保持2K/后置开启供用户试。
+
+## 2026-09-20 07:33起：用户改定原生≤1080P契约，撤回2K后置支持
+
+用户否定先超分再缩小的后置流程，要求关闭游戏超分、最大1080P，超范围报错且不工作。撤回RE9_POST_1440构建开关，统一外部帧上限1920×1080，超过显示ERROR MAX 1920X1080并在创建/执行HIP前返回；内部900P计算保持。新增原生设置要求：读取RE9 config.ini UpscalingAlgorithm=None，否则显示TURN OFF GAME UPSCALING、不执行HIP；另外只观察OptiScaler NGX Evaluate入口（原函数照常执行），有最近调用也禁用后置，覆盖尚未保存的DLSS开关。不会强行改变游戏的渲染调用；用户开启不支持设置时停用的是我们的处理。native_only.h、configure-native.ps1归档。
+
+候选c9873d7e…已编译/部署，CPU通用2073600尺寸与专用1080上限测试通过。准备验证2K拒绝、1080关闭超分可用，以及开启超分的错误提示。上条2K实测作为被撤回实验保留，后续专用包以本条契约为准。

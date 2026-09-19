@@ -6,12 +6,7 @@
 // Integer viewport dimensions keep padding boundaries on pixel edges.
 struct NativeInputGeometry {
  unsigned width{},height{},x{},y{},fit_width{},fit_height{},network_width{1920},network_height{1080};
- // Only the RE9 post-present build accepts a larger composed frame. The neural viewport remains fixed.
-#ifdef DLSS5_RE9_POST_1440
- static constexpr unsigned max_width=2560,max_height=1440;
-#else
  static constexpr unsigned max_width=1920,max_height=1080;
-#endif
  static bool Supported(uint64_t w,unsigned h){return w>0&&h>0&&w<=max_width&&h<=max_height;}
  static NativeInputGeometry Make(unsigned w,unsigned h,unsigned nw=1920,unsigned nh=1080){
   if(!Supported(w,h))throw std::runtime_error("input exceeds this integration viewport limit");
