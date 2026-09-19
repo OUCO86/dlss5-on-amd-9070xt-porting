@@ -1,0 +1,29 @@
+--- a/hip/multihead_fast_padded.hip
++++ b/hip/multihead_fast_padded.hip
+@@ -579,6 +579,13 @@
+ // attention-project stored; every input value the f32 path would read is exactly cvt_f32_fp8(byte), so decoding here and
+ // feeding the unchanged f32 code is bit for bit the same computation. Padding outside the mapped window stays +0.
+ template<uint C,bool Mapped> DEV float ffn_input8(const unsigned char*in,uint p,uint c,uint width,uint height,uint workw,uint sx,uint sy){if constexpr(Mapped){int x=int(p%workw)-int(sx),y=int(p/workw)-int(sy);return x>=0&&y>=0&&x<int(width)&&y<int(height)?__builtin_amdgcn_cvt_f32_fp8(int(in[(uint(y)*width+uint(x))*C+c]),0):0.f;}return __builtin_amdgcn_cvt_f32_fp8(int(in[p*C+c]),0);}
++// Candidate: preserve encoded E4M3 input (including signed zero) when staging four channels.
++// Producers emit finite FP8 values; invalid mapped positions must still become positive zero.
++template<uint C,bool Mapped> DEV uint ffn_input8_word(const unsigned char*in,uint p,uint c,uint width,uint height,uint workw,uint sx,uint sy){
++ uint index=p*C+c;bool ok=true;
++ if constexpr(Mapped){int x=int(p%workw)-int(sx),y=int(p/workw)-int(sy);ok=x>=0&&y>=0&&x<int(width)&&y<int(height);uint xi=ok?uint(x):0u,yi=ok?uint(y):0u;index=(yi*width+xi)*C+c;}
++ uint word;__builtin_memcpy(&word,in+index,4);return ok?word:0u;
++}
+ // BatchNorm: the three QKV projections are computed first, both normalized parts' raw tiles go to LDS in one round and
+ // their row sums run on 2*16*(C/32) threads behind a single barrier (same sequential 32-term order per row, so the
+ // same bytes); two barriers and one LDS round per block fewer than the part-by-part loop. C64/C128 only (LDS budget).
+@@ -603,9 +610,9 @@
+ #if HIP_FFN_INPUT_PACK4
+ #if HIP_FFN_HOIST_RES>=2
+  // Level 2: the cooperative input staging also loads branch-free (4 window tests per word, loads overlap). Same bytes.
+- for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C)word=pack4(load_in_nb(first+row,k),load_in_nb(first+row,k+1),load_in_nb(first+row,k+2),load_in_nb(first+row,k+3));__builtin_memcpy(hidden+i*4,&word,4);}
+-#else
+- for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C)word=pack4(load_in(first+row,k),load_in(first+row,k+1),load_in(first+row,k+2),load_in(first+row,k+3));__builtin_memcpy(hidden+i*4,&word,4);}
++ for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C){if constexpr(ByteIn)word=ffn_input8_word<C,Mapped>(in8,first+row,k,width,height,workw,sx,sy);else word=pack4(load_in_nb(first+row,k),load_in_nb(first+row,k+1),load_in_nb(first+row,k+2),load_in_nb(first+row,k+3));}__builtin_memcpy(hidden+i*4,&word,4);}
++#else
++ for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C){if constexpr(ByteIn)word=ffn_input8_word<C,Mapped>(in8,first+row,k,width,height,workw,sx,sy);else word=pack4(load_in(first+row,k),load_in(first+row,k+1),load_in(first+row,k+2),load_in(first+row,k+3));}__builtin_memcpy(hidden+i*4,&word,4);}
+ #endif
+ #else
+  for(uint i=tid;i<16*(C+4);i+=2*C){uint row=i/(C+4),k=i%(C+4);hidden[i]=k<C?static_cast<unsigned char>(q8(load_in(first+row,k))):0;}
