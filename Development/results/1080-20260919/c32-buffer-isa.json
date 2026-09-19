@@ -1,0 +1,62 @@
+[
+  {
+    "kernel": "c32_fast_ffn_attention_fused_half_chain",
+    "variant": "base",
+    "group_segment_fixed_size": "15360",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "177",
+    "buffer_ops": 0,
+    "v_add_co_family": 124,
+    "lshl64": 50
+  },
+  {
+    "kernel": "c32_fast_ffn_attention_fused_half_chain",
+    "variant": "buffer",
+    "group_segment_fixed_size": "15360",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "177",
+    "buffer_ops": 48,
+    "v_add_co_family": 42,
+    "lshl64": 17
+  },
+  {
+    "kernel": "c32_fast_ffn_attention_fused_half_mapped",
+    "variant": "base",
+    "group_segment_fixed_size": "19712",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "217",
+    "buffer_ops": 0,
+    "v_add_co_family": 76,
+    "lshl64": 34
+  },
+  {
+    "kernel": "c32_fast_ffn_attention_fused_half_mapped",
+    "variant": "buffer",
+    "group_segment_fixed_size": "19712",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "217",
+    "buffer_ops": 16,
+    "v_add_co_family": 74,
+    "lshl64": 33
+  },
+  {
+    "kernel": "c32_fast_ffn_attention_fused_half_chain_finish",
+    "variant": "base",
+    "group_segment_fixed_size": "15360",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "182",
+    "buffer_ops": 0,
+    "v_add_co_family": 160,
+    "lshl64": 69
+  },
+  {
+    "kernel": "c32_fast_ffn_attention_fused_half_chain_finish",
+    "variant": "buffer",
+    "group_segment_fixed_size": "15360",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "182",
+    "buffer_ops": 32,
+    "v_add_co_family": 80,
+    "lshl64": 37
+  }
+]

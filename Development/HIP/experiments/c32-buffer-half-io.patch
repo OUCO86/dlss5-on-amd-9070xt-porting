@@ -1,0 +1,67 @@
+--- a/hip/c32_fused_ffn_attention.hip
++++ b/hip/c32_fused_ffn_attention.hip
+@@ -205,10 +205,33 @@
+  if(temporal){uint q=(y*width+x)*4;values[13]=Hrtz(Hrtz(Hrtz(history[q])-.5f)*.125f);values[2]=Hrtz(Hrtz(Hrtz(history[q+1])-.5f)*.125f);values[3]=Hrtz(Hrtz(Hrtz(history[q+2])-.5f)*.125f);}
+  for(uint i=0;i<16;i++)f[i]=values[i];
+ }
++// Experimental raw buffer addressing. Production C32 tensors are below 2 GiB.
++#ifndef HIP_C32_BUFFER_INPUT
++#define HIP_C32_BUFFER_INPUT 1
++#endif
++#ifndef HIP_C32_BUFFER_OUTPUT
++#define HIP_C32_BUFFER_OUTPUT 1
++#endif
++// gfx1200/gfx1201 configuration from ROCm composable_kernel/include/ck/ck.hpp.
++DEV __amdgpu_buffer_rsrc_t c32_buffer(const void*p){return __builtin_amdgcn_make_buffer_rsrc(const_cast<void*>(p),0,0x7fffffff,0x31004000);}
++DEV float c32_load_half(const float*p,uint i){
++#if HIP_C32_BUFFER_INPUT
++ unsigned short b=__builtin_amdgcn_raw_buffer_load_b16(c32_buffer(p),i*2,0,0);return float(__builtin_bit_cast(_Float16,b));
++#else
++ return float(reinterpret_cast<const _Float16*>(p)[i]);
++#endif
++}
++DEV void c32_store_half(float*p,uint i,_Float16 v){
++#if HIP_C32_BUFFER_OUTPUT
++ __builtin_amdgcn_raw_buffer_store_b16(__builtin_bit_cast(unsigned short,v),c32_buffer(p),i*2,0,0);
++#else
++ reinterpret_cast<_Float16*>(p)[i]=v;
++#endif
++}
+ template<bool Raw=false,bool Merge=false>
+ DEV float mapped_c32_input(const float*in,uint window,uint token,uint channel,uint width,uint height,uint sx,uint sy,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr){uint ww=width+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);if(x<0||y<0||x>=int(width)||y>=int(height))return 0.f;
+  if constexpr(Merge){uint i=(uint(y)*width+uint(x))*32+channel,q=((uint(y)/2)*(width/2)+uint(x)/2)*32+channel;float high=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[i]),0);return Hrtz(Hrtz(in[q]*scales[channel])+high*scales[32+channel]);}
+- if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;return F(float(reinterpret_cast<const _Float16*>(in)[(tile*64+token0)*32+channel]));}
++ if constexpr(Raw){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;return F(c32_load_half(in,(tile*64+token0)*32+channel));}
+  return in[(uint(y)*width+uint(x))*32+channel];}
+ 
+ template<bool HalfOutput,bool Mapped=false,bool RawMapped=false,bool Merge=false,bool RgbHead=false,bool Finish=false,bool Main8=false,bool DownCrop=false,bool Prefix=false>
+@@ -264,7 +287,7 @@
+    if constexpr(!Mapped){lv[j]=raw_input[(base+row)*32+l];srcs[j]=0;hb[j]=0;}
+    else{int src=__builtin_amdgcn_readlane(mine,j);srcs[j]=src;uint idx=src>=0?uint(src):0u;hb[j]=0;
+     if constexpr(Merge){int src2=__builtin_amdgcn_readlane(mine2,j);uint idx2=src2>=0?uint(src2):0u;hb[j]=reinterpret_cast<const unsigned char*>(skip)[idx+l];lv[j]=raw_input[idx2+l];}
+-    else if constexpr(RawMapped)lv[j]=float(reinterpret_cast<const _Float16*>(raw_input)[idx+l]);
++    else if constexpr(RawMapped)lv[j]=c32_load_half(raw_input,idx+l);
+     else lv[j]=raw_input[idx+l];}}
+   #pragma unroll
+   for(uint j=0;j<16;j++){uint row=first+j;float v;
+@@ -277,7 +300,7 @@
+   #pragma unroll
+   for(uint j=0;j<16;j++){uint row=first+j;float v=0.f;
+    if constexpr(!Mapped)v=raw_input[(base+row)*32+l];
+-   else{int src=__builtin_amdgcn_readlane(mine,j);if(src>=0){if constexpr(Merge){int src2=__builtin_amdgcn_readlane(mine2,j);float high=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[uint(src)+l]),0);v=Hrtz(Hrtz(raw_input[uint(src2)+l]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)v=F(float(reinterpret_cast<const _Float16*>(raw_input)[uint(src)+l]));else v=raw_input[uint(src)+l];}}
++   else{int src=__builtin_amdgcn_readlane(mine,j);if(src>=0){if constexpr(Merge){int src2=__builtin_amdgcn_readlane(mine2,j);float high=__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(skip)[uint(src)+l]),0);v=Hrtz(Hrtz(raw_input[uint(src2)+l]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)v=F(c32_load_half(raw_input,uint(src)+l));else v=raw_input[uint(src)+l];}}
+    packed[row*36+l]=static_cast<unsigned char>(fp8(v));
+    if constexpr(NeedIn16)in16[row*34+l]=(_Float16)v;
+   }}
+@@ -442,9 +465,9 @@
+    float prod=residual*w[8193+col+rc()],v=Hrtz(acc[e]+prod);
+ #endif
+    if constexpr(RgbHead||Finish)scratch.ex[(first+gr()*8+e)*34+col+rc()]=(_Float16)v; // raw_output is 1 here: v is the half the finish/head would have read back
+-   if constexpr(Finish){if(out)reinterpret_cast<_Float16*>(out)[i]=(_Float16)v;}
++   if constexpr(Finish){if(out)c32_store_half(out,i,(_Float16)v);}
+    else if constexpr(RgbHead){}
+-   else if constexpr(HalfOutput)reinterpret_cast<_Float16*>(out)[i]=(_Float16)(raw_output?v:F(v));else out[i]=raw_output?v:F(v);}
++   else if constexpr(HalfOutput)c32_store_half(out,i,(_Float16)(raw_output?v:F(v)));else out[i]=raw_output?v:F(v);}
+  }
+ #endif
+ 

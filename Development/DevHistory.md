@@ -2591,3 +2591,11 @@ C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗�
 正式四模块重编：gfx1200 unpacked AE28609A…/packed 5A91FB9A…，gfx1201 unpacked 1D0CAC28…/packed FD24B2FF…；完整48模块D:\DLSSNR-Lab\c256-frag-production-modules，hip/SHA256SUMS更新。full-byte-flags.txt已标注新DLL/模块并加FRAG256=1，后续部署/打包需同步这组配置；已上传0.25和游戏安装未动。README中英文“未发布”简述输入直读＋C256权重预排。源码/候选/脚本/CSV均归档；未做9060实机测试。预读尝试不采用；下一步仍可查C32输入映射与输出的32位地址，权重预读不再盲做。
 
 21:46按用户要求部署到《剑星》：现场确认游戏/Magpie退出，deploy-stellar-c256-fragment.ps1安装f5d3f734… DLL（同步_storage_副本）及c256-frag-production双架构48内核，按仓库SHA256SUMS逐个验证；启用MH_FFN_FRAG256=1，保留完整MH/decoder字节流、auto和FPS关闭，OptiScaler.ini未变。覆盖前完整备份DLL/内核/flags至D:\DLSSNR-Lab\pre-upscale\before-c256-fragment，脚本-Action Restore可回退。此安装包含0.25之后的输入字节直读与C256权重预排，待用户实玩反馈。
+
+21:57用户回测《剑星》反馈“玩了下，没啥问题”，未提供新帧率；确认本机游戏/Magpie均退出，继续研究C32输入/输出地址计算。
+
+## 2026-09-19 21:57起：C32半精度buffer地址候选，修正RDNA4描述符后回归
+
+在c256-frag-production基线上，仅把RawMapped半精度输入（入口/残差）及HalfOutput写出换为raw_buffer_load/store_b16，保留坐标、边界、舍入和数组布局；uint字节偏移配固定基址。初版照搬09-17仅编译过的buf_probe常量0x27000，720首组输出错误（未装到游戏）；不能把“出buffer指令”当执行正确。单独枚举65536半精度位型定位：0/0x20000/0x27000配置读写均错，AMD CK官方ck.hpp对gfx1200/gfx1201使用0x31004000。改用该常量后65536种位型读写无差异、全部有限值f16→f32转换相同。来源：https://github.com/ROCm/composable_kernel/blob/develop/include/ck/ck.hpp ；builtin签名核对LLVM release/21.x BuiltinsAMDGPU.def。test_buffer_half.cpp、c32-buffer-probe.hip及双架构编译/探针脚本归档。
+
+修正候选双目标COMGR通过，gfx1200 7DA02C86…、gfx1201 59534773…，完整候选由test-c32-buffer.ps1组装（基础保留FRAG256=1）。C32 chain静态64位加法族124→42、64位移位50→17，buffer读写48条，VGPR177/LDS15360/private0不变；chain_finish加法160→80、移位69→37，VGPR182不变。统计c32-buffer-isa.json。正在跑12组正确性，尚未计性能；候选patch c32-buffer-half-io，生产源码/已部署版本未改。
