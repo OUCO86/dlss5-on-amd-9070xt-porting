@@ -89,7 +89,7 @@ static void STDMETHODCALLTYPE native_barriers(ID3D12GraphicsCommandList*c,UINT c
 #endif
  original_barriers(c,count,b);
 #ifdef NATIVE_ORDER_NEURAL
- if(NativePreUpscale::Enabled()&&!NativePreUpscale::Replaying())NativePreUpscale::ObserveBarrier(c,count,b);
+ if(NativePreUpscale::HasPendingJobs()&&!NativePreUpscale::Replaying())NativePreUpscale::ObserveBarrier(c,count,b);
 #endif
  if(!b)return;auto target=tracked_output.load();if(!target)return;
  for(UINT i=0;i<count;i++){
@@ -146,7 +146,7 @@ static void device_identity(const char*origin,ID3D12Device*d){
  if(native_identity)native_identity->Release();if(unwrapped)unwrapped->Release();if(identity)identity->Release();
 }
 static void log(const char*kind,void*list,void*queue,unsigned value=0){
- if(!frames.load()||events.fetch_add(1)>=8192)return;
+ if(!frames.load()||events.load(std::memory_order_relaxed)>=8192||events.fetch_add(1)>=8192)return;
  AcquireSRWLockExclusive(&lock);
  if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){
   fprintf(f,"pid=%lu thread=%lu tick=%llu kind=%s list=%p queue=%p value=%u observation_only=1\n",GetCurrentProcessId(),GetCurrentThreadId(),GetTickCount64(),kind,list,queue,value);fclose(f);
@@ -428,7 +428,7 @@ static std::atomic<unsigned>presents{};
 static void on_present(reshade::api::command_queue*,reshade::api::swapchain*,const reshade::api::rect*,const reshade::api::rect*,uint32_t,const reshade::api::rect*){++presents;}
 static void pre_upscale_work(reshade::api::command_list*c){
 #ifdef NATIVE_ORDER_NEURAL
- if(NativePreUpscale::Enabled())NativePreUpscale::ObserveWork(reinterpret_cast<ID3D12GraphicsCommandList*>(c->get_native()));
+ if(NativePreUpscale::HasPendingJobs())NativePreUpscale::ObserveWork(reinterpret_cast<ID3D12GraphicsCommandList*>(c->get_native()));
 #endif
 }
 static bool compute(reshade::api::command_list*c,uint32_t,uint32_t,uint32_t){pre_upscale_work(c);log("dispatch_api",c,nullptr);return false;}

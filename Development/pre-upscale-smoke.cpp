@@ -69,10 +69,14 @@ int main(int argc,char**){try{
   const auto old_fence=NativePreUpscale::State()?NativePreUpscale::State()->submit.LastValue():0;
   const unsigned old_calls=ffx_calls;
   const bool captured=NativePreUpscale::Capture(&context,reinterpret_cast<Header*>(desc),list,frame+1);
+  if(NativePreUpscale::HasPendingJobs()!=captured)throw std::runtime_error("pending publication mismatch");
+  if(captured){NativePreUpscale::ObserveWork(list);auto&job=*NativePreUpscale::Jobs().at(list);if(job.following_work!=1)throw std::runtime_error("following work guard skipped");job.following_work=0;}
   if(captured==direct)throw std::runtime_error("capture bypass mismatch");
   if(direct){if(!NativePreUpscale::Jobs().empty())throw std::runtime_error("bypass retained job");if(original(&context,reinterpret_cast<Header*>(desc)))throw std::runtime_error("direct FFX failed");}
   if(late_off){NativeBypassTestAccess::Set(neural_oneshot,true);_wputenv(L"DLSS5_PRE_UPSCALE=1");}
   ck(list->Close());ID3D12CommandList*lists[]={list};const bool intercepted=NativePreUpscale::Execute(q,1,lists,ExecuteReal);
+  if(NativePreUpscale::HasPendingJobs())throw std::runtime_error("pending flag retained after execute");
+  NativePreUpscale::ObserveWork(nullptr);NativePreUpscale::ObserveBarrier(nullptr,0,nullptr);
   if(intercepted==direct)throw std::runtime_error("execute bypass mismatch");
   if(!intercepted)ExecuteReal(q,1,lists);
   if(ffx_calls!=old_calls+1)throw std::runtime_error("FFX omitted or replayed twice");

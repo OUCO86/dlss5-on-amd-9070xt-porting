@@ -2467,3 +2467,12 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 用户退出后执行stellarblade-native-city-test.ps1新增ReShadeOnly阶段。要求状态为optiscaler-only，检查游戏无进程、无本地d3d12代理且递归未找到活动*.addon64。仅从已校验备份恢复ReShade64.dll，并把OptiScaler LoadReshade从false改回true；dlss5-amd.addon64继续留在外部备份。
 
 GameUserSettings.ini、ReShade.ini、ReShadePreset.ini操作前后SHA一致，预设Techniques为空。当前state=reshade-no-addon，尚未启动；待用户回同一主城城内外视角测FPS。此阶段保留OptiScaler与现有FSR后端，只新增ReShade，不能在未看加载模块和实测前下结论。
+
+
+### 2026-09-19：ReShade无addon仍60fps，准备空闲跟踪快速路径
+
+用户确认OptiScaler+ReShade、无addon仍保持60fps；本轮只读模块核对PID23344已加载ReShade64.dll，没有活动addon。三轮原生、仅OptiScaler、OptiScaler+ReShade均60fps，问题缩小到我们的addon或其组合交互，具体原因仍需候选对照。
+
+代码发现draw/draw_indexed/dispatch每次调用Mode查询环境、获取native对象并锁全局Jobs映射，即使F6关闭且没有捕获任务也执行。候选用在Jobs互斥锁内发布的原子pending标记，在无任务时跳过这条路径；有任务仍保留following_work与资源状态检查，私有纹理barrier修正不受pending标记影响。日志配额耗尽后先读取计数，避免每次draw继续原子递增争用。
+
+HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe20261832fac8a43188eb69661baa52eb140c8a99655d8b7f4e4ac75d。pre-upscale-smoke补充pending发布/清除、非空时following_work仍有效检查，测试程序交叉编译通过；git diff --check通过。游戏仍运行，尚未执行GPU smoke、未部署，不能把候选当作帧率修复已验证。下一步用户退出后运行同步/异步smoke，再仅装回候选addon测主城F6 OFF/ON。

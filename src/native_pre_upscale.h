@@ -62,6 +62,9 @@ struct Job{
 };
 inline std::mutex&Mutex(){static std::mutex m;return m;}
 inline auto&Jobs(){static std::unordered_map<ID3D12GraphicsCommandList*,std::unique_ptr<Job>>jobs;return jobs;}
+// Published under Mutex: idle game draws must not contend on the job map.
+inline std::atomic<bool>&PendingJobs(){static std::atomic<bool>pending{false};return pending;}
+inline bool HasPendingJobs(){return PendingJobs().load(std::memory_order_acquire);}
 inline void Log(unsigned frame,const Description&d,const char*event,bool processed=false,uint32_t result=0){
  if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-pre-upscale.txt").c_str(),L"ab")){fprintf(f,"frame=%u render=%ux%u upscale=%ux%u phase=%u processed=%u replay=%u history_reset=1 event=%s\n",frame,d.render[0],d.render[1],d.upscale[0]?d.upscale[0]:d.resources[6].width,d.upscale[1]?d.upscale[1]:d.resources[6].height,neural_oneshot.Phase(),processed,result,event);fclose(f);}
 }
@@ -98,10 +101,10 @@ inline bool Capture(void**context,const Header*h,ID3D12GraphicsCommandList*nativ
  auto j=std::make_unique<Job>();j->desc=d;j->context=ctx;j->list=native;j->frame=frame;native->AddRef();
  for(unsigned i=0;i<7;i++){j->states[i]=states[i];if(d.resources[i].resource)static_cast<ID3D12Resource*>(d.resources[i].resource)->AddRef();}
  if(FAILED(static_cast<ID3D12GraphicsCommandList*>(d.command_list)->GetDevice(IID_PPV_ARGS(&j->record_device))))return false;
- Jobs().emplace(native,std::move(j));if(frame<5)Log(frame,d,"captured: experimental no-following-consumer contract");return true;
+ Jobs().emplace(native,std::move(j));PendingJobs().store(true,std::memory_order_release);if(frame<5)Log(frame,d,"captured: experimental no-following-consumer contract");return true;
 }
 inline void ObserveBarrier(ID3D12GraphicsCommandList*list,UINT count,const D3D12_RESOURCE_BARRIER*b){
- if(!Enabled()||Replaying()||!b)return;std::lock_guard<std::mutex>lock(Mutex());auto it=Jobs().find(list);if(it==Jobs().end())return;auto&j=*it->second;
+ if(!HasPendingJobs()||Replaying()||!b)return;std::lock_guard<std::mutex>lock(Mutex());auto it=Jobs().find(list);if(it==Jobs().end())return;auto&j=*it->second;
  for(UINT n=0;n<count;n++){auto&v=b[n];if(v.Type!=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION)continue;
   for(unsigned i=0;i<7;i++)if(j.desc.resources[i].resource==v.Transition.pResource){
    if(v.Flags==D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY){j.uncertain=true;continue;}
@@ -111,7 +114,7 @@ inline void ObserveBarrier(ID3D12GraphicsCommandList*list,UINT count,const D3D12
  }
 }
 inline void ObserveWork(ID3D12GraphicsCommandList*list){
- if(!Enabled()||Replaying())return;std::lock_guard<std::mutex>lock(Mutex());auto it=Jobs().find(list);if(it!=Jobs().end())++it->second->following_work;
+ if(!HasPendingJobs()||Replaying())return;std::lock_guard<std::mutex>lock(Mutex());auto it=Jobs().find(list);if(it!=Jobs().end())++it->second->following_work;
 }
 inline void Transition(ID3D12GraphicsCommandList*c,ID3D12Resource*r,D3D12_RESOURCE_STATES a,D3D12_RESOURCE_STATES b){if(!r||a==b)return;D3D12_RESOURCE_BARRIER v{};v.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;v.Transition={r,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,a,b};c->ResourceBarrier(1,&v);}
 struct Runtime{NativeGameSubmission submit;NativeTextOverlay overlay;ID3D12Resource*low{};bool failed{};
@@ -184,9 +187,9 @@ inline bool Process(ID3D12CommandQueue*q,Job&j){
  }catch(const std::exception&e){PrivateBarrierResource()=nullptr;Fatal().store(true);if(s){s->failed=true;DumpDebug(s->submit.Device());}Log(j.frame,d,e.what(),processed,result);return false;}
 }
 inline bool Execute(ID3D12CommandQueue*q,UINT count,ID3D12CommandList*const*lists,ExecuteLists real_execute){
- if(!Enabled()||Replaying()||!q||!lists||!real_execute||q->GetDesc().Type!=D3D12_COMMAND_LIST_TYPE_DIRECT)return false;
+ if(!HasPendingJobs()||Replaying()||!q||!lists||!real_execute||q->GetDesc().Type!=D3D12_COMMAND_LIST_TYPE_DIRECT)return false;
  std::vector<std::pair<UINT,std::unique_ptr<Job>>>jobs;
- {std::lock_guard<std::mutex>lock(Mutex());for(UINT i=0;i<count;i++){auto it=Jobs().find(static_cast<ID3D12GraphicsCommandList*>(lists[i]));if(it!=Jobs().end()){jobs.emplace_back(i,std::move(it->second));Jobs().erase(it);}}}
+ {std::lock_guard<std::mutex>lock(Mutex());for(UINT i=0;i<count;i++){auto it=Jobs().find(static_cast<ID3D12GraphicsCommandList*>(lists[i]));if(it!=Jobs().end()){jobs.emplace_back(i,std::move(it->second));Jobs().erase(it);}}PendingJobs().store(!Jobs().empty(),std::memory_order_release);}
  if(jobs.empty())return false;
  static std::mutex execution;std::lock_guard<std::mutex>lock(execution);Guard guard;UINT begin=0;
  for(auto&entry:jobs){const UINT end=entry.first+1;real_execute(q,end-begin,lists+begin);begin=end;
