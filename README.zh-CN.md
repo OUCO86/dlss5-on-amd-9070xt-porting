@@ -121,7 +121,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | 0.24 · [OptiScaler](https://pan.quark.cn/s/1f32ffbd2e96)（HIP） | 09-19 | 前置版：游戏低分辨率颜色 → DLSS5 → OptiScaler 的 FSR 3.x/4 → 最终输出。修改我们自己的插件，OptiScaler 本体、网络权重与内核不变；采用同队列异步提交。《剑星》2560×1440、FSR质量档（输入1707×961）实玩约34～35帧。DLSS5历史暂时每帧重置，FSR时序处理保留；网络输入仍须≤1920×1080，4K输出与新版DLL的Magpie回归尚未验证。包 `OptiScaler-DLSS5-AMD-0.24.zip`（385,880,495字节，sha256 2a46adeb…）。 |
 | 0.24.1 · [OptiScaler](https://pan.quark.cn/s/4f73a54d0ff9)（HIP） | 09-19 | 修复配置/资产路径查找：DLL被加载到 `_storage_` 等子目录、旁边找不到 `DLSS5-AMD` 时，继续到游戏EXE旁查找，避免误读开发目录旧配置。已在《剑星》2560×1440回归前置链，网络内核与权重不变；此修正不解决《生化危机9》同一命令列表中的前置接入限制。包 `OptiScaler-DLSS5-AMD-0.24.1.zip`（385,883,920字节，sha256 1e9ec721…）。 |
 | 0.24.2 · [OptiScaler](https://pan.quark.cn/s/f74aaa5c7f9a)（HIP） | 09-19 | 修复addon在无前置任务时仍逐次绘制查配置、锁任务表的CPU开销，并减少日志计数争用；F6关闭直接旁路前置捕获/颜色复制，已捕获任务仍执行一次。《剑星》主城回归约49fps（此前约31fps），同步/异步GPU检查通过。网络内核与权重不变。包 `OptiScaler-DLSS5-AMD-0.24.2.zip`。 同日重打完整包补上FPS/状态显示开关，下载链接已更新。 |
-| 0.25 · OptiScaler（HIP） | 09-19 | 同源码双目标 gfx1200/gfx1201 自动选择；集成当前优化、900档尾部漏写与Unicode路径修复。9070 XT回归通过，9060/XT待实机反馈。完整包 `OptiScaler-DLSS5-AMD-0.25.zip`。 SHA256 `d5d4c8fd…`。 |
+| 0.25 · [OptiScaler](https://pan.quark.cn/s/636691131c5f)（HIP） | 09-19 | 同源码双目标 gfx1200/gfx1201 自动选择；集成当前优化、900档尾部漏写与Unicode路径修复。9070 XT回归通过，9060/XT待实机反馈。完整包 `OptiScaler-DLSS5-AMD-0.25.zip`。 SHA256 `d5d4c8fd…`。 |
 
 ## 权重
 

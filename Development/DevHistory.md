@@ -2548,4 +2548,4 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 
 验证：9070 XT自动选gfx1201，match=luid/runtime=70260201；900w＋修正960六道黄金通过。中文发布路径与英文路径加载完整网络，8帧结果逐位同（B4F66E9D…）。gfx1200无本机硬件，仅编译/目标/打包校验，README明确9060/XT待网友实测。HIP DLL SHA02b4031994aca161098e4240e2a6782bc93cba19a6fd63f3a2b6bdea8ee14e31，DX12亦编译通过。
 
-成品`D:\給網友打包\OptiScaler-DLSS5-AMD-0.25.zip`，387,840,134字节，SHA256 `d5d4c8fdf26d20767d10abf5a7308267ddf4c4d279441ff461f0c4e225a8cfd9`，旁置.sha256；538个有效载荷逐个从zip读回校验，含48个目标内核。清掉Unicode回归产生的shader-cache，保留HIP API MIT许可。Release工具支持ModulesPath/Optimized及Repack，后续打包需传双架构根目录。中英文README版本行保留OptiScaler标签，下载链接等用户上传后补。未部署到游戏、未上传网盘/打tag。
+成品`D:\給網友打包\OptiScaler-DLSS5-AMD-0.25.zip`，387,840,134字节，SHA256 `d5d4c8fdf26d20767d10abf5a7308267ddf4c4d279441ff461f0c4e225a8cfd9`，旁置.sha256；538个有效载荷逐个从zip读回校验，含48个目标内核。清掉Unicode回归产生的shader-cache，保留HIP API MIT许可。Release工具支持ModulesPath/Optimized及Repack，后续打包需传双架构根目录。20:35用户已上传完整包：https://pan.quark.cn/s/636691131c5f ，中英文README链接挂在0.25的OptiScaler标签上。未部署到游戏、未打tag。
