@@ -2538,3 +2538,14 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 80帧ABBA：900 13.803/13.707→13.6595/13.6865（−0.082ms，基线有漂移）；1080 20.0705/20.066→20.0155/20.0195（−0.051ms），最终hash一致。新增byte模式后28组解码边界/裁剪/哨兵测试全过，八组跨档输入/seed/历史首尾相同；正式重编两模块、新benchmark/reference后900w＋960六道黄金全过。
 
 生产代码与SHA表更新，deep_fast=d8bbcef9…、packed=d0a9adfa…；完整模块hip-backend/decoder-byte-production-modules。HIP DLL native-decoder-byte.addon64 SHA7bb889bec5a49200a6ec4cd5b2f6693dda8bcbda2c6fc47010729fc1e53ed60a，DX12构建0128e805…；full-byte-flags.txt追加DECODER_BYTE=1并写明配套要求。尚未部署/打包。下一步可查ByteIn的FFN是否仍先解码再pack，尝试直接搬运已编码的输入字节；必须验证负零/边界等编码语义。
+
+
+## 2026-09-19 20:02起：gfx1200/gfx1201双构建与OptiScaler 0.25完整包
+
+用户要求以后正式编译带gfx1200，并先发含全部当前优化的OptiScaler包。rtc_compile增加目标参数，build-modules默认同源码编两套24模块到gfx1200/gfx1201，保存分目标及汇总SHA；显式单目标保持平铺目录以兼容9070诊断。两套48模块全部COMGR编译成功，汇编目标逐项核对，hip/SHA256SUMS更新双目录48行。0.25启用局部/完整MH字节流与解码字节输出，保留C32/MH复用、有界倒数、完整tile快路径、900漏写修复；ViT字节流保持关闭。
+
+运行时通过官方HIP R0600属性ABI读gcnArchName（结构1472字节、arch偏移1160已在9070实测），优先用LUID匹配D3D设备；仅HIP不提供LUID时退回名称。选择HIP/架构子目录，旧平铺目录仍可用。native-hip-device.txt记录设备、架构、模块路径、匹配方法与runtime。模块用Unicode文件读取＋hipModuleLoadData，权重同样用Unicode路径；测试台原先把UTF8路径逐字节扩成wchar，修为UTF8解码，模块override改读宽字符环境变量。
+
+验证：9070 XT自动选gfx1201，match=luid/runtime=70260201；900w＋修正960六道黄金通过。中文发布路径与英文路径加载完整网络，8帧结果逐位同（B4F66E9D…）。gfx1200无本机硬件，仅编译/目标/打包校验，README明确9060/XT待网友实测。HIP DLL SHA02b4031994aca161098e4240e2a6782bc93cba19a6fd63f3a2b6bdea8ee14e31，DX12亦编译通过。
+
+成品`D:\給網友打包\OptiScaler-DLSS5-AMD-0.25.zip`，387,840,134字节，SHA256 `d5d4c8fdf26d20767d10abf5a7308267ddf4c4d279441ff461f0c4e225a8cfd9`，旁置.sha256；538个有效载荷逐个从zip读回校验，含48个目标内核。清掉Unicode回归产生的shader-cache，保留HIP API MIT许可。Release工具支持ModulesPath/Optimized及Repack，后续打包需传双架构根目录。中英文README版本行保留OptiScaler标签，下载链接等用户上传后补。未部署到游戏、未上传网盘/打tag。

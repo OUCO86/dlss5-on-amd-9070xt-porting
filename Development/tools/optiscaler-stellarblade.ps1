@@ -1,12 +1,13 @@
-﻿param([ValidateSet('Package','FixPackage','Release','Install','Restore','Status')][string]$Action='Status',
+﻿param([ValidateSet('Package','FixPackage','Release','Repack','Install','Restore','Status')][string]$Action='Status',
  [string]$OutputDirectory='D:\給網友打包',[string]$Version='0.23',
- [string]$AddonPath='', [string]$AddonSha='', [switch]$PreUpscale)
+ [string]$AddonPath='', [string]$AddonSha='', [switch]$PreUpscale,[string]$ModulesPath='',[switch]$Optimized)
 $ErrorActionPreference='Stop'
 $lab='D:\DLSSNR-Lab'
 $stage="$lab\OptiScaler-DLSS5-AMD-test"
 $game='C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64'
 $backup="$lab\stellarblade-before-optiscaler"
 function Closed { if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Close Stellar Blade first.'} }
+if($Action -eq 'Repack'){$stage=Join-Path $OutputDirectory "OptiScaler-DLSS5-AMD-$Version";if(!(Test-Path $stage)){throw 'Stage missing'};Copy-Item "$lab\HIP-API-LICENSE.txt" "$stage\HIP-API-LICENSE.txt" -Force}
 if($Action -eq 'Release'){
  $source=$stage
  $stage=Join-Path $OutputDirectory "OptiScaler-DLSS5-AMD-$Version"
@@ -18,6 +19,7 @@ if($Action -eq 'Release'){
  }
  Copy-Item "$lab\package-README-optiscaler.txt" "$stage\README.txt"
  Copy-Item "$lab\OptiScaler-LICENSE.txt" "$stage\OptiScaler-LICENSE.txt"
+ Copy-Item "$lab\HIP-API-LICENSE.txt" "$stage\HIP-API-LICENSE.txt"
  if($AddonPath){
   if(!$AddonSha -or (Get-FileHash $AddonPath).Hash -ne $AddonSha){throw 'Candidate addon hash mismatch'}
   Copy-Item $AddonPath "$stage\dlss5-amd.addon64" -Force
@@ -33,14 +35,34 @@ if($Action -eq 'Release'){
  if($ini -notmatch '(?m)^Dx12Upscaler=fsr31\s*$'){throw 'Incorrect backend configuration'}
  $expected=if($AddonPath){$AddonSha}else{(Get-FileHash "$lab\DLSS5-AMD-0.23\dlss5-amd.addon64").Hash}
  if((Get-FileHash "$stage\dlss5-amd.addon64").Hash -ne $expected){throw 'Unexpected addon'}
- foreach($m in Get-ChildItem "$stage\DLSS5-AMD\native-game-tiled-assets\HIP\*.hsaco"){
-  if((Get-FileHash $m.FullName).Hash -ne (Get-FileHash "$source\DLSS5-AMD\native-game-tiled-assets\HIP\$($m.Name)").Hash){throw 'Network module changed'}
+ $hip="$stage\DLSS5-AMD\native-game-tiled-assets\HIP"
+ if($ModulesPath){
+  foreach($arch in 'gfx1200','gfx1201'){if(@(Get-ChildItem "$ModulesPath\$arch\*.hsaco").Count -ne 24){throw "Expected 24 modules for $arch"}}
+  Remove-Item $hip -Recurse -Force;New-Item -ItemType Directory -Force $hip|Out-Null
+  foreach($arch in 'gfx1200','gfx1201'){
+   New-Item -ItemType Directory "$hip\$arch"|Out-Null
+   foreach($m in Get-ChildItem "$ModulesPath\$arch\*.hsaco"){
+    Copy-Item $m.FullName "$hip\$arch\$($m.Name)"
+    if((Get-FileHash $m.FullName).Hash -ne (Get-FileHash "$hip\$arch\$($m.Name)").Hash){throw 'Module copy mismatch'}
+   }
+  }
+ }else{
+  foreach($m in Get-ChildItem "$hip\*.hsaco"){if((Get-FileHash $m.FullName).Hash -ne (Get-FileHash "$source\DLSS5-AMD\native-game-tiled-assets\HIP\$($m.Name)").Hash){throw 'Network module changed'}}
+  if(@(Get-ChildItem "$hip\*.hsaco").Count -ne 24){throw 'Expected 24 HIP modules'}
  }
- if(@(Get-ChildItem "$stage\DLSS5-AMD\native-game-tiled-assets\HIP\*.hsaco").Count -ne 24){throw 'Expected 24 HIP modules'}
+ if($Optimized){
+  if(!$ModulesPath -or !$AddonPath -or !$PreUpscale){throw 'Optimized package requires matched dual modules/addon and pre-upscale'}
+  $flag="$stage\DLSS5-AMD\native-game-flags.txt"
+  $lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|DECODER_BYTE|VIT_BYTE_STREAM)='})+@('DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
+  if($lines -match '^DLSS5_HIP_MODULES='){throw 'Package must not override architecture selection'}
+  [IO.File]::WriteAllLines($flag,$lines,(New-Object Text.UTF8Encoding($false)))
+ }
  if(Get-ChildItem "$stage\DLSS5-AMD\logs" -File|Where-Object{$_.Name -ne '.keep'}){throw 'Package contains runtime logs'}
 }
 function Archive {
- $sums=if($Action -eq 'Release'){'SHA256SUMS.txt'}else{'SHA256SUMS-test.txt'}
+ $cache=Join-Path $stage 'DLSS5-AMD\native-game-tiled-assets\shader-cache'
+ if(Test-Path $cache){Remove-Item $cache -Recurse -Force}
+ $sums=if($Action -in @('Release','Repack')){'SHA256SUMS.txt'}else{'SHA256SUMS-test.txt'}
  $lines=@(Get-ChildItem $stage -Recurse -File|Where-Object{$_.Name -ne $sums}|ForEach-Object{(Get-FileHash $_.FullName).Hash+'  '+$_.FullName.Substring($stage.Length+1)})
  $lines|Set-Content "$stage\$sums"
  Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -60,7 +82,7 @@ function Archive {
  "ARCHIVE_VERIFIED_FILES=$($lines.Count)"
  Get-FileHash "$stage.zip"
 }
-if($Action -eq 'Release'){
+if($Action -in @('Release','Repack')){
  Archive
  $hash=(Get-FileHash "$stage.zip").Hash
  [IO.File]::WriteAllText("$stage.zip.sha256",$hash.ToLowerInvariant()+'  '+(Split-Path "$stage.zip" -Leaf)+"`n")
