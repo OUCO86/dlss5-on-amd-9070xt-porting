@@ -2529,3 +2529,12 @@ test_mh_byte_stream新增可选diag模式，48组独立FFN/QKV/投影/byteout检
 decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择，完整16-token组不做逐项token判断，尾组保留读取/写出保护；两条路径都保留输出尺寸裁剪和正确派发网格。21组identity/哨兵/guard测试通过。完整MH字节流配置下80帧ABBA：900 13.880/13.8935→13.7495/13.738（−0.143ms），1080 20.395/20.4155→20.0845/20.055（−0.336ms），最终hash一致。
 
 正式配方重编deep_fast/packed（SHA16676e10…/8009b86a…），900w＋修正后960六道黄金全过，720两组历史/重置首尾匹配；生产源码及SHA表更新。完整模块目录hip-backend/decoder-fast-path-modules，配native-full-byte.addon64即可，本刀不改DLL；游戏/发布包未动。decoder-full-tile.patch及test/build-golden脚本、fulltile与fastpath720结果归档。下一步可研究上采样输出直接用FP8字节交给下一块FFN，避免先扩成f32再量化；需保持decoder尾部修复及局部/完整流的接口约束。
+
+
+## 2026-09-19 19:40起：上采样FP8字节输出接首个FFN，约−0.08/0.05ms
+
+新增decoder_project2x_h16w_byteout，沿用完整/尾tile保护，只将原F(merged)结果存为byte。host的Up支持byte_out，三个MH上坡48/56/62在完整流＋DECODER_BYTE下启用，首个FFN也切bytein；decoder39和最终32通道Up保留float。新入口纳入正确二维tile派发，oc32禁止字节请求，开关默认0。
+
+80帧ABBA：900 13.803/13.707→13.6595/13.6865（−0.082ms，基线有漂移）；1080 20.0705/20.066→20.0155/20.0195（−0.051ms），最终hash一致。新增byte模式后28组解码边界/裁剪/哨兵测试全过，八组跨档输入/seed/历史首尾相同；正式重编两模块、新benchmark/reference后900w＋960六道黄金全过。
+
+生产代码与SHA表更新，deep_fast=d8bbcef9…、packed=d0a9adfa…；完整模块hip-backend/decoder-byte-production-modules。HIP DLL native-decoder-byte.addon64 SHA7bb889bec5a49200a6ec4cd5b2f6693dda8bcbda2c6fc47010729fc1e53ed60a，DX12构建0128e805…；full-byte-flags.txt追加DECODER_BYTE=1并写明配套要求。尚未部署/打包。下一步可查ByteIn的FFN是否仍先解码再pack，尝试直接搬运已编码的输入字节；必须验证负零/边界等编码语义。
