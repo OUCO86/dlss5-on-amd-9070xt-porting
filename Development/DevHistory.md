@@ -2577,3 +2577,9 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 第二候选完成：双目标COMGR通过，12组首尾逐位匹配、每组全部24帧有限。80帧ABBA：900 13.6765→13.57675ms（−0.09975）；1080 19.98875→19.8215（−0.16725）。120帧BAAB复核：900 13.75275→13.65575（−0.097）；1080 20.036→19.88325（−0.15275）。各轮最终hash相同；基线是上一刀字节直搬，不把两刀收益相加。静态barrier 10→8，LDS大小不变、private0，C64/128/256 VGPR为97/108/79（基线96/103/81）。
 
 采用直接FP8片段方案，合入hip/multihead_fast_padded.hip；正式双目标重编packed/unpacked四模块、完整48模块目录D:\DLSSNR-Lab\ffn-load-production-modules。gfx1200 unpacked 9C901B31…/packed 17F1B31F…，gfx1201 unpacked DB9B7B08…/packed C33DA4F6…。SHA表更新四项，完整目录自动选架构及900w/960六道黄金通过；9060仍仅编译验证。无需换DLL，游戏/已上传0.25包未动。中英文changelog加“未发布”简述；归档ffnload-*与ffn-input-staging-isa.json。第一候选未采用；后续优先考察矩阵权重片段读取的地址计算/依赖，入口同步这条路已有明确结果，不再盲删barrier。
+
+## 2026-09-19 21:32起：C256预读变慢，转测权重连续片段
+
+先看当前ffn-load-production ISA：C64 expand的20次global load全部在第一条MMA前发出，C128为34/40，已有编译器预读；C256仍循环读取/拼接32个权重字节后做4次MMA。只对C256 ByteIn tiled做下一批预读（ffn-c256-prefetch.patch），双目标COMGR通过；VGPR79→87，private0。80帧ABBA：900基线13.552/13.545、候选13.613/13.620（+0.068ms）；1080基线19.8005/19.7985、候选19.877/19.890（+0.084）。输出hash一致但更慢，不采用；ISA仍等下一批拼接完才发当前MMA，没形成有效重叠。
+
+进一步发现09-17的MH FFN fragment-layout失败实验只覆盖C64/C128。C256旧tiled布局每个B片段读8个分散字节，可以用现成FragmentPackedMatrix初始化重排，再由frag_b一次读8字节。隔离host暂把MH_FFN_FRAG仅路由C256、优先选_frag名，新增6个C256导出（mapped/identity × float/fb/bytein_fb）；计算顺序不变。双目标编译成功，独立benchmark_c256frag.exe；测试脚本test-c256-fragment.ps1。C256 VGPR79→101，LDS21568/private0不变。首轮80帧ABBA：900 13.611→13.294ms（−0.317）；1080 19.81275→19.40975（−0.403），输出hash一致。完整12组正确性与倒序复核进行中；候选patch c256-ffn-fragment，生产源码、游戏/发布包未改。若通过，正式版需独立C256开关，保留旧小通道实验语义，并配套新DLL/模块。
