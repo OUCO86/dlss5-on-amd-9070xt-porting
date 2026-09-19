@@ -2529,3 +2529,14 @@ HIP与DX12两种addon编译通过，git diff --check通过。HIP SHA BE9E82CEE99
 ### 2026-09-19 16:27：更新0.24.2重打包下载链接
 
 用户已上传含显示开关修复的完整包，新链接：https://pan.quark.cn/s/f74aaa5c7f9a 。中英文README的0.24.2 OptiScaler链接同步替换，移除待更新说明。此前1MB overlay-fix补丁及目录已从发布目录移至D:\DLSSNR-Lab\pre-upscale\overlay-patch-archive，避免与完整包混淆。
+
+
+### 2026-09-19 16:30后：1080档基线、家族成本图和分块配置初筛
+
+确认剑星/Magpie均退出，重新从当前源码交叉编译benchmark_live_capture.cpp为benchmark1080.exe。新脚本Development/HIP/profile-1080.ps1与tune-1080.ps1使用已发0.23的24个生产HIP模块与资产、默认跳42/43/46；强制NETWORK_HEIGHT=1080，即有效1920×1080/处理1920×1152。固定输入仍是旧真实HDR抓帧1296×720，非原生1080抓帧；每帧重置历史以对应当前OptiScaler前置行为。计时覆盖NativeGameFrame处理到完成（包括转换/桥接/同步），不是纯HIP网络或游戏FPS。每轮40帧，排除前8帧取中位，检查首尾有限及最终输出哈希。
+
+基线四轮21.144/21.1215/21.1705/21.1765ms，最终half输出SHA256均1DE20C219105CC281CBA1364A0A21D0DDC4510A95458EC0CA3B8C893EA54F23A。用相同输入/输出的内核重复执行法测边际成本（不是可直接相加的独立层时间，也不是必然可节省时间），相对四轮平均21.153ms：C32融合家族+4.907ms，ViT+2.805，C256 FFN+1.919，post+1.671，C64 FFN+1.637，C128 FFN+1.538，C64 attention+1.334，split+0.922，C128 attention+0.828，C256 attention+0.733，decoder+0.570，C512 QKV+0.426，C512 attention+0.282，pool+0.216；每轮最终输出完全一致。
+
+现有候选初筛：ViT expand M2=21.145，基线21.1375，无收益。M4初测21.0485但ABBA基线21.1305/21.1335，候选21.134/21.050，约0.04ms均值差且两轮候选不稳定，暂不采用。小通道tiled FFN=21.5865，对照21.1745，负优化约0.41ms，保持关闭。MH attention W16与当前diag路径组合缺c64_attention_project_w16_diag符号，报hipErrorNotFound(500)，不是可用候选；停止该轮后继续独立其他实验，没有误计性能。
+
+结果归档Development/results/1080-20260919/；远端完整日志/输出在hip-backend/profile1080。游戏DLL与发布包未更换，本阶段没有可部署的新提速。接下来重点是C32融合核的1080档相位/占用率分析，再看ViT；要与外部“1080P12ms”比较还需对齐纯网络计时、实际输入、显卡与跳块。
