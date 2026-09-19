@@ -1,5 +1,5 @@
-param([string]$Version='0.20',[string]$Modules='ffnh2-modules',[string]$Addon='native-pinline.addon64',
- [string]$AddonSha='8D5A218FF26FC6E89B01DB77E1BEADC1B2C028C4DC4066D40D39AEC243270343',[string]$Base='Magpie-DLSS5-AMD-0.15-900P',[switch]$VerifyOnly)
+﻿param([string]$Version='0.20',[string]$Modules='ffnh2-modules',[string]$Addon='native-pinline.addon64',
+ [string]$AddonSha='8D5A218FF26FC6E89B01DB77E1BEADC1B2C028C4DC4066D40D39AEC243270343',[string]$Base='Magpie-DLSS5-AMD-0.15-900P',[switch]$VerifyOnly,[string]$OutputDirectory='D:\給網友打包')
 # Builds the two HIP user packages on the AMD box from the last Magpie staging directory (weights already f16 where exact):
 #   D:\DLSSNR-Lab\DLSS5-AMD-<v>\          game edition (d3d12.dll + dlss5-amd.addon64 + DLSS5-AMD\{flags, HIP\*.hsaco, assets, logs})
 #   D:\DLSSNR-Lab\Magpie-DLSS5-AMD-<v>\   Magpie edition (the 0.15-900P bundle minus DLSS5-D3D12-721/enable-game-sdk721.txt, plus HIP\, new DLL/flags/README)
@@ -12,7 +12,7 @@ $mods=@(Get-ChildItem "$r\$Modules" -Filter '*.hsaco');if($mods.Count -ne 24){th
 $base="$lab\$Base";if(!(Test-Path "$base\DLSS5-AMD\native-game-tiled-assets")){throw 'base staging missing'}
 $loader="$game\d3d12.dll";if((Get-FileHash $loader).Hash -ne (Get-FileHash "$base\dxgi.dll").Hash){throw 'ReShade loader differs between game and base bundle'}
 function Sums($stage){$lines=@(Get-ChildItem $stage -Recurse -File|Where-Object{$_.Name -ne 'SHA256SUMS.txt'}|Sort-Object FullName|ForEach-Object{(Get-FileHash $_.FullName).Hash.ToLowerInvariant()+'  '+$_.FullName.Substring($stage.Length+1).Replace('\','/')});[IO.File]::WriteAllLines("$stage\SHA256SUMS.txt",$lines,$utf8);$lines.Count}
-function Zip($stage){$zip="$stage.zip";if(Test-Path $zip){Remove-Item $zip};Add-Type -AssemblyName System.IO.Compression.FileSystem;[IO.Compression.ZipFile]::CreateFromDirectory($stage,$zip,[IO.Compression.CompressionLevel]::Fastest,$true)
+function Zip($stage){New-Item -ItemType Directory -Force $OutputDirectory|Out-Null;$zip=Join-Path $OutputDirectory ((Split-Path $stage -Leaf)+'.zip');if(Test-Path $zip){Remove-Item $zip};Add-Type -AssemblyName System.IO.Compression.FileSystem;[IO.Compression.ZipFile]::CreateFromDirectory($stage,$zip,[IO.Compression.CompressionLevel]::Fastest,$true)
  $lines=[IO.File]::ReadAllLines("$stage\SHA256SUMS.txt");$archive=[IO.Compression.ZipFile]::OpenRead($zip);$n=0
  try{$prefix=(Split-Path $stage -Leaf)+'/';$entries=@{};foreach($e in $archive.Entries){$entries[$e.FullName.Replace('\','/')]=$e}
   foreach($line in $lines){$hash=$line.Substring(0,64);$name=$line.Substring(66);$e=$entries[$prefix+$name];if(!$e){throw "missing archive entry $name"};$s=$e.Open();$sha=[Security.Cryptography.SHA256]::Create();try{$actual=([BitConverter]::ToString($sha.ComputeHash($s))).Replace('-','').ToLowerInvariant()}finally{$s.Dispose();$sha.Dispose()};if($actual -ne $hash){throw "archive hash mismatch $name"};$n++}}finally{$archive.Dispose()}

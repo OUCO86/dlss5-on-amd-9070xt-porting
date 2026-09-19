@@ -478,18 +478,6 @@ decoder 实际移位序列（09-06 从 5090 launch 参数直接解码，取代�
 
 ---
 
-## 5. 当前状态（截至 2026-09-10 12:10）
-
-- **剑星游戏里装的**：fast43 = fast42 + 黑帧探针 + OUT16，DLL `native-game-fast43.addon64`（`7da2b88c…`）、flag 文件 `native-game-flags-fast43.txt`，cso 来自 `decout16`；回退：`native-game-fast42p.addon64` + `native-game-flags-fast42-blackprobe.txt`（cso 用 `decfast`），再往前 fast40。Zero 实测 fast40 静止 36fps。跳块 {42,43,46} 在链里（40.66dB）。
-- **帧率**：fast33 实测 29fps（网络 GPU 约 30.7ms + 游戏 6～7ms，GPU 满载）；fast38 Zero 实测 33～34fps，一般场景 35 上下。换区/下车仍会掉几秒（显存之争）。
-- **测试台**（`decfast`，fast42）：09-10 19:10 停电重启后整帧中位 24.4 / min 23.8；之前几天的 33～37 是机器降频态的数字；单核隔离合计约 23.6 之后再减 fast38 的 2.4；PSNR 对 exact 41.96（fast36 起，fast37/38 逐位不变）；网络显存 3.75GB。
-- **0.07 发布包** = fast36 已发（网盘）。
-- **浪人崛起**：出图、颜色对；未验运动向量符号（拖影）、LDR 亮度是否与训练域一致、帧率、进游戏颜色骤变/黑帧是否同样出现。
-- **已知瞬态问题**（09-10 09:55 Zero 报告，暂不处理）：fast37 刚进游戏颜色骤变几秒后稳定；偶发整帧变黑。
-- 雨景闪烁：网络本身的空间扩散，输出平滑压到"不太闪"，问题严重时再弄。
-
----
-
 ## 6. 待办与候选方向（照 `PLAN.md`，09-10 07:45 重排）
 
 上限估计：1+2+3 全做约 −3ms → 网络 22ms → 游戏 35～36fps；再往上要动网络本身。
@@ -2306,3 +2294,16 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 構建：`build-addon.sh --hip` → `native-multigpu.addon64`（sha256 fda2edab…，3595356 B）；`--tiled` 也重編通過。已拷到 9070 `D:\DLSSNR-Lab\native-multigpu.addon64`，部署腳本 `D:\DLSSNR-Lab\deploy-multigpu.ps1 -Action Install|Restore|Status`（《劍星》+ 本機 Magpie 目錄，備份 `*.before-multigpu`）。**未在單卡機上回歸、未給網友驗證**；下個 tag 打包前要先在《劍星》跑一次。
 - 18:00 Zero 在《劍星》回歸 native-multigpu（fda2edab…）：1080p 37 fps、900p 52 fps，畫面正常，與 0.22 一致。
 - 18:05 打包 0.23：`package-hip.ps1 -Version 0.23 -Addon native-multigpu.addon64`（fda2edab…）+ ffnh2-modules，底仍是 0.15-900P 暫存目錄。產物 `DLSS5-AMD-0.23.zip`（493 文件，250,670,338 B，sha256 3dde0e0a32f1250bdda292fb42261e3d981c60b4d608d5e3f732984e0f2404b0）、`Magpie-DLSS5-AMD-0.23.zip`（698 文件，354,855,813 B，sha256 7146569c61b6b3e957ac2e211ba8bbc35a567fdd5939e79894a9e20defdaf0ef）。包內說明加「0.23 與 0.22 的區別」；README 兩版加 0.23 行（網盤鏈接待 Zero 上傳後補）。內核/權重/flag 與 0.22 相同，`verify-pkg023.ps1` 跑 960 兩道黃金。
+
+
+## 2026-09-19 OptiScaler 組合包與《劍星》首測（闇）
+
+- Zero 指定先打包 OptiScaler、在《劍星》測試。不是把 HIP 網絡寫成 OptiScaler 新後端，而是 OptiScaler + ReShade + 0.23 addon 串接。工具 `Development/tools/optiscaler-stellarblade.ps1`（Package / FixPackage / Install / Restore / Status），遠端同名放 D:\DLSSNR-Lab。
+- 測試包 `D:\DLSSNR-Lab\OptiScaler-DLSS5-AMD-test.zip`，基底是本機 OptiScaler 0.9.4 原包與 DLSS5-AMD-0.23 遊戲包；dxgi.dll=OptiScaler、ReShade64.dll=ReShade、唯一活動 addon=dlss5-amd.addon64。舊 native-present-contract/native-submission-order、d3d12.dll、原 DLSS5-AMD 資產與被替換檔案移到 `D:\DLSSNR-Lab\stellarblade-before-optiscaler`，manifest 記錄回退。部署前確認遊戲已關，逐檔 SHA 校驗後啟動 dlss5game 任務。
+- 首次 PID 25036：OptiScaler 日誌有 ffxCreateContext_Dx12、CreateDLSSContext、EvaluateFeature；HIP 網絡 1920×1152 初始化成功，連續 >1700 幀、dropped_pending=0。這證明組合鏈在跑，不是只有載入 DLL。畫面仍等 Zero 實測；日誌 cadence 不當遊戲 FPS。
+- **發現 0.9.4 包內 ini 說明與程式不一致**：ini 寫 Dx12Upscaler=ffx，但 v0.9.4 `OptiScaler/upscalers/FeatureProvider_Dx12.cpp` 只判斷 fsr31，未知值靜默建立 FSR2FeatureDx12_212。首測執行日誌正是 FSR2.1.2，不是 FSR4。測試包已改用 fsr31；運行中的遊戲等 Zero 用 Insert 切後端再驗。之前黑神話用過同一個 ffx 值，故其 OptiScaler 後端判斷需撤回重驗，不能再據此聲稱 FSR4 路徑沒鉤到。
+- 測試設定：Dxgi=false（先用遊戲 FSR 輸入）、LoadReshade=true、FGInput/FGOutput=nofg、DLSS5_UPSCALER=ffx（這是我們自己的 flag，與 OptiScaler 的 fsr31 值不同）。修訂包日誌級別 2，避免首測級別 1 的逐幀 debug 洪流。
+
+- 10:39 Zero 在 OptiScaler 面板選 FSR 3.x/4 並切換；日誌 10:39:43 出現 FSR31FeatureDx12::InitFSR3、upscaling_dx12 context 建立成功，隨後 FSR31FeatureDx12::Evaluate 連續 Dispatch、Upscaling done=true。咱們網絡切換後繼續出幀（總幀數超 42700，dropped_pending=0），cadence 約 27.5ms（約36fps，非獨立性能測試）。已確認 FSR3.x/4 後端鏈接通，具體 FSR4 模型版本及切換後畫面仍待確認；請 Zero Save Settings 持久化面板選擇。修訂測試 zip 514 檔哈希全驗過，SHA256 30A91095DD98539AD9D9220DB933CDAC428FCECA129773147B91380CB83574C7。
+
+- 10:45 Zero 指定：以後給網友的發布包統一放 `D:\給網友打包`。OptiScaler 組合正式整理為 `OptiScaler-DLSS5-AMD-0.23.zip`（同0.23網絡，未另打tag），默认fsr31、FG关闭；补中文安装/卸载/输入与后端区别说明、保留组件许可、加入OptiScaler GPL文本与对应源码链接、去掉测试README及会覆盖预设的setup脚本。513个有效载荷文件逐个从zip读取SHA256通过；zip SHA256 `9D70D28F2EDBF4DAFE87ABEDE4047C41748F94F72AF75FEF9453B4CF22A23121`，旁边有.sha256。游戏运行中的文件未改。`Development/HIP/package-hip.ps1` 的后续游戏/Magpie包输出也改到同一目录，并同步到远端hip-backend；OptiScaler打包用tools/optiscaler-stellarblade.ps1 -Action Release。
