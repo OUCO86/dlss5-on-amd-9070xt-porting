@@ -1,0 +1,15 @@
+--- a/hip/c32_fused_ffn_attention.hip
++++ b/hip/c32_fused_ffn_attention.hip
+@@ -199,7 +199,12 @@
+  float a=production_uniform(h*0xcaa5b80du+0x21dd796bu),b=production_uniform(h*0x2c9277b5u+0xac564b05u),c=production_uniform(h*0x83232c31u+0x3463e0acu),d=production_uniform(h*0xfa6dc5f9u+0x4712a88eu);
+  float r0=__builtin_amdgcn_sqrtf(-2.f*(__builtin_amdgcn_logf(a)*.6931471805599453f)),r1=__builtin_amdgcn_sqrtf(-2.f*(__builtin_amdgcn_logf(b)*.6931471805599453f));
+  float ct=(6.283185482025146f*c)*.15915494309189535f,dt=(6.283185482025146f*d)*.15915494309189535f;
++// Diagnostic only: zero the three noise features to measure the fused prefix contribution.
++#if HIP_C32_ABLATE_PREFIX_NOISE
++ float g0=0.f,g1=0.f,g2=0.f;
++#else
+  float g0=Hrtz(r0*__builtin_amdgcn_cosf(ct)),g1=Hrtz(r1*__builtin_amdgcn_cosf(dt)),g2=Hrtz(r1*__builtin_amdgcn_sinf(dt));
++#endif
+  float red=Hrtz(Hrtz(Hrtz(rgba[rgbp*4])-.5f)*.125f),green=Hrtz(Hrtz(Hrtz(rgba[rgbp*4+1])-.5f)*.125f),blue=Hrtz(Hrtz(Hrtz(rgba[rgbp*4+2])-.5f)*.125f);
+  float values[16]={g1,g2,green,blue,g0,1,.0078125f,1,red,green,1,1,blue,red,1,0};
+  if(temporal){uint q=(y*width+x)*4;values[13]=Hrtz(Hrtz(Hrtz(history[q])-.5f)*.125f);values[2]=Hrtz(Hrtz(Hrtz(history[q+1])-.5f)*.125f);values[3]=Hrtz(Hrtz(Hrtz(history[q+2])-.5f)*.125f);}

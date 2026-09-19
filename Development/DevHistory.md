@@ -2607,3 +2607,11 @@ C256片段方案验证完成：12组720/900/1080×历史/重置/种子/HDR/暗�
 ## 2026-09-19 22:36起：最新C256基线分族计时
 
 用户要求继续慢慢量。确认游戏/Magpie退出，以已实玩通过的c256-frag-production-modules、benchmark_c256frag_production.exe和完整字节流＋FRAG256=1为基线，关闭Graph。profile-1080.ps1新增可配置预热及P10/P90，默认预热8保持旧脚本兼容；新profile-current-families.ps1每组160帧、舍32帧，900/1080两档，14类核各重复一遍，测量顺序baseline→family→baseline，取相邻两基线均值作差并记录漂移。每轮核对该档末帧黄金hash及首尾有限性。耗时是完整NativeGameFrame回放，分族差值是重复执行的边际成本，含缓存/提交影响，不能相加当精确分解或视为可全部省去的时间。过程中持续保存current-map-runs/margins.csv；结果待汇总，随后只对大头细分。
+
+完成14类×两档及11项细分×两档：共104组正常/重复测量，每组160帧；另12组入口噪声消融对照，合计18,560帧用于计时（只检查首尾有限性和末帧hash，不声称每帧逐值验证）。正常回放中位数约900 13.462ms、1080 19.633ms，均含NativeGameFrame转换/桥接/同步；粗分最大相邻基线漂移0.0715/0.0655ms，细分0.044/0.0375ms。正常测量所有末帧黄金hash匹配。
+
+粗分边际成本900/1080(ms)：C32 3.198/4.704，ViT 1.549/2.972，post/head 1.165/1.600，C256 FFN/QKV 1.026/1.493，C128 1.047/1.403，C64 0.953/1.338，其余单族<1ms。C32细分：入口融合1.102/1.695，普通链0.993/1.441，mapped入口0.558/0.772，链尾0.552/0.829。注意调用数/尺度：入口和post是全W×H，普通链4次、mapped2次、链尾2次均在W/2×H/2，不能拿入口单次与普通单次直接判“入口低效”。ViT注意力0.489/1.177最大，QKV0.345/0.616、投影0.307/0.473、FFN展开0.279/0.458、收缩0.184/0.297；pack/gather为小项。
+
+追查固定seed=0的噪声是否值得缓存：独立双目标消融只把fused_prefix_values的g0/g1/g2置零，图像故意改变，绝不部署。入口VGPR169/LDS15360/WMMA74不变，log2/sqrt2/sin1/cos2消失；分别在原版和零噪声版测入口重复的边际成本，900 1.14575→1.12825（差0.0175ms），1080 1.6825→1.65275（差0.02975），与小漂移同量级，不把它当确定可兑现的提速；噪声缓存暂不追。patch c32-prefix-noise-ablation、measure-prefix-noise.ps1及prefix-noise数据归档，候选目录prefix-noise-ablate-build/hip-backend/prefix-noise-ablate-modules仅诊断。
+
+完整报告Development/results/1080-20260919/current-profile.md，由summarize-current-profile.py从current-map/current-detail/prefix-noise CSV生成。下一步优先C32高分辨率首尾的算术主干，以及ViT attention内部评分/归一化/AV细分；不重做已否定的buffer地址、小项pack/gather或噪声缓存。生产算法/游戏/发布包本轮未改。

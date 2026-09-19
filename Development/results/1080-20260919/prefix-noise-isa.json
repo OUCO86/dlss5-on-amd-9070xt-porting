@@ -1,0 +1,24 @@
+[
+  {
+    "variant": "base",
+    "group_segment_fixed_size": "15360",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "169",
+    "wmma": 74,
+    "log": 2,
+    "sqrt": 2,
+    "sin": 1,
+    "cos": 2
+  },
+  {
+    "variant": "zero-noise",
+    "group_segment_fixed_size": "15360",
+    "private_segment_fixed_size": "0",
+    "next_free_vgpr": "169",
+    "wmma": 74,
+    "log": 0,
+    "sqrt": 0,
+    "sin": 0,
+    "cos": 0
+  }
+]
