@@ -68,3 +68,7 @@ The C64/C128/C256 fused attention-project bodies also retain their exact half ex
 The 900 tier has 50×30=1500 input tokens at decoder48. Launching ceil(tokens×channels/256) groups omitted four channel tiles; the correct grid is ceil(tokens/16)×(channels/16). The host now computes that grid and the fast/WMMA decoder kernels mask tail reads and writes. Decoder kernels support partial token tiles; the other WMMA kernels retain their alignment requirements.
 
 The missing tiles left 3072 latent floats unwritten. The old 960-row goldens therefore depended on buffer contents and are replaced in `Development/HIP/validate-modules-960.ps1`; 900w, 720 and 1080 recorded results are unchanged. Install the matching host DLL and decoder modules together.
+
+## Corrected full MH byte stream (2026-09-19, unreleased)
+
+The new `*_fb_bout_diag` entry points retain the fast residual projection for byte outputs. With the decoder tail fix, the full MH stream passes the recorded cross-tier/input checks and both golden suites. Relative to local byte features, measured savings are ~0.05/0.07/0.16 ms at 720/900/1080. It remains opt-in: use `Development/HIP/full-byte-flags.txt` with the matching new host and module set; the ViT byte stream remains disabled.

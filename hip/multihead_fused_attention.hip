@@ -453,3 +453,12 @@ KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c256_attention_project_fb_diag(const unsigned char*normalized,const float*w,const unsigned char*feature,float*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<true,false,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
 KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
 void c256_attention_project_fb_bout(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(256,256)))
+void c64_attention_project_fb_bout_diag(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c64_attention_project_body<true,true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+void c128_attention_project_fb_bout_diag(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c128_attention_project_body<true,true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
+
+KERNEL __attribute__((amdgpu_flat_work_group_size(512,512)))
+void c256_attention_project_fb_bout_diag(const unsigned char*normalized,const float*w,const unsigned char*feature,unsigned char*out,uint width,uint height,uint post,uint cropw,uint croph,uint sx,uint sy){c256_attention_project_body<true,true,true>(normalized,w,feature,out,width,height,post,cropw,croph,sx,sy);}
