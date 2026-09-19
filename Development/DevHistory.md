@@ -1,6 +1,6 @@
 # DLSS5（DLSSNR）→ AMD RX 9070 XT 移植：开发史
 
-> 本文件是本项目**唯一持续更新**的开发史，按时间线重新整理，以后只续写这一份。
+> 本文件是本项目开发、部署、运维与后续工作的**唯一记录入口**。新进展按时间追加，历史安装状态和待办按当时日期理解；后文的验证与更正优先。
 > 逐刀的原始记录、数字、失败样本全部保留在 `Development/history/`，本文引用时只给结论和数字，细节回原件查。
 
 ## history/ 里每个文件是什么
@@ -411,7 +411,7 @@ decoder 实际移位序列（09-06 从 5090 launch 参数直接解码，取代�
 
 ---
 
-## 4. 运行时约定（当前有效）
+## 4. DX12 阶段运行时约定（截至 2026-09-10；HIP 与 OptiScaler 变更见后续时间线）
 
 ### 游戏目录与根目录规则
 
@@ -478,7 +478,7 @@ decoder 实际移位序列（09-06 从 5090 launch 参数直接解码，取代�
 
 ---
 
-## 6. 待办与候选方向（照 `PLAN.md`，09-10 07:45 重排）
+## 5. 历史候选方向（2026-09-10；执行结果见后续时间线）
 
 上限估计：1+2+3 全做约 −3ms → 网络 22ms → 游戏 35～36fps；再往上要动网络本身。
 
@@ -496,7 +496,7 @@ decoder 实际移位序列（09-06 从 5090 launch 参数直接解码，取代�
 
 ---
 
-## 7. 工程教训
+## 6. 工程教训
 
 ### 测量
 
@@ -577,6 +577,28 @@ decoder 实际移位序列（09-06 从 5090 launch 参数直接解码，取代�
 
 ---
 
+## 2026-09-11～12：黑块修复、Magpie 发布与远程实测（原 context 补入）
+
+以下是当时的发布及部署记录；“待上传”“待换 DLL”和候选方向仅描述当时，后续版本与实验结果见下文。
+
+- **0.09 已打 tag（09-11 08:55，Zero 笔记本带走，改在 9070 机上 release-check 验）。黑块根因（09-11 09:50）= 硬件 E4M3 Cast 不饱和，超 ±448 出 NaN → 8×8 注意力窗口全 NaN → 头部 clamp 出 0**。离线重放套路：`D:\DLSSNR-Lab\logs\replay.ps1 -Folder <decout16 的拷贝> -Flags logs\replay-flags.txt`，input.f32 = 转储色 f16→f32；`DLSS5_TEST_EPILOGUE_MODE=8` 看头部累加器（NaN 在这儿现形）。修法 `NATIVE_C32_SAT_CAST`（bench 默认开），只改两个 cso，参考 fixture 逐位不变。Magpie 包的 assets 已换新 cso（未换游戏 assets 和网盘包，等 0.10）。遗留：仓库另外 40 处硬件 E4M3 Cast 同类隐患，逐处加饱和是下一刀。
+- **09-11 下午（周末远程）**：tag 0.10（黑块修 + E4M3 Cast 全审计）、tag 0.11（Magpie 接管 22→3.4 秒：预读/合批/磁盘 shader 缓存）。网盘包 `D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.11.zip`（sha256 8BFC9EA7…）待 Zero 上传。**游戏侧 add-on 仍是 0.10 的**（游戏整个周末开着，回来关了再换 + release-check 的 add-on 行）。**C32 "溢出"作废**：09-10 认的 p0087 是从不派发的 `full_attention` PSO，真正的融合核 p0006 无 scratch、VGPR 112；RGP 里的 ELF 按占位哈希缓存会拿旧货，抓前用 `Development/tools/dxilhash.py` 签名 cso。GPU 被游戏占着，所有计时活等周一：p0006 占用率（≤96 VGPR 升 5 wave）、C512 尾巴、九块跳过、游戏与网络重叠。网友 2K 屏问题（Magpie 放大到 1440p → 插件只旁观）要"网络先跑再让 FSR 放大"的结构改动，钩子现在是 FSR 跑完再替换输出，需和 Zero 定方案。今天四次 TDR 里两次是我合批第一版的 bug（释放了拷贝目标），两次是机器状态，已重启。
+- **09-11 18:20 压缩前状态**：跳块维持 {42,43,46}（九块版 Zero 试了 37～38fps 看不出差别，但 5% 换 3.5 倍误差能量不划算，不做默认）；`DLSS5_STRENGTH=<structure>,<tone>` 已加（输出合成的两个混合系数 = NVIDIA 面板的强度；风格预设只有 Natural，其他要回 5090 重新捕获，不做）。Magpie 包里的 add-on 是最新的（prefetch/合批/STRENGTH），游戏里的还是 0.10。下一步清单见 DevHistory 09-11 18:20：① Magpie 每帧 ~10ms 非网络开销（光流/捕获/呈现）量了砍；② 游戏与网络重叠；③ 换游戏侧 add-on（等 Zero 关游戏）；④ p0006 占用率、C512 尾巴；⑤ 2K 屏方案 Zero 拍板。远程测试套路：改 flags → Zero 远程重开游戏/Magpie 看帧率；schtasks dlss5game/dlss5magpie/dlss5toggle/dlss5rgp；`logs\replay.ps1` 离线重放；`Development/tools/dxilhash.py` 签 cso 后再抓 RGP。
+- **09-11 19:15（压缩后续）**：游戏 18:03 Zero 自己关的（无崩溃），GPU 空出来后：① 游戏侧 add-on 已换成当前源码构建（备份 `.0.10`），release-check 绿；② 清单 1 结论：Magpie 自身开销约 2ms（无游戏时动画窗口当源：24.1ms/帧，网络 GPU 21.5），游戏里多的 10ms 是游戏渲染抢 GPU，Magpie 侧无可砍；③ 清单 2 做了是 null：`DLSS5_OVERLAP=1/2`（网络放自己的 COMPUTE 队列、落后一帧）主菜单 32.7→50ms，计算队列上网络被拖到 45.8ms，串行最快，代码留着默认关。游戏目录 / Magpie 包里的 add-on 现在是含 overlap 代码的 HEAD 构建（flag 关 = 同行为）。远程工具新增：`logs\anim.ps1`+`dlss5anim`/`dlss5toggleanim` 任务（无游戏时给 Magpie 一个 1080p 动画源）、`logs\runC.ps1`（Magpie 一键跑）、`logs\gameRun.ps1`（起游戏到主菜单量 every_frame 后杀掉）、`logs\quiet-bench.ps1`（安静 bench + 分段汇总）。游戏 flag 文件里仍留着 BLACK_PROBE/DEBUG_DUMPS（收口时去掉）。剩下的杠杆只有网络核本身（融合 C32 约 13ms 最大）。
+- **09-11 20:50**：清单 4a（C32 融合核占用率）做了是 null（`NATIVE_C32_LDS_SLIM` 逐位相同、无收益、默认关）；隔离单核账见 DevHistory 20:45——编码器 C32 块 1～4 在 960×576，pre/post70/tail67-69 才是全分辨率，各核按 token 成本一致，没有异常核可砍。测试台把 post base/历史/运动放 UPLOAD 堆（走 PCIe），bench 数只作同批 A/B，绝对值以游戏探针为准（网络 21.5ms）。剩下的都是结构性选择（更小网络/跳块/分辨率/2K 方案），等 Zero 拍板。decout16-sat 的 cso 已还原为基线（0C10F1D6），hlsl 与仓库 HEAD 一致。
+- **09-12 02:45 tag 0.12**：屏幕提示（`native_text_overlay.h/.hlsl`，`DLSS5_NOTICE=0` 关）——输入不是 1080p / 初始化中 / 初始化失败三种文案写进画面。教训：宿主贴图不能建 UAV（Magpie 里 D3D12Core 崩），只能自己缓冲 + CopyTextureRegion，且用自己的命令列表在游戏批次后提交。整包 `D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.12.zip`（342MB，sha256 D8A884EC…）待 Zero 决定是否上传（0.11 教程刚发，网盘是 0.11）。游戏目录 / Magpie 包 add-on 都是 0.12 构建（5C433F12…）；release-check 绿。0.11 教程文章在 `wechat/dlss5-amd-0.11-安装教程.md`（非正式期数）。
+- **09-12 08:11 网盘链接**：0.11 https://pan.quark.cn/s/570436349755 ；0.12 https://pan.quark.cn/s/a5bafe0e2050 （sha256 160DBD31…，含 Alt+Shift+A 热键修正；Magpie 热键是 Alt+Shift+A，不是 Win+Shift+A）。
+- **09-12 17:15 tag 0.13（重打）**：`DLSS5_SHOW_FPS=1`（Magpie 包默认开，左上角网络帧率）；钩子按声明状态接管；**Magpie 效果组挂了 XeSS FG ZeroMV（跨厂商）：9070 XT 网络 28 帧 → 显示 55 帧**（Magpie 效能分析器"帧率 总/真实"）。今天的坑：**Windows Update 11:48 把预览驱动 32.0.31007.2048 换成正式版 32.0.31044.16 → 所有 SM6.10 PSO E_INVALIDARG（屏幕 INIT FAILED）**；重装 26.10.07.02（安装包重新下到 `D:\DLSSNR-Lab\drivers\`，sha256 cca61a1d…），已设 `ExcludeWUDriversInQualityUpdate=1`。Zero 本机 Magpie 配置（LocalAppData）已含 FG，备份 `config.json.pre-fg.bak`。远程工具：`dlss5toolbar` / `dlss5profiler` 任务（WM_HOTKEY id 2/3）看 Magpie 工具栏/效能分析器。decout16-sat 的 cso 现在是 dxilhash 签名版（`unsigned\` 备份）。
+- 0.13 网盘：https://pan.quark.cn/s/7097bd16dc10 （sha256 9104C48D…，含 FG）
+
+- **09-12 18:08 FPS 优化部署**：Zero 退出 Magpie 后，已将 commit `529a0e7` 构建装到 `D:\Magpie-DLSS5\Magpie-Experimental-x64\Magpie-Experimental-x64\dlss5-amd.addon64`；SHA256 `B4AA401DE728288033A27B586E31DC0B1BB3EF0EE84385CB1CF894F611C49B8F` 与本地一致。旧 DLL 备份同目录 `dlss5-amd.addon64.before-fps-529a0e7`；包内 `DLSS5_SHOW_FPS=1`。数字至少隔三秒更新、字条缓存、叠字并入输出提交。尚待 Zero 重开后验画面和收益；游戏目录及发布 zip 本次未换。
+
+- **09-12 Magpie 0.14 包（闇）**：`D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.14.zip`（358004639 字节，SHA256 `14CCDE3C752B40821CB9F30024579304627A2499E087E06E9AEC399BFE734EED`），FPS 三秒刷新/缓存/合并提交，保留 XeSS FG ZeroMV，671 个包内文件哈希通过。校验文件同路径加 `.sha256`；待 Zero 上传，未打 tag。
+
+- **09-12 18:25**：Zero 已上传 0.14，夸克链接 https://pan.quark.cn/s/8bbc3033181d ，中英文 README 下载入口已更新。
+
+- **09-12 19:35 C512 FFWD 换 FP8 矩阵：null，项目收尾**。权重全在 E4M3 格点、A 输入本就是 E4M3 → 换 FP8 wave matrix 逐位相同，但 8 块 C512 整体 0.852→0.880ms（同批 min）、隔离法重合——这个核是延迟/暂存绑着，不是矩阵吞吐。留 `DLSS5_SPLIT_FFWD_FP8`（默认关）+ `DLSS5_BUILD_SPLIT_FFWD_FP8`（cso 不进发布）。Zero 定：做完这条项目就算结束。之后只剩三件事之一触发：SM6.10 转正 / 网友多到值得蒸馏 / 想动 Vulkan。remote: `logs\ffwd8.ps1`；decout16-sat exe 含 flag（备份 `.pre-ffwd8`）。
+
 ## 2026-09-13：小窗口适配 + Magpie 后接 FSR4（闇）
 
 Zero 在《鬼武者》菜单选 1080p 窗口，捕获实际为 1914×1063。现场原链是 FSR3 1914×1063→3840×2133、FSR4再到7680×4266，所以 DLSS5 `armed=0 ran=0`。Zero 定：宽≤1920、高≤1080的窗口都应能输入，不要求用户精确调整客户区。
@@ -629,6 +651,10 @@ Zero于09-13 23:54反馈720游戏链（游戏内FSR→DLSS5→2K→XeSS FG）仍
 
 - **2026-09-14 07:42《剑星》内接入**：Zero要求把900DLL集成Steam游戏。游戏已退出，替换native-submission-order.addon64（72F87A97…）及D:\DLSSNR-Lab资产的40个配套shader，逐项hash通过；启用900/FIT_INPUT/线性codec/FPS，清掉旧转储、黑帧探针和占位参数，原生运动与时序保留。ffxDispatch/ffxDestroyContext导出齐全，SDK/驱动检查通过。备份network-900p/before-stellarblade-900p，回退deploy-stellarblade.ps1 -Action Restore。尚待实玩，Magpie/发布包未动。
 
+
+### 2026-09-14：HIP 路线起点与后来修正（原 context 补入）
+
+309 期写作时讨论 HIP 重写是否值得：预期收益来自寄存器/LDS 控制、搬运与核形状；最初判断提升有限，还误以为要丢掉整条 D3D12 游戏接入。实际实现保留 codec、时序与游戏钩子，只加 D3D12↔HIP 共享 buffer/fence 桥接，推翻了“必须丢掉接入链”的前提。09-15 研究过 jammm/SageAttention 的 jam/gfx12（commit `66f5e64c9e36084c863a4480e570069245e58f90`），只借鉴寄存器排列和片上重用，没有移植其 INT8/标准 softmax 算法；本网络的 64-token/head32、特殊 exp 和 rounding 契约仍须保留。
 
 ## 2026-09-14 22:57：HIP 分支第一阶段——完整网络与原生 WMMA 数值通过
 
@@ -2271,6 +2297,11 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 至此候選 2、3 都關閉。逐位路線上還沒試過的一條：權重片段的 64 位地址算術換成 buffer_load 的 32 位 voffset（C32 chain 核裡 v_add_co/ci 124 條 + lshlrev_b64 50 條 ≈ 4.7% 指令）。非逐位的路（PK_ACT=2 已測 +0.08 更慢、放寬精度已封、跳塊有性能檔）不再看。
 - 23:05 buffer_load 這刀的底數：COMGR 的 clang 21 接受 `__builtin_amdgcn_make_buffer_rsrc` + `__builtin_amdgcn_raw_buffer_load_b64`，探針（hip-backend\buf_probe.hip）出 `buffer_load_b32 v, v, s[4:7], null offen offset:4096`，32 位 voffset、立即數偏移可折。C32 chain 核的 ISA：global_load 60 條已是 saddr 形式（SGPR 基址 + 32 位 VGPR 偏移，不用 64 位加法），54 條 load + 16 條 store 是 vaddr64 形式——這 70 處就是 62 對 v_add_co/ci + 50 條 lshl_b64 的來源（≈170 條，4.6%），都在按 token 的輸入映射讀和輸出寫上，不在權重。post 核 94 saddr / 19 vaddr64。換成 buffer 形式要在 c32_fused_body 的 70 個讀寫點各換一個 helper，上限約 C32 家族 4.1 ms 的 4%，且 09-16 的 no-unroll 實驗說明這個核吃的是 MMA 流水不是指令數，實際能拿到的估計 ≤0.1 ms。未做，等 Zero 決定值不值。
 
+## 2026-09-17 22:55～23:06：5090《剑星》多遍 NR 试装与回退
+
+- **09-17 22:55 5090《劍星》裝了 DLSS5-ReShade-AIO v2.2.4（kibblerz）**——Zero 要「三倍 DLSS5」= 這個插件的 NR pass count 2x/3x（同一幀網絡串跑 N 遍，每遍獨立歷史，成本 ×N；每次啟動回 1x）。遊戲目錄 `D:\SteamLibrary\steamapps\common\StellarBlade\SB\Binaries\Win64`：ReShade 6.8.0 addon 版原本就在（d3d12.dll）；新放 standalone-dlssnr.addon64、nvngx.dll（AIO 橋）、兩個 .fx，nvngx_dlss.dll / nvngx_dlssg.dll 從遊戲自帶的 Plugins 目錄複製；原 renodx-dlss5.addon64 和 7 個逆向探針 addon 移到 `Win64\before-aio\`（兩套 NR 不能同掛）。回退：`powershell -ExecutionPolicy Bypass -File D:\work\aio\install-aio.ps1 -Action Restore`（遊戲關著）。用法：遊戲裡關自帶 DLSS/FG/AA → ReShade 面板 Add-ons 頁 → Standalone DLSS-NR + SR → NR pass count 3x；F10 對比源畫面，Ctrl+Alt+N 換 NR 模型 1/2/3。不同於 Magpie：它是 ReShade 插件鉤遊戲自身 D3D12，運動矢量走 NVIDIA 光流。
+- **09-17 23:06 AIO 已從 5090《劍星》去掉**（Zero 試了 3x：效果沒差別，卡到不能玩）。Restore 跑過：renodx-dlss5 + 探針 addon 回位，AIO 的 addon64/nvngx.dll/nvngx_dlss(g).dll/.fx 刪除，ini 復原。結論：多遍 NR 在 5090 上也不划算，不再碰。
+
 ## 2026-09-18 00:20 第二個 FFX/XeSS 遊戲《黑神話：悟空》（9070 XT）——鉤子通用化的三道坎
 
 - 目標：驗證「遊戲有 FSR3.1/FSR4/XeSS 就能直接用《劍星》包」；副線：OptiScaler（只有 DLSS 的遊戲）怎麼拼。網友拼 danielblnc 的方法 = OptiScaler（dxgi.dll，鉤遊戲 DLSS/XeSS/靜態 FSR3 輸入，用自帶 amd_fidelityfx_dx12.dll 跑 FSR4）+ 他的 version.dll 代理鉤 ffxCreateContext/Dispatch；三份同一 DLL = 三遍。
@@ -2307,3 +2338,37 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 10:39 Zero 在 OptiScaler 面板選 FSR 3.x/4 並切換；日誌 10:39:43 出現 FSR31FeatureDx12::InitFSR3、upscaling_dx12 context 建立成功，隨後 FSR31FeatureDx12::Evaluate 連續 Dispatch、Upscaling done=true。咱們網絡切換後繼續出幀（總幀數超 42700，dropped_pending=0），cadence 約 27.5ms（約36fps，非獨立性能測試）。已確認 FSR3.x/4 後端鏈接通，具體 FSR4 模型版本及切換後畫面仍待確認；請 Zero Save Settings 持久化面板選擇。修訂測試 zip 514 檔哈希全驗過，SHA256 30A91095DD98539AD9D9220DB933CDAC428FCECA129773147B91380CB83574C7。
 
 - 10:45 Zero 指定：以後給網友的發布包統一放 `D:\給網友打包`。OptiScaler 組合正式整理為 `OptiScaler-DLSS5-AMD-0.23.zip`（同0.23網絡，未另打tag），默认fsr31、FG关闭；补中文安装/卸载/输入与后端区别说明、保留组件许可、加入OptiScaler GPL文本与对应源码链接、去掉测试README及会覆盖预设的setup脚本。513个有效载荷文件逐个从zip读取SHA256通过；zip SHA256 `9D70D28F2EDBF4DAFE87ABEDE4047C41748F94F72AF75FEF9453B4CF22A23121`，旁边有.sha256。游戏运行中的文件未改。`Development/HIP/package-hip.ps1` 的后续游戏/Magpie包输出也改到同一目录，并同步到远端hip-backend；OptiScaler打包用tools/optiscaler-stellarblade.ps1 -Action Release。
+
+
+## 2026-09-19：合并独立 context，统一记录入口
+
+原 `context/dlss5-9070移植.md` 共 1565 行，大部分为重复的逐刀实验、部署状态及已经执行完的下一步。完成记录继续保留在本文件对应日期；重复计划不再复制。原文件中独有的 09-11～12 发布/实测、HIP 起点修正和 5090 AIO 试装已补回对应日期，运维入口与零散教训归并如下。删除原文件，公众号工作上下文的两处引用改指本文件。
+
+### 运维入口与工作约定
+
+- AMD 机：`ssh amd9070`，实验根 `D:\DLSSNR-Lab`，《剑星》`C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64`。5090：`ssh rtx5090`，《剑星》`D:\SteamLibrary\steamapps\common\StellarBlade\SB\Binaries\Win64`。每次操作前读实际文件与进程，历史 DLL 名、目录名不等于当前安装。
+- 发布成品统一 `D:\給網友打包`；开发资产和实验仍在 lab。给网友的配置不含本机绝对 `DLSS5_HIP_MODULES` 路径，默认模块位置是 `DLSS5-AMD\native-game-tiled-assets\HIP`。
+- 游戏或 Magpie 运行中不换 DLL/HSACO，也不同时跑 GPU 测试台。改动独立 flag/宏及可回退部署；每刀报进度，commit 不加 Co-Authored-By。开发过程材料在 `Development/`，版本发布时把验证过的源码同步到 `hip/`、`shaders/`、`src/` 并实际编译。
+- 打版核验：HIP 与 DX12 addon 都编一次，`hip/build-modules.ps1` 全量重编，900w 与 960 两套黄金输出验证；HLSL 有改动才重编对应 cso。09-10 的笔记本干净 checkout 验收曾抓到缺 10 个源、3 个手工 cso 和过期 flags，不能只验开发机缓存。09-17 起直接在 main 开发，旧 HIP 分支不再用。
+- 游戏内包优先读取 DLL 旁 `DLSS5-AMD`，不存在才回落 lab。09-10 的“开发机不要留同名目录”针对旧全局部署脚本；后来的 HIP 游戏私有包和 OptiScaler 包明确使用该目录，不能照旧规则删。
+- 远程 UI 走交互计划任务：`dlss5game` / `dlss5magpie` / `dlss5toggle` / `dlss5shot` / `dlss5rgp`；Magpie 工具栏与分析器是 `dlss5toolbar` / `dlss5profiler`（WM_HOTKEY id 2/3）。Magpie 启停热键是 **Alt+Shift+A**。
+- 无游戏测 Magpie：`logs\anim.ps1` + `dlss5anim` / `dlss5toggleanim`；`logs\runC.ps1` 启动 Magpie；`logs\gameRun.ps1` 启游戏到菜单取 every_frame 后关闭；`logs\quiet-bench.ps1` 做安静测试与分段汇总。这些旧脚本使用前先看内容，避免意外关闭用户正在玩的游戏。
+- 离线重放：`logs\replay.ps1 -Folder <decout16拷贝> -Flags logs\replay-flags.txt`，输入色从 f16 转 input.f32；`DLSS5_TEST_EPILOGUE_MODE=8` 看头部累加器。`Development/tools/dump.sh` 抓中间量；bench.ps1 变了用 `make-norebuild.sh` 重生无编译 runner。
+- 掉帧诊断：`Development/tools/gpu.ps1` / `shared.ps1` 区分 CPU 提交与共享显存驱逐；测量关 Splashtop、核实帧率上限。曾有游戏锁 30fps 掩盖优化收益；Engine.ini 的 `r.Streaming.PoolSize=6000` 曾帮助驱逐后恢复，原备份 `.before-poolsize`，不作为所有场景的默认设置。
+- 预览 DX12 路线曾被 AMD Install Manager 与 Windows Update 自动换驱动破坏：前者计划任务已禁用，后者设 `ExcludeWUDriversInQualityUpdate=1`。这是 SM6.10 阶段事故；HIP 0.20 起不再要求该预览接口，正式驱动仅有用户可用反馈，不能混成亲测。
+- `DLSS5_GAME_PROBE` 每帧 Flush 会破坏异步提交的时序，曾出现地面透明；不要与 ASYNC_SUBMIT 同开。旧探针 pre/post/network 分项可用，含 Flush 的 cpu_frame 不能当正常帧时间。
+
+### 补充工程教训
+
+- RGP 可能按占位 DXIL 哈希读到旧 ELF；抓 HLSL 前用 `Development/tools/dxilhash.py` 签名 cso。09-10 的 p0087 是未派发 full_attention PSO，不能拿它的 scratch 诊断实际融合核 p0006。
+- codec 每个输入 SRV 用各自资源描述；复用改过的输出 desc 会建立 UNKNOWN 格式视图，造成 device removed（887a0001）。
+- post 有 shift 3，写输出栅格必须减去 shift；pre 没 shift，pre 正确不能证明 post 正确。
+- fxc cs_5_1 的 round/exp2 与 dxc 路径有舍入差异，搬核时区分结构逐位检查和对 exact 的 PSNR 检查。C32 的 f16 中间流优化不能直接套给已是 E4M3 的多头/C512。
+- 内核形状变化先算权重 B 的重读量；减少 barrier/转换/寄存器不自动变快。单核隔离会把工作集留在缓存，不能直接相加当整帧；按实际生产路径做重复 dispatch/launch 与同批 ABBA。旧 null 可在依赖变化后重测，但原方案、基线与变化必须说清。
+
+### 同行与写作素材（仅保留当时调查结论）
+
+- 09-10／09-17 调查 `danielblnc/DLSS-NR-on-AMD`：闭源 HIP、安装时从 310.8 原 DLL 抽权重、FFX API 钩子，二进制使用 amdhip64_7.dll/hipLaunchKernel。已检查的 setup.exe（`scratchpad/nramd/setup.exe`，sha cf7ada14…）没发现本项目环境变量/核名标识，记录结论是独立平行实现，没有抄袭证据。其自报帧率不能作为与本项目的同条件跑分。
+- `MatheusGViana/dlss-5-amd-project` 当时是 OptiScaler fork 包装上面的闭源 DLL，提供多遍/顺序/颜色开关，网络本身无源码；`SAOG0721/Magpie` 是 NVIDIA DLL + 光流的截图后处理路线。以上都是当时版本观察，不当成永久产品状态。
+- OptiScaler 组合在黑神话未验通的历史，不能外推为接口不可用；09-19 已在《剑星》验通，并发现 0.9.4 的 fsr31/ffx 配置名问题，见同日记录。
+- 公众号 296/297/298/299/301/304 是早期 DLSS5 系列，304 是优化篇；0.11 安装教程位于 `wechat/dlss5-amd-0.11-安装教程.md`，0.20 教程为 `wechat/dlss5-amd-0.20-安装教程.md`。写作定位是学习笔记，实验结果与未验证推测分开记录。
