@@ -1,4 +1,6 @@
-param([ValidateSet('Native','OptiScalerOnly','ReShadeOnly','Restore','Status')][string]$Action='Status')
+param([ValidateSet('Native','OptiScalerOnly','ReShadeOnly','AddonCandidate','Restore','Status')][string]$Action='Status',
+ [string]$Candidate='D:\DLSSNR-Lab\pre-upscale\native-idle-tracking.addon64',
+ [string]$ExpectedSha='395DABFE20261832FAC8A43188EB69661BAA52EB140C8A99655D8B7F4E4AC75D')
 $ErrorActionPreference='Stop'
 $game='C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64'
 $original='D:\DLSSNR-Lab\stellarblade-before-optiscaler'
@@ -99,6 +101,29 @@ if($Action -eq 'Native'){
   Closed
   if(Test-Path "$game\ReShade64.dll"){Remove-Item -LiteralPath "$game\ReShade64.dll"}
   Copy-Item $snapshot $iniPath -Force
+  throw
+ }
+ }elseif($Action -eq 'AddonCandidate'){
+ Closed
+ if((Get-Content "$backup\state.txt" -Raw).Trim() -ne 'reshade-no-addon'){throw 'Candidate requires ReShade without addon baseline'}
+ if(@(Get-ChildItem $game -Recurse -File -Filter *.addon64).Count){throw 'Unexpected active addon'}
+ if((Get-FileHash $Candidate).Hash -ne $ExpectedSha){throw 'Candidate hash mismatch'}
+ $m=Get-Content "$backup\manifest.json" -Raw|ConvertFrom-Json
+ foreach($r in $m.files){if($r.name -ne 'dlss5-amd.addon64' -and (Get-FileHash "$game\$($r.name)").Hash -ne $r.sha256){throw 'Baseline binary changed'}}
+ $settings=Join-Path $env:LOCALAPPDATA 'SB\Saved\Config\WindowsNoEditor\GameUserSettings.ini'
+ $tracked=@($settings,"$game\OptiScaler.ini","$game\ReShade.ini","$game\ReShadePreset.ini","$game\DLSS5-AMD\native-game-flags.txt")
+ $hashes=@{};foreach($path in $tracked){$hashes[$path]=(Get-FileHash $path).Hash}
+ try{
+  Closed
+  Copy-Item $Candidate "$game\dlss5-amd.addon64"
+  if((Get-FileHash "$game\dlss5-amd.addon64").Hash -ne $ExpectedSha){throw 'Installed addon hash mismatch'}
+  foreach($path in $tracked){if((Get-FileHash $path).Hash -ne $hashes[$path]){throw 'Configuration changed during deployment'}}
+  'addon-idle-tracking-candidate'|Set-Content "$backup\state.txt"
+  "ADDON_CANDIDATE_READY SHA=$ExpectedSha baseline_binaries_and_settings_unchanged=1"
+ }catch{
+  Closed
+  if(Test-Path "$game\dlss5-amd.addon64"){Remove-Item -LiteralPath "$game\dlss5-amd.addon64"}
+  'reshade-no-addon'|Set-Content "$backup\state.txt"
   throw
  }
 }elseif($Action -eq 'Restore'){

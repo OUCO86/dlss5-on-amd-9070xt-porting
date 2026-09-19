@@ -2476,3 +2476,10 @@ GameUserSettings.ini、ReShade.ini、ReShadePreset.ini操作前后SHA一致，�
 代码发现draw/draw_indexed/dispatch每次调用Mode查询环境、获取native对象并锁全局Jobs映射，即使F6关闭且没有捕获任务也执行。候选用在Jobs互斥锁内发布的原子pending标记，在无任务时跳过这条路径；有任务仍保留following_work与资源状态检查，私有纹理barrier修正不受pending标记影响。日志配额耗尽后先读取计数，避免每次draw继续原子递增争用。
 
 HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe20261832fac8a43188eb69661baa52eb140c8a99655d8b7f4e4ac75d。pre-upscale-smoke补充pending发布/清除、非空时following_work仍有效检查，测试程序交叉编译通过；git diff --check通过。游戏仍运行，尚未执行GPU smoke、未部署，不能把候选当作帧率修复已验证。下一步用户退出后运行同步/异步smoke，再仅装回候选addon测主城F6 OFF/ON。
+
+
+### 2026-09-19 15:25后：空闲跟踪候选通过GPU检查并部署剑星
+
+用户确认退出，远端检查无剑星/Magpie进程后运行更新的pre-upscale-smoke，同步和异步两轮均通过：每轮6帧，F6边沿/直接旁路/捕获后关闭/恢复捕获均每帧只执行一次FFX，逐4096个half读回全部different=0；pending标记发布、消费后清除及有任务时following_work观察断言通过。
+
+部署工具增加AddonCandidate阶段，要求reshade-no-addon基线、无活动addon、候选SHA正确，逐一验证其余12个基线二进制。只复制native-idle-tracking.addon64为游戏dlss5-amd.addon64，SHA 395dabfe20261832fac8a43188eb69661baa52eb140c8a99655d8b7f4e4ac75d；游戏图形配置、OptiScaler/ReShade配置与预设、DLSS5 flags前后SHA一致。状态addon-idle-tracking-candidate，原addon备份仍在before-native-city-test/files。发布包未更新，主城实际FPS待用户测F6 OFF/ON。
