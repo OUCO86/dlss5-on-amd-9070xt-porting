@@ -2567,3 +2567,9 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 已将有限字节直搬合入hip/multihead_fast_padded.hip，正式双目标重编packed/unpacked四模块；完整48模块保存在D:\DLSSNR-Lab\ffn-direct-production-modules，hip/SHA256SUMS更新四项。gfx1200 unpacked CA52AC43…/packed C566F5B4…，gfx1201 unpacked 8F7AED4F…/packed C63249CD…。正式目录自动选gfx1201，900w及960六道黄金全过。无需重编DLL；游戏/Magpie安装和已上传0.25包保留原状。脚本build-golden-ffn-direct-word.ps1、recheck-ffn-direct-word.ps1与结果归档Development/results/1080-20260919/directword-*。下一步优先回到较大块的内存访问/同步开销；FFN激活配对、半精度多项式已在09-17测过无收益/更慢，避免重走。
 
 21:16发布说明约定：每个版本changelog简要写明具体优化内容，不用“集成当前优化”代替；兼容/修复和实测效果一并简述，按实际随包内容写。中英文README的0.25已补C32/MH指数复用、有界倒数、FP8字节传递和解码完整分组快路径；21:05后的FFN直接搬运尚未发布，不计入0.25。
+
+## 2026-09-19 21:17起：FFN入口共享缓冲复用无收益，转测直接字节片段
+
+以已采用的ffn-direct-production-modules为基线，入口暂存借用稍后才使用的qfeature，expand读qfeature、激活写hidden，去掉防止覆盖输入的一道barrier，无额外LDS。C64/128/256的mapped bytein_fb静态barrier 10→9，VGPR 96/103/81→95/102/80，LDS仍5440/10816/21568，private0。gfx1200/1201均编译成功；12组720/900/1080×历史/重置/HDR/暗部/种子首尾一致、全部帧有限。80帧ABBA：900基线13.6485/13.6555、候选13.6685/13.677（+0.02075ms）；1080基线19.931/20.0075、候选19.944/19.968（−0.01325，基线漂移）。无稳定收益，不采用；隔离patch ffn-reuse-input-stage与ffnstage结果存档。
+
+第二候选从原生产基线另起：ByteIn直接读取8字节WMMA输入片段，省入口LDS暂存及两道barrier；f32仍走原路径。代价是多个wave重复读取全局输入，和旧float输入下关COOP不同，这次直接读FP8无逐元素转换。patch ffn-direct-input-fragment；测试脚本test-ffn-reuse-stage.ps1 -DirectLoad（正确性）、-DirectLoad -Timing（ABBA）、再加-Recheck（BAAB）。双目标构建ffn-load-build，待验证/计时后决定。生产源码、游戏及发布包未改。

@@ -1,0 +1,40 @@
+--- a/hip/multihead_fast_padded.hip
++++ b/hip/multihead_fast_padded.hip
+@@ -610,28 +610,26 @@
+ #if HIP_FFN_INPUT_PACK4
+ #if HIP_FFN_HOIST_RES>=2
+  // Level 2: the cooperative input staging also loads branch-free (4 window tests per word, loads overlap). Same bytes.
+- for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C){if constexpr(ByteIn)word=ffn_input8_word<C,Mapped>(in8,first+row,k,width,height,workw,sx,sy);else word=pack4(load_in_nb(first+row,k),load_in_nb(first+row,k+1),load_in_nb(first+row,k+2),load_in_nb(first+row,k+3));}__builtin_memcpy(hidden+i*4,&word,4);}
+-#else
+- for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C){if constexpr(ByteIn)word=ffn_input8_word<C,Mapped>(in8,first+row,k,width,height,workw,sx,sy);else word=pack4(load_in(first+row,k),load_in(first+row,k+1),load_in(first+row,k+2),load_in(first+row,k+3));}__builtin_memcpy(hidden+i*4,&word,4);}
+-#endif
+-#else
+- for(uint i=tid;i<16*(C+4);i+=2*C){uint row=i/(C+4),k=i%(C+4);hidden[i]=k<C?static_cast<unsigned char>(q8(load_in(first+row,k))):0;}
++ for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C){if constexpr(ByteIn)word=ffn_input8_word<C,Mapped>(in8,first+row,k,width,height,workw,sx,sy);else word=pack4(load_in_nb(first+row,k),load_in_nb(first+row,k+1),load_in_nb(first+row,k+2),load_in_nb(first+row,k+3));}__builtin_memcpy(qfeature+i*4,&word,4);}
++#else
++ for(uint i=tid;i<16*(C/4+1);i+=2*C){uint row=i/(C/4+1),k=(i%(C/4+1))*4,word=0;if(k<C){if constexpr(ByteIn)word=ffn_input8_word<C,Mapped>(in8,first+row,k,width,height,workw,sx,sy);else word=pack4(load_in(first+row,k),load_in(first+row,k+1),load_in(first+row,k+2),load_in(first+row,k+3));}__builtin_memcpy(qfeature+i*4,&word,4);}
++#endif
++#else
++ for(uint i=tid;i<16*(C+4);i+=2*C){uint row=i/(C+4),k=i%(C+4);qfeature[i]=k<C?static_cast<unsigned char>(q8(load_in(first+row,k))):0;}
+ #endif
+  __builtin_amdgcn_s_barrier();
+ #endif
+  f8 expand[4]{};
+  for(uint k=0;k<C;k+=16){i2 a{};
+ #if HIP_FFN_COOP_INPUT
+-  __builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);
++  __builtin_memcpy(&a,qfeature+rc*(C+4)+k+group*8,8);
+ #else
+   for(uint e=0;e<8;e++)pack(a,e,load_in(first+rc,k+group*8+e));
+ #endif
+   for(uint tile=0;tile<4;tile++){uint row=wave*64+tile*16+rc,offset=(row*C+k+group*8)/4;i2 b{};if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(w),row,C,k,group);else if constexpr(Tiled){const unsigned char*wb=reinterpret_cast<const unsigned char*>(w);uint off=((row/16)*(C/32)+k/32)*512+(k%32+group*8)*16+row%16;for(uint e=0;e<8;e++)b[e/4]=int(uint(b[e/4])|(uint(wb[off+e*16])<<(8*(e%4))));}else b={int(pw[offset]),int(pw[offset+1])};expand[tile]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,expand[tile]);}
+  }
+-#if HIP_FFN_COOP_INPUT
+- // Every wave must finish reading input before its storage becomes hidden.
+- __builtin_amdgcn_s_barrier();
+-#endif
++// Input lives in qfeature, so activation writes to hidden cannot overwrite another wave's input.
++// The following hidden-ready barrier completes all input reads before qfeature is reused later.
+ #if HIP_FFN_ABLATE_ACT
+  for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e++)hidden[(group*8+e)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>(q8(expand[tile][e])); // timing only
+ #elif HIP_FFN_PK_ACT==1
