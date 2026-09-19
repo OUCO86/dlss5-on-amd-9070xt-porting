@@ -13,13 +13,15 @@
       "file": "OptiScaler-DLSS5-AMD-0.26.zip",
       "bytes": 387976939,
       "sha256": "e008013b3c6dfa9ae1268a66fe5d4cf4170462e9bd9270cf550bf4b2a730f9a6",
-      "verified_payload_files": 538
+      "verified_payload_files": 538,
+      "download_url": "https://pan.quark.cn/s/c880a70f0824"
     },
     {
       "file": "Magpie-DLSS5-AMD-0.26.zip",
       "bytes": 356968661,
       "sha256": "9571fc0cda7ad78cb2e12312fdd0d0cc28e270109edad15301ec94fc007276f0",
-      "verified_payload_files": 722
+      "verified_payload_files": 722,
+      "download_url": "https://pan.quark.cn/s/7ce2ca11db43"
     }
   ]
 }

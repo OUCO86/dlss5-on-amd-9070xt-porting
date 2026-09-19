@@ -2633,7 +2633,7 @@ compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV�
 
 ## 2026-09-19 23:39起：Magpie与OptiScaler 0.26完整包
 
-按用户指定版本0.26，采用已编译/回归/《剑星》实玩通过的f5d3f734… DLL与c256-frag-production双架构48内核，开启MH_FFN_FRAG256=1及完整字节流/解码字节输出，保留FFN直接片段读取；未纳入C32 buffer或噪声消融。同步98a790d9…解码shader，包含《匹诺曹》已实测的低效果品质黑屏修复。DLL/HSACO沿用已验证产物，本轮无需重编；两份实际staging均跑过44种shader编译/反射绑定校验，随后从ZIP逐项读回所有有效载荷，再核对两套48内核、DLL、shader和配置。OptiScaler保持PRE_UPSCALE=1/ASYNC=1/FSR31；Magpie保持PRE_UPSCALE=0及原流水线。打包工具补齐FRAG256配方，package-026.ps1先核对源文件SHA再顺序打两包。中英文README及包内说明简述0.26优化与修复；两版下载链接待用户上传后补，不打tag、不改游戏安装。
+按用户指定版本0.26，采用已编译/回归/《剑星》实玩通过的f5d3f734… DLL与c256-frag-production双架构48内核，开启MH_FFN_FRAG256=1及完整字节流/解码字节输出，保留FFN直接片段读取；未纳入C32 buffer或噪声消融。同步98a790d9…解码shader，包含《匹诺曹》已实测的低效果品质黑屏修复。DLL/HSACO沿用已验证产物，本轮无需重编；两份实际staging均跑过44种shader编译/反射绑定校验，随后从ZIP逐项读回所有有效载荷，再核对两套48内核、DLL、shader和配置。OptiScaler保持PRE_UPSCALE=1/ASYNC=1/FSR31；Magpie保持PRE_UPSCALE=0及原流水线。打包工具补齐FRAG256配方，package-026.ps1先核对源文件SHA再顺序打两包。中英文README及包内说明简述0.26优化与修复；23:49用户上传两款完整包，OptiScaler：https://pan.quark.cn/s/c880a70f0824 ，Magpie：https://pan.quark.cn/s/7ce2ca11db43 ；中英文README链接挂在0.26对应标签上。不打tag、不改游戏安装。
 
 输出D:\給網友打包，旁置.zip.sha256：
 
