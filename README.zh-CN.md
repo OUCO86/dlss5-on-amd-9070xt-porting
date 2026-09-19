@@ -122,6 +122,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | 0.24.1 · [OptiScaler](https://pan.quark.cn/s/4f73a54d0ff9)（HIP） | 09-19 | 修复配置/资产路径查找：DLL被加载到 `_storage_` 等子目录、旁边找不到 `DLSS5-AMD` 时，继续到游戏EXE旁查找，避免误读开发目录旧配置。已在《剑星》2560×1440回归前置链，网络内核与权重不变；此修正不解决《生化危机9》同一命令列表中的前置接入限制。包 `OptiScaler-DLSS5-AMD-0.24.1.zip`（385,883,920字节，sha256 1e9ec721…）。 |
 | 0.24.2 · [OptiScaler](https://pan.quark.cn/s/f74aaa5c7f9a)（HIP） | 09-19 | 修复addon在无前置任务时仍逐次绘制查配置、锁任务表的CPU开销，并减少日志计数争用；F6关闭直接旁路前置捕获/颜色复制，已捕获任务仍执行一次。《剑星》主城回归约49fps（此前约31fps），同步/异步GPU检查通过。网络内核与权重不变。包 `OptiScaler-DLSS5-AMD-0.24.2.zip`。 同日重打完整包补上FPS/状态显示开关，下载链接已更新。 |
 | 0.25 · [Magpie](https://pan.quark.cn/s/09630ed99606) · [OptiScaler](https://pan.quark.cn/s/636691131c5f)（HIP） | 09-19 | **优化**：复用C32/多头注意力的指数计算、简化倒数计算；中间特征和解码输出直接用FP8字节传递，减少数据搬运；解码完整分组走快速路径。**修复/兼容**：修复900档尾部漏写和中文路径加载失败，新增9060/XT的gfx1200内核，与gfx1201自动选择。9070 XT回归通过，9060/XT待实机反馈；Magpie实测1080P只做DLSS5约37fps，与之前基本持平。Magpie、OptiScaler均提供完整包。 |
+| 未发布（HIP） | 09-19 | FFN直接读取FP8字节片段，省去入口共享缓冲暂存及两道同步；900P/1080P离线对照每帧约省0.10/0.15～0.17ms。待打包。 |
 
 ## 权重
 

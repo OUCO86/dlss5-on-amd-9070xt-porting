@@ -1,5 +1,5 @@
 # Append to a complete HIP configuration. Requires native-dual-arch.addon64
-# and a matched module set (latest: ffn-direct-production-modules), including
+# and a matched module set (latest: ffn-load-production-modules), including
 # the decoder tail fix and *_fb_bout_diag entries.
 DLSS5_HIP_MH_FEATURE_BYTE=1
 DLSS5_HIP_MH_PROJ_DIAG_FB=1

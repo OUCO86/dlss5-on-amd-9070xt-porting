@@ -2568,8 +2568,12 @@ decoder_project2x_h16w拆为FullTile模板：入口按整组剩余token数选择
 
 21:16发布说明约定：每个版本changelog简要写明具体优化内容，不用“集成当前优化”代替；兼容/修复和实测效果一并简述，按实际随包内容写。中英文README的0.25已补C32/MH指数复用、有界倒数、FP8字节传递和解码完整分组快路径；21:05后的FFN直接搬运尚未发布，不计入0.25。
 
-## 2026-09-19 21:17起：FFN入口共享缓冲复用无收益，转测直接字节片段
+## 2026-09-19 21:17起：FFN入口缓冲复用无收益，直接字节片段省约0.10/0.15～0.17ms
 
 以已采用的ffn-direct-production-modules为基线，入口暂存借用稍后才使用的qfeature，expand读qfeature、激活写hidden，去掉防止覆盖输入的一道barrier，无额外LDS。C64/128/256的mapped bytein_fb静态barrier 10→9，VGPR 96/103/81→95/102/80，LDS仍5440/10816/21568，private0。gfx1200/1201均编译成功；12组720/900/1080×历史/重置/HDR/暗部/种子首尾一致、全部帧有限。80帧ABBA：900基线13.6485/13.6555、候选13.6685/13.677（+0.02075ms）；1080基线19.931/20.0075、候选19.944/19.968（−0.01325，基线漂移）。无稳定收益，不采用；隔离patch ffn-reuse-input-stage与ffnstage结果存档。
 
 第二候选从原生产基线另起：ByteIn直接读取8字节WMMA输入片段，省入口LDS暂存及两道barrier；f32仍走原路径。代价是多个wave重复读取全局输入，和旧float输入下关COOP不同，这次直接读FP8无逐元素转换。patch ffn-direct-input-fragment；测试脚本test-ffn-reuse-stage.ps1 -DirectLoad（正确性）、-DirectLoad -Timing（ABBA）、再加-Recheck（BAAB）。双目标构建ffn-load-build，待验证/计时后决定。生产源码、游戏及发布包未改。
+
+第二候选完成：双目标COMGR通过，12组首尾逐位匹配、每组全部24帧有限。80帧ABBA：900 13.6765→13.57675ms（−0.09975）；1080 19.98875→19.8215（−0.16725）。120帧BAAB复核：900 13.75275→13.65575（−0.097）；1080 20.036→19.88325（−0.15275）。各轮最终hash相同；基线是上一刀字节直搬，不把两刀收益相加。静态barrier 10→8，LDS大小不变、private0，C64/128/256 VGPR为97/108/79（基线96/103/81）。
+
+采用直接FP8片段方案，合入hip/multihead_fast_padded.hip；正式双目标重编packed/unpacked四模块、完整48模块目录D:\DLSSNR-Lab\ffn-load-production-modules。gfx1200 unpacked 9C901B31…/packed 17F1B31F…，gfx1201 unpacked DB9B7B08…/packed C33DA4F6…。SHA表更新四项，完整目录自动选架构及900w/960六道黄金通过；9060仍仅编译验证。无需换DLL，游戏/已上传0.25包未动。中英文changelog加“未发布”简述；归档ffnload-*与ffn-input-staging-isa.json。第一候选未采用；后续优先考察矩阵权重片段读取的地址计算/依赖，入口同步这条路已有明确结果，不再盲删barrier。

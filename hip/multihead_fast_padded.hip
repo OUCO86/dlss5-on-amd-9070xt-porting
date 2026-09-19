@@ -586,6 +586,12 @@ template<uint C,bool Mapped> DEV uint ffn_input8_word(const unsigned char*in,uin
  if constexpr(Mapped){int x=int(p%workw)-int(sx),y=int(p/workw)-int(sy);ok=x>=0&&y>=0&&x<int(width)&&y<int(height);uint xi=ok?uint(x):0u,yi=ok?uint(y):0u;index=(yi*width+xi)*C+c;}
  uint word;__builtin_memcpy(&word,in+index,4);return ok?word:0u;
 }
+// Byte inputs can feed WMMA fragments directly; mapped padding remains positive zero.
+template<uint C,bool Mapped> DEV i2 ffn_input8_fragment(const unsigned char*in,uint p,uint c,uint width,uint height,uint workw,uint sx,uint sy){
+ uint index=p*C+c;bool ok=true;
+ if constexpr(Mapped){int x=int(p%workw)-int(sx),y=int(p/workw)-int(sy);ok=x>=0&&y>=0&&x<int(width)&&y<int(height);uint xi=ok?uint(x):0u,yi=ok?uint(y):0u;index=(yi*width+xi)*C+c;}
+ i2 v;__builtin_memcpy(&v,in+index,8);return ok?v:i2{};
+}
 // BatchNorm: the three QKV projections are computed first, both normalized parts' raw tiles go to LDS in one round and
 // their row sums run on 2*16*(C/32) threads behind a single barrier (same sequential 32-term order per row, so the
 // same bytes); two barriers and one LDS round per block fewer than the part-by-part loop. C64/C128 only (LDS budget).
@@ -607,6 +613,7 @@ DEV void mh_ffn_qkv_body(const float*in,const float*w,unsigned char*out,uint tok
  __attribute__((shared)) float inverse[(BatchNorm?2:1)*16*(C/32)];
  const uint*pw=reinterpret_cast<const uint*>(w);
 #if HIP_FFN_COOP_INPUT
+ if constexpr(!ByteIn){
 #if HIP_FFN_INPUT_PACK4
 #if HIP_FFN_HOIST_RES>=2
  // Level 2: the cooperative input staging also loads branch-free (4 window tests per word, loads overlap). Same bytes.
@@ -618,19 +625,20 @@ DEV void mh_ffn_qkv_body(const float*in,const float*w,unsigned char*out,uint tok
  for(uint i=tid;i<16*(C+4);i+=2*C){uint row=i/(C+4),k=i%(C+4);hidden[i]=k<C?static_cast<unsigned char>(q8(load_in(first+row,k))):0;}
 #endif
  __builtin_amdgcn_s_barrier();
+ }
 #endif
  f8 expand[4]{};
  for(uint k=0;k<C;k+=16){i2 a{};
 #if HIP_FFN_COOP_INPUT
-  __builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);
+  if constexpr(ByteIn)a=ffn_input8_fragment<C,Mapped>(in8,first+rc,k+group*8,width,height,workw,sx,sy);else __builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);
 #else
   for(uint e=0;e<8;e++)pack(a,e,load_in(first+rc,k+group*8+e));
 #endif
   for(uint tile=0;tile<4;tile++){uint row=wave*64+tile*16+rc,offset=(row*C+k+group*8)/4;i2 b{};if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(w),row,C,k,group);else if constexpr(Tiled){const unsigned char*wb=reinterpret_cast<const unsigned char*>(w);uint off=((row/16)*(C/32)+k/32)*512+(k%32+group*8)*16+row%16;for(uint e=0;e<8;e++)b[e/4]=int(uint(b[e/4])|(uint(wb[off+e*16])<<(8*(e%4))));}else b={int(pw[offset]),int(pw[offset+1])};expand[tile]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,expand[tile]);}
  }
 #if HIP_FFN_COOP_INPUT
- // Every wave must finish reading input before its storage becomes hidden.
- __builtin_amdgcn_s_barrier();
+ // ByteIn reads global memory; only the f32 staging aliases the hidden buffer.
+ if constexpr(!ByteIn)__builtin_amdgcn_s_barrier();
 #endif
 #if HIP_FFN_ABLATE_ACT
  for(uint tile=0;tile<4;tile++)for(uint e=0;e<8;e++)hidden[(group*8+e)*(4*C+4)+wave*64+tile*16+rc]=static_cast<unsigned char>(q8(expand[tile][e])); // timing only
