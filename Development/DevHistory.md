@@ -2658,3 +2658,9 @@ compile_fit_shaders.cpp新增R11输出组合并反射断言OutputBits为raw UAV�
 用户退出后，按进程/校验保护把观察版2bc1ee44…同步root/_storage_，再启动RE9（PID32500）。NGX Evaluate出口hook成功；16次成功返回后列表均为DIRECT，随后同一列表有51～53次普通draw/dispatch（51×5、52×1、53×10）。前几条栈显示re9.exe+5865c16、draw +59098aa、draw_indexed +59099a3，经ReShade转发；这次明确是游戏自己的后续命令，不只是OptiScaler内部RCAS/菜单。没有追踪所有资源读写，不能将“后续命令”细化成已证明的具体纹理消费者，但现有尾部契约已经明确不满足。provider导出仍无调用日志，不把它当没执行；NGX外层证据独立成立。
 
 完整记录Development/RE9/results/ngx-following-work-20260920.txt及summary.json。已向用户询问后续路线：推荐先做后置兼容模式（FSR后处理成品画面，UI亦受处理，保持HIP）；若保留前置则继续找引擎提交边界或新的原生D3D12接法。后置需先做Present时序及R10G10B10A2转换验证；现有HLSL RecordUnsubmitted明确保留了single-list device-hang保护，不能直接启用。游戏仍运行观察版，原DLSS5 .off；未宣称DLSS5已接通，等待用户路线选择。
+
+## 2026-09-20 01:36起：RE9后置HIP兼容候选
+
+用户授权直接退出游戏并继续兼容，由助手处理退出/启动，无需反复请用户退出。先做独立ReShade present插件：游戏提交后、ReShade效果前，用自有列表复制R10G10B10A2后缓冲→FP16私有纹理→HIP→raw buffer打包R10并写回，保持PRESENT状态，不关闭/重置游戏列表。范围暂限SDR、R10、≤1920×1080，900P网络，UI也会处理。mode文件0只转换/1推理/2绕过，F6绕过；后台初始化，首次推理前后私有FP16诊断读回；失败停止处理并保留可能在途资源。
+
+独立test_present_bridge在9070上完成17×9、128×32、1920×1080，两种位型图案各三次，共18次GPU往返逐位一致。第一版66b6aa74…进入游戏时在ReShade get_back_buffer调用内崩溃，尚未做转换/推理；汇编定位返回点+75e7。改用IDXGISwapChain3原生GetBuffer避免跨编译器的resource返回接口；需继续游戏验证。备份D:\DLSSNR-Lab\re9-opti\before-present，旧observer已.off；同步c256-frag-production双架构48模块与当前解码shader，原发布版本不变。新源码/编译/安装脚本均在Development/RE9；这阶段不能宣称已兼容。
