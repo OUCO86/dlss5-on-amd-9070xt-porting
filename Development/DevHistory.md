@@ -2514,4 +2514,4 @@ test_mh_byte_stream新增可选diag模式，48组独立FFN/QKV/投影/byteout检
 
 ## 2026-09-19 19:17：《剑星》部署900档解码尾部修复
 
-用户要求试玩，确认游戏/Magpie退出后，deploy-stellar-decoder-tail.ps1安装174c7827… DLL与deep_fast/deep_fast-packed/deep_wmma三个配套模块，共4文件逐SHA验证；备份pre-upscale/before-decoder-tail，-Action Restore可回退。游戏画质、OptiScaler.ini、flags均未变：auto、FPS关闭、局部字节特征＋快速残差开启、完整MH/ViT字节流仍关闭。未启动游戏，待实玩回归。
+用户要求试玩，确认游戏/Magpie退出后，deploy-stellar-decoder-tail.ps1安装174c7827… DLL与deep_fast/deep_fast-packed/deep_wmma三个配套模块，共4文件逐SHA验证；备份pre-upscale/before-decoder-tail，-Action Restore可回退。游戏画质、OptiScaler.ini、flags均未变：auto、FPS关闭、局部字节特征＋快速残差开启、完整MH/ViT字节流仍关闭。19:26用户实玩反馈无异常、肉眼看不出变化，设置2560×1440＋平衡档。日志PID31608持续processed=1/replay=0，实际render1506×848，auto对应900档（1600×900有效画布、1600×960处理网格）。
