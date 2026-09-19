@@ -2438,3 +2438,8 @@ OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscal
 将c32-register-ex.patch并入hip/c32_fused_ffn_attention.hip，补注释强调固定索引循环必须展开。正式build-modules.ps1配方重编两个受影响模块：普通版SHA145d3dd186db27ab13ae82b17a6690992fd93de8e97599552c6a454ff42aed1c，packed版71baedcc0486790c48c884917ab96faa722f781bf415d195e195928e651921de；hip/SHA256SUMS同步。其余22模块沿用基底，未重编无关内核。生产候选远端hip-backend/c32-regex-production-modules。
 
 旧黄金脚本先因过时资产目录报noise missing；为validate-hdr/validate-modules/validate-modules-960补Assets参数后，用0.23完整资产重跑，900w与960两套共六道黄金值全部匹配（40帧、每8帧reset、seed123参考历史）。主机DLL和发布包未变，尚未部署游戏；下次需要部署的是新的HSACO，不是重新编DLL。本轮收下约1%的确定收益，下一步仍可继续研究归一化的数据传递，不再重复已证伪的占用率捷径。
+
+
+## 2026-09-19 17:15：《剑星》安装C32优化内核与显示修正版
+
+用户要求实玩测试；确认游戏/Magpie退出后，用Development/tools/deploy-stellar-c32-regex.ps1备份并替换两个C32 HSACO（145d3dd…/71baedc…）及此前待装的显示修复DLL be9e82…，共3文件逐SHA验证。备份pre-upscale/before-c32-regex，脚本-Action Restore可回退。flags前后SHA一致：auto、SHOW_FPS=0、PRE_UPSCALE=1、ASYNC=1；保持游戏图形设置，未启动游戏。待用户用Steam/AMD帧率显示比较，插件FPS应隐藏但状态行保留；整行隐藏另设NOTICE=0。
