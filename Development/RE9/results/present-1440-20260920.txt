@@ -1,0 +1,21 @@
+pid=24140 tick=65682000 mode=1
+pid=24140 tick=65682015 bridge ready 1920x1080
+pid=24140 tick=65682359 HIP ready
+pid=24140 tick=65682390 bridge ready 2560x1440
+pid=24140 tick=65682562 HIP ready
+pid=24140 tick=65684062 HIP processed=1
+pid=24140 tick=65686062 bridge ready 2560x1440
+pid=24140 tick=65686265 HIP ready
+pid=24140 tick=65687531 HIP processed=1
+pid=24140 tick=65692812 HIP processed=300
+pid=24140 tick=65698062 HIP processed=600
+pid=24140 tick=65703390 HIP processed=900
+pid=24140 tick=65708984 HIP processed=1200
+pid=24140 tick=65714625 HIP processed=1500
+pid=24140 tick=65720265 HIP processed=1800
+pid=24140 tick=65725953 HIP processed=2100
+pid=24140 tick=65731625 HIP processed=2400
+pid=24140 tick=65737281 HIP processed=2700
+pid=24140 tick=65742937 HIP processed=3000
+pid=24140 tick=65748593 HIP processed=3300
+pid=24140 tick=65754265 HIP processed=3600
