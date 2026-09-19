@@ -1,6 +1,7 @@
-param([string]$Candidate='r960',[string]$Runner='benchmark_r960.exe',[string]$Reference='reference_g960.exe',[string]$Modules='ffnh2-modules',[string]$ExpectedFull='383FA5BCF544860F40D55E15E390E4154EDE54E784FE07366FB0445CCD93BFC3',[string]$ExpectedReset='698E1A39AFDF6BA47F53AD1BE559837076FF291E72ADD743C5BF7999AD2DC9C1',[string]$ExpectedHistory='78AF52D3FEA5068EBFA28E00047437011B0DED73578C0A2BC206F658CF470998',[string]$Assets='D:\DLSSNR-Lab\network-720p\DLSS5-AMD\native-game-tiled-assets',[string[]]$ExtraFlags=@(),[string[]]$ReferenceArgs=@())
+param([string]$Candidate='r960',[string]$Runner='benchmark_production.exe',[string]$Reference='reference_production.exe',[string]$Modules='decoder-tail-modules',[string]$ExpectedFull='047C36E1B84F32FAE71CEAF6E0667402D6BCD53A06055BDC1892003F23CCB141',[string]$ExpectedReset='B4F66E9DBF0EC0D3CDB0D21D46E6D54836D665A42DE3FEE80B5BC0B780431467',[string]$ExpectedHistory='0E4AFD8383889F9593A382CCC370CD043441B64DC4D16A3144D793100B714A30',[string]$Assets='D:\DLSSNR-Lab\network-720p\DLSS5-AMD\native-game-tiled-assets',[string[]]$ExtraFlags=@(),[string[]]$ReferenceArgs=@())
 # The three bit-exact checks on the shipped 900 tier (1600x900 padded to 960 rows, 0.22+): 40-frame HDR, 24-frame reset-every-8, seed-123 history via the
-# reference chain (--960, input960.rgba32f). Goldens recorded 2026-09-17 21:05 (ffnh2-modules, native-r960 build) and reproduced; pass '' to record new ones.
+# reference chain (--960, input960.rgba32f). Corrected 2026-09-19 after fixing decoder48 partial-tile dispatch.
+# The old 0.22 goldens included 3072 unwritten latent values; do not use an old host with these expected hashes.
 $ErrorActionPreference='Stop'
 $r='D:\DLSSNR-Lab\hip-backend'
 $a=$Assets

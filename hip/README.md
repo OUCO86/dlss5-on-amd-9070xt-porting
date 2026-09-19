@@ -62,3 +62,9 @@ The fused C32 kernels retain half exponent values in registers for probability n
 A subsequent bounded-reciprocal change uses hardware reciprocal plus two FMA refinements for the positive normalization denominator. An exhaustive gfx1201 check of every float in [1/256, 624] matched `1.f/x` bit-for-bit (144,441,345 inputs). The fixed-capture ABBA tests show a further ~0.05 ms at 1080 and ~0.06 ms at 900. This is also unreleased.
 
 The C64/C128/C256 fused attention-project bodies also retain their exact half exponent values and unroll fixed-index loops. The combined change measured ~0.10 ms at 1080 and ~0.08 ms at 900; separate per-shape tests did not show additive benefits, so those figures describe the combined module only.
+
+## Decoder tail fix (2026-09-19, unreleased)
+
+The 900 tier has 50×30=1500 input tokens at decoder48. Launching ceil(tokens×channels/256) groups omitted four channel tiles; the correct grid is ceil(tokens/16)×(channels/16). The host now computes that grid and the fast/WMMA decoder kernels mask tail reads and writes. Decoder kernels support partial token tiles; the other WMMA kernels retain their alignment requirements.
+
+The missing tiles left 3072 latent floats unwritten. The old 960-row goldens therefore depended on buffer contents and are replaced in `Development/HIP/validate-modules-960.ps1`; 900w, 720 and 1080 recorded results are unchanged. Install the matching host DLL and decoder modules together.

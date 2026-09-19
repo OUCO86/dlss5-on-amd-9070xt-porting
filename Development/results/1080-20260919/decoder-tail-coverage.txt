@@ -1,0 +1,8 @@
+Legacy grid: iw=50 ih=30 ic=512 oc=256 crop=0 mode=0 bad=3072 unwritten=3072 guard=0
+Corrected grid: all 21 cases passed (fast f32, fast halfweight, WMMA; full and cropped dimensions).
+DECODER_TAIL_PASS
+960 goldens (full/reset/history):
+047C36E1B84F32FAE71CEAF6E0667402D6BCD53A06055BDC1892003F23CCB141
+B4F66E9DBF0EC0D3CDB0D21D46E6D54836D665A42DE3FEE80B5BC0B780431467
+0E4AFD8383889F9593A382CCC370CD043441B64DC4D16A3144D793100B714A30
+The local byte-feature configuration reproduced all three corrected goldens.
