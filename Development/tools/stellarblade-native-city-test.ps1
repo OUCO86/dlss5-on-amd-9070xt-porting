@@ -1,4 +1,4 @@
-param([ValidateSet('Native','OptiScalerOnly','Restore','Status')][string]$Action='Status')
+param([ValidateSet('Native','OptiScalerOnly','ReShadeOnly','Restore','Status')][string]$Action='Status')
 $ErrorActionPreference='Stop'
 $game='C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64'
 $original='D:\DLSSNR-Lab\stellarblade-before-optiscaler'
@@ -67,6 +67,37 @@ if($Action -eq 'Native'){
   Closed
   foreach($r in $records){if(Test-Path "$game\$($r.name)"){Remove-Item -LiteralPath "$game\$($r.name)"}}
   Copy-Item "$original\amd_fidelityfx_dx12.dll" "$game\amd_fidelityfx_dx12.dll" -Force
+  Copy-Item $snapshot $iniPath -Force
+  throw
+ }
+}elseif($Action -eq 'ReShadeOnly'){
+ Closed
+ if((Get-Content "$backup\state.txt" -Raw).Trim() -ne 'optiscaler-only'){throw 'ReShade stage requires OptiScaler-only baseline'}
+ if(Test-Path "$game\d3d12.dll"){throw 'Unexpected local D3D12 proxy'}
+ if(@(Get-ChildItem $game -Recurse -File -Filter *.addon64).Count){throw 'Unexpected active addon; inspect before enabling ReShade'}
+ if(Test-Path "$game\ReShade64.dll"){throw 'ReShade already present'}
+ $m=Get-Content "$backup\manifest.json" -Raw|ConvertFrom-Json
+ $records=@($m.files|Where-Object{$_.name -eq 'ReShade64.dll'})
+ if($records.Count -ne 1){throw 'ReShade backup missing'}
+ $iniPath="$game\OptiScaler.ini";$ini=Get-Content $iniPath -Raw
+ if([regex]::Matches($ini,'(?m)^\s*LoadReshade\s*=').Count -ne 1){throw 'Expected one LoadReshade setting'}
+ $snapshot="$backup\OptiScaler.before-reshade.ini"
+ if(Test-Path $snapshot){throw 'ReShade-stage settings backup already exists'}
+ Copy-Item $iniPath $snapshot
+ $settings=Join-Path $env:LOCALAPPDATA 'SB\Saved\Config\WindowsNoEditor\GameUserSettings.ini'
+ $tracked=@($settings,"$game\ReShade.ini","$game\ReShadePreset.ini")
+ $hashes=@{};foreach($path in $tracked){$hashes[$path]=(Get-FileHash $path).Hash}
+ try{
+  RestoreFiles $records
+  $ini=[regex]::Replace($ini,'(?m)^(\s*LoadReshade\s*=\s*)[^\r\n]*','${1}true')
+  [IO.File]::WriteAllText($iniPath,$ini,(New-Object Text.UTF8Encoding($false)))
+  if((Get-Content $iniPath -Raw) -notmatch '(?m)^\s*LoadReshade\s*=\s*true\s*$'){throw 'ReShade enable verification failed'}
+  foreach($path in $tracked){if((Get-FileHash $path).Hash -ne $hashes[$path]){throw 'Game settings or ReShade preset changed'}}
+  'reshade-no-addon'|Set-Content "$backup\state.txt"
+  'RESHADE_ONLY_READY LoadReshade=true addon_absent=1 game_settings_and_preset_unchanged=1'
+ }catch{
+  Closed
+  if(Test-Path "$game\ReShade64.dll"){Remove-Item -LiteralPath "$game\ReShade64.dll"}
   Copy-Item $snapshot $iniPath -Force
   throw
  }
