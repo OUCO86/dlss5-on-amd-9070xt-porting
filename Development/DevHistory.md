@@ -2500,3 +2500,10 @@ HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe2
 ### 2026-09-19 15:33：0.24.2网盘下载链接
 
 用户已上传OptiScaler-DLSS5-AMD-0.24.2.zip，提供夸克链接：https://pan.quark.cn/s/32eec4b3f1f3 。已挂到中英文README的0.24.2版本号，未放到文首；本地发布包不变。
+
+
+### 2026-09-19 15:37后：Magpie 0.24.2测试包
+
+用户要求打Magpie版自行测试。新增Development/tools/package-magpie-candidate.ps1，先逐文件验证0.23暂存包的SHA256SUMS，再复制到独立发布目录，换入已编译且剑星实测的395dabfe… addon，更新README/版本标记，flags仅明确追加DLSS5_PRE_UPSCALE=0（不沿用OptiScaler前置配置）。其余文件逐一与0.23对比一致，包括Magpie/ReShade、流水线config、权重与24个HIP模块；未修改正在运行的游戏或Magpie安装。
+
+成品`D:\給網友打包\Magpie-DLSS5-AMD-0.24.2.zip`，354,881,266字节，SHA256 `167a3dcaee84770cee505bf857a7614368846e505c229dc71944835ac989bccf`，旁置.zip.sha256。698个有效载荷从zip逐个读回哈希通过。包内明确Magpie启动/画面/性能仍待用户回归，不能套用剑星前置路径GPU smoke和49fps结果；本次未重复编译未变的网络内核或跑GPU测试台。README同时纠正旧“固定900”与实际auto配置矛盾。未上传网盘。

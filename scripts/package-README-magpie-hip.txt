@@ -1,12 +1,17 @@
-DLSS5-AMD 0.23 · Magpie 版（HIP 后端）
+DLSS5-AMD 0.24.2 · Magpie 版（HIP 后端）
 ============================
-整包文件：Magpie-DLSS5-AMD-0.23.zip
+整包文件：Magpie-DLSS5-AMD-0.24.2.zip
 
 把 DLSS 5 的神经网络（DLSSNR）跑在 AMD RX 9070 XT（RDNA4）上，以 Magpie 窗口缩放器为载体：
 支持宽不超过 1920、高不超过 1080 的普通游戏窗口，不需要游戏自己支持 FSR 或 DLSS。
-本包固定用 1600x900 进行网络计算，建议游戏窗口设为 1600x900，再由 FSR4 放大到 2K/4K。
+本包按输入自动选择网络档位，建议游戏窗口设为 1600x900，再由 FSR4 放大到 2K/4K。
 游戏窗口 -> FSR3（本插件的 DLSS5 入口）-> FSR4 放大到屏幕 -> XeSS 帧生成 -> 显示。
 效果组里名叫 FSR3_SR 的那一项，就是本插件接入 DLSS5 的位置；界面名称仍是 FSR3，不用另外添加 DLSS5 滤镜。
+
+0.24.2 测试版
+  - 更新共用addon：没有前置任务时跳过绘制/屏障跟踪，日志配额耗尽后减少计数争用。
+  - Magpie仍走原有接入路径，明确设置DLSS5_PRE_UPSCALE=0；配置和FSR3→FSR4→XeSS流水线沿用0.23。
+  - 网络权重与24个HIP内核不变。DLL已编译并通过游戏前置路径GPU检查；本包Magpie启动、画面与帧率待实测，不能套用《剑星》主城49fps结果。
 
 0.23 与 0.22 的区别
   - 修复带核显（AMD Radeon(TM) Graphics）或第二块显卡的机器上初始化失败（画面 INIT FAILED，日志 bridge currently requires exactly one HIP GPU）：
@@ -29,7 +34,7 @@ DLSS5-AMD 0.23 · Magpie 版（HIP 后端）
   由显卡驱动自带的 HIP 运行时执行，输出与 0.15 逐位相同（同一输入、同一种子、同一历史帧，40 帧输出哈希完全一致）。
   因此不再需要：预览驱动的 Shader Model 6.10、DirectX Agility SDK 1.721 预览运行时、Windows 开发人员模式。
   速度：独立测试台 1600x900 每帧约 15.5ms（0.15 为 16.8ms）；《剑星》游戏内 900p 实测约 52 fps（0.15 约 47）。
-  Magpie 路径的实机测试在发布前由作者完成，见下方「已知」。
+  上述为历史版本结果；0.24.2 Magpie路径等待本次实测。
 
 本包内容
 --------
