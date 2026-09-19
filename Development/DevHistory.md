@@ -2402,3 +2402,22 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 中文包内说明更新前置顺序、2K实测、4K需控制内部输入尺寸、三档适配、reset限制、回退方式和Magpie未回归范围。原0.23包保留，未改运行中的游戏文件，未打tag/未上传网盘。
 
 - 12:53 Zero 已上传0.24，网盘 https://pan.quark.cn/s/1f32ffbd2e96 。中英文README新增0.24行；公众号 `wechat/DLSS5-AMD@OptiScaler使用方法.md` 同步新链接、前置顺序、2K实测、内部输入尺寸限制与reset说明。
+
+
+## 2026-09-19 13:20 起：《生化危机9》OptiScaler 安装与前置兼容性测试
+
+- 用户指定目录 `C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem`，exe=re9.exe，Steam appid3764200，日志游戏版本1.3.1.0。原目录无注入插件；有FSR loader2.1.0.604、upscaler4.0.3.604，以及DLSS/XeSS组件。原config.ini为FSR3、FG关、3840×2160/Borderless；启动实际超分尺寸由游戏阶段决定，不能只看ini猜。
+- OptiScaler官方兼容页明确要求REFramework（https://github.com/optiscaler/OptiScaler/wiki/Resident-Evil-9-Requiem）。下载官方nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9的REFramework.zip，只装dinput8.dll（非VR，不装其它组件）。压缩包SHA f035f1da…；DLL SHA `14f4d6fd65218f850f39781fb53fb07ba28da6601c1954529098b91608e6ae88`，来源json在release/re9与远端lab。
+- 工具 `Development/tools/optiscaler-re9.ps1`，远端 `D:\DLSSNR-Lab\re9-opti`；原覆盖文件和config.ini备份在before，manifest记录安装/备份名单。从已校验0.24包安装dxgi=OptiScaler、ReShade64、资产与后端，先把dlss5-amd.addon64改.off。基础组合完成着色器编译后正常到主菜单，截图约60fps；这仅验证菜单，不是实玩/插帧验收。计划任务dlss5re9启动、dlss5re9close正常关窗、dlss5re9shot后台截图。
+- 开DLSS5后发现实际模块加载路径在 `_storage_`，插件原先只找DLL旁DLSS5-AMD，误回落D:\DLSSNR-Lab旧配置；PID13408在旧全局日志出现大量dropped_pending及codec unverified input format/geometry。修复 `NativeLabRoot()`：DLL旁找不到时再找游戏exe旁，再回落lab。候选8fc6ee29…安装到根目录与_storage_缓存；源码变化未发布。
+- 路径修好后PID9860确实读取游戏包内flags，前置模式在首帧render1920×1080/upscale1920×1080被安全检查拒绝：`UNSAFE: draw/dispatch after deferred upscaler in same list`，随后`pre-upscale requires tail-of-list dispatch`、fatal关闭后续捕获。说明当前0.24的“超分在列表尾部、提交后插入网络”契约在该游戏启动阶段不成立；不等于FSR4不可用，也不能把OptiScaler菜单正常说成DLSS5已兼容。未尝试强行忽略检查，游戏内实际网络未验通。
+- 已正常退出并把根目录和_storage_里的DLSS5 addon都改.off，保留OptiScaler+REFramework+ReShade后重新启动。当前交付是能进菜单的OptiScaler安装，DLSS5禁用。进一步支持需要处理同一命令列表中超分后的消费者，或选择另一种接入位置，不能只换flags。还原原游戏：退出后远端optiscaler-re9.ps1 -Action Restore；保留的生成日志/缓存不当成原版文件。
+
+
+## 2026-09-19 13:36 起：路径修正回归《剑星》，OptiScaler 0.24.1 打包
+
+- Zero 要求最新DLL在《剑星》回归后重打0.24.1。确认剑星/re9/Magpie均未运行，旧0.24 DLL及flags备份 `D:\DLSSNR-Lab\pre-upscale\before-0.24.1`；安装8fc6ee29…（同RE9路径修正版），flags仍PRE_UPSCALE=1、PRE_UPSCALE_ASYNC=1，未改权重/内核。
+- PID2468启动回归：实际render1506×848、upscale2560×1440，网络初始化与首帧pixels_changed成功，连续400+帧processed=1/replay=0；稳态submit_cpu_ms约1.21，菜单间隔17.6～17.8ms。此轮验证启动/连续前置链，不冒称已重新跑过完整实玩或Magpie。
+- 包 `D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.1.zip`；SHA256 `1E9EC72167D234BBC73C106B22E2EE392E254C9D031C823BF36EE9BA50B25BE3`，附.zip.sha256。513个文件从zip读回逐个哈希通过，24个HIP模块与基底一致。包内说明新增DLL子目录加载时回查游戏exe旁资产的修正，并明确《生化9》前置路径仍不兼容。未上传、未打tag；旧0.24包保留。
+
+- 13:44 Zero 已上传0.24.1： https://pan.quark.cn/s/4f73a54d0ff9 。中英文README追加版本行；公众号使用教程同步最新包名、链接和路径修正说明。

@@ -40,6 +40,10 @@ inline const std::wstring&NativeLabRoot(){
  if(GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,reinterpret_cast<LPCWSTR>(&NativeLabRoot),&h)&&GetModuleFileNameW(h,path,MAX_PATH)){
   std::wstring dir(path);size_t slash=dir.find_last_of(L"\\/");if(slash!=std::wstring::npos){dir.resize(slash);std::wstring local=dir+L"\\DLSS5-AMD";if(GetFileAttributesW((local+L"\\native-game-flags.txt").c_str())!=INVALID_FILE_ATTRIBUTES){root=local;return root;}}
  }
+ /* RE Engine's mod-loading chain may relocate DLLs to _storage_. Packaged assets stay beside re9.exe. */
+ if(GetModuleFileNameW(nullptr,path,MAX_PATH)){
+  std::wstring dir(path);size_t slash=dir.find_last_of(L"\\/");if(slash!=std::wstring::npos){dir.resize(slash);std::wstring local=dir+L"\\DLSS5-AMD";if(GetFileAttributesW((local+L"\\native-game-flags.txt").c_str())!=INVALID_FILE_ATTRIBUTES){root=local;return root;}}
+ }
  root=L"D:\\DLSSNR-Lab";return root;
 }
 inline std::wstring NativeLabPath(const wchar_t*relative){std::wstring p=NativeLabRoot();p+=L"\\";p+=relative;return p;}
