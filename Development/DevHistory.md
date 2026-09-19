@@ -2327,22 +2327,59 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - 18:05 打包 0.23：`package-hip.ps1 -Version 0.23 -Addon native-multigpu.addon64`（fda2edab…）+ ffnh2-modules，底仍是 0.15-900P 暫存目錄。產物 `DLSS5-AMD-0.23.zip`（493 文件，250,670,338 B，sha256 3dde0e0a32f1250bdda292fb42261e3d981c60b4d608d5e3f732984e0f2404b0）、`Magpie-DLSS5-AMD-0.23.zip`（698 文件，354,855,813 B，sha256 7146569c61b6b3e957ac2e211ba8bbc35a567fdd5939e79894a9e20defdaf0ef）。包內說明加「0.23 與 0.22 的區別」；README 兩版加 0.23 行（網盤鏈接待 Zero 上傳後補）。內核/權重/flag 與 0.22 相同，`verify-pkg023.ps1` 跑 960 兩道黃金。
 
 
-## 2026-09-19 OptiScaler 組合包與《劍星》首測（闇）
+## 2026-09-19：OptiScaler前置接入、主城修复与1080档优化
 
-- Zero 指定先打包 OptiScaler、在《劍星》測試。不是把 HIP 網絡寫成 OptiScaler 新後端，而是 OptiScaler + ReShade + 0.23 addon 串接。工具 `Development/tools/optiscaler-stellarblade.ps1`（Package / FixPackage / Install / Restore / Status），遠端同名放 D:\DLSSNR-Lab。
-- 測試包 `D:\DLSSNR-Lab\OptiScaler-DLSS5-AMD-test.zip`，基底是本機 OptiScaler 0.9.4 原包與 DLSS5-AMD-0.23 遊戲包；dxgi.dll=OptiScaler、ReShade64.dll=ReShade、唯一活動 addon=dlss5-amd.addon64。舊 native-present-contract/native-submission-order、d3d12.dll、原 DLSS5-AMD 資產與被替換檔案移到 `D:\DLSSNR-Lab\stellarblade-before-optiscaler`，manifest 記錄回退。部署前確認遊戲已關，逐檔 SHA 校驗後啟動 dlss5game 任務。
-- 首次 PID 25036：OptiScaler 日誌有 ffxCreateContext_Dx12、CreateDLSSContext、EvaluateFeature；HIP 網絡 1920×1152 初始化成功，連續 >1700 幀、dropped_pending=0。這證明組合鏈在跑，不是只有載入 DLL。畫面仍等 Zero 實測；日誌 cadence 不當遊戲 FPS。
-- **發現 0.9.4 包內 ini 說明與程式不一致**：ini 寫 Dx12Upscaler=ffx，但 v0.9.4 `OptiScaler/upscalers/FeatureProvider_Dx12.cpp` 只判斷 fsr31，未知值靜默建立 FSR2FeatureDx12_212。首測執行日誌正是 FSR2.1.2，不是 FSR4。測試包已改用 fsr31；運行中的遊戲等 Zero 用 Insert 切後端再驗。之前黑神話用過同一個 ffx 值，故其 OptiScaler 後端判斷需撤回重驗，不能再據此聲稱 FSR4 路徑沒鉤到。
-- 測試設定：Dxgi=false（先用遊戲 FSR 輸入）、LoadReshade=true、FGInput/FGOutput=nofg、DLSS5_UPSCALER=ffx（這是我們自己的 flag，與 OptiScaler 的 fsr31 值不同）。修訂包日誌級別 2，避免首測級別 1 的逐幀 debug 洪流。
+### 当前状态（续工先读这里）
 
-- 10:39 Zero 在 OptiScaler 面板選 FSR 3.x/4 並切換；日誌 10:39:43 出現 FSR31FeatureDx12::InitFSR3、upscaling_dx12 context 建立成功，隨後 FSR31FeatureDx12::Evaluate 連續 Dispatch、Upscaling done=true。咱們網絡切換後繼續出幀（總幀數超 42700，dropped_pending=0），cadence 約 27.5ms（約36fps，非獨立性能測試）。已確認 FSR3.x/4 後端鏈接通，具體 FSR4 模型版本及切換後畫面仍待確認；請 Zero Save Settings 持久化面板選擇。修訂測試 zip 514 檔哈希全驗過，SHA256 30A91095DD98539AD9D9220DB933CDAC428FCECA129773147B91380CB83574C7。
+- 在 `main` 开发；生产宿主 `src/`、HIP源与构建配方 `hip/`，实验在 `Development/HIP/`。旧 `context/dlss5-9070移植.md` 已合并删除，不再重建；独有旧记录已并回对应日期。
+- 最新对外包是 **OptiScaler 0.24.2 显示开关修复重打版**；本机《剑星》仍装主城修正版 `395dabfe…`，尚未换显示修正版 `be9e82…`。游戏flags已设 `DLSS5_SHOW_FPS=0`，待换DLL后回归。16:30检查游戏/Magpie均退出；下次操作仍须现场核实。
+- 主线转回 **1080档内核优化**：基线约21.15ms，首轮无值得部署的新优化；下步查C32融合核的相位/占用率，再看ViT。详细结果见下节及 `Development/results/1080-20260919/`。
+- 日志按阶段合并，记录关键结论、当前状态和下一步；详细测量进结果文件，小改不单开一节。阶段commit照常。
 
-- 10:45 Zero 指定：以後給網友的發布包統一放 `D:\給網友打包`。OptiScaler 組合正式整理為 `OptiScaler-DLSS5-AMD-0.23.zip`（同0.23網絡，未另打tag），默认fsr31、FG关闭；补中文安装/卸载/输入与后端区别说明、保留组件许可、加入OptiScaler GPL文本与对应源码链接、去掉测试README及会覆盖预设的setup脚本。513个有效载荷文件逐个从zip读取SHA256通过；zip SHA256 `9D70D28F2EDBF4DAFE87ABEDE4047C41748F94F72AF75FEF9453B4CF22A23121`，旁边有.sha256。游戏运行中的文件未改。`Development/HIP/package-hip.ps1` 的后续游戏/Magpie包输出也改到同一目录，并同步到远端hip-backend；OptiScaler打包用tools/optiscaler-stellarblade.ps1 -Action Release。
+### 1. OptiScaler前置链跑通（0.23 → 0.24 → 0.24.1）
 
+OptiScaler 0.9.4 + ReShade + HIP在《剑星》验通。配置必须 `Dx12Upscaler=fsr31`，旧说明中的 `ffx` 会静默落到FSR2.1；游戏菜单“FSR3”只是输入接口。组合包默认关闭插帧、LoadReshade=true、Dxgi=false。
 
-## 2026-09-19：合并独立 context，统一记录入口
+实现低分辨率颜色 → DLSS5 → FSR → 最终输出：`src/native_pre_upscale.h` 拦下FFX dispatch并保留资源，到原列表提交后用自有列表运行网络、重放FFX，再提交剩余列表。只适用于超分调用后同列表没有消费者的场景；**不关闭/重置游戏列表，不移除following_work安全检查**。PRE_UPSCALE=0旧路径、1网络前置、2仅延后FFX烟测。模式1仍每帧reset网络历史，FSR自己的时序不变；没有完成抖动输入的网络跨帧契约。
 
-原 `context/dlss5-9070移植.md` 共 1565 行，大部分为重复的逐刀实验、部署状态及已经执行完的下一步。完成记录继续保留在本文件对应日期；重复计划不再复制。原文件中独有的 09-11～12 发布/实测、HIP 起点修正和 5090 AIO 试装已补回对应日期，运维入口与零散教训归并如下。删除原文件，公众号工作上下文的两处引用改指本文件。
+关键修复：接受合法upscaleSize=0；自有列表必须由FFX的ReShade包装设备创建，提交原生queue前unwrap，否则包装描述符堆导致E_INVALIDARG；保留私有颜色纹理flags，只校正该纹理重放期间的barrier。删去reset模式无用motion提交，PRE_UPSCALE_ASYNC=1消除额外CPU等待，资源按最终fence保留。同步/异步GPU烟测通过。《剑星》2560×1440输出、1707×961输入实玩约34～35fps（1080网络档）；4K未验。
+
+《生化危机9》安装OptiScaler+REFramework后可进菜单，但网络前置被 `UNSAFE: draw/dispatch after deferred upscaler in same list` 拒绝，不能靠改flags解决。DLSS5在根目录及_storage_缓存均已改.off，保留基础组合。工具 `Development/tools/optiscaler-re9.ps1`，远端 `D:\DLSSNR-Lab\re9-opti`（before备份、Restore还原）；REFramework来源/校验在 `release/re9`。该测试发现DLL被加载到_storage_时资产误落旧lab，0.24.1修为DLL旁→游戏exe旁→lab。此修复已回归《剑星》，不代表RE9兼容。
+
+### 2. 主城低GPU占用掉帧：定位addon空闲回调（0.24.2）
+
+原整套链同地点：朝城外F6 OFF60/ON43，朝城内OFF30/ON31。显存/温度未见足以支持驱逐或降频的证据，GPU利用率和等待线程本身不能定因；游戏专用FrameLimit实际60，不能只读通用FrameRateLimit=0判无限制。
+
+先修F6真实旁路：关闭后不再新捕获FFX、不复制私有颜色；已捕获任务仍重放一次。该修复正确但主城仍30fps。随后逐层对照：**原生游戏、仅OptiScaler、OptiScaler+ReShade无addon均60fps**。原生对照须恢复安装前6.6MB游戏FFX库，不能只移走dxgi；旧备份中的d3d12.dll是ReShade代理，不应当原库恢复。
+
+根因范围落到addon：draw/dispatch/barrier在没有待处理任务时仍查环境、取native对象、锁全局Jobs；日志配额耗尽仍逐draw原子递增。以锁内发布的pending原子标记快速跳过空闲观察，保留有任务时的following_work/状态检查，私有barrier修正不依赖pending；日志满额先读计数。用户复测“正常了，49帧”，支持修复有效；该条未单独给出F6状态及OFF帧率，不补写OFF60。两种改动的贡献未分别测量。
+
+验证：`Development/pre-upscale-smoke.cpp` 同步/异步各6帧，覆盖F6边沿、直接旁路、捕获后关闭、恢复、pending发布/清除与following_work；每帧FFX恰好一次，4096个half读回全一致。主城修正版 `release/HIP/native-idle-tracking.addon64` SHA256 `395dabfe20261832fac8a43188eb69661baa52eb140c8a99655d8b7f4e4ac75d`。
+
+部署/回退：`Development/tools/stellarblade-native-city-test.ps1` 支持Native/OptiScalerOnly/ReShadeOnly/AddonCandidate/Restore/Status；当前记录state=addon-idle-tracking-candidate。备份 `D:\DLSSNR-Lab\pre-upscale\before-native-city-test`，Restore恢复当时完整插件链并保留现行游戏画质设置。更早F6备份before-f6-passthrough。所有换DLL须游戏退出。
+
+### 3. 发布与网友反馈（只保留当前交付）
+
+成品目录 `D:\給網友打包`，完整包及.zip.sha256：
+
+| 包 | 字节数 | SHA256 | 下载/状态 |
+|---|---:|---|---|
+| OptiScaler-DLSS5-AMD-0.24.2.zip（显示开关修复重打） | 385886558 | `91cc2ce444edef687dba7236867a1b343836c1bc4dba151eb864f422d52e21a8` | https://pan.quark.cn/s/f74aaa5c7f9a |
+| Magpie-DLSS5-AMD-0.24.2.zip | 354881266 | `167a3dcaee84770cee505bf857a7614368846e505c229dc71944835ac989bccf` | 本机测试包，未收到上传链接 |
+
+两包分别513/698个有效载荷从zip逐项读回校验，24个HIP模块与基底一致。网络权重/内核未改。README链接挂在版本行的OptiScaler文字上；历史0.24/0.24.1下载见README。工具 `Development/tools/optiscaler-stellarblade.ps1 -Action Release`、`package-magpie-candidate.ps1`；Magpie基于0.23，显式PRE_UPSCALE=0，流水线与auto档保持。
+
+**显示开关修复**：前置路径原先无条件绘制状态/FPS。改为首次从flags读取并缓存：NOTICE默认2，0/1跳过文字Prepare/Draw；SHOW_FPS默认0，非零且NOTICE>=2才显示FPS，关闭FPS保留状态行。修改后重启。HIP与DX12编译通过，屏幕回归待做。修正版 `release/HIP/native-overlay-flags.addon64` SHA `be9e82cee99037ef92eb2bec18acc51c428ec3cd02ccf80a1fd1033b3a8c3119`（源码提交300a565）。本机DLL/flags备份before-overlay-flags。旧完整包归档before-0242-overlay-repack；误发的1MB补丁已移到pre-upscale/overlay-patch-archive，**给网友发完整包**。
+
+**Magpie**：用户回测优化效果不明显；它不开前置路径、回调远少于游戏内，本就不会付出同量Jobs锁开销。中文目录“給網友打包”运行时报 `c32_prefix_reference.hsaco: hipErrorFileNotFound(301)`，文件实际存在，建议英文目录后用户继续测试；尚未通过代码修复/严格A/B确认编码机制。网友日志 `C:\Users\lmxxf\Downloads\logs202009131113` 同样27次报该错误，但未记录安装路径，应先检查完整解压和英文路径，不能直接判同因。
+
+### 4. 1080档优化：基线与首轮候选（16:30～16:37）
+
+当前源码编译benchmark1080.exe；脚本 `Development/HIP/profile-1080.ps1`、`tune-1080.ps1`。固定真实HDR输入1296×720，强制网络有效1920×1080/处理1920×1152，默认跳42/43/46，每帧reset（对应前置行为）。每轮40帧，舍前8帧取中位，检查首尾有限与最终hash。**21.15ms包含NativeGameFrame转换、桥接与同步，不是纯网络或原生1080抓帧，不能直接对比网友“1080P12ms”。**
+
+四轮基线21.144/21.1215/21.1705/21.1765ms，最终SHA `1DE20C219105CC281CBA1364A0A21D0DDC4510A95458EC0CA3B8C893EA54F23A`。重复执行法的边际成本：C32约4.91ms、ViT2.80、C256 FFN1.92、post1.67、C64 FFN1.64、C128 FFN1.54、C64 attention1.33，其余各<1ms；不是可直接相加的层时间，也不等于能省掉的时间。详细表/初筛结果在 `Development/results/1080-20260919/`，远端完整数据 `hip-backend/profile1080`。
+
+候选结论：ViT M2无收益；M4 ABBA基线21.1305/21.1335对21.134/21.050，差异小且不稳定，暂不采用；小通道tiled FFN慢约0.41ms，关闭；W16+diag组合缺所需内核入口，停止该项，未计性能。成功轮次最终输出均逐位一致。**本阶段无生产变更；下一步优先分析C32内部阶段/占用率，再看ViT。** 源码/结果提交65c711a。
 
 ### 运维入口与工作约定
 
@@ -2372,171 +2409,3 @@ pre 0.49 ms / network 20.8 ms / post 0.26 ms / gpu_total 21.5 ms / cpu_frame 24.
 - `MatheusGViana/dlss-5-amd-project` 当时是 OptiScaler fork 包装上面的闭源 DLL，提供多遍/顺序/颜色开关，网络本身无源码；`SAOG0721/Magpie` 是 NVIDIA DLL + 光流的截图后处理路线。以上都是当时版本观察，不当成永久产品状态。
 - OptiScaler 组合在黑神话未验通的历史，不能外推为接口不可用；09-19 已在《剑星》验通，并发现 0.9.4 的 fsr31/ffx 配置名问题，见同日记录。
 - 公众号 296/297/298/299/301/304 是早期 DLSS5 系列，304 是优化篇；0.11 安装教程位于 `wechat/dlss5-amd-0.11-安装教程.md`，0.20 教程为 `wechat/dlss5-amd-0.20-安装教程.md`。写作定位是学习笔记，实验结果与未验证推测分开记录。
-
-
-## 2026-09-19：OptiScaler 前置 DLSS5 候选（开发中，非发布版）
-
-- Zero 要求改成低分辨率 DLSS5 → FSR 3.x/4 → 2K/4K。HIP 需要 D3D12 队列提交边界，不能在游戏还没提交输入生产命令时直接调网络。候选沿《剑星》原有“超分列表后处理”的契约：拦下 FFX dispatch、保留描述与资源，到该列表提交后先运行低分辨率网络，再用自有列表重放 FFX，之后继续提交批次余下列表。没有关闭或重置游戏列表。仅适用超分调用后同列表无输出消费者的场景，不能宣传通用。
-- `src/native_pre_upscale.h`；flag `DLSS5_PRE_UPSCALE=2` 只延后 FFX（烟测），`=1` 私有颜色副本上跑 DLSS5 再交 FFX，默认0维持发布行为。保留全部资源与最后状态，输出文字画在最终输出，不混入 FSR 输入。异常关闭后续捕获，恢复原 FFX；已截获失败帧无法撤回。模式1暂时每帧reset DLSS5历史，原 FSR 的 jitter/reset 不改；低分辨率原始抖动输入的跨帧契约尚未验，不冒称时序完成。
-- `Development/pre-upscale-smoke.cpp`：AMD GPU 上三帧输入生产 → 延后模拟FFX复制 → 读回，全4096个half元素不同数均0，`PRE_UPSCALE_DEFER_SMOKE_PASS`。HIP候选与DX12构建已进行编译检查。后续补入 upscaleSize=0 用例。
-- 工具 `Development/tools/pre-upscale.ps1`（远端 `D:\DLSSNR-Lab\pre-upscale`）：Smoke / Install / Update / Mode / Restore / Status；所有部署检查游戏退出。原0.23 addon、flags、OptiScaler.ini备份 `before-pre-upscale`，发布包未改。
-- 第一轮游戏 PID15028：mode2已装，但没有捕获成功；查旧 FFX日志发现《剑星》合法使用upscaleSize=0（由context最大尺寸决定），候选误拒绝，故这轮仍走原始FSR，不能算烟测通过。源码已改为接受0，原描述原样保留；新候选等待退出游戏后再装。当前游戏仍开着旧候选，DLSS5未启动是mode2预期。
-
-- 12:01 退出後：補含upscaleSize=0的三幀GPU煙測全過。mode2修正版在遊戲成功捕獲並進入重放；首個進程13412退出，第二輪加入例外追蹤後PID25604存活，日誌顯示 original FFX replay返回0，但自有命令列表Submit報 E_INVALIDARG（2147942487），已自動關閉後續Capture並回落普通FSR。尚未跑通延期派發，更沒有開mode1。已編譯診斷版77321946…，新增DLSS5_PRE_UPSCALE_DEBUG=1開D3D12 debug layer、失敗記native-pre-debug.txt，待Zero退出後用pre-upscale.ps1 -Action Update -Mode 2 -GpuDebug部署。遊戲PID25604仍開著，未換正在載入的DLL。
-
-- 12:09 起續測：系統D3D12 debug interface返回887a002d（缺調試組件）；私有Agility721設置成功但調試層仍不可用。vectored exception捕到D3D12Core+2e9b22，FSR provider+5101上一條調用是命令列表vtable槽28 SetDescriptorHeaps。原因：OptiScaler/FSR持有ReShade包裝堆，候選用原生device創建的列表不能消費它。
-- 修法：NativeGameSubmission增加可選record_device，從FFX原命令列表GetDevice取得同一包裝設備來建自有列表；向原生queue提交前再QI取unwrapped list。普通既有路徑不啟用unwrap。mode2在PID600連續700+幀重放成功、沒有following-work警告。
-- mode1初次PID28516已生成一張低分辨率神經結果（pixels_changed），但交給FSR時Close再報E_INVALIDARG：OptiScaler的UE後端會把color按RT→SRV再還原RT，而私有紋理被建成Flags=NONE。保留原color創建flags，且只對私有color在FFX重放期間的barrier做狀態追蹤/校正，FFX後還原NS_SRV，遊戲資源不重寫。
-- 候選b9d63156…已部署，mode1、debug關；PID9036連續4200+幀processed=1/replay=0。實際流程1281×721私有色→900檔DLSS5（每幀reset）→FSR輸出1920×1080，菜單間隔約18.9ms，不當實玩幀率。截圖菜單出圖正常，但尚未收到實玩、2K/4K及移動畫質反饋；黄色新overlay在這張菜單截圖未見，待查輸出格式/可見性。正式包與教程未改，未提交。下一步Zero讀檔、切2560×1440+FSR質量；再測4K時內部render尺寸仍須≤1920×1080（性能/超級性能檔視遊戲實際尺寸）。
-- 自動菜單重啟工具：Development/tools/pre-upscale-close.ps1，交互任務dlss5preclose以CloseMainWindow正常關遊戲；也關閉Report Problem窗（不發送報告）。直接SSH的CloseMainWindow因會話隔離返回false，交互任務有效。崩潰後Report Problem窗不關會擋Steam再次啟動，別把這種情況當候選DLL啟動失敗。
-
-- 12:26 Zero 回報1080p實玩20～30fps，日誌PID9036對應每100幀27～40ms。同步候選每幀額外4次CPU等待（私有color copy、motion前後兩個pass、FFX），而reset模式不讀motion；先刪兩個空motion提交，再加 `DLSS5_PRE_UPSCALE_ASYNC=1` 用同隊列延遲提交。捕獲資源/命令列表按最後FFX fence保留到GPU完成，不能Submit返回就Release。NativeGameSubmission增加獨立force_deferred參數，不改舊預設；同步/異步兩種GPU煙測均三幀逐值全過。
-- 候選bc8d7f57…已部署，mode1+async1、debug關。遊戲此前已退出，重開PID18692讀到保存的2560×1440：render1707×961→DLSS5→FSR2560×1440，连续700+帧processed=1/replay=0，submit_cpu_ms約1.15～1.28，retained=1；菜單每幀約25ms（40fps），尚待同場景實玩確認，不能宣稱已修好低幀率。GPU菜單採樣compute81.9%、3D16.7%，總Dedicated約5.6GB，未頂滿16GB；Shared約523MB不能在未滿時直接當驅逐證據。Splashtop服務仍在，截屏測量要避開其影響。4K尚未驗證，原始jitter輸入仍每幀reset。
-
-
-## 2026-09-19 12:48：OptiScaler 0.24 前置版打包
-
-- Zero 实玩反馈：2560×1440输出下约34～35fps，观感“还行”；随后授权打新OptiScaler包。仍只验证《剑星》、前置DLSS5逐帧reset，4K与Magpie未回归。
-- `D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.zip`，SHA256 `2A46ADEB048EA93095472B2D03E1822B0F38282F8DD2A2AEE5F94FCFDFC8C15F`，旁置.zip.sha256。513个有效载荷文件从zip逐个读回哈希通过；24个HIP模块与0.23基底逐文件哈希一致。addon是已实玩的bc8d7f57…；网络权重/内核未变。
-- 打包配方扩展 `Development/tools/optiscaler-stellarblade.ps1 -Action Release -Version 0.24 -AddonPath D:\DLSSNR-Lab\pre-upscale\native-pre-upscale.addon64 -AddonSha BC8D7F57A589F9D9C517D98EA529875EAAE1081485386AF6873D4B312B1DC2B0 -PreUpscale`。包内开PRE_UPSCALE=1与PRE_UPSCALE_ASYNC=1、保留网络ASYNC_SUBMIT=1；不含GPU debug开关与本机路径。
-- 中文包内说明更新前置顺序、2K实测、4K需控制内部输入尺寸、三档适配、reset限制、回退方式和Magpie未回归范围。原0.23包保留，未改运行中的游戏文件，未打tag/未上传网盘。
-
-- 12:53 Zero 已上传0.24，网盘 https://pan.quark.cn/s/1f32ffbd2e96 。中英文README新增0.24行；公众号 `wechat/DLSS5-AMD@OptiScaler使用方法.md` 同步新链接、前置顺序、2K实测、内部输入尺寸限制与reset说明。
-
-
-## 2026-09-19 13:20 起：《生化危机9》OptiScaler 安装与前置兼容性测试
-
-- 用户指定目录 `C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem`，exe=re9.exe，Steam appid3764200，日志游戏版本1.3.1.0。原目录无注入插件；有FSR loader2.1.0.604、upscaler4.0.3.604，以及DLSS/XeSS组件。原config.ini为FSR3、FG关、3840×2160/Borderless；启动实际超分尺寸由游戏阶段决定，不能只看ini猜。
-- OptiScaler官方兼容页明确要求REFramework（https://github.com/optiscaler/OptiScaler/wiki/Resident-Evil-9-Requiem）。下载官方nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9的REFramework.zip，只装dinput8.dll（非VR，不装其它组件）。压缩包SHA f035f1da…；DLL SHA `14f4d6fd65218f850f39781fb53fb07ba28da6601c1954529098b91608e6ae88`，来源json在release/re9与远端lab。
-- 工具 `Development/tools/optiscaler-re9.ps1`，远端 `D:\DLSSNR-Lab\re9-opti`；原覆盖文件和config.ini备份在before，manifest记录安装/备份名单。从已校验0.24包安装dxgi=OptiScaler、ReShade64、资产与后端，先把dlss5-amd.addon64改.off。基础组合完成着色器编译后正常到主菜单，截图约60fps；这仅验证菜单，不是实玩/插帧验收。计划任务dlss5re9启动、dlss5re9close正常关窗、dlss5re9shot后台截图。
-- 开DLSS5后发现实际模块加载路径在 `_storage_`，插件原先只找DLL旁DLSS5-AMD，误回落D:\DLSSNR-Lab旧配置；PID13408在旧全局日志出现大量dropped_pending及codec unverified input format/geometry。修复 `NativeLabRoot()`：DLL旁找不到时再找游戏exe旁，再回落lab。候选8fc6ee29…安装到根目录与_storage_缓存；源码变化未发布。
-- 路径修好后PID9860确实读取游戏包内flags，前置模式在首帧render1920×1080/upscale1920×1080被安全检查拒绝：`UNSAFE: draw/dispatch after deferred upscaler in same list`，随后`pre-upscale requires tail-of-list dispatch`、fatal关闭后续捕获。说明当前0.24的“超分在列表尾部、提交后插入网络”契约在该游戏启动阶段不成立；不等于FSR4不可用，也不能把OptiScaler菜单正常说成DLSS5已兼容。未尝试强行忽略检查，游戏内实际网络未验通。
-- 已正常退出并把根目录和_storage_里的DLSS5 addon都改.off，保留OptiScaler+REFramework+ReShade后重新启动。当前交付是能进菜单的OptiScaler安装，DLSS5禁用。进一步支持需要处理同一命令列表中超分后的消费者，或选择另一种接入位置，不能只换flags。还原原游戏：退出后远端optiscaler-re9.ps1 -Action Restore；保留的生成日志/缓存不当成原版文件。
-
-
-## 2026-09-19 13:36 起：路径修正回归《剑星》，OptiScaler 0.24.1 打包
-
-- Zero 要求最新DLL在《剑星》回归后重打0.24.1。确认剑星/re9/Magpie均未运行，旧0.24 DLL及flags备份 `D:\DLSSNR-Lab\pre-upscale\before-0.24.1`；安装8fc6ee29…（同RE9路径修正版），flags仍PRE_UPSCALE=1、PRE_UPSCALE_ASYNC=1，未改权重/内核。
-- PID2468启动回归：实际render1506×848、upscale2560×1440，网络初始化与首帧pixels_changed成功，连续400+帧processed=1/replay=0；稳态submit_cpu_ms约1.21，菜单间隔17.6～17.8ms。此轮验证启动/连续前置链，不冒称已重新跑过完整实玩或Magpie。
-- 包 `D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.1.zip`；SHA256 `1E9EC72167D234BBC73C106B22E2EE392E254C9D031C823BF36EE9BA50B25BE3`，附.zip.sha256。513个文件从zip读回逐个哈希通过，24个HIP模块与基底一致。包内说明新增DLL子目录加载时回查游戏exe旁资产的修正，并明确《生化9》前置路径仍不兼容。未上传、未打tag；旧0.24包保留。
-
-- 13:44 Zero 已上传0.24.1： https://pan.quark.cn/s/4f73a54d0ff9 。中英文README追加版本行；公众号使用教程同步最新包名、链接和路径修正说明。
-
-
-## 2026-09-19 14:31～14:50：《剑星》主城低占用掉帧与F6真正旁路修复
-
-- 用户现场：主城比原场景慢，进入游戏内菜单立即恢复约48fps；F6关闭推理后主城仍约34fps，GPU显示Steam约25～45%、AMD约80%；关闭游戏垂直同步没有改变。不能直接据此归因OptiScaler、显存驱逐或单线程瓶颈。
-- 只读采样PID12504：主GPU专用约10.17GiB/16GiB，游戏约8.09GiB专用、0.36GiB共享，连续快照未增长；系统可用RAM约11.8GiB，ADL主adapter核心约2.6～3.0GHz、edge59°C、hotspot约73～80°C。F6关闭后WDDM只见约20%的3D活动；两秒线程CPU采样最高约单核35%，等待快照不能单独证明根因。
-- 当前前置链render1506×848→FSR2560×1440，network1600×960、async1。关闭前处理帧间隔由19～21ms变到31～32ms，中间40～41ms；这不是纯网络时间或含插帧显示FPS。F6日志确认OFF，随后pre-upscale仍processed=0/replayed。配置中游戏专用FrameLimit=60，通用FrameRateLimit=0；游戏自身FG保存为OFF，OptiScaler配置为auto，不能仅凭加载libxess_fg.dll认定正在插帧。用户关闭VSync后bUseVSync=False，但另一旧字段bVSync=True，文件不能代替实际Present验证。
-- 核对当前0.24.1代码：F6原本只让WantsFrame返回false，FFX仍被Capture延后，Process仍先复制低分辨率颜色，再重放FSR。OFF不是干净对照。`history_reset=1`日志字段虽是固定文本，当前mode1代码也确实每帧传reset=true；不能沿旧会话把它当完整时序网络。
-- 用户14:47明确退出游戏后授权继续修复。当前main基于8ef8e40（0.24.1），不是旧HIP优化分支。HIP在09-17已追平/超过HLSL，用户已停止追性能；本次只修接入旁路，旧“差几毫秒”的自动优化目标不再作为当前任务。
-- 新实现：F6按键边沿处理提取到共用PollBypassKeyLocked，入口Bypassed在直通期间仍轮询，支持按住不重复切换和再次启用。前置FFX钩子在QI/安装屏障跟踪/Capture之前直通原始FFX；Capture自身也有旁路保护。若F6关闭发生在捕获之后，那一帧保留必要的FFX重放，但跳过私有颜色分配/复制和神经处理，避免漏执行原FFX。未拆掉OptiScaler/ReShade或释放驻留网络，故这仍不是“无插件原版”的对照。
-- HIP addon编译SHA `b8e357411c925e7dc2a4ef6e2afbf64cd23e730a8cfd2c958dfa3ffed1460cbd`；DX12/tiled编译SHA `48885c25ab74136c0f91b3e01f15080f20f262cf2ad61992f7459bd38b3a3cfd`。`Development/pre-upscale-smoke.cpp`扩展到六帧，同步与异步两种模式均通过：关闭直通、重新开启延后、捕获后才关闭、合法upscaleSize=0；每帧FFX只执行一次，直通无额外提交/捕获任务，捕获后关闭不分配私有颜色，4096个half元素逐值全部一致。按键边沿/按住/重新启用检查通过。没有把烟测当主城性能验证。
-- 部署工具`Development/tools/f6-passthrough-stellarblade.ps1`，只替换剑星addon及已有同名_storage_缓存，安装前检查游戏退出、备份并逐SHA验证；备份`D:\DLSSNR-Lab\pre-upscale\before-f6-passthrough`。权重/24个HIP内核/游戏设置/OptiScaler.ini不变，0.24.1发布包未重打。等待同一主城位置F6 OFF/ON实际反馈；OFF日志应出现`ffx_passthrough_f6`，而非持续pre-upscale重放。
-- 记录入口纠正：本旧会话14:35误重新创建了已废弃context文件，仅含当天五行诊断，内容已并回本节并删除；以后只更新DevHistory。
-
-
-## 2026-09-19 15:04～15:05：《剑星》主城视角对照与临时原生环境
-
-- 用户确认F6真正旁路修正版：朝城外OFF60fps/ON43fps，朝城内OFF30fps/ON31fps。城内约30fps限制在关闭神经推理时仍存在，不能据此区分游戏自身与OptiScaler/ReShade开销；ON/OFF相差1fps视为波动，不宣称推理加速游戏。
-- 用户正常退出后授权准备无整套插件的同地点对照。检查发现OptiScaler安装曾覆盖原游戏amd_fidelityfx_dx12.dll（当前26KB loader，安装前备份约6.6MB原库），仅停dxgi.dll不足以恢复原FSR后端。
-- 新工具`Development/tools/stellarblade-native-city-test.ps1`（Native/Restore/Status）；依据既有安装manifest，先备份并逐SHA验证当前相关DLL/addon，再从游戏根目录移出12个插件/附带后端二进制，恢复安装前备份的原amd_fidelityfx_dx12.dll，SHA `9C2BA6727683804242980BCDDC5C1EE4E16357B4BD17C8A93CE94614ED149780`。未恢复安装前的d3d12.dll，因为那是旧ReShade代理，恢复它会重新加载插件。
-- 当前游戏关闭、原生对照准备完成；GameUserSettings.ini前后SHA一致。OptiScaler.ini、DLSS5 flags、权重和HIP资产保留不动。当前插件文件备份位于`D:\DLSSNR-Lab\pre-upscale\before-native-city-test`，manifest与图形/插件配置快照在内。Restore只还原插件文件，保留用户测试期间的图形设置；必须先退出游戏。
-- 恢复命令：`powershell -NoProfile -ExecutionPolicy Bypass -File D:\DLSSNR-Lab\pre-upscale\stellarblade-native-city-test.ps1 -Action Restore`。此次未启动游戏，待用户回同一存档/位置，分别朝城内、城外测FPS；启动后可只读核对OptiScaler/ReShade/addon未加载。未把文件准备完成当成已确认掉帧根因。
-
-
-### 2026-09-19 15:10：原生主城对照保持60fps
-
-用户回同一主城对照后报告始终60fps（此前整套链F6关闭：城外60、城内30；开启：城外43、城内31）。只读核对新PID23256：加载系统dxgi.dll及已恢复的原生amd_fidelityfx_dx12.dll，没有ReShade/addon/fakenvapi匹配模块。支持问题在整套插件或替换超分后端的差异范围内，不能单独点名OptiScaler本体，也不能排除此前驻留推理资源/接入钩子影响。下一步逐层加回：先OptiScaler且LoadReshade=false，再ReShade无DLSS5 addon，最后加addon以F6关闭对照。需用户退出后才改文件；当前仍为原生游戏环境。
-
-
-### 2026-09-19 15:11：准备仅OptiScaler的主城对照
-
-用户再次退出后，扩展stellarblade-native-city-test.ps1增加OptiScalerOnly阶段，要求当前已验证native状态且游戏关闭。从before-native-city-test中校验并恢复11个OptiScaler/附带后端二进制，ReShade64.dll与dlss5-amd.addon64保持移出；OptiScaler.ini仅改LoadReshade=false，其修改前原件另存OptiScaler.before-only.ini，完整Restore会还原它。Dx12Upscaler仍fsr31，其余插件配置未改。GameUserSettings.ini操作前后SHA一致。
-
-当前state=optiscaler-only，尚未启动；待用户在同一地点/视角测城内外FPS。这一步同时包含OptiScaler与其替换FSR后端，若掉帧仍不能直接区分两者，但能排除未加载的ReShade/DLSS5。这一轮不使用F6，因为addon未加载。
-
-
-### 2026-09-19 15:16：仅OptiScaler主城对照也保持60fps
-
-用户报告OptiScaler-only阶段城内外一直60fps。只读核对PID20740：游戏目录dxgi.dll、FFX loader/upscaler/framegeneration DLL、fakenvapi及驱动amdxcffx64已加载，没有ReShade或addon匹配模块。说明OptiScaler及当前超分后端独立运行正常；后续重点是ReShade、DLSS5 addon或组合交互，不能一概排除跨组件问题。下一阶段为仅加回ReShade，继续保留DLSS5 addon停用，需用户退出后操作。当前游戏仍在OptiScaler-only环境运行。
-
-
-### 2026-09-19 15:17：准备OptiScaler+ReShade、无DLSS5 addon对照
-
-用户退出后执行stellarblade-native-city-test.ps1新增ReShadeOnly阶段。要求状态为optiscaler-only，检查游戏无进程、无本地d3d12代理且递归未找到活动*.addon64。仅从已校验备份恢复ReShade64.dll，并把OptiScaler LoadReshade从false改回true；dlss5-amd.addon64继续留在外部备份。
-
-GameUserSettings.ini、ReShade.ini、ReShadePreset.ini操作前后SHA一致，预设Techniques为空。当前state=reshade-no-addon，尚未启动；待用户回同一主城城内外视角测FPS。此阶段保留OptiScaler与现有FSR后端，只新增ReShade，不能在未看加载模块和实测前下结论。
-
-
-### 2026-09-19：ReShade无addon仍60fps，准备空闲跟踪快速路径
-
-用户确认OptiScaler+ReShade、无addon仍保持60fps；本轮只读模块核对PID23344已加载ReShade64.dll，没有活动addon。三轮原生、仅OptiScaler、OptiScaler+ReShade均60fps，问题缩小到我们的addon或其组合交互，具体原因仍需候选对照。
-
-代码发现draw/draw_indexed/dispatch每次调用Mode查询环境、获取native对象并锁全局Jobs映射，即使F6关闭且没有捕获任务也执行。候选用在Jobs互斥锁内发布的原子pending标记，在无任务时跳过这条路径；有任务仍保留following_work与资源状态检查，私有纹理barrier修正不受pending标记影响。日志配额耗尽后先读取计数，避免每次draw继续原子递增争用。
-
-HIP候选release/HIP/native-idle-tracking.addon64编译通过，SHA256 395dabfe20261832fac8a43188eb69661baa52eb140c8a99655d8b7f4e4ac75d。pre-upscale-smoke补充pending发布/清除、非空时following_work仍有效检查，测试程序交叉编译通过；git diff --check通过。游戏仍运行，尚未执行GPU smoke、未部署，不能把候选当作帧率修复已验证。下一步用户退出后运行同步/异步smoke，再仅装回候选addon测主城F6 OFF/ON。
-
-
-### 2026-09-19 15:25后：空闲跟踪候选通过GPU检查并部署剑星
-
-用户确认退出，远端检查无剑星/Magpie进程后运行更新的pre-upscale-smoke，同步和异步两轮均通过：每轮6帧，F6边沿/直接旁路/捕获后关闭/恢复捕获均每帧只执行一次FFX，逐4096个half读回全部different=0；pending标记发布、消费后清除及有任务时following_work观察断言通过。
-
-部署工具增加AddonCandidate阶段，要求reshade-no-addon基线、无活动addon、候选SHA正确，逐一验证其余12个基线二进制。只复制native-idle-tracking.addon64为游戏dlss5-amd.addon64，SHA 395dabfe20261832fac8a43188eb69661baa52eb140c8a99655d8b7f4e4ac75d；游戏图形配置、OptiScaler/ReShade配置与预设、DLSS5 flags前后SHA一致。状态addon-idle-tracking-candidate，原addon备份仍在before-native-city-test/files。发布包未更新，主城实际FPS待用户测F6 OFF/ON。
-
-
-### 2026-09-19 15:29：用户确认空闲跟踪修正版恢复正常，49fps
-
-部署395dabfe候选后，用户反馈“现在正常了，49帧”。此前同一轮主城朝城内整套链约30～31fps，移除addon则60fps；此次仅加回修正后的addon即恢复，支持addon高频空闲回调开销是本次掉帧的重要原因。按连续测试语境理解49fps为DLSS5开启表现，但本条反馈未单独说明F6状态，也未给出修正后OFF帧率，不补记OFF60。候选同时减少配置查询/Jobs锁争用和日志原子递增，尚未分别测量各项贡献。当前保留该候选继续游戏，未改发布包。
-
-
-### 2026-09-19 15:30后：OptiScaler-DLSS5-AMD 0.24.2打包完成
-
-用户要求打包0.24.2。使用已编译、同步/异步GPU smoke通过并由用户主城实测49fps的395dabfe… addon，包含F6真实旁路和无待处理任务时的绘制/屏障快速跳过。更新包内说明及中英文README版本表；未编造下载链接。
-
-成品：`D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2.zip`，385,887,973字节；SHA256 `B40175165A8A73120F53CE25EB0061D79CD54F7C65A2E85BC35C56D1DB7B9834`，旁置.zip.sha256。Release配方从zip读回513个有效载荷逐文件哈希通过，24个HIP模块与基底逐文件一致。额外对比0.24.1完整文件树，无增删，只有dlss5-amd.addon64、README.txt和SHA256SUMS.txt变化；权重/模块/默认配置及附带组件完全一致。打包未触碰正在运行的游戏文件，未上传网盘或打tag。
-
-
-### 2026-09-19 15:33：0.24.2网盘下载链接
-
-用户已上传OptiScaler-DLSS5-AMD-0.24.2.zip，提供夸克链接：https://pan.quark.cn/s/32eec4b3f1f3 。已挂到中英文README的0.24.2版本号，未放到文首；本地发布包不变。
-
-
-### 2026-09-19 15:37后：Magpie 0.24.2测试包
-
-用户要求打Magpie版自行测试。新增Development/tools/package-magpie-candidate.ps1，先逐文件验证0.23暂存包的SHA256SUMS，再复制到独立发布目录，换入已编译且剑星实测的395dabfe… addon，更新README/版本标记，flags仅明确追加DLSS5_PRE_UPSCALE=0（不沿用OptiScaler前置配置）。其余文件逐一与0.23对比一致，包括Magpie/ReShade、流水线config、权重与24个HIP模块；未修改正在运行的游戏或Magpie安装。
-
-成品`D:\給網友打包\Magpie-DLSS5-AMD-0.24.2.zip`，354,881,266字节，SHA256 `167a3dcaee84770cee505bf857a7614368846e505c229dc71944835ac989bccf`，旁置.zip.sha256。698个有效载荷从zip逐个读回哈希通过。包内明确Magpie启动/画面/性能仍待用户回归，不能套用剑星前置路径GPU smoke和49fps结果；本次未重复编译未变的网络内核或跑GPU测试台。README同时纠正旧“固定900”与实际auto配置矛盾。未上传网盘。
-
-
-### 2026-09-19 16:14后：修复OptiScaler前置路径显示开关失效
-
-用户反馈0.24.2帧率显示关不掉。确认NativePreUpscale::Process无条件绘制状态/FPS，未接SHOW_FPS/NOTICE。现从包内flags在首次使用时读取并缓存设置，避免背景初始化尚未应用环境变量的时序问题：NOTICE默认2，0/1均跳过overlay Prepare和Draw；SHOW_FPS默认0，仅非零且NOTICE>=2显示FPS数字，关闭FPS仍保留状态行。设置需重启游戏生效。
-
-HIP与DX12两种addon编译通过，git diff --check通过。HIP SHA BE9E82CEE99037EF92EB2BEC18ACC51C428EC3CD02CCF80A1FD1033B3A8C3119。独立补丁DLL及说明位于`D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2-overlay-fix`，上传后SHA核对一致；未替换运行中游戏文件、未重打已上传0.24.2整包。屏幕显示的游戏回归待做，不能把编译通过当作实测。
-
-
-### 2026-09-19 16:18：显示修复补丁ZIP与关闭FPS配置
-
-按用户要求生成D:\給網友打包\OptiScaler-DLSS5-AMD-0.24.2-overlay-fix.zip，1,037,812字节，SHA256 6f3ee2396c9acb32dbd30ca450bb142673105e90ad5758cf7eab535fe9bb9fe3；DLL/README逐项从zip读回验证，附校验表与zip.sha256。剑星PID25864仍运行且加载旧395dabfe DLL，未热替换。已备份游戏DLL及flags到pre-upscale/before-overlay-flags，仅将DLSS5_SHOW_FPS=1改0，保留默认NOTICE状态显示。待用户退出后部署be9e82修正版并重启验证；当前屏幕尚不会响应这一文件修改。
-
-
-### 2026-09-19 16:21：按用户要求重打0.24.2完整包
-
-用户明确网友不使用补丁，要求完整包。旧完整包/目录/sha256移到D:\DLSSNR-Lab\pre-upscale\before-0242-overlay-repack留档；正式位置重新生成OptiScaler-DLSS5-AMD-0.24.2.zip，包含be9e82显示开关修正版DLL，包内说明同步。513个有效载荷逐项从zip读回哈希通过，24个HIP模块与基底一致。新完整包385,886,558字节，SHA256 91cc2ce444edef687dba7236867a1b343836c1bc4dba151eb864f422d52e21a8，旁置校验文件。原网盘链接仍为此前上传版，README明确重打包链接待更新。没有部署运行中的剑星，关闭显示的画面回归仍待进行。
-
-
-### 2026-09-19 16:27：更新0.24.2重打包下载链接
-
-用户已上传含显示开关修复的完整包，新链接：https://pan.quark.cn/s/f74aaa5c7f9a 。中英文README的0.24.2 OptiScaler链接同步替换，移除待更新说明。此前1MB overlay-fix补丁及目录已从发布目录移至D:\DLSSNR-Lab\pre-upscale\overlay-patch-archive，避免与完整包混淆。
-
-
-### 2026-09-19 16:30后：1080档基线、家族成本图和分块配置初筛
-
-确认剑星/Magpie均退出，重新从当前源码交叉编译benchmark_live_capture.cpp为benchmark1080.exe。新脚本Development/HIP/profile-1080.ps1与tune-1080.ps1使用已发0.23的24个生产HIP模块与资产、默认跳42/43/46；强制NETWORK_HEIGHT=1080，即有效1920×1080/处理1920×1152。固定输入仍是旧真实HDR抓帧1296×720，非原生1080抓帧；每帧重置历史以对应当前OptiScaler前置行为。计时覆盖NativeGameFrame处理到完成（包括转换/桥接/同步），不是纯HIP网络或游戏FPS。每轮40帧，排除前8帧取中位，检查首尾有限及最终输出哈希。
-
-基线四轮21.144/21.1215/21.1705/21.1765ms，最终half输出SHA256均1DE20C219105CC281CBA1364A0A21D0DDC4510A95458EC0CA3B8C893EA54F23A。用相同输入/输出的内核重复执行法测边际成本（不是可直接相加的独立层时间，也不是必然可节省时间），相对四轮平均21.153ms：C32融合家族+4.907ms，ViT+2.805，C256 FFN+1.919，post+1.671，C64 FFN+1.637，C128 FFN+1.538，C64 attention+1.334，split+0.922，C128 attention+0.828，C256 attention+0.733，decoder+0.570，C512 QKV+0.426，C512 attention+0.282，pool+0.216；每轮最终输出完全一致。
-
-现有候选初筛：ViT expand M2=21.145，基线21.1375，无收益。M4初测21.0485但ABBA基线21.1305/21.1335，候选21.134/21.050，约0.04ms均值差且两轮候选不稳定，暂不采用。小通道tiled FFN=21.5865，对照21.1745，负优化约0.41ms，保持关闭。MH attention W16与当前diag路径组合缺c64_attention_project_w16_diag符号，报hipErrorNotFound(500)，不是可用候选；停止该轮后继续独立其他实验，没有误计性能。
-
-结果归档Development/results/1080-20260919/；远端完整日志/输出在hip-backend/profile1080。游戏DLL与发布包未更换，本阶段没有可部署的新提速。接下来重点是C32融合核的1080档相位/占用率分析，再看ViT；要与外部“1080P12ms”比较还需对齐纯网络计时、实际输入、显卡与跳块。
