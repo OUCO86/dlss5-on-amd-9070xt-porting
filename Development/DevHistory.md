@@ -2708,3 +2708,13 @@ CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P
 包名OptiScaler-REFramework-DLSS5-AMD-0.26.1.zip，输出D:\給網友打包。说明涵盖旧插件清理（含_storage_）、1080P输出/无边框限制、900P计算与游戏渲染尺寸区别、HIP7系统运行时依赖及实际后置顺序。通用0.26包不改，不宣称所有RE引擎游戏兼容。中英文README新增专用0.26.1条目。package-0261.ps1归档；44种实际staging shader编译/绑定检查通过，正在完成ZIP逐文件读回校验。首次压缩路径分隔符问题改为显式创建标准斜线路径ZIP，最终以读回校验成功的产物为准。
 
 09:21最终ZIP完成：379,780,870字节（约362.2MiB），543个载荷文件全部逐项读回SHA匹配，双架构48模块完整；SHA256 58d58f3f65048eaab0d3a32a48e8b6af983e84ad3d1ec4003417a4860e1dc4e9，旁置.zip.sha256。清单Development/results/release-0.26.1-reframework.json。用户测试通过的DLL沿用未重编，打包阶段复核实际shader与资产。09:28用户上传网盘：https://pan.quark.cn/s/624c87a6aa11；中英文README链接挂在版本表OptiScaler-REFramework标签，明确标注“专门针对RE9这类特殊接入场景的非常规版本，普通游戏使用通用版，目前仅RE9实测”。已上传ZIP不重打。
+
+## 2026-09-20 12:08起：调研Sol-Attn与Spectrum优化线索
+
+用户转述闭源作者曾与两仓作者交流；公开源码只能核实方法，不能证实交流或33→60fps具体实现。读取kijai/ComfyUI-SolAttn_triton（26d816ebd4f1e43a2c6e4d4759be3137f10a7a73）及xmarre/ComfyUI-Spectrum-MiniMax-H3（5161f0457bc8c52535212d6783eee73f439e1537）README和核心源码。Sol的_preprocess/_tri_fwd：K均值、V块汇总、按mean+tau*std阈值路由；重要块/相邻块精算，其余以块代表近似，带块长度归一化，并非只丢弃低分块；另有融合预处理/INT8量化。Comfy节点64-token分块、head_dim128，README已标deprecated（上游ComfyUI/comfy-kitchen已有实现），仓库报告测试4090/5090，不当成AMD即插即用库。
+
+本项目MH已是64-token窗口/head32，还有位置偏置、特殊指数近似和FP16/FP8舍入；Sol默认一个块就覆盖整个窗口，不能直接替换或照搬标准softmax。可探索更细块的近似路由，但必须先量归一化权重分布/可压缩性，计入摘要与选择开销。ViT较长（900/1080为400/640 token），可先作为候选；09-19 ViT attention重复执行边际0.489/1.177ms，只用于选热点，不能当精确可节约上限，更不能据此声称全网翻倍。
+
+Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge从实际中间特征拟合/预测，跳过部分H3 transformer调用；近似、会改输出。我们的每帧一次网络并无多步去噪循环可直接跳；若借鉴成跨游戏帧特征复用/预测，就是新算法，须处理运动对齐、遮挡、转镜/切场景失效，先比较便宜复用再考虑多项式预测。候选研究优先“注意力质量集中度/分块收益”和“动态游戏输入下中间特征可复用性”，不把静态重复回放当跨帧质量验证。尚未改核/运行新GPU实验，所有已部署和发布包保持原状。
+
+来源：https://github.com/kijai/ComfyUI-SolAttn_triton ，https://github.com/xmarre/ComfyUI-Spectrum-MiniMax-H3 。
