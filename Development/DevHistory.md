@@ -2732,3 +2732,5 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 ## 2026-09-20 22:40：《剑星》安装main三项优化版本
 
 用户要求安装。确认SB-Win64-Shipping退出后，替换实际Steam/StellarBlade/SB/Binaries/Win64的dlss5-amd.addon64（7a315550…）及DLSS5-AMD/native-game-tiled-assets/HIP下双架构deep_fast-packed模块（gfx1200 7eee02c1…/gfx1201 9fdd8a02…），三文件安装前后SHA通过。原三文件和flags备份D:\DLSSNR-Lab\main-reuse-backups\20260920-224023-409，安装脚本D:\DLSSNR-Lab\hip-backend\install-main-r3.ps1。保留用户游戏配置：ADAPTIVE=1、period4、HOTKEY=1、Graph=0、NETWORK_HEIGHT=auto、SHOW_FPS=0以及现有gain路径；main发布预设默认0不覆盖用户已开启的试玩设置。未启动游戏，待用户实玩。
+
+22:45用户实玩反馈：main新版在《剑星》画面较简单的场景，900P达到56–57FPS，用户明确感觉有提升。当前自适应复用开启；未提供同镜头F8完整计算的配对读数，因此不与之前52–54FPS直接相减宣称固定增幅，也不外推复杂场景。此次反馈未涉及新的画质判断。
