@@ -2762,3 +2762,9 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 ## 2026-09-20 23:32：《匹诺曹的谎言》安装OptiScaler 0.27
 
 用户指定Lies of P/LiesofP/Binaries/Win64，确认LOP-Win64-Shipping退出后按0.27完整包清单安装540文件，源/目标SHA及旧文件备份SHA均通过。旧插件、配置及被替换文件备份D:\DLSSNR-Lab\liesofp-backups\20260920-233243-348（inventory.json可恢复），脚本Development/LiesOfP/install-optiscaler.ps1。配置使用包内仓库默认，自适应=0，带精确流式attention/双架构模块及此前黑屏shader修复；未启动游戏，待实玩。
+
+## 2026-09-20 23:54起：《匹诺曹的谎言》完整网络对照版
+
+用户要求编译去掉有损选项的OP版看画面差别。隔离生成/tmp/dlss5-full-control，仅强制HIP Network清空skip_blocks、AdaptiveVitGroup固定mode0；保留原FP8数值/精确流式及既有管线，不称FP32原网络复原。DLL编译SHA bccbe270…，12帧GPU回放故意给对照版skip42/43/46与adaptive1，输出仍与普通main配置全层/adaptive0一致，SHA01e9587b…且有限。
+
+确认游戏退出后安装到LiesofP/Binaries/Win64，配套gfx1201模块ABI校验及新DLL安装hash通过；游戏flags清空SKIP_BLOCKS、ADAPTIVE=0、REUSE_HOTKEY=0，其他保持。旧DLL/配置备份D:\DLSSNR-Lab\liesofp-full-control-backups\20260920-235714-043。工具Development/LiesOfP/prepare-full-control.py、test-full-control.ps1、install-full-control.ps1。main默认及0.27发布ZIP未改，未启动游戏，待用户比较。
