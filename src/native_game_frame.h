@@ -239,7 +239,11 @@ public:
  void UpdateFps(double ms){
   std::lock_guard<std::mutex>guard(mutex);if(!resources||!resources->show_fps||ms<=0)return;
   auto&r=*resources;const auto now=GetTickCount64();if(r.fps_text[0]&&now-r.fps_tick<3000)return;
-  snprintf(r.fps_text,sizeof r.fps_text,"DLSS5-AMD %.0f FPS (%.1f MS) %uX%u",1000.0/ms,ms,r.geometry.valid_width,r.geometry.valid_height);r.fps_tick=now;
+  snprintf(r.fps_text,sizeof r.fps_text,"DLSS5-AMD %.0f FPS (%.1f MS) %uX%u",1000.0/ms,ms,r.geometry.valid_width,r.geometry.valid_height);
+#ifdef DLSS5_USE_HIP
+  if(const char*v=std::getenv("DLSS5_VIT_REUSE_HOTKEY");v&&!strcmp(v,"1")){size_t used=strlen(r.fps_text);snprintf(r.fps_text+used,sizeof(r.fps_text)-used," %s",hip_reference::AdaptivePreviewState.load()?"AE":"EXACT");}
+#endif
+  r.fps_tick=now;
  }
  /* Pre-upscale integration draws its overlay on the final output, never into the color fed to FSR. */
  void SuppressFps(){std::lock_guard<std::mutex>guard(mutex);if(resources){resources->show_fps=false;resources->fps_text[0]=0;}}

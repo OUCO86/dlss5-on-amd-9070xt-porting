@@ -2718,3 +2718,13 @@ CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P
 Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge从实际中间特征拟合/预测，跳过部分H3 transformer调用；近似、会改输出。我们的每帧一次网络并无多步去噪循环可直接跳；若借鉴成跨游戏帧特征复用/预测，就是新算法，须处理运动对齐、遮挡、转镜/切场景失效，先比较便宜复用再考虑多项式预测。候选研究优先“注意力质量集中度/分块收益”和“动态游戏输入下中间特征可复用性”，不把静态重复回放当跨帧质量验证。尚未改核/运行新GPU实验，所有已部署和发布包保持原状。
 
 来源：https://github.com/kijai/ComfyUI-SolAttn_triton ，https://github.com/xmarre/ComfyUI-Spectrum-MiniMax-H3 。
+
+## 2026-09-20 22:30起：从AttExp选入三项有效改动到main
+
+用户明确要求切main，只取精确流式attention、R3自适应复用、静止输入延长缓存/融合提交。完整阅读AttExp当天归纳后迁移最终实现到正常hip/deep_fast.hip及HIP host，不依赖实验生成器。main原已带建分支前KV均值实验084f8df，另用d29211a撤回；其完整历史仍在AttExp，不删除分支。其他INT4/稀疏/选择性路由/调度实验均未迁入。
+
+默认DLSS5_VIT_ADAPTIVE=0，精算流式生效但不启用有损跨帧预测；用户显式开1才用R3，F8可切完整/复用（需HOTKEY=1），Graph/ViT byte-stream需关闭。R3的通道gain改为可从现有16份权重尾部自动计算（double乘积→float），仍允许文件覆盖，对上实验版本，不需另下资产。文档Development/HIP/VIT-REUSE.md。新DLL/模块ABI需成套构建/更新。
+
+正常HIP DLL编译通过SHA7a315550…；标准build-modules双架构deep_fast-packed通过gfx1200 7eee02c1…/gfx1201 9fdd8a02…。9070XT主机main与已验证R3逐帧比较：900/1080×静止/平移/小遮挡×完整/复用×12帧、历史开启，共144对RGB全部同hash且有限，证明自动gain与迁移一致；16项直接GPU边界/融合提交检查通过。证据results/main-vit-reuse-20260920，诊断耗时不报新收益。未部署/打包/发布，游戏仍原R3。
+
+跨分支结论简记：精确流式已有整网无额外误差收益；R3动态近似有受控回放收益但实玩只反馈900P52–54FPS、未做严格配对。大FFN稀疏仅单层快约41%，特征剪枝误差39.6%，还没整网验；INT4局部缩放省5–8%但仍输FP8；C32稀疏展开/收缩均没整网收益；选择性KV额外收益很小，多stream负优化。失败代码/全量报告留AttExp，将来按需回读，不能重复计算收益或把未测试C64/C128/C256写成失败。
