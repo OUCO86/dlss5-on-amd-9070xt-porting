@@ -2768,3 +2768,7 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 用户要求编译去掉有损选项的OP版看画面差别。隔离生成/tmp/dlss5-full-control，仅强制HIP Network清空skip_blocks、AdaptiveVitGroup固定mode0；保留原FP8数值/精确流式及既有管线，不称FP32原网络复原。DLL编译SHA bccbe270…，12帧GPU回放故意给对照版skip42/43/46与adaptive1，输出仍与普通main配置全层/adaptive0一致，SHA01e9587b…且有限。
 
 确认游戏退出后安装到LiesofP/Binaries/Win64，配套gfx1201模块ABI校验及新DLL安装hash通过；游戏flags清空SKIP_BLOCKS、ADAPTIVE=0、REUSE_HOTKEY=0，其他保持。旧DLL/配置备份D:\DLSSNR-Lab\liesofp-full-control-backups\20260920-235714-043。工具Development/LiesOfP/prepare-full-control.py、test-full-control.ps1、install-full-control.ps1。main默认及0.27发布ZIP未改，未启动游戏，待用户比较。
+
+## 2026-09-21 00:10：《匹诺曹的谎言》恢复正式0.27对比
+
+用户反馈完整网络对照版“好像也差不多”，要求换回正式OP0.27继续比较。确认游戏退出后，从已校验0.27完整包恢复DLL与native-game-flags.txt，两文件源清单/安装SHA通过，其余配套文件未改。恢复默认SKIP_BLOCKS=42,43,46、VIT_ADAPTIVE=0；完整网络对照DLL/配置另备份D:\DLSSNR-Lab\liesofp-full-control-backups\restore-20260921-001024-560。未启动游戏，待第二次观察；不把主观初步反馈写成画质逐位等价。
