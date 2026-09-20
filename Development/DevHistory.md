@@ -2700,3 +2700,11 @@ CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P
 候选f7c10735b1447c7ed5ed29c92d3bc4e6a3a97a3583220a1e7ae515f4c0b6420a编译通过，游戏退出后同步root/_storage_；恢复UpscalingAlgorithm=DLSS，保留Balanced、1920×1080普通视窗。临时恢复脚本仅修改超分开关，备份before-restore-upscale.ini。待检查启动处理；用户实玩后才打专用0.26包。
 
 07:51验证PID3604：OptiScaler重新创建fsr31接口后端，HIP随后正常初始化并处理600帧以上；启动短暂2K时仍被尺寸保护拒绝，回到1920×1080后正常。日志present-upscale-restored-20260920.txt。游戏保留已开启超分/平衡档，后置与信息显示开启，待用户继续试玩；无原生超分禁用检查。
+
+## 2026-09-20 09:11起：OptiScaler-REFramework 0.26.1完整包
+
+用户确认最新流水线实玩通过，指定单独发布0.26.1 OptiScaler-REFramework版本。采用07:49已部署/验证的f7c10735…后置DLL（允许上游超分，输出≤1080P SDR，900P网络，F6/F7），REFramework nightly-01424/d1461375… DLL SHA14f4d6fd…，OptiScaler0.9.4/ReShade6.8及完整模型资产、c256-frag双架构48内核。以旧完整包SHA256SUMS白名单从游戏目录提取，不递归拷游戏；未改动资产逐项比对旧SHA，替换当前解码/字体shader和配置。OptiScaler路径auto，ReShade改便携配置、关闭自己的额外FPS，保留本插件两行信息；保留日志目录占位文件，默认关闭快照诊断。加入REFramework对应提交MIT许可证及release.json。
+
+包名OptiScaler-REFramework-DLSS5-AMD-0.26.1.zip，输出D:\給網友打包。说明涵盖旧插件清理（含_storage_）、1080P输出/无边框限制、900P计算与游戏渲染尺寸区别、HIP7系统运行时依赖及实际后置顺序。通用0.26包不改，不宣称所有RE引擎游戏兼容。中英文README新增专用0.26.1条目，尚无用户网盘链接。package-0261.ps1归档；44种实际staging shader编译/绑定检查通过，正在完成ZIP逐文件读回校验。首次压缩路径分隔符问题改为显式创建标准斜线路径ZIP，最终以读回校验成功的产物为准。
+
+09:21最终ZIP完成：379,780,870字节（约362.2MiB），543个载荷文件全部逐项读回SHA匹配，双架构48模块完整；SHA256 58d58f3f65048eaab0d3a32a48e8b6af983e84ad3d1ec4003417a4860e1dc4e9，旁置.zip.sha256。清单Development/results/release-0.26.1-reframework.json。用户测试通过的DLL沿用未重编，打包阶段复核实际shader与资产。等待用户上传网盘链接。
