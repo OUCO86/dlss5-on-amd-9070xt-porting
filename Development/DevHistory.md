@@ -2756,3 +2756,5 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 输出D:\給網友打包：Magpie-DLSS5-AMD-0.27.zip（723 payload文件，约336MB）、OptiScaler-DLSS5-AMD-0.27.zip（540，约366MB）、OptiScaler-REFramework-DLSS5-AMD-0.27.zip（544，约380MB），均有.sha256。未部署到游戏或上传网盘。README版本表已写0.27优化内容，等待用户提供下载链接。
 
 23:25用户指出漏更新中文首页。补齐README.zh-CN.md的0.27三包介绍、简短更新记录、仓库默认配置入口、自适应启用方式，以及RE9/Xbox鬼武者特殊版范围。此前包内中文说明已包含0.27，此次仅补仓库中文README，不改ZIP或校验和。
+
+23:29用户提供0.27三包夸克链接，已同步中英文README版本栏：OptiScaler 004278159ed8、REFramework 010683548f68、Magpie ec3a3282aa76；链接不放首页开头，包内容及SHA不变。
