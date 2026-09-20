@@ -2740,3 +2740,7 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 用户指出游戏配置靠部署累积、不易追溯，要求仓库默认文件自动随包。OptiScaler Release、Magpie候选打包及RE9特殊打包改为直接复制scripts/hip-game-flags.txt、hip-magpie-flags.txt、hip-re9-flags.txt，不再从旧stage/游戏读flags再零散追加；package-026传递ConfigDirectory。默认按仓库路径找scripts，单独上传脚本需同步模板并显式传ConfigDirectory，缺文件报错。普通游戏/RE9模板以已验证配置校对，保留各自超分/色彩契约，去机器gain路径；adaptive默认0、FPS默认1。Magpie模板补齐当前HIP优化参数。
 
 四个Windows打包脚本AST语法通过，三模板无重复键/机器绝对路径，PRE_UPSCALE和CODEC_SRGB按版本检查通过。未实际重打大包或改游戏配置。Repack/FinalizeOnly重封保留已有stage配置，新的Release带仓库默认。scripts/CONFIGURATION.md说明唯一来源与上传方法，Development旧同名文件加历史标注。用户当前《剑星》adaptive=1设置保留。
+
+## 2026-09-20 23:01：《鬼武者》Xbox版安装REFramework后置包
+
+用户要求把RE9版本试装到C:\XboxGames\Onimusha- Way of the Sword。实际主程序在Content\OnimushaWotS.exe；确认进程未运行后，从已发布OptiScaler-REFramework-DLSS5-AMD-0.26.1完整包按SHA256SUMS清单安装543文件，安装前源文件及安装后目标SHA全部通过。唯一覆盖的原文件amd_fidelityfx_dx12.dll已备份，完整恢复清单在D:\DLSSNR-Lab\onimusha-backups\20260920-230114-918；脚本Development/Onimusha/install-reframework.ps1支持Restore -Backup。未改游戏config.ini、未启动游戏，尚未验证此Xbox游戏的REFramework兼容性。首次测试按RE9包契约：SDR≤1080P、DLSS超分输入由OptiScaler转FSR，固定900P后置网络；F6处理开关/F7信息层。此次装的是指定0.26.1兼容包，不混入main新ABI模块。
