@@ -6,7 +6,7 @@
 Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8（E4M3）的 HLSL 计算着色器，在 AMD RDNA 4
 显卡上跑起来，并通过 ReShade 插件钩住游戏的 FSR dispatch，对 1080p 画面做后处理。
 
-**REFramework 专用版（2026-09-20，0.26.1）**：新增《生化9》实测的 OptiScaler-REFramework 完整包，采用 FSR 超分之后的 HIP 后处理，固定900P计算，输出最高1080P SDR；F6开关处理、F7隐藏/恢复状态和帧率信息。允许游戏超分，但不代表所有RE引擎游戏都已验证。通用 OptiScaler/Magpie 仍为0.26。
+**REFramework 专用版（2026-09-20，0.26.1）**：**这是专门针对 RE9 这类特殊接入场景的非常规版本，普通游戏请使用通用 OptiScaler 版。** 已在《生化9》实测，采用 FSR 超分之后的 HIP 后处理，固定900P计算，输出最高1080P SDR；F6开关处理、F7隐藏/恢复状态和帧率信息。允许游戏超分，但不代表所有RE引擎游戏都已验证。通用 OptiScaler/Magpie 仍为0.26。
 
 **最新（2026-09-19，0.26 OptiScaler / Magpie）**：完整包集成FFN输入直读、C256连续权重片段优化，并补齐R11G11B10解码shader，修复《匹诺曹的谎言》降低效果品质后黑屏。包含gfx1200/gfx1201双架构内核，9060/XT仍待实机反馈。两包已生成并校验，下载见下方版本表。
 
@@ -125,7 +125,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | 0.24.2 · [OptiScaler](https://pan.quark.cn/s/f74aaa5c7f9a)（HIP） | 09-19 | 修复addon在无前置任务时仍逐次绘制查配置、锁任务表的CPU开销，并减少日志计数争用；F6关闭直接旁路前置捕获/颜色复制，已捕获任务仍执行一次。《剑星》主城回归约49fps（此前约31fps），同步/异步GPU检查通过。网络内核与权重不变。包 `OptiScaler-DLSS5-AMD-0.24.2.zip`。 同日重打完整包补上FPS/状态显示开关，下载链接已更新。 |
 | 0.25 · [Magpie](https://pan.quark.cn/s/09630ed99606) · [OptiScaler](https://pan.quark.cn/s/636691131c5f)（HIP） | 09-19 | **优化**：复用C32/多头注意力的指数计算、简化倒数计算；中间特征和解码输出直接用FP8字节传递，减少数据搬运；解码完整分组走快速路径。**修复/兼容**：修复900档尾部漏写和中文路径加载失败，新增9060/XT的gfx1200内核，与gfx1201自动选择。9070 XT回归通过，9060/XT待实机反馈；Magpie实测1080P只做DLSS5约37fps，与之前基本持平。Magpie、OptiScaler均提供完整包。 |
 | 0.26 · [Magpie](https://pan.quark.cn/s/7ce2ca11db43) · [OptiScaler](https://pan.quark.cn/s/c880a70f0824)（HIP） | 09-19 | FFN直接读取FP8字节片段，省去入口共享缓冲暂存及两道同步；C256权重在初始化时预排成连续矩阵片段，减少分散读取和字节拼装。补齐漏打包的R11G11B10解码shader，修复《匹诺曹的谎言》降低效果品质后黑屏，用户复测恢复；增加shader编译/绑定校验。两款完整包已生成，包内文件及44种shader组合校验通过。 |
-| 0.26.1 · OptiScaler-REFramework（HIP，《生化9》专用） | 09-20 | 后置HIP兼容：R10G10B10A2/FP16转换，FSR后处理、固定900P计算，保留1080P SDR输出保护；补齐状态/分辨率/Present帧率与F7信息开关。集成REFramework、OptiScaler、ReShade、完整模型及gfx1200/gfx1201内核，沿用0.26优化。用户实玩通过。 |
+| 0.26.1 · [OptiScaler-REFramework](https://pan.quark.cn/s/624c87a6aa11)（HIP，非常规版） | 09-20 | **专门针对RE9这类特殊接入场景的非常规版本，普通游戏请用通用版；目前仅《生化9》实测。** 后置HIP兼容：R10G10B10A2/FP16转换，FSR后处理、固定900P计算，保留1080P SDR输出保护；补齐状态/分辨率/Present帧率与F7信息开关。集成REFramework、OptiScaler、ReShade、完整模型及gfx1200/gfx1201内核，沿用0.26优化。用户实玩通过。 |
 
 ## 权重
 

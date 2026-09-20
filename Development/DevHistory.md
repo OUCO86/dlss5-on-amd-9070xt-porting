@@ -2705,6 +2705,6 @@ CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P
 
 用户确认最新流水线实玩通过，指定单独发布0.26.1 OptiScaler-REFramework版本。采用07:49已部署/验证的f7c10735…后置DLL（允许上游超分，输出≤1080P SDR，900P网络，F6/F7），REFramework nightly-01424/d1461375… DLL SHA14f4d6fd…，OptiScaler0.9.4/ReShade6.8及完整模型资产、c256-frag双架构48内核。以旧完整包SHA256SUMS白名单从游戏目录提取，不递归拷游戏；未改动资产逐项比对旧SHA，替换当前解码/字体shader和配置。OptiScaler路径auto，ReShade改便携配置、关闭自己的额外FPS，保留本插件两行信息；保留日志目录占位文件，默认关闭快照诊断。加入REFramework对应提交MIT许可证及release.json。
 
-包名OptiScaler-REFramework-DLSS5-AMD-0.26.1.zip，输出D:\給網友打包。说明涵盖旧插件清理（含_storage_）、1080P输出/无边框限制、900P计算与游戏渲染尺寸区别、HIP7系统运行时依赖及实际后置顺序。通用0.26包不改，不宣称所有RE引擎游戏兼容。中英文README新增专用0.26.1条目，尚无用户网盘链接。package-0261.ps1归档；44种实际staging shader编译/绑定检查通过，正在完成ZIP逐文件读回校验。首次压缩路径分隔符问题改为显式创建标准斜线路径ZIP，最终以读回校验成功的产物为准。
+包名OptiScaler-REFramework-DLSS5-AMD-0.26.1.zip，输出D:\給網友打包。说明涵盖旧插件清理（含_storage_）、1080P输出/无边框限制、900P计算与游戏渲染尺寸区别、HIP7系统运行时依赖及实际后置顺序。通用0.26包不改，不宣称所有RE引擎游戏兼容。中英文README新增专用0.26.1条目。package-0261.ps1归档；44种实际staging shader编译/绑定检查通过，正在完成ZIP逐文件读回校验。首次压缩路径分隔符问题改为显式创建标准斜线路径ZIP，最终以读回校验成功的产物为准。
 
-09:21最终ZIP完成：379,780,870字节（约362.2MiB），543个载荷文件全部逐项读回SHA匹配，双架构48模块完整；SHA256 58d58f3f65048eaab0d3a32a48e8b6af983e84ad3d1ec4003417a4860e1dc4e9，旁置.zip.sha256。清单Development/results/release-0.26.1-reframework.json。用户测试通过的DLL沿用未重编，打包阶段复核实际shader与资产。等待用户上传网盘链接。
+09:21最终ZIP完成：379,780,870字节（约362.2MiB），543个载荷文件全部逐项读回SHA匹配，双架构48模块完整；SHA256 58d58f3f65048eaab0d3a32a48e8b6af983e84ad3d1ec4003417a4860e1dc4e9，旁置.zip.sha256。清单Development/results/release-0.26.1-reframework.json。用户测试通过的DLL沿用未重编，打包阶段复核实际shader与资产。09:28用户上传网盘：https://pan.quark.cn/s/624c87a6aa11；中英文README链接挂在版本表OptiScaler-REFramework标签，明确标注“专门针对RE9这类特殊接入场景的非常规版本，普通游戏使用通用版，目前仅RE9实测”。已上传ZIP不重打。
