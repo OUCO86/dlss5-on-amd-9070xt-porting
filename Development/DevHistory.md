@@ -2718,13 +2718,3 @@ CPU检查：通用input_geometry_test的2,073,600尺寸回归通过，专用900P
 Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge从实际中间特征拟合/预测，跳过部分H3 transformer调用；近似、会改输出。我们的每帧一次网络并无多步去噪循环可直接跳；若借鉴成跨游戏帧特征复用/预测，就是新算法，须处理运动对齐、遮挡、转镜/切场景失效，先比较便宜复用再考虑多项式预测。候选研究优先“注意力质量集中度/分块收益”和“动态游戏输入下中间特征可复用性”，不把静态重复回放当跨帧质量验证。尚未改核/运行新GPU实验，所有已部署和发布包保持原状。
 
 来源：https://github.com/kijai/ComfyUI-SolAttn_triton ，https://github.com/xmarre/ComfyUI-Spectrum-MiniMax-H3 。
-
-## 2026-09-20 12:16起：首次ViT注意力近似实验，K/V相邻均值代表
-
-用户要求先试某个算子。隔离修改vit_attention_fused_body：Q不变，相邻两个K/V分别取均值并按原FP8打包，用一半代表计算；保留特殊指数bit映射/输出舍入，代表数量的共同2倍因子在归一化中抵消，但均值后非线性与V相关性导致近似误差。400-token半长尾部无效权重置0、读取钳制。不是完整Sol-Attn，不改权重。prepare.py只生成/tmp候选与patch，hip/deep_fast.hip生产源不改。双架构COMGR通过：gfx1200 3ae02111…、gfx1201 6a7611fe…；机器空闲检查后仅gfx1201实跑。
-
-最新c256-frag-production基线，固定1296×720捕获，900/1080各160帧ABBA、舍32：完整NativeGameFrame回放900 13.3995→13.2070ms（−0.1925，1.44%），1080 19.54175→18.85725（−0.6845，3.50%）；原版hash匹配黄金，候选重复hash一致。补重复attention边际：900原0.419/候选0.43475ms，1080原1.12525/候选0.73375ms，不能把全帧差全部解释成算子本体节省；尤其900还需匹配真实QKV的独立事件计时归因。
-
-两档×真实画面/合成HDR/近黑×AB各12帧，144帧全有限且每组冻输入输出一致；不是动态时序测试。真实画面clip到SDR再转sRGB的MAE约2.63/255，两档PSNR35.79/35.22dB；raw相对RMSE11.97%/13.30%，最大分量差0.1546/0.2437，人物/高光差异集中。1080合成HDR的显示MAE5.27/255；暗部绝对误差小但相对误差大，均归档，不把“没黑屏”当画质等价。首轮结论：近似能跑且完整回放有收益，但无条件合并偏粗，保留实验不部署；后续考虑相似性/空间分组保留重要项并计入预处理成本、测动态输入。
-
-报告Development/results/vit-kv-pair-20260920/report.md、summary.json和对比图；工具Development/HIP/experiments/vit-kv-pair，原始输出Windows hip-backend/profile1080/vitpair-*。游戏DLL、发布包和生产内核未改。
