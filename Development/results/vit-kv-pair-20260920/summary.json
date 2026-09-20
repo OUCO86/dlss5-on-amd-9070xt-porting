@@ -1,0 +1,114 @@
+{
+  "timing": [
+    {
+      "height": 900,
+      "base_ms": 13.3995,
+      "pair_ms": 13.207,
+      "saved_ms": 0.192499999999999,
+      "reduction_percent": 1.436620769431688,
+      "base_drift_ms": 0.025000000000000355
+    },
+    {
+      "height": 1080,
+      "base_ms": 19.54175,
+      "pair_ms": 18.85725,
+      "saved_ms": 0.6844999999999999,
+      "reduction_percent": 3.502756917880947,
+      "base_drift_ms": 0.059499999999999886
+    }
+  ],
+  "quality": [
+    {
+      "height": 900,
+      "pattern": 0,
+      "finite": true,
+      "raw_mae": 0.001797552453354001,
+      "raw_max": 0.154632568359375,
+      "raw_p99": 0.0286865234375,
+      "relative_rmse": 0.11971963196992874,
+      "display_mae_255": 2.630207226611674,
+      "display_psnr_db": 35.794217586517334
+    },
+    {
+      "height": 900,
+      "pattern": 1,
+      "finite": true,
+      "raw_mae": 0.009152766317129135,
+      "raw_max": 0.119140625,
+      "raw_p99": 0.03173828125,
+      "relative_rmse": 0.019796783104538918,
+      "display_mae_255": 2.346880892291665,
+      "display_psnr_db": 38.909523487091064
+    },
+    {
+      "height": 900,
+      "pattern": 2,
+      "finite": true,
+      "raw_mae": 0.0001803861086955294,
+      "raw_max": 0.0023382902145385742,
+      "raw_p99": 0.0009072422981262207,
+      "relative_rmse": 0.8185907602310181,
+      "display_mae_255": 0.5942999850958586,
+      "display_psnr_db": 48.729915618896484
+    },
+    {
+      "height": 1080,
+      "pattern": 0,
+      "finite": true,
+      "raw_mae": 0.001959353219717741,
+      "raw_max": 0.24365234375,
+      "raw_p99": 0.030914306640625,
+      "relative_rmse": 0.13303980231285095,
+      "display_mae_255": 2.623369968496263,
+      "display_psnr_db": 35.224692821502686
+    },
+    {
+      "height": 1080,
+      "pattern": 1,
+      "finite": true,
+      "raw_mae": 0.021269692108035088,
+      "raw_max": 0.1943359375,
+      "raw_p99": 0.0651675415039108,
+      "relative_rmse": 0.04403272271156311,
+      "display_mae_255": 5.265978304669261,
+      "display_psnr_db": 32.51563310623169
+    },
+    {
+      "height": 1080,
+      "pattern": 2,
+      "finite": true,
+      "raw_mae": 0.0003059597802348435,
+      "raw_max": 0.002871990203857422,
+      "raw_p99": 0.0012612342834472656,
+      "relative_rmse": 0.6175401210784912,
+      "display_mae_255": 1.0080150165595114,
+      "display_psnr_db": 45.04750728607178
+    }
+  ],
+  "marginal": [
+    {
+      "height": 900,
+      "variant": "base",
+      "extra_attention_ms": 0.4189999999999987,
+      "baseline_drift_ms": 0.05400000000000027
+    },
+    {
+      "height": 900,
+      "variant": "pair",
+      "extra_attention_ms": 0.4347500000000011,
+      "baseline_drift_ms": 0.01750000000000007
+    },
+    {
+      "height": 1080,
+      "variant": "base",
+      "extra_attention_ms": 1.1252500000000012,
+      "baseline_drift_ms": 0.016500000000000625
+    },
+    {
+      "height": 1080,
+      "variant": "pair",
+      "extra_attention_ms": 0.7337500000000006,
+      "baseline_drift_ms": 0.01249999999999929
+    }
+  ]
+}

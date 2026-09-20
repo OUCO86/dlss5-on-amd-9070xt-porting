@@ -1,0 +1,46 @@
+--- a/hip/deep_fast.hip
++++ b/hip/deep_fast.hip
+@@ -151,19 +151,27 @@
+ // ByteInput: Q/K/V arrive as the E4M3 bytes vit_qkv_project_normalize_fused_f16compact_fp8 stores (byte_F of the same
+ // F() values the f32 tensor holds, so pack() of the f32 value and the stored byte are identical): Q/K rows are one
+ // 8-byte load per lane, V columns eight byte loads placed exactly as pack() places them.
++// Approximation experiment: adjacent K/V centroid pairs, all Q unchanged.
++// Equal pair multiplicity cancels between attention numerator and denominator.
++// Only an experiment; no assertion of mathematical equivalence or visual safety.
++template<bool ByteInput> DEV float vit_pair_value(const float*in,uint part,uint token,uint c,uint tokens){
++ token=token+1<tokens?token:tokens-2;uint i=(part*tokens+token)*1024+c;
++ if constexpr(ByteInput){const unsigned char*p=reinterpret_cast<const unsigned char*>(in);return .5f*(__builtin_amdgcn_cvt_f32_fp8(p[i],0)+__builtin_amdgcn_cvt_f32_fp8(p[i+1024],0));}
++ else return .5f*(in[i]+in[i+1024]);
++}
+ template<uint MAXT,bool ByteInput=false,bool ByteOut=false>
+ DEV void vit_attention_fused_body(const float*in,float*out,uint tokens){
+  uint head=bid()%32,first=bid()/32*16;if(first>=tokens)return;
+- __attribute__((shared)) unsigned char p8[16*(MAXT+16)];
++ __attribute__((shared)) unsigned char p8[16*(MAXT/2+32)];
+  __attribute__((shared)) unsigned short t16[2*16*24];
+- const uint S=tokens+16;const unsigned char*in8=reinterpret_cast<const unsigned char*>(in);
++ const uint KT=tokens/2,S=((KT+15)&~15u)+16;const unsigned char*in8=reinterpret_cast<const unsigned char*>(in);
+  i2 q[2]{};for(uint k=0;k<32;k+=16){if constexpr(ByteInput)__builtin_memcpy(&q[k/16],in8+(first+rc())*1024+head*32+k+gr()*8,8);else for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(q[k/16],e,in[(first+rc())*1024+head*32+j]);}}
+  h8 ones{};for(uint e=0;e<8;e++)ones[e]=(_Float16)1.f;
+  f8 sum{};
+- for(uint key=0,tile=0;key<tokens;key+=16,tile^=1u){f8 a{};
+-  for(uint k=0;k<32;k+=16){i2 y{};if constexpr(ByteInput)__builtin_memcpy(&y,in8+(tokens+key+rc())*1024+head*32+k+gr()*8,8);else for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(y,e,in[(tokens+key+rc())*1024+head*32+j]);}a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(q[k/16],y,a);}
++ for(uint key=0,tile=0;key<KT;key+=16,tile^=1u){f8 a{};
++  for(uint k=0;k<32;k+=16){i2 y{};for(uint e=0;e<8;e++){uint j=k+gr()*8+e;pack(y,e,vit_pair_value<ByteInput>(in,1,2*(key+rc()),head*32+j,tokens));}a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(q[k/16],y,a);}
+   unsigned short*t=t16+tile*16*24;
+-  for(uint e=0;e<8;e++){float af=clampf(a[e]*from_half(0x2dbb)+1.708984375f,1.439453125f,1.9775390625f);uint hb=(bits(af)>>13)-0x1c000u;t[(gr()*8+e)*24+rc()]=(unsigned short)(((hb<<4)+0x4000u)&65535u);}
++  for(uint e=0;e<8;e++){float af=clampf(a[e]*from_half(0x2dbb)+1.708984375f,1.439453125f,1.9775390625f);uint hb=(bits(af)>>13)-0x1c000u;t[(gr()*8+e)*24+rc()]=key+rc()<KT?(unsigned short)(((hb<<4)+0x4000u)&65535u):0;}
+   __builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");
+   h8 x{};i2 xb{};for(uint e=0;e<8;e++){unsigned short u=t[rc()*24+gr()*8+e];union{unsigned short u;_Float16 h;}cv;cv.u=u;x[e]=cv.h;pack(xb,e,from_half(u));}
+   sum=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,ones,sum);
+@@ -172,8 +180,8 @@
+  float inv[8];for(uint e=0;e<8;e++)inv[e]=1.f/sum[e];
+  __builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");
+  f8 acc[2]{};
+- for(uint k=0;k<tokens;k+=16){i2 x;__builtin_memcpy(&x,p8+rc()*S+k+gr()*8,8);
+-  for(uint c=0;c<2;c++){i2 y{};for(uint e=0;e<8;e++){uint key=k+gr()*8+e;if constexpr(ByteInput){uint b=in8[(2*tokens+key)*1024+head*32+c*16+rc()];y[e/4]=int(uint(y[e/4])|(b<<(8*(e%4))));}else pack(y,e,in[(2*tokens+key)*1024+head*32+c*16+rc()]);}acc[c]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,acc[c]);}
++ for(uint k=0;k<KT;k+=16){i2 x;__builtin_memcpy(&x,p8+rc()*S+k+gr()*8,8);
++  for(uint c=0;c<2;c++){i2 y{};for(uint e=0;e<8;e++){uint key=k+gr()*8+e;pack(y,e,vit_pair_value<ByteInput>(in,2,2*key,head*32+c*16+rc(),tokens));}acc[c]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,acc[c]);}
+  }
+  for(uint c=0;c<2;c++)for(uint e=0;e<8;e++){if constexpr(ByteOut)reinterpret_cast<unsigned char*>(out)[(first+gr()*8+e)*1024+head*32+c*16+rc()]=byte_F(Hrtz(acc[c][e]*inv[e]));else out[(first+gr()*8+e)*1024+head*32+c*16+rc()]=F(Hrtz(acc[c][e]*inv[e]));}
+ }
