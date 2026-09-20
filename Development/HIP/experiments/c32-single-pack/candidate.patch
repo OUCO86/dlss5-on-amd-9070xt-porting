@@ -1,0 +1,13 @@
+--- a/hip/c32_fused_ffn_attention.hip
++++ b/hip/c32_fused_ffn_attention.hip
+@@ -269,8 +269,8 @@
+   #pragma unroll
+   for(uint j=0;j<16;j++){uint row=first+j;float v;
+    if constexpr(!Mapped)v=lv[j];
+-   else{float c;if constexpr(Merge){float high=__builtin_amdgcn_cvt_f32_fp8(int(hb[j]),0);c=Hrtz(Hrtz(lv[j]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)c=F(lv[j]);else c=lv[j];v=srcs[j]>=0?c:0.f;}
+-   packed[row*36+l]=static_cast<unsigned char>(fp8(v));
++   else{float c;if constexpr(Merge){float high=__builtin_amdgcn_cvt_f32_fp8(int(hb[j]),0);c=Hrtz(Hrtz(lv[j]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)c=lv[j];else c=lv[j];v=srcs[j]>=0?c:0.f;}
++   uint packed_v=fp8(v);if constexpr(RawMapped&&!Merge)if((bits(v)&0x7fffffffu)==0)packed_v=0;packed[row*36+l]=static_cast<unsigned char>(packed_v);
+    if constexpr(NeedIn16)in16[row*34+l]=(_Float16)v;
+   }}
+ #else

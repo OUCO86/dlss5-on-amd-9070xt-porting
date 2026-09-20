@@ -1,0 +1,4 @@
+#include "hip_api.h"
+#include <vector>
+#include <cstdio>
+int main(int argc,char**argv){try{if(argc!=2)return 2;hip_probe::Api a;a.Check(a.hipInit(0),"init");a.Check(a.hipSetDevice(0),"device");hip_probe::Handle m{},f{};a.Check(a.LoadModule(&m,argv[1]),"module");a.Check(a.hipModuleGetFunction(&f,m,"check_single_pack"),"function");void*p{};a.Check(a.hipMalloc(&p,65536*4),"alloc");void*args[]={&p};a.Check(a.hipModuleLaunchKernel(f,2048,1,1,32,1,1,0,nullptr,args,nullptr),"launch");a.Check(a.hipDeviceSynchronize(),"sync");std::vector<unsigned>v(65536);a.Check(a.hipMemcpy(v.data(),p,v.size()*4,2),"read");unsigned count=0;for(unsigned i=0;i<v.size();i++)if(v[i]){if(count<10)printf("mismatch %x %x\n",i,v[i]);count++;}printf("half encodings checked65536 mismatches%u\n",count);a.hipFree(p);a.hipModuleUnload(m);return count?1:0;}catch(const std::exception&e){puts(e.what());return 1;}}
