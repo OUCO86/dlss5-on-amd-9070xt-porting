@@ -2758,3 +2758,7 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 23:25用户指出漏更新中文首页。补齐README.zh-CN.md的0.27三包介绍、简短更新记录、仓库默认配置入口、自适应启用方式，以及RE9/Xbox鬼武者特殊版范围。此前包内中文说明已包含0.27，此次仅补仓库中文README，不改ZIP或校验和。
 
 23:29用户提供0.27三包夸克链接，已同步中英文README版本栏：OptiScaler 004278159ed8、REFramework 010683548f68、Magpie ec3a3282aa76；链接不放首页开头，包内容及SHA不变。
+
+## 2026-09-20 23:32：《匹诺曹的谎言》安装OptiScaler 0.27
+
+用户指定Lies of P/LiesofP/Binaries/Win64，确认LOP-Win64-Shipping退出后按0.27完整包清单安装540文件，源/目标SHA及旧文件备份SHA均通过。旧插件、配置及被替换文件备份D:\DLSSNR-Lab\liesofp-backups\20260920-233243-348（inventory.json可恢复），脚本Development/LiesOfP/install-optiscaler.ps1。配置使用包内仓库默认，自适应=0，带精确流式attention/双架构模块及此前黑屏shader修复；未启动游戏，待实玩。
