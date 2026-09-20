@@ -2734,3 +2734,9 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 用户要求安装。确认SB-Win64-Shipping退出后，替换实际Steam/StellarBlade/SB/Binaries/Win64的dlss5-amd.addon64（7a315550…）及DLSS5-AMD/native-game-tiled-assets/HIP下双架构deep_fast-packed模块（gfx1200 7eee02c1…/gfx1201 9fdd8a02…），三文件安装前后SHA通过。原三文件和flags备份D:\DLSSNR-Lab\main-reuse-backups\20260920-224023-409，安装脚本D:\DLSSNR-Lab\hip-backend\install-main-r3.ps1。保留用户游戏配置：ADAPTIVE=1、period4、HOTKEY=1、Graph=0、NETWORK_HEIGHT=auto、SHOW_FPS=0以及现有gain路径；main发布预设默认0不覆盖用户已开启的试玩设置。未启动游戏，待用户实玩。
 
 22:45用户实玩反馈：main新版在《剑星》画面较简单的场景，900P达到56–57FPS，用户明确感觉有提升。当前自适应复用开启；未提供同镜头F8完整计算的配对读数，因此不与之前52–54FPS直接相减宣称固定增幅，也不外推复杂场景。此次反馈未涉及新的画质判断。
+
+## 2026-09-20 22:52起：发布默认配置固定到仓库模板
+
+用户指出游戏配置靠部署累积、不易追溯，要求仓库默认文件自动随包。OptiScaler Release、Magpie候选打包及RE9特殊打包改为直接复制scripts/hip-game-flags.txt、hip-magpie-flags.txt、hip-re9-flags.txt，不再从旧stage/游戏读flags再零散追加；package-026传递ConfigDirectory。默认按仓库路径找scripts，单独上传脚本需同步模板并显式传ConfigDirectory，缺文件报错。普通游戏/RE9模板以已验证配置校对，保留各自超分/色彩契约，去机器gain路径；adaptive默认0、FPS默认1。Magpie模板补齐当前HIP优化参数。
+
+四个Windows打包脚本AST语法通过，三模板无重复键/机器绝对路径，PRE_UPSCALE和CODEC_SRGB按版本检查通过。未实际重打大包或改游戏配置。Repack/FinalizeOnly重封保留已有stage配置，新的Release带仓库默认。scripts/CONFIGURATION.md说明唯一来源与上传方法，Development旧同名文件加历史标注。用户当前《剑星》adaptive=1设置保留。

@@ -2,8 +2,9 @@
  [string]$Addon='D:\DLSSNR-Lab\c256-frag-src\native-c256-fragment.addon64',
  [string]$AddonSha='f5d3f7348e42f362a0db4233814e1b2d8c4842de0d1196620a40bbc299adde75',
  [string]$Modules='D:\DLSSNR-Lab\c256-frag-production-modules',
- [string]$OutputDirectory='D:\給網友打包',[string]$CodecDecodePath='D:\DLSSNR-Lab\native_codec_decode.hlsl')
+ [string]$OutputDirectory='D:\給網友打包',[string]$CodecDecodePath='D:\DLSSNR-Lab\native_codec_decode.hlsl',[string]$ConfigDirectory=(Join-Path $PSScriptRoot '..\..\scripts'))
 $ErrorActionPreference='Stop';$utf8=New-Object Text.UTF8Encoding($false)
+if(!(Test-Path "$ConfigDirectory\hip-magpie-flags.txt")){throw 'Missing repository default configuration'}
 $stage=Join-Path $OutputDirectory "Magpie-DLSS5-AMD-$Version"
 if((Test-Path $stage) -or (Test-Path "$stage.zip")){throw 'Output already exists'}
 if((Get-FileHash $Addon).Hash -ne $AddonSha){throw 'Candidate hash mismatch'}
@@ -37,8 +38,7 @@ foreach($rel in 'DLSS5-AMD\logs','DLSS5-AMD\native-game-tiled-assets\shader-cach
  if(Test-Path "$stage\$rel"){Remove-Item "$stage\$rel" -Recurse -Force}
 }
 $flag="$stage\DLSS5-AMD\native-game-flags.txt"
-$lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_ASYNC|_DEBUG)?=' -and $_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|MH_FFN_FRAG256|DECODER_BYTE|VIT_BYTE_STREAM|MODULE_DIR)='})+@('DLSS5_PRE_UPSCALE=0','DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_MH_FFN_FRAG256=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
-[IO.File]::WriteAllLines($flag,$lines,$utf8)
+Copy-Item "$ConfigDirectory\hip-magpie-flags.txt" $flag -Force
 $allowed=@('DLSS5-AMD\native-game-tiled-assets\native_codec_decode.hlsl','HIP-API-LICENSE.txt','dlss5-amd.addon64','README.txt','DLSS5-AMD-VERSION.txt','DLSS5-AMD\native-game-flags.txt','SHA256SUMS.txt')
 foreach($f in Get-ChildItem $stage -Recurse -File){
  $rel=$f.FullName.Substring($stage.Length+1)

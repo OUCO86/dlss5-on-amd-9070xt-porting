@@ -1,3 +1,4 @@
+# Historical development test configuration. Current HIP release defaults: scripts/hip-game-flags.txt (see scripts/CONFIGURATION.md).
 DLSS5_TEST_BLOCKED_C32_FFN=1
 DLSS5_TEST_BLOCKED_FFN=1
 DLSS5_TEST_BLOCKED_VIT=1

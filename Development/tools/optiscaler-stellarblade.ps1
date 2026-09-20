@@ -1,6 +1,6 @@
 ﻿param([ValidateSet('Package','FixPackage','Release','Repack','Install','Restore','Status')][string]$Action='Status',
  [string]$OutputDirectory='D:\給網友打包',[string]$Version='0.23',
- [string]$AddonPath='', [string]$AddonSha='', [switch]$PreUpscale,[string]$ModulesPath='',[switch]$Optimized,[string]$CodecDecodePath='D:\DLSSNR-Lab\native_codec_decode.hlsl')
+ [string]$AddonPath='', [string]$AddonSha='', [switch]$PreUpscale,[string]$ModulesPath='',[switch]$Optimized,[string]$CodecDecodePath='D:\DLSSNR-Lab\native_codec_decode.hlsl',[string]$ConfigDirectory=(Join-Path $PSScriptRoot '..\..\scripts'))
 $ErrorActionPreference='Stop'
 $lab='D:\DLSSNR-Lab'
 $stage="$lab\OptiScaler-DLSS5-AMD-test"
@@ -9,11 +9,13 @@ $backup="$lab\stellarblade-before-optiscaler"
 function Closed { if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Close Stellar Blade first.'} }
 if($Action -eq 'Repack'){$stage=Join-Path $OutputDirectory "OptiScaler-DLSS5-AMD-$Version";if(!(Test-Path $stage)){throw 'Stage missing'};Copy-Item "$lab\HIP-API-LICENSE.txt" "$stage\HIP-API-LICENSE.txt" -Force}
 if($Action -eq 'Release'){
+ if(!(Test-Path "$ConfigDirectory\hip-game-flags.txt")){throw 'Missing repository default configuration'}
  $source=$stage
  $stage=Join-Path $OutputDirectory "OptiScaler-DLSS5-AMD-$Version"
  if(Test-Path $stage){throw 'Release staging already exists.'}
  New-Item -ItemType Directory -Force $OutputDirectory|Out-Null
  Copy-Item $source $stage -Recurse
+ Copy-Item "$ConfigDirectory\hip-game-flags.txt" "$stage\DLSS5-AMD\native-game-flags.txt" -Force
  foreach($n in 'README-TEST.txt','SHA256SUMS-test.txt','setup_windows.bat','setup_linux.sh'){
   Remove-Item "$stage\$n" -ErrorAction SilentlyContinue
  }
@@ -26,10 +28,8 @@ if($Action -eq 'Release'){
  }
  if($PreUpscale){
   if(!$AddonPath){throw 'Pre-upscale package needs an explicitly verified addon'}
-  $flag="$stage\DLSS5-AMD\native-game-flags.txt"
-  $lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_PRE_UPSCALE(_DEBUG|_ASYNC)?='})+@('DLSS5_PRE_UPSCALE=1','DLSS5_PRE_UPSCALE_ASYNC=1')
-  [IO.File]::WriteAllLines($flag,$lines,(New-Object Text.UTF8Encoding($false)))
-  if($lines -notcontains 'DLSS5_TEST_ASYNC_SUBMIT=1'){throw 'Network asynchronous submission is required'}
+  $lines=Get-Content "$stage\DLSS5-AMD\native-game-flags.txt"
+  if($lines -notcontains 'DLSS5_PRE_UPSCALE=1' -or $lines -notcontains 'DLSS5_PRE_UPSCALE_ASYNC=1'){throw 'Pre-upscale flags missing from repository template'}
  }
  $ini=Get-Content "$stage\OptiScaler.ini" -Raw
  if($ini -notmatch '(?m)^Dx12Upscaler=fsr31\s*$'){throw 'Incorrect backend configuration'}
@@ -52,10 +52,9 @@ if($Action -eq 'Release'){
  }
  if($Optimized){
   if(!$ModulesPath -or !$AddonPath -or !$PreUpscale){throw 'Optimized package requires matched dual modules/addon and pre-upscale'}
-  $flag="$stage\DLSS5-AMD\native-game-flags.txt"
-  $lines=@(Get-Content $flag|Where-Object{$_ -notmatch '^DLSS5_HIP_(MH_FEATURE_BYTE|MH_PROJ_DIAG_FB|MH_BYTE_STREAM|MH_FFN_FRAG256|DECODER_BYTE|VIT_BYTE_STREAM)='})+@('DLSS5_HIP_MH_FEATURE_BYTE=1','DLSS5_HIP_MH_PROJ_DIAG_FB=1','DLSS5_HIP_MH_BYTE_STREAM=1','DLSS5_HIP_DECODER_BYTE=1','DLSS5_HIP_MH_FFN_FRAG256=1','DLSS5_HIP_VIT_BYTE_STREAM=0')
+  $lines=Get-Content "$stage\DLSS5-AMD\native-game-flags.txt"
+  foreach($key in 'MH_FEATURE_BYTE','MH_PROJ_DIAG_FB','MH_BYTE_STREAM','DECODER_BYTE','MH_FFN_FRAG256'){if($lines -notcontains "DLSS5_HIP_$key=1"){throw "Missing optimized default $key"}}
   if($lines -match '^DLSS5_HIP_MODULES='){throw 'Package must not override architecture selection'}
-  [IO.File]::WriteAllLines($flag,$lines,(New-Object Text.UTF8Encoding($false)))
  }
  if(Get-ChildItem "$stage\DLSS5-AMD\logs" -File|Where-Object{$_.Name -ne '.keep'}){throw 'Package contains runtime logs'}
 }

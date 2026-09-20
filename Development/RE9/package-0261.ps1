@@ -1,4 +1,4 @@
-﻿param([switch]$FinalizeOnly)
+﻿param([switch]$FinalizeOnly,[string]$ConfigDirectory=(Join-Path $PSScriptRoot '..\..\scripts'))
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -10,6 +10,7 @@ if((Get-FileHash "$g\re9-present.addon64").Hash -ne $addon){throw 'Wrong game-te
 $ref=Get-Content "$r\reframework-source.json" -Raw|ConvertFrom-Json
 if((Get-FileHash "$g\dinput8.dll").Hash -ne $ref.dll_sha256){throw 'Wrong REFramework'}
 if(!$FinalizeOnly){
+if(!(Test-Path "$ConfigDirectory\hip-re9-flags.txt")){throw 'Missing repository RE9 configuration'}
 $sourceManifest=Get-Content "$g\SHA256SUMS.txt"
 # Use the original package inventory, never recursively copy a game directory.
 $skip=@('README.txt','!! README_EXTRACT ALL FILES TO GAME FOLDER !!.txt','dlss5-amd.addon64','OptiScaler.ini','DLSS5-AMD\native-game-flags.txt','DLSS5-AMD\native-game-tiled-assets\native_codec_decode.hlsl','DLSS5-AMD\native-game-tiled-assets\native_text_overlay.hlsl')
@@ -24,9 +25,7 @@ if((Get-FileHash "$a\native_codec_decode.hlsl").Hash -ne '98a790d928e61c3eab905f
 if((Get-FileHash "$a\native_text_overlay.hlsl").Hash -ne '8d20c7f5d9c08d4cc50ad726c4e31ba1dbf0b7281f5ecafeec8196defc997423'){throw 'Wrong overlay shader'}
 $m='D:\DLSSNR-Lab\c256-frag-production-modules';$manifest=@(Get-Content "$m\SHA256SUMS");if($manifest.Count -ne 48){throw 'Wrong module count'}
 foreach($line in $manifest){$p=$line.Substring(66).Replace('/','\');$dest="$a\HIP\$p";New-Item -ItemType Directory -Force (Split-Path $dest)|Out-Null;Copy-Item "$m\$p" $dest;if((Get-FileHash $dest).Hash -ne $line.Substring(0,64)){throw "Module mismatch $p"}}
-$f=Get-Content "$g\DLSS5-AMD\native-game-flags.txt"|Where-Object{$_ -notmatch '^DLSS5_(SHOW_FPS|NOTICE|RE9_SNAPSHOT|NETWORK_HEIGHT|PRE_UPSCALE|PRE_UPSCALE_ASYNC)='}
-$f+=@('DLSS5_SHOW_FPS=1','DLSS5_NOTICE=2','DLSS5_RE9_SNAPSHOT=0','DLSS5_NETWORK_HEIGHT=900','DLSS5_PRE_UPSCALE=0','DLSS5_PRE_UPSCALE_ASYNC=0')
-$f|Set-Content "$stage\DLSS5-AMD\native-game-flags.txt" -Encoding ASCII
+Copy-Item "$ConfigDirectory\hip-re9-flags.txt" "$stage\DLSS5-AMD\native-game-flags.txt" -Force
 '1'|Set-Content "$stage\DLSS5-AMD\re9-present-mode.txt" -Encoding ASCII
 # Portable ReShade configuration; avoid user paths, layout and duplicate FPS overlay.
 @'

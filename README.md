@@ -12,6 +12,8 @@ FP8 (E4M3) operands, and wired into a game through a ReShade add-on that hooks t
 
 **Latest (2026-09-19, 0.26 OptiScaler / Magpie)**: full packages now include direct FP8 FFN input loads, contiguous C256 weight fragments, and the missing R11G11B10 decoder shader that fixes black output at lower Effects Quality in Lies of P. Both gfx1200/gfx1201 kernel sets are included; RX 9060/XT still awaits hardware feedback. Packages are built and verified; downloads are in the version table below.
 
+**Release configuration**: package defaults are tracked in [scripts/CONFIGURATION.md](scripts/CONFIGURATION.md); fresh packages copy the matching repository template instead of inheriting local gameplay settings.
+
 **Unreleased HIP update (2026-09-20)**: exact streaming ViT attention is enabled in source builds. Optional R3 adaptive reuse is disabled by default; enabling it trades some accuracy for speed. See [configuration and matched DLL/module requirements](Development/HIP/VIT-REUSE.md). INT4 and sparse pruning experiments are not included.
 
 **Status (2026-09-17, `0.20`, HIP backend)**: the inference backend moved from DirectX 12 Shader Model 6.10 wave matrix to AMD HIP — the 24 network kernels ship as gfx1201 binaries (`.hsaco`) and run through the HIP 7 runtime that comes with the AMD driver (`amdhip64_7.dll`). Output is bit-identical to the 0.15 DX12 chain (same 40-frame output hash); isolated 1600×900 inference 16.8 → ≈15.5 ms, Stellar Blade in-game 900p 47 → 52 fps. No Agility SDK 1.721 preview runtime, no Shader Model 6.10 and no Windows Developer Mode are needed any more. The DX12 chain below stays as documented history.
