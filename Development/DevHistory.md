@@ -2744,3 +2744,5 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 ## 2026-09-20 23:01：《鬼武者》Xbox版安装REFramework后置包
 
 用户要求把RE9版本试装到C:\XboxGames\Onimusha- Way of the Sword。实际主程序在Content\OnimushaWotS.exe；确认进程未运行后，从已发布OptiScaler-REFramework-DLSS5-AMD-0.26.1完整包按SHA256SUMS清单安装543文件，安装前源文件及安装后目标SHA全部通过。唯一覆盖的原文件amd_fidelityfx_dx12.dll已备份，完整恢复清单在D:\DLSSNR-Lab\onimusha-backups\20260920-230114-918；脚本Development/Onimusha/install-reframework.ps1支持Restore -Backup。未改游戏config.ini、未启动游戏，尚未验证此Xbox游戏的REFramework兼容性。首次测试按RE9包契约：SDR≤1080P、DLSS超分输入由OptiScaler转FSR，固定900P后置网络；F6处理开关/F7信息层。此次装的是指定0.26.1兼容包，不混入main新ABI模块。
+
+23:11用户实玩反馈：Xbox版《鬼武者》使用REFramework 0.26.1后置包“没啥毛病”；900P约30多FPS，开启游戏内帧生成后可玩，用户感觉游戏本身较吃资源。记录为该游戏/本机的初步实玩兼容反馈；未明确30多FPS是插帧前还是显示帧率，未提供关闭插件的同场景基线，不据此归因具体性能瓶颈或外推其他Xbox游戏。没有进一步更改安装或配置。
