@@ -6,9 +6,13 @@
 Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8（E4M3）的 HLSL 计算着色器，在 AMD RDNA 4
 显卡上跑起来，并通过 ReShade 插件钩住游戏的 FSR dispatch，对 1080p 画面做后处理。
 
-**REFramework 专用版（2026-09-20，0.26.1）**：**这是专门针对 RE9 这类特殊接入场景的非常规版本，普通游戏请使用通用 OptiScaler 版。** 已在《生化9》实测，采用 FSR 超分之后的 HIP 后处理，固定900P计算，输出最高1080P SDR；F6开关处理、F7隐藏/恢复状态和帧率信息。允许游戏超分，但不代表所有RE引擎游戏都已验证。通用 OptiScaler/Magpie 仍为0.26。
+**REFramework 专用版（0.27）**：**针对《生化9》、Xbox版《鬼武者：剑之道》这类特殊接入场景，普通游戏优先用通用 OptiScaler 版。** 两款游戏已用0.26.1实玩，0.27更新共用HIP核心。流程为FSR超分之后的HIP后处理，固定900P计算，输出最高1080P SDR；F6开关处理、F7隐藏/恢复信息。允许上游超分，不代表其他RE引擎游戏均已验证。
 
-**最新（2026-09-19，0.26 OptiScaler / Magpie）**：完整包集成FFN输入直读、C256连续权重片段优化，并补齐R11G11B10解码shader，修复《匹诺曹的谎言》降低效果品质后黑屏。包含gfx1200/gfx1201双架构内核，9060/XT仍待实机反馈。两包已生成并校验，下载见下方版本表。
+**最新（2026-09-20，0.27）**：Magpie、OptiScaler、OptiScaler-REFramework三个完整包均已生成并逐文件校验，包含完整模型和gfx1200/gfx1201双架构内核。新增精确流式ViT注意力、可选R3自适应复用，以及静止输入延长缓存、合并缓存提交。**自适应复用是有损功能，默认关闭；未包含INT4或稀疏剪枝实验。** 9060/XT仍待实机反馈。
+
+**默认配置**：新包自动带入仓库中的[普通游戏配置](scripts/hip-game-flags.txt)、[Magpie配置](scripts/hip-magpie-flags.txt)或[REFramework配置](scripts/hip-re9-flags.txt)，不继承本机试玩设置。来源与打包方法见[配置说明](scripts/CONFIGURATION.md)。
+
+**开启自适应复用**：在游戏目录的`DLSS5-AMD/native-game-flags.txt`中将`DLSS5_VIT_ADAPTIVE=0`改为`1`，并设置`DLSS5_VIT_REUSE_HOTKEY=1`、`DLSS5_HIP_GRAPH=0`、`DLSS5_HIP_VIT_BYTE_STREAM=0`，重启游戏。F8切换复用/完整计算；F8不取消原有跳层配置。精确流式注意力直接生效，无需开关。机制和限制见[ViT复用说明](Development/HIP/VIT-REUSE.md)。
 
 **现状（2026-09-17，`0.20`，HIP 后端）**：推理后端从 DirectX 12 Shader Model 6.10 wave matrix 换成 AMD HIP——网络的 24 个内核以 gfx1201 二进制（`.hsaco`）随包提供，由 AMD 驱动自带的 HIP 7 运行时（`amdhip64_7.dll`）执行。输出与 0.15 的 DX12 链逐位相同（40 帧输出哈希一致）；独立测试台 1600×900 每帧 16.8 → ≈15.5 ms，《剑星》游戏内 900p 47 → 52 fps。不再需要 Agility SDK 1.721 预览运行时、Shader Model 6.10 和 Windows 开发人员模式。下面的 DX12 链作为历史记录保留。
 
@@ -29,7 +33,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 | `src/` | 宿主代码：ReShade 插件（`native_submission_order_probe.cpp` + `native_game_*.h`）和离线测试台（`d3d12_native_network70_test.cpp`）；网络每一段一个头文件（`native_c64.h`、`native_preblock_runtime.h`、`native_vit_*.h`、`native_post70.h` 等）。 |
 | `shaders/` | 快速链的 HLSL 计算核（DX12 版）。wave-matrix 核是 `native_wave_*.hlsl`，`NATIVE_*` 宏选择快速路径。 |
 | `hip/` | 0.20 HIP 后端的内核：21 份 `.hip` 源码、`rtc_compile.cpp`（源码 → gfx1201 `.hsaco`，走驱动自带的 COMGR，不用 SDK）、`build-modules.ps1`（随包 24 个模块的配方）、`SHA256SUMS`。 |
-| `scripts/` | `build-addon.sh`（mingw-w64 交叉编译插件）、`build-bench.sh`、`bench.ps1`（用预览版 dxc 编译快速链全部着色器并跑测试台）、`deploy_fast.ps1` / `update-manifest.ps1`（装进游戏资产目录）、`game-flags.txt`（游戏当前使用的运行时 flag）。 |
+| `scripts/` | `build-addon.sh`（mingw-w64 交叉编译插件）、`build-bench.sh`、`bench.ps1`（用预览版 dxc 编译快速链全部着色器并跑测试台）、`deploy_fast.ps1` / `update-manifest.ps1`（装进游戏资产目录）、`hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt`（HIP发布默认配置）。 |
 | `tools/` | `compare_fast_output.py`（对精确链算 PSNR）、`flicker_stats.py`（游戏内 dump 的帧间分析）。 |
 | `Development/` | 过程中产生的一切：逆向笔记、逐块参考实现与校验脚本、快速链长出来之前的 76 层嵌套实验 runner、计划和状态日志。`DevHistory.md` 是统一整理后的开发史（唯一持续更新的一份），各时期的原始文档在 `history/`。编译用不到。 |
 
@@ -126,6 +130,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | 0.25 · [Magpie](https://pan.quark.cn/s/09630ed99606) · [OptiScaler](https://pan.quark.cn/s/636691131c5f)（HIP） | 09-19 | **优化**：复用C32/多头注意力的指数计算、简化倒数计算；中间特征和解码输出直接用FP8字节传递，减少数据搬运；解码完整分组走快速路径。**修复/兼容**：修复900档尾部漏写和中文路径加载失败，新增9060/XT的gfx1200内核，与gfx1201自动选择。9070 XT回归通过，9060/XT待实机反馈；Magpie实测1080P只做DLSS5约37fps，与之前基本持平。Magpie、OptiScaler均提供完整包。 |
 | 0.26 · [Magpie](https://pan.quark.cn/s/7ce2ca11db43) · [OptiScaler](https://pan.quark.cn/s/c880a70f0824)（HIP） | 09-19 | FFN直接读取FP8字节片段，省去入口共享缓冲暂存及两道同步；C256权重在初始化时预排成连续矩阵片段，减少分散读取和字节拼装。补齐漏打包的R11G11B10解码shader，修复《匹诺曹的谎言》降低效果品质后黑屏，用户复测恢复；增加shader编译/绑定校验。两款完整包已生成，包内文件及44种shader组合校验通过。 |
 | 0.26.1 · [OptiScaler-REFramework](https://pan.quark.cn/s/624c87a6aa11)（HIP，非常规版） | 09-20 | **专门针对RE9这类特殊接入场景的非常规版本，普通游戏请用通用版；目前仅《生化9》实测。** 后置HIP兼容：R10G10B10A2/FP16转换，FSR后处理、固定900P计算，保留1080P SDR输出保护；补齐状态/分辨率/Present帧率与F7信息开关。集成REFramework、OptiScaler、ReShade、完整模型及gfx1200/gfx1201内核，沿用0.26优化。用户实玩通过。 |
+| 0.27 · Magpie / OptiScaler / OptiScaler-REFramework（HIP） | 09-20 | 精确流式ViT注意力减少中间存储与重复读取，保持原计算/舍入；可选R3自适应复用增加变化检测、静止输入延长缓存和融合提交，默认关闭。三包直接使用仓库默认配置，带完整模型和双架构内核，不含INT4/剪枝。REFramework保留固定900P、最高1080P SDR后置契约。DLL重新编译，三包各44个shader变体及ZIP逐文件校验通过。 |
 
 ## 权重
 

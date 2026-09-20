@@ -2754,3 +2754,5 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 统一脚本Development/tools/package-027.ps1，三包flags直接复制仓库对应模板（adaptive默认0），写0.27版本/配置来源/简短优化说明，不含INT4/稀疏。REFramework保留固定900P、≤1080P SDR后置契约，并区分RE9/Xbox鬼武者0.26.1实玩与0.27核心更新。新DLL编译及RE9几何CPU检查通过；三包各44个shader变体编译通过，48模块及配置复制hash核对，每个ZIP逐文件SHA及条目数验证通过。ZIP路径分隔符兼容已修正；README显式UTF8读取后重写对应ZIP条目并重新全量校验。最终结果Development/results/release-027/packages.json。
 
 输出D:\給網友打包：Magpie-DLSS5-AMD-0.27.zip（723 payload文件，约336MB）、OptiScaler-DLSS5-AMD-0.27.zip（540，约366MB）、OptiScaler-REFramework-DLSS5-AMD-0.27.zip（544，约380MB），均有.sha256。未部署到游戏或上传网盘。README版本表已写0.27优化内容，等待用户提供下载链接。
+
+23:25用户指出漏更新中文首页。补齐README.zh-CN.md的0.27三包介绍、简短更新记录、仓库默认配置入口、自适应启用方式，以及RE9/Xbox鬼武者特殊版范围。此前包内中文说明已包含0.27，此次仅补仓库中文README，不改ZIP或校验和。
