@@ -1,0 +1,17 @@
+--- a/hip/c32_fused_ffn_attention.hip
++++ b/hip/c32_fused_ffn_attention.hip
+@@ -467,8 +467,12 @@
+   // hip_post_head_fast_half in the epilogue (HLSL DLSS5_C32_EPILOGUE shape): no raw write/read-back, no head dispatch.
+   // 16 tokens x 3 rows = 48 tasks over the wave's 32 lanes; the 32-term dot runs in the same sequential f32 order.
+   sync_owned_rows();uint l=tid%32,ww=sourcew+2*sx;
+-  for(uint task=l;task<48;task+=32){uint tok=first+task/3,row=task%3;int x=int((window%(ww/8))*8+tok%8)-int(sx),y=int((window/(ww/8))*8+tok/8)-int(sy);if(x<0||y<0||x>=int(sourcew)||y>=int(sourceh))continue;uint p=uint(y)*sourcew+uint(x);
+-   float acc=0.f;for(uint j=0;j<32;j++)acc+=float(scratch.ex[tok*34+j])*headw[row*32+j];acc=Hrtz(acc);float centered=color[p*4+row]*.125f-.0625f,v=(acc*rgb_scale+centered)*8.f+.5f;rgb[p*3+row]=clampf(v,0.f,1.f);}
++  if(l<16){uint tok=first+l;int x=int((window%(ww/8))*8+tok%8)-int(sx),y=int((window/(ww/8))*8+tok/8)-int(sy);
++   if(x>=0&&y>=0&&x<int(sourcew)&&y<int(sourceh)){uint p=uint(y)*sourcew+uint(x);float a0=0.f,a1=0.f,a2=0.f;
++    for(uint j=0;j<32;j++){float f=float(scratch.ex[tok*34+j]);a0+=f*headw[j];a1+=f*headw[32+j];a2+=f*headw[64+j];}
++    float sums[3]={a0,a1,a2};for(uint row=0;row<3;row++){float acc=Hrtz(sums[row]),centered=color[p*4+row]*.125f-.0625f,v=(acc*rgb_scale+centered)*8.f+.5f;rgb[p*3+row]=clampf(v,0.f,1.f);}
++   }
++  }
+  }
+ }
+ 
