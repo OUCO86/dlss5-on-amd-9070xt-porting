@@ -2728,3 +2728,7 @@ Spectrum forecast.py/runtime.py：沿扩散采样时间，用Chebyshev基+ridge�
 正常HIP DLL编译通过SHA7a315550…；标准build-modules双架构deep_fast-packed通过gfx1200 7eee02c1…/gfx1201 9fdd8a02…。9070XT主机main与已验证R3逐帧比较：900/1080×静止/平移/小遮挡×完整/复用×12帧、历史开启，共144对RGB全部同hash且有限，证明自动gain与迁移一致；16项直接GPU边界/融合提交检查通过。证据results/main-vit-reuse-20260920，诊断耗时不报新收益。未部署/打包/发布，游戏仍原R3。
 
 跨分支结论简记：精确流式已有整网无额外误差收益；R3动态近似有受控回放收益但实玩只反馈900P52–54FPS、未做严格配对。大FFN稀疏仅单层快约41%，特征剪枝误差39.6%，还没整网验；INT4局部缩放省5–8%但仍输FP8；C32稀疏展开/收缩均没整网收益；选择性KV额外收益很小，多stream负优化。失败代码/全量报告留AttExp，将来按需回读，不能重复计算收益或把未测试C64/C128/C256写成失败。
+
+## 2026-09-20 22:40：《剑星》安装main三项优化版本
+
+用户要求安装。确认SB-Win64-Shipping退出后，替换实际Steam/StellarBlade/SB/Binaries/Win64的dlss5-amd.addon64（7a315550…）及DLSS5-AMD/native-game-tiled-assets/HIP下双架构deep_fast-packed模块（gfx1200 7eee02c1…/gfx1201 9fdd8a02…），三文件安装前后SHA通过。原三文件和flags备份D:\DLSSNR-Lab\main-reuse-backups\20260920-224023-409，安装脚本D:\DLSSNR-Lab\hip-backend\install-main-r3.ps1。保留用户游戏配置：ADAPTIVE=1、period4、HOTKEY=1、Graph=0、NETWORK_HEIGHT=auto、SHOW_FPS=0以及现有gain路径；main发布预设默认0不覆盖用户已开启的试玩设置。未启动游戏，待用户实玩。
