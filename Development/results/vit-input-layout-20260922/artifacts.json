@@ -1,0 +1,22 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-input-layout\\kernel.hip",
+        "sha":  "BFCB50ED8203102A442059C4C5941CB2C0DEE0BFD51052E2B1A40CF7D2694F91"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-input-layout\\pure.exe",
+        "sha":  "C796B2D08EF0171157E48886F4FD7FC31895B1F15AD912F18EF21379BF0659A6"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-input-layout\\network.exe",
+        "sha":  "BB11065603198151C1063F5507961ED94EFE5B711FD9883437E32864F1F460D5"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-input-layout\\gfx1200.hsaco",
+        "sha":  "CB6C3EB2B2B3BBB54FF32F3DB30D4EEB32FAD503577C836AC7045B8901984FB8"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-input-layout\\modules\\deep_fast-packed.hsaco",
+        "sha":  "166A250CA9A450CE590FE0092B21AD41A68234CCF1C0B61DD6F8370F6D194407"
+    }
+]

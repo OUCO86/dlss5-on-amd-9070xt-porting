@@ -1,0 +1,13 @@
+#include <windows.h>
+#include <fstream>
+#include <vector>
+#include <string>
+#include "Development/HIP/hip_reference_network.h"
+std::vector<float> read(const char*p){std::ifstream f(p,std::ios::binary|std::ios::ate);if(!f)throw std::runtime_error(p);size_t n=size_t(f.tellg());if(n%4)throw std::runtime_error("unaligned");std::vector<float>x(n/4);f.seekg(0);if(!f.read(reinterpret_cast<char*>(x.data()),n))throw std::runtime_error("read");return x;}
+int main(int argc,char**argv){try{
+ if(argc!=8)throw std::runtime_error("assets modules flags input expected width height");unsigned W=unsigned(std::stoul(argv[6])),H=unsigned(std::stoul(argv[7]));std::ifstream flags(argv[3]);std::string line;while(std::getline(flags,line)){if(!line.empty()&&line.back()=='\r')line.pop_back();auto eq=line.find('=');if(line.rfind("DLSS5_",0)==0&&eq!=std::string::npos)_putenv_s(line.substr(0,eq).c_str(),line.substr(eq+1).c_str());}
+ /* OPTIONS */
+ if(o.graph)throw std::runtime_error("graph off required");o.modules=argv[2];hip_reference::Network net(o);auto&api=net.Runtime();auto input=read(argv[4]),expected=read(argv[5]);if(input.size()!=size_t(W)*H*4||expected.size()!=size_t(W)*H*3)throw std::runtime_error("shape");void*x{},*y{};api.Check(api.hipMalloc(&x,input.size()*4),"input");api.Check(api.hipMalloc(&y,expected.size()*4),"output");api.Check(api.hipMemcpy(x,input.data(),input.size()*4,1),"upload");
+ for(unsigned frame=0;frame<2;frame++){net.Enqueue(x,nullptr,y,0);net.Synchronize();std::vector<float>actual(expected.size());api.Check(api.hipMemcpy(actual.data(),y,actual.size()*4,2),"raw check");size_t diff=0;for(size_t i=0;i<actual.size();i++)diff+=memcmp(&actual[i],&expected[i],4)!=0;printf("RAW frame=%u bitdiff=%llu\n",frame,(unsigned long long)diff);if(diff)throw std::runtime_error("network output changed");}
+ if(!net.C32ProbeDone())throw std::runtime_error("target not reached");api.hipFree(x);api.hipFree(y);puts("PASS ViT input layout controls");return 0;
+}catch(const std::exception&e){fprintf(stderr,"FAIL %s\n",e.what());return 1;}}

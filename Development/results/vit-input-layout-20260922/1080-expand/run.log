@@ -1,0 +1,7 @@
+LAYOUT_DONE matrix
+LAYOUT_DONE pack
+LAYOUT_DONE pair
+LAYOUT_DONE dynamic_control
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT input layout controls

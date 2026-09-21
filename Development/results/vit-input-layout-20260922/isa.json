@@ -1,0 +1,47 @@
+{
+  "vit_pack_input": {
+    "NumVgprs": 7,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma_static": 0,
+    "load64_static": 0,
+    "waitload_static": 1
+  },
+  "vit_pack_input_tiled": {
+    "NumVgprs": 10,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma_static": 0,
+    "load64_static": 0,
+    "waitload_static": 1
+  },
+  "vit_expand_blocked_fp8_frag_bytein": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma_static": 20,
+    "load64_static": 25,
+    "waitload_static": 8
+  },
+  "vit_expand_blocked_fp8_frag_tiledin": {
+    "NumVgprs": 48,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma_static": 4,
+    "load64_static": 5,
+    "waitload_static": 4
+  },
+  "probe_vit_tiled_fixed": {
+    "NumVgprs": 76,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma_static": 20,
+    "load64_static": 25,
+    "waitload_static": 10
+  }
+}
