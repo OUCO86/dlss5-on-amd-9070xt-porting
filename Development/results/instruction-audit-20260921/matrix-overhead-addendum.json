@@ -1,0 +1,14 @@
+{
+  "900": {
+    "additional_fp8_GFLOP": 25.600720896,
+    "additional_fp16_GFLOP": 36.54549504,
+    "additional_advertised_peak_budget_ms": 0.25322441691754005,
+    "principal_plus_known_extra_budget_ms": 2.2482204024748986
+  },
+  "1080": {
+    "additional_fp8_GFLOP": 36.664246272,
+    "additional_fp16_GFLOP": 53.802958848,
+    "additional_advertised_peak_budget_ms": 0.3701651705874629,
+    "principal_plus_known_extra_budget_ms": 3.2294100151538743
+  }
+}

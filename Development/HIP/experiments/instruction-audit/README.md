@@ -1,0 +1,3 @@
+# Static instruction and arithmetic audit
+
+build.ps1 compiles canonical multihead_fast_padded.hip on gfx1201 and produces its .hsaco.s. analyze.py C32_ASM MH_ASM OUTPUT_DIR counts selected static kernel opcodes/resources and adds known omitted matrix-emulation FLOPs to the earlier principal model. Static instruction counts cannot be converted directly into time shares or dynamic rates. Baseline C32 assembly used is the adopted post-head-shared-input build. Results: results/instruction-audit-20260921. The proposed16-byte paired-K weight layout is a next hypothesis, not implemented by these tools.
