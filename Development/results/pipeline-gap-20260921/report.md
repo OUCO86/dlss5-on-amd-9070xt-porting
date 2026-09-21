@@ -1,5 +1,7 @@
 # Locate the larger performance gap — 2026-09-21
 
+**Correction:** later output checks found the mixed D3D12/HIP RGP capture changes the result (final6a933465… versus normal75aaba5e…). Its counter numbers below are retained as historical data, NOT valid normal-inference bottleneck evidence. The ordinary unprofiled bridge/Graph/burst comparisons remain valid. Use ../kernel-bottleneck-20260921 for bit-exact pure-HIP isolated captures.
+
 Rechecked current main network including RGB-head sharing, not the old24ms-era bridge result. Reuse/history off, same frozen capture/network instance. Full before/after restore input outside timing; privateHIP uploads once and excludes codec/sharedD3D resources from its loop. CPU Enqueue and completion wait recorded separately. Burst4/16 preserves stream order but amortizes per-frame host wait/submission boundaries. Graph0/1 separate runs, not a strict cross-Graph ABBA. Raw private/burst/full-after output comparisons all exact and finite; Graph stats3builds/1479replays confirm actual reuse of graphs.
 
 |900P /1080P|Graph0|Graph1|

@@ -1,0 +1,3 @@
+COUNTER_TARGET name=mh_ffn_fused_c128_project_mapped_g128_qkv_bytein_fb normal_launch_index=18 repeats=10000
+PURE frame=0 bitdiff=0
+PURE frame=1999 bitdiff=0

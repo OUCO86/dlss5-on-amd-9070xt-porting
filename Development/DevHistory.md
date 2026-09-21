@@ -2836,3 +2836,11 @@ AMD官方RDNA4 WMMA part2明确FP8每lane8字节片段未用满16字节读宽。
 用户明确开工。隔离host在初始化时将C256展开每512字节tile从[K16half][lane][8B]重排为[lane][K16half][8B]，收缩/投影/QKV区域保持原布局；kernel一次i4读取两个B片段，按每累加器原K顺序两次FP8 MMA，A仍两次8B。双架构编译。实际C256映射bytein_fb机器码global_load_b64从152→88、新增32条b128，WMMA136不变；静态指令2122→2030，VGPR指标101→97但VGPRBlocks/Occupancy仍12，LDS21568/private0不变。
 
 48对900/1080静止/平移12帧RGB逐位同且有限。160帧ABBA900约省0.0049ms、1080省0.0299ms；再1000帧去前200长测，90013.300928→13.302034ms持平，108018.837969→18.809923ms省0.0280ms（约0.15%）。收益小、有漂移，不外推游戏FPS；确认128bit指令变化并非无效源码重排，但没有出现翻倍收益。保留小收益候选，尚未进生产；试验复用原符号但权重格式不同，严禁与普通DLL混装，正式纳入须独立宽布局导出/路由及补控制。工具experiments/c256-wide-load，ISA/16组逐帧CSV/报告results/c256-wide-load-20260921。游戏/0.27包不动。
+
+## 2026-09-21 14:53起：按1→2→3排查，先定位单核计数器
+
+用户要求依次单核等待定位、C32资源压力、每wave重用更多位置。步骤1发现重要测量污染：混合D3D12/HIP RGP捕获下输出不匹配，早先整段捕获final6a933465…也不同于正常75aaba5e…；不启RGP的正常及C32重复一万次都正确。因此撤回旧整段21.7%作为正常推理瓶颈依据，普通无RGP时序/Graph/桥接数据不受影响，具体混合捕获原因未定。
+
+改真实编码输入一次上传、纯HIP进程（不建D3D设备），post_shift按实际Frame设3；首次设0被逐值检查抓住，修正后控制通过。每目标首调用重复10000，捕获第3000起16dispatch，全部三例首/尾原始网络float输出逐位同参考。C32 post访存busy99.056/stalled5.461/L2hit96.188%；C128融合FFN93.021/49.480/98.086%；C256 76.498/15.560/99.201%；LDS冲突0/2.062/1.585%。是热cache隔离、profiling时钟，非普通帧时间归因，但明确C128值得优先追。工具experiments/kernel-bottleneck，证据results/kernel-bottleneck-20260921，旧pipeline-gap报告已加撤回说明。
+
+步骤2前的资源读数校正：C32 post实际NumVgprs158，而217为NumVGPRsForWavesPerEU/保留指标；LDS19712、Occupancy6、private0。拆RGB的post核实际153仍Occupancy6，不能只削寄存器。旧no-unroll降寄存器反而慢0.64～1ms，不盲重做。下一候选针对post的4KiB半精度输入暂存，改为残差阶段重读同样输入，检验能否降低LDS并提升驻留。

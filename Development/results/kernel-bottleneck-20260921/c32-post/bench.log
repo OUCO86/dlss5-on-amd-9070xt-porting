@@ -1,0 +1,3 @@
+COUNTER_TARGET name=c32_post_merge_head_half normal_launch_index=234 repeats=10000
+PURE frame=0 bitdiff=0
+PURE frame=1999 bitdiff=0

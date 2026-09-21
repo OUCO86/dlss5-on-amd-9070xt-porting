@@ -1,0 +1,17 @@
+[INFO] [RGP Trace Source] (PID:23500) Client connected [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Client reached init state [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Initialized new client [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Client reached POSTDEVICEINIT state [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Successfully updated config [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Successfully queried SPM counters [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Successfully updated config [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Successfully set clocks to peak [6691 HIP]
+  [>                                       ]   0%   [INFO] [RGP Trace Source] (PID:23500) Successfully requested trace [6691 HIP]
+  [########################################] 100%  7.3 / 7.3 MB   [INFO] [RGP Trace Source] (PID:23500) Successfully collected and dumped trace [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Successfully wrote additional chunks [6691 HIP]
+Profiling (RGP) trace completed successfully! Size: 7929645 bytes
+[INFO] [RGP Trace Source] (PID:23500) Successfully restored clocks [6691 HIP]
+Trace saved to: D:\DLSSNR-Lab\hip-backend\kernel-bottleneck-pure-results\c128-ffn\trace.rgp
+Size: 7929645 bytes
+[INFO] [RGP Trace Source] (PID:23500) Client disconnected [6691 HIP]
+[INFO] [RGP Trace Source] (PID:23500) Finished disconnecting client [6691 HIP]
