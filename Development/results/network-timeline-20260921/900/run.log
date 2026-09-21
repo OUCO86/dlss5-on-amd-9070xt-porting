@@ -1,0 +1,7 @@
+VERIFY label=warm bitdiff=0 invalid=0
+VERIFY label=normal bitdiff=0 invalid=0
+VERIFY label=traced bitdiff=0 invalid=0
+VERIFY label=normal bitdiff=0 invalid=0
+VERIFY label=traced bitdiff=0 invalid=0
+VERIFY label=normal bitdiff=0 invalid=0
+PASS timeline output controls

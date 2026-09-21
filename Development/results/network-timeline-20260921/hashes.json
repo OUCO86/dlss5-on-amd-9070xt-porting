@@ -1,0 +1,32 @@
+[
+    {
+        "height":  900,
+        "file":  "input.f32",
+        "sha":  "5AD4A2E2237E99B66DCC460F8EFE1FC6FD67E5BD4D5124B14CF7C5E91684A5AB"
+    },
+    {
+        "height":  900,
+        "file":  "expected.f32",
+        "sha":  "8F0A989A9C407A8ABC695918BB3B43C1454F0A1AEF606FFCB3E4D4C829E4B13F"
+    },
+    {
+        "height":  900,
+        "file":  "rgb.f16",
+        "sha":  "75AABA5EF94368353F3F17C034B53918151AA2EBC98FF870B2A057D08AE910AB"
+    },
+    {
+        "height":  1080,
+        "file":  "input.f32",
+        "sha":  "F66892CD504E44BC7C4F281F6FA49295E5323204CB036B635815AB8A66FA3448"
+    },
+    {
+        "height":  1080,
+        "file":  "expected.f32",
+        "sha":  "D4CE077A4515FCE22DAB0856F3F69E93F4121CFDB3F7C339D3712FAAF70B841A"
+    },
+    {
+        "height":  1080,
+        "file":  "rgb.f16",
+        "sha":  "1DE20C219105CC281CBA1364A0A21D0DDC4510A95458EC0CA3B8C893EA54F23A"
+    }
+]

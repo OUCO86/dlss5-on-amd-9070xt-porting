@@ -1,0 +1,45 @@
+{
+  "timed_and_assembly_sibling_hsaco_sha256": "C381FCE5BB69927D8A33EBDD1ED2B083E4621BF504095CA3202E081034DFD67D",
+  "warning": "Static ops are not executed counts, clock shares, or a dual-issue eligibility ratio.",
+  "kernels": {
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8": {
+      "wmma_static_ops": 74,
+      "single_f32_arithmetic_static_ops": 483,
+      "dual_f32_arithmetic_static_ops": 233,
+      "conversion_static_ops": 538,
+      "lds_static_ops": 437,
+      "global_load_static_ops": 88,
+      "NumVgprs": 153,
+      "NumVGPRsForWavesPerEU": 169,
+      "LDSByteSize": 15360,
+      "Occupancy": 8,
+      "ScratchSize": 0
+    },
+    "c32_fast_ffn_attention_fused_half_chain": {
+      "wmma_static_ops": 70,
+      "single_f32_arithmetic_static_ops": 447,
+      "dual_f32_arithmetic_static_ops": 243,
+      "conversion_static_ops": 412,
+      "lds_static_ops": 387,
+      "global_load_static_ops": 114,
+      "NumVgprs": 177,
+      "NumVGPRsForWavesPerEU": 177,
+      "LDSByteSize": 15360,
+      "Occupancy": 8,
+      "ScratchSize": 0
+    },
+    "c32_post_merge_head_half": {
+      "wmma_static_ops": 58,
+      "single_f32_arithmetic_static_ops": 530,
+      "dual_f32_arithmetic_static_ops": 338,
+      "conversion_static_ops": 434,
+      "lds_static_ops": 417,
+      "global_load_static_ops": 107,
+      "NumVgprs": 158,
+      "NumVGPRsForWavesPerEU": 217,
+      "LDSByteSize": 19712,
+      "Occupancy": 6,
+      "ScratchSize": 0
+    }
+  }
+}

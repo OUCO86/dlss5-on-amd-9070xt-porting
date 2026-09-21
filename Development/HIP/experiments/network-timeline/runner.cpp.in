@@ -1,0 +1,31 @@
+#include <windows.h>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <chrono>
+#include "Development/HIP/hip_reference_network.h"
+std::vector<float> read(const char*p){std::ifstream f(p,std::ios::binary|std::ios::ate);if(!f)throw std::runtime_error(p);size_t n=size_t(f.tellg());if(n%4)throw std::runtime_error("unaligned");std::vector<float>x(n/4);f.seekg(0);if(!f.read(reinterpret_cast<char*>(x.data()),n))throw std::runtime_error("read");return x;}
+int main(int argc,char**argv){try{
+ if(argc!=8)throw std::runtime_error("assets modules flags input expected width height");unsigned W=unsigned(std::stoul(argv[6])),H=unsigned(std::stoul(argv[7]));
+ std::ifstream flags(argv[3]);std::string line;while(std::getline(flags,line)){if(!line.empty()&&line.back()=='\r')line.pop_back();auto eq=line.find('=');if(line.rfind("DLSS5_",0)==0&&eq!=std::string::npos)_putenv_s(line.substr(0,eq).c_str(),line.substr(eq+1).c_str());}
+ /* OPTIONS */
+ if(o.graph)throw std::runtime_error("timeline requires graph off");o.modules=argv[2];hip_reference::Network net(o);auto&api=net.Runtime();
+ auto input=read(argv[4]),expected=read(argv[5]);if(input.size()!=size_t(W)*H*4||expected.size()!=size_t(W)*H*3)throw std::runtime_error("shape");
+ void*x{},*y{};api.Check(api.hipMalloc(&x,input.size()*4),"input");api.Check(api.hipMalloc(&y,expected.size()*4),"output");api.Check(api.hipMemcpy(x,input.data(),input.size()*4,1),"upload");
+ auto run=[&](){net.Enqueue(x,nullptr,y,0);net.Synchronize();};
+ auto verify=[&](const char*label){std::vector<float>actual(expected.size());api.Check(api.hipMemcpy(actual.data(),y,actual.size()*4,2),"check");size_t diff=0,invalid=0;for(size_t i=0;i<actual.size();i++){diff+=memcmp(&actual[i],&expected[i],4)!=0;invalid+=!std::isfinite(actual[i]);}printf("VERIFY label=%s bitdiff=%llu invalid=%llu\n",label,(unsigned long long)diff,(unsigned long long)invalid);fflush(stdout);if(diff||invalid)throw std::runtime_error("trace output changed");};
+ net.ProbePrepare(16,512);
+ for(int i=0;i<40;i++)run();verify("warm");
+ FILE*times=fopen("frames.csv","wb");if(!times)throw std::runtime_error("frames csv");fprintf(times,"phase,frame,start_tick,end_tick,wall_ms\n");
+ for(unsigned phase=0;phase<5;phase++){
+  bool traced=phase==1||phase==3;unsigned n=traced?8:100;
+  for(unsigned i=0;i<n;i++){
+   auto tick=GetTickCount64();auto t=std::chrono::steady_clock::now();
+   if(traced)net.ProbeBegin((phase==1?0:8)+i);net.Enqueue(x,nullptr,y,0);if(traced)net.ProbeEnd();net.Synchronize();
+   double ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-t).count();fprintf(times,"%u,%u,%llu,%llu,%.9f\n",phase,i,tick,GetTickCount64(),ms);
+  }
+  fflush(times);verify(traced?"traced":"normal");
+ }
+ fclose(times);net.ProbeExport("timeline.csv");net.ProbeRelease();api.hipFree(x);api.hipFree(y);puts("PASS timeline output controls");return 0;
+}catch(const std::exception&e){fprintf(stderr,"FAIL %s\n",e.what());return 1;}}
