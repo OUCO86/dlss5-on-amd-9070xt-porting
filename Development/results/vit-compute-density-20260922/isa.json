@@ -1,0 +1,65 @@
+{
+  "probe_work1": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma": 16,
+    "global64": 20,
+    "loops": 1
+  },
+  "probe_work2": {
+    "NumVgprs": 84,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma": 32,
+    "global64": 20,
+    "loops": 1
+  },
+  "probe_work4": {
+    "NumVgprs": 96,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma": 64,
+    "global64": 20,
+    "loops": 1
+  },
+  "probe_work8": {
+    "NumVgprs": 97,
+    "ScratchSize": 0,
+    "Occupancy": 12,
+    "LDSByteSize": 0,
+    "wmma": 128,
+    "global64": 20,
+    "loops": 1
+  },
+  "probe_control2": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma": 16,
+    "global64": 20,
+    "loops": 1
+  },
+  "probe_control4": {
+    "NumVgprs": 92,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma": 16,
+    "global64": 20,
+    "loops": 1
+  },
+  "probe_control8": {
+    "NumVgprs": 94,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0,
+    "wmma": 16,
+    "global64": 20,
+    "loops": 1
+  }
+}

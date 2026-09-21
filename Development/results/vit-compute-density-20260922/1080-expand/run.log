@@ -1,0 +1,10 @@
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein work1
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein work2
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein work4
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein work8
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein control2
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein control4
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein control8
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT density controls

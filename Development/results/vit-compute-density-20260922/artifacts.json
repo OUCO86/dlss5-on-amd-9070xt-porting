@@ -1,0 +1,42 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\kernel.hip",
+        "sha":  "0287B90E1EC2E809286A0C49EC8B33C4051EB8A074D4F25B53AE7EDCE072FCD5"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\pure.exe",
+        "sha":  "7F0A63DB5690B66EA7B6F907CE411ABB31F392DF40AA7820DC0AD73C9E4D69C7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\gfx1200.hsaco",
+        "sha":  "44D168F0C74B23B6C24D2828291FBCB2453E4FDAEFDA758E530B1EE604C6F214"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\modules\\deep_fast-packed.hsaco",
+        "sha":  "A2845ED2A6FB50AB5D6F81BADEE3CF104ADF8203F31820D0620AF50D315B7412"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\seeded.hip",
+        "sha":  "7DB6DFF84EA674F930871B7983FA12FDF2824E68B245DC63431331B2F1F832BB"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\seeded-gfx1200.hsaco",
+        "sha":  "679A7C47110907626E79F979B31DC427955FF062F52497F088F51CB48A8D5846"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\modules-seeded\\deep_fast-packed.hsaco",
+        "sha":  "819B86FD8643E4E3B68EDE743FC939F9009BA92C46A3FBE9EF16A75E35546029"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\uniform.hip",
+        "sha":  "BDAAED503FC1A91D5E57588E97E1188DDB615FEAD04044A6240C9DA3F5FBC67B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\uniform-gfx1200.hsaco",
+        "sha":  "53656D5380D1ED7BBFBF8CB7793B8ED7D96547340A1814E4F3EA6D41D9E7AE82"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-compute-density\\modules-uniform\\deep_fast-packed.hsaco",
+        "sha":  "94593F3623CAF6D4E30FAFAC25B703C2D14055AA8C73F2329D723B3B20DF2826"
+    }
+]
