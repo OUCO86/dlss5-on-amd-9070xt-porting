@@ -1,0 +1,3206 @@
+{
+  "configurations": [
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 2,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 16.57937405,
+        "median": 16.723329349,
+        "max": 17.097627432
+      },
+      "event_tflops_median": 16.786055854,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 34.33948531622176,
+      "clock_adjusted_reference": 51.331072,
+      "clock_adjusted_percent": 32.57934950004551,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 2850,
+          "median": 3133,
+          "max": 3138
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 67,
+          "median": 77,
+          "max": 225
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 46,
+          "median": 47,
+          "max": 47
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 61,
+          "median": 71,
+          "max": 71
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 157,
+          "median": 191,
+          "max": 202
+        }
+      },
+      "max_wall_event_difference_percent": 0.7669951139290442
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 2,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 19.879625613,
+        "median": 19.964984525,
+        "max": 20.104407775
+      },
+      "event_tflops_median": 19.981511351,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 40.995861447638596,
+      "clock_adjusted_reference": 52.0192,
+      "clock_adjusted_percent": 38.380029921644315,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3166,
+          "median": 3175,
+          "max": 3180
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 89,
+          "median": 93,
+          "max": 98
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 48,
+          "median": 48,
+          "max": 49
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 79,
+          "median": 81,
+          "max": 82
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 252,
+          "median": 264,
+          "max": 265
+        }
+      },
+      "max_wall_event_difference_percent": 0.16463073214461166
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 2,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 20.468146735,
+        "median": 20.494784058,
+        "max": 20.522187221
+      },
+      "event_tflops_median": 20.532666604,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 42.0837454989733,
+      "clock_adjusted_reference": 52.084736,
+      "clock_adjusted_percent": 39.348925677572794,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3177,
+          "median": 3179.0,
+          "max": 3181
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 65,
+          "median": 65.5,
+          "max": 77
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 49,
+          "median": 49.0,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 83,
+          "median": 84.0,
+          "max": 84
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 277,
+          "median": 277.0,
+          "max": 278
+        }
+      },
+      "max_wall_event_difference_percent": 0.26675224995929064
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 4,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 24.90459049,
+        "median": 25.378942299,
+        "max": 25.504979233
+      },
+      "event_tflops_median": 25.424853955,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 52.112817862422986,
+      "clock_adjusted_reference": 52.256768,
+      "clock_adjusted_percent": 48.56584758360869,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3188,
+          "median": 3189.5,
+          "max": 3195
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 74,
+          "median": 75.5,
+          "max": 76
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 50,
+          "median": 50.0,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 79,
+          "median": 79.0,
+          "max": 81
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 244,
+          "median": 244.5,
+          "max": 250
+        }
+      },
+      "max_wall_event_difference_percent": 0.3136757281626603
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 4,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 30.480155367,
+        "median": 30.500666177,
+        "max": 30.557103927
+      },
+      "event_tflops_median": 30.581518325,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 62.62970467556468,
+      "clock_adjusted_reference": 51.511296,
+      "clock_adjusted_percent": 59.21160705605233,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3143,
+          "median": 3144,
+          "max": 3146
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 76,
+          "median": 79,
+          "max": 82
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 50,
+          "median": 50,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 86,
+          "median": 87,
+          "max": 87
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 299,
+          "median": 299,
+          "max": 300
+        }
+      },
+      "max_wall_event_difference_percent": 0.3734962337764629
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 4,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 31.136223468,
+        "median": 31.245106669,
+        "max": 31.273545339
+      },
+      "event_tflops_median": 31.287931802,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 64.15832991581108,
+      "clock_adjusted_reference": 51.249152,
+      "clock_adjusted_percent": 60.96707057513848,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3126,
+          "median": 3128.0,
+          "max": 3130
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 64,
+          "median": 67.5,
+          "max": 79
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 51,
+          "median": 51.0,
+          "max": 51
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 88,
+          "median": 89.0,
+          "max": 89
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 311,
+          "median": 311.0,
+          "max": 313
+        }
+      },
+      "max_wall_event_difference_percent": 0.2595111411497905
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 8,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 36.724602935,
+        "median": 37.497821349,
+        "max": 37.591592415
+      },
+      "event_tflops_median": 37.612710743,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 76.9975797720739,
+      "clock_adjusted_reference": 51.822592,
+      "clock_adjusted_percent": 72.3580583329371,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3162,
+          "median": 3163,
+          "max": 3166
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 74,
+          "median": 81,
+          "max": 83
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 51,
+          "median": 51,
+          "max": 51
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 83,
+          "median": 84,
+          "max": 85
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 269,
+          "median": 272,
+          "max": 274
+        }
+      },
+      "max_wall_event_difference_percent": 0.3054536377674483
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 43.638942949,
+        "median": 43.673610526,
+        "max": 43.693833563
+      },
+      "event_tflops_median": 43.768276684,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 89.67887171663243,
+      "clock_adjusted_reference": 51.167232,
+      "clock_adjusted_percent": 85.35464753301488,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3122,
+          "median": 3123.0,
+          "max": 3123
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 68,
+          "median": 76.5,
+          "max": 81
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 51,
+          "median": 52.0,
+          "max": 52
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 89,
+          "median": 89.5,
+          "max": 90
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 313,
+          "median": 314.0,
+          "max": 315
+        }
+      },
+      "max_wall_event_difference_percent": 0.26424322279793305
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 8,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 43.930091939,
+        "median": 44.165666472,
+        "max": 44.779328328
+      },
+      "event_tflops_median": 44.266216,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 90.68925353593428,
+      "clock_adjusted_reference": 51.011584,
+      "clock_adjusted_percent": 86.57968055255841,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3112,
+          "median": 3113.5,
+          "max": 3114
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 57,
+          "median": 122.5,
+          "max": 259
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 52,
+          "median": 52.0,
+          "max": 52
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 91,
+          "median": 91.0,
+          "max": 91
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 321,
+          "median": 322.0,
+          "max": 323
+        }
+      },
+      "max_wall_event_difference_percent": 0.2271473284640296
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 16,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 43.982561301,
+        "median": 44.093344072,
+        "max": 44.281352188
+      },
+      "event_tflops_median": 44.175873224,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 90.54074758110883,
+      "clock_adjusted_reference": 51.929088,
+      "clock_adjusted_percent": 84.91068449343844,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3159,
+          "median": 3169.5,
+          "max": 3175
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 69,
+          "median": 73.0,
+          "max": 74
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 52,
+          "median": 52.0,
+          "max": 52
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 84,
+          "median": 84.0,
+          "max": 84
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 246,
+          "median": 265.0,
+          "max": 269
+        }
+      },
+      "max_wall_event_difference_percent": 0.3181543165763059
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 16,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 49.641177252,
+        "median": 49.707006862,
+        "max": 49.744988019
+      },
+      "event_tflops_median": 49.784919852,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 102.06777589733058,
+      "clock_adjusted_reference": 51.503104,
+      "clock_adjusted_percent": 96.5126429311911,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3142,
+          "median": 3143.5,
+          "max": 3151
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 62,
+          "median": 64.5,
+          "max": 68
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 52,
+          "median": 52.0,
+          "max": 53
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 87,
+          "median": 88.0,
+          "max": 88
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 289,
+          "median": 296.5,
+          "max": 297
+        }
+      },
+      "max_wall_event_difference_percent": 0.1635671131778798
+    },
+    {
+      "run": "dual",
+      "kind": "fp32d",
+      "accumulators": 16,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 48.202146853,
+        "median": 49.585943514,
+        "max": 50.277835881
+      },
+      "event_tflops_median": 49.689639535,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 101.8191858603696,
+      "clock_adjusted_reference": 51.412992,
+      "clock_adjusted_percent": 96.44632919632453,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3136,
+          "median": 3138,
+          "max": 3139
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 55,
+          "median": 184,
+          "max": 214
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 53,
+          "median": 53,
+          "max": 53
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 89,
+          "median": 89,
+          "max": 89
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 299,
+          "median": 301,
+          "max": 302
+        }
+      },
+      "max_wall_event_difference_percent": 0.24793683989886944
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 1,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 319.872541227,
+        "median": 323.523179195,
+        "max": 333.332663045
+      },
+      "event_tflops_median": 324.38596241,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 83.16791238946016,
+      "clock_adjusted_reference": 409.862144,
+      "clock_adjusted_percent": 78.93463300553077,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 2263,
+          "median": 3127,
+          "max": 3131
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 85,
+          "median": 86,
+          "max": 359
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 45,
+          "median": 46,
+          "max": 47
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 62,
+          "median": 82,
+          "max": 83
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 191,
+          "median": 305,
+          "max": 315
+        }
+      },
+      "max_wall_event_difference_percent": 0.7231719344972987
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 1,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 377.902705911,
+        "median": 379.116307326,
+        "max": 379.588515336
+      },
+      "event_tflops_median": 380.093840403,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 97.4592049681234,
+      "clock_adjusted_reference": 397.279232,
+      "clock_adjusted_percent": 95.42817162060967,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3030,
+          "median": 3031,
+          "max": 3035
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 98,
+          "median": 100,
+          "max": 105
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 47,
+          "median": 48,
+          "max": 48
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 87,
+          "median": 88,
+          "max": 88
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 327,
+          "median": 330,
+          "max": 330
+        }
+      },
+      "max_wall_event_difference_percent": 0.37468430599688035
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 1,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 386.751007367,
+        "median": 387.316141426,
+        "max": 387.677783509
+      },
+      "event_tflops_median": 388.095594491,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 99.56713147197944,
+      "clock_adjusted_reference": 392.429568,
+      "clock_adjusted_percent": 98.69698234002591,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 2993,
+          "median": 2994,
+          "max": 2995
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 69,
+          "median": 70,
+          "max": 75
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 49,
+          "median": 49,
+          "max": 49
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 88,
+          "median": 88,
+          "max": 88
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 329,
+          "median": 329,
+          "max": 329
+        }
+      },
+      "max_wall_event_difference_percent": 0.24427166083367946
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 2,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 346.212224502,
+        "median": 346.883372251,
+        "max": 352.372194271
+      },
+      "event_tflops_median": 347.466659762,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 89.17310340642675,
+      "clock_adjusted_reference": 409.862144,
+      "clock_adjusted_percent": 84.63415744270347,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3124,
+          "median": 3127,
+          "max": 3136
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 76,
+          "median": 88,
+          "max": 159
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 49,
+          "median": 49,
+          "max": 49
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 86,
+          "median": 86,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 307,
+          "median": 309,
+          "max": 309
+        }
+      },
+      "max_wall_event_difference_percent": 0.2665453677032596
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 2,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 389.921671709,
+        "median": 390.558258951,
+        "max": 391.312056973
+      },
+      "event_tflops_median": 391.2077928,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 100.40058070719795,
+      "clock_adjusted_reference": 399.638528,
+      "clock_adjusted_percent": 97.72787946786752,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3049,
+          "median": 3049,
+          "max": 3049
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 75,
+          "median": 76,
+          "max": 77
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 50,
+          "median": 50,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 89,
+          "median": 89,
+          "max": 90
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 329,
+          "median": 329,
+          "max": 330
+        }
+      },
+      "max_wall_event_difference_percent": 0.22750369430747983
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 2,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 389.426739161,
+        "median": 393.309812555,
+        "max": 393.752485422
+      },
+      "event_tflops_median": 393.802458061,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 101.10792096529563,
+      "clock_adjusted_reference": 396.427264,
+      "clock_adjusted_percent": 99.21361325819407,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3024,
+          "median": 3024.5,
+          "max": 3033
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 61,
+          "median": 71.5,
+          "max": 192
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 50,
+          "median": 51.0,
+          "max": 51
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 90,
+          "median": 90.0,
+          "max": 90
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 329,
+          "median": 330.0,
+          "max": 330
+        }
+      },
+      "max_wall_event_difference_percent": 0.14557259838592
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 4,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 365.875918675,
+        "median": 373.06829031,
+        "max": 375.328078625
+      },
+      "event_tflops_median": 373.943057885,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 95.90444480976863,
+      "clock_adjusted_reference": 410.25536,
+      "clock_adjusted_percent": 90.9356285582716,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3126,
+          "median": 3130,
+          "max": 3137
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 65,
+          "median": 65,
+          "max": 200
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 51,
+          "median": 51,
+          "max": 51
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 88,
+          "median": 88,
+          "max": 89
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 313,
+          "median": 316,
+          "max": 322
+        }
+      },
+      "max_wall_event_difference_percent": 0.2339306896526804
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 4,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 397.03542765,
+        "median": 397.560959448,
+        "max": 397.992677531
+      },
+      "event_tflops_median": 398.338312807,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 102.20076078354757,
+      "clock_adjusted_reference": 403.243008,
+      "clock_adjusted_percent": 98.59091207056963,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3071,
+          "median": 3076.5,
+          "max": 3098
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 69,
+          "median": 70.0,
+          "max": 77
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 51,
+          "median": 51.5,
+          "max": 52
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 91,
+          "median": 91.0,
+          "max": 91
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 329,
+          "median": 330.0,
+          "max": 336
+        }
+      },
+      "max_wall_event_difference_percent": 0.21330119903301528
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 4,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 387.800591756,
+        "median": 394.35773858,
+        "max": 400.790553515
+      },
+      "event_tflops_median": 394.802252891,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 101.37731068894603,
+      "clock_adjusted_reference": 401.211392,
+      "clock_adjusted_percent": 98.29176001562787,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3056,
+          "median": 3061,
+          "max": 3076
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 71,
+          "median": 283,
+          "max": 312
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 52,
+          "median": 52,
+          "max": 52
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 91,
+          "median": 91,
+          "max": 91
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 329,
+          "median": 329,
+          "max": 329
+        }
+      },
+      "max_wall_event_difference_percent": 0.14014817691098508
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 8,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 377.754169988,
+        "median": 379.287820543,
+        "max": 383.601177108
+      },
+      "event_tflops_median": 379.733386664,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 97.50329576940874,
+      "clock_adjusted_reference": 411.041792,
+      "clock_adjusted_percent": 92.27475841264337,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3131,
+          "median": 3136,
+          "max": 3146
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 63,
+          "median": 297,
+          "max": 371
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 52,
+          "median": 52,
+          "max": 52
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 89,
+          "median": 89,
+          "max": 89
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 312,
+          "median": 314,
+          "max": 320
+        }
+      },
+      "max_wall_event_difference_percent": 0.1519864674868348
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 403.424413795,
+        "median": 403.853073568,
+        "max": 404.92605604
+      },
+      "event_tflops_median": 404.643672837,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 103.81827084010283,
+      "clock_adjusted_reference": 407.240704,
+      "clock_adjusted_percent": 99.16815033499205,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3104,
+          "median": 3107.0,
+          "max": 3123
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 65,
+          "median": 68.5,
+          "max": 70
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 52,
+          "median": 52.0,
+          "max": 53
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 91,
+          "median": 92.0,
+          "max": 92
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 328,
+          "median": 331.0,
+          "max": 337
+        }
+      },
+      "max_wall_event_difference_percent": 0.22184325508482813
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 8,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 381.100831741,
+        "median": 386.841248654,
+        "max": 388.198511489
+      },
+      "event_tflops_median": 387.36850925,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 99.44505106786633,
+      "clock_adjusted_reference": 404.815872,
+      "clock_adjusted_percent": 95.5598027179132,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3076,
+          "median": 3088.5,
+          "max": 3116
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 768,
+          "median": 1295.0,
+          "max": 1538
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 53,
+          "median": 53.0,
+          "max": 53
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 90,
+          "median": 90.0,
+          "max": 90
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 325,
+          "median": 326.5,
+          "max": 329
+        }
+      },
+      "max_wall_event_difference_percent": 0.14052219454388215
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 16,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 376.826222815,
+        "median": 381.04953465,
+        "max": 385.962835551
+      },
+      "event_tflops_median": 381.73153465,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 97.95617857326478,
+      "clock_adjusted_reference": 412.090368,
+      "clock_adjusted_percent": 92.46746933187237,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3140,
+          "median": 3144,
+          "max": 3149
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 434,
+          "median": 446,
+          "max": 589
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 53,
+          "median": 53,
+          "max": 53
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 90,
+          "median": 90,
+          "max": 90
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 322,
+          "median": 323,
+          "max": 323
+        }
+      },
+      "max_wall_event_difference_percent": 0.17865959142751595
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 16,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 383.754556962,
+        "median": 385.325175886,
+        "max": 390.036051002
+      },
+      "event_tflops_median": 385.996398728,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 99.05531513778921,
+      "clock_adjusted_reference": 409.534464,
+      "clock_adjusted_percent": 94.08858344239374,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3114,
+          "median": 3124.5,
+          "max": 3133
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 574,
+          "median": 759.0,
+          "max": 1090
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 53,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 91,
+          "median": 91.0,
+          "max": 92
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 324,
+          "median": 329.0,
+          "max": 335
+        }
+      },
+      "max_wall_event_difference_percent": 0.17389355044619953
+    },
+    {
+      "run": "initial",
+      "kind": "fp8",
+      "accumulators": 16,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 378.607483927,
+        "median": 385.9903579,
+        "max": 386.911439178
+      },
+      "event_tflops_median": 386.35429865,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 99.22631308483291,
+      "clock_adjusted_reference": 406.585344,
+      "clock_adjusted_percent": 94.93464621784301,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3097,
+          "median": 3102.0,
+          "max": 3127
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 1260,
+          "median": 1538.0,
+          "max": 1538
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 91,
+          "median": 91.0,
+          "max": 91
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 325,
+          "median": 327.5,
+          "max": 332
+        }
+      },
+      "max_wall_event_difference_percent": 0.21384489025317532
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 1,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 148.660574407,
+        "median": 149.988936882,
+        "max": 152.916926769
+      },
+      "event_tflops_median": 150.162548802,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 76.91740352923077,
+      "clock_adjusted_reference": 205.815808,
+      "clock_adjusted_percent": 72.87532397997339,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3128,
+          "median": 3140.5,
+          "max": 3161
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 72,
+          "median": 74.0,
+          "max": 841
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 53,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 80,
+          "median": 81.0,
+          "max": 82
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 228,
+          "median": 235.5,
+          "max": 240
+        }
+      },
+      "max_wall_event_difference_percent": 0.23083650159690575
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 1,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 171.316863162,
+        "median": 171.63778142,
+        "max": 171.999357757
+      },
+      "event_tflops_median": 171.897817588,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 88.0193750871795,
+      "clock_adjusted_reference": 207.847424,
+      "clock_adjusted_percent": 82.57873882526445,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3166,
+          "median": 3171.5,
+          "max": 3175
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 93,
+          "median": 146.5,
+          "max": 280
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 85,
+          "median": 86.0,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 273,
+          "median": 277.5,
+          "max": 280
+        }
+      },
+      "max_wall_event_difference_percent": 0.23994861881514173
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 1,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 170.273326622,
+        "median": 170.765869621,
+        "max": 173.801482359
+      },
+      "event_tflops_median": 171.011778012,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 87.57224083128206,
+      "clock_adjusted_reference": 207.650816,
+      "clock_adjusted_percent": 82.23703277958705,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3165,
+          "median": 3168.5,
+          "max": 3171
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 60,
+          "median": 118.0,
+          "max": 188
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 86,
+          "median": 86.0,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 277,
+          "median": 279.5,
+          "max": 280
+        }
+      },
+      "max_wall_event_difference_percent": 0.21258366110280322
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 2,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 169.617103437,
+        "median": 169.98366885,
+        "max": 172.421450896
+      },
+      "event_tflops_median": 170.262047545,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 87.17111223076922,
+      "clock_adjusted_reference": 208.470016,
+      "clock_adjusted_percent": 81.53866542131412,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3178,
+          "median": 3181,
+          "max": 3196
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 67,
+          "median": 67,
+          "max": 79
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 83,
+          "median": 83,
+          "max": 84
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 255,
+          "median": 255,
+          "max": 257
+        }
+      },
+      "max_wall_event_difference_percent": 0.33107410251500097
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 2,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 183.106673335,
+        "median": 183.303262876,
+        "max": 183.412117879
+      },
+      "event_tflops_median": 183.580165195,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 94.00167326974358,
+      "clock_adjusted_reference": 207.09376,
+      "clock_adjusted_percent": 88.51220957888832,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3160,
+          "median": 3160,
+          "max": 3160
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 80,
+          "median": 82,
+          "max": 84
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 86,
+          "median": 86,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 278,
+          "median": 278,
+          "max": 278
+        }
+      },
+      "max_wall_event_difference_percent": 0.21526786855500155
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 2,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 176.576707778,
+        "median": 178.999631247,
+        "max": 181.676328377
+      },
+      "event_tflops_median": 179.235867369,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 91.79468269076922,
+      "clock_adjusted_reference": 207.192064,
+      "clock_adjusted_percent": 86.39309237587402,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3157,
+          "median": 3161.5,
+          "max": 3164
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 224,
+          "median": 297.0,
+          "max": 430
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 86,
+          "median": 86.0,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 276,
+          "median": 276.5,
+          "max": 280
+        }
+      },
+      "max_wall_event_difference_percent": 0.19064957819712505
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 4,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 180.671756344,
+        "median": 181.623263988,
+        "max": 181.715079707
+      },
+      "event_tflops_median": 181.900627993,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 93.14013537846154,
+      "clock_adjusted_reference": 208.044032,
+      "clock_adjusted_percent": 87.30039609499589,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3174,
+          "median": 3174.5,
+          "max": 3177
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 64,
+          "median": 127.0,
+          "max": 316
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 84,
+          "median": 84.0,
+          "max": 84
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 259,
+          "median": 260.5,
+          "max": 262
+        }
+      },
+      "max_wall_event_difference_percent": 0.2232517620904079
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 4,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 193.769711783,
+        "median": 194.127711918,
+        "max": 194.263682287
+      },
+      "event_tflops_median": 194.359714949,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 99.55267277846154,
+      "clock_adjusted_reference": 207.028224,
+      "clock_adjusted_percent": 93.76871818115002,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3158,
+          "median": 3159.0,
+          "max": 3161
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 113,
+          "median": 192.0,
+          "max": 309
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 86,
+          "median": 86.0,
+          "max": 87
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 279,
+          "median": 279.0,
+          "max": 280
+        }
+      },
+      "max_wall_event_difference_percent": 0.13394628266378814
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 4,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 181.935746546,
+        "median": 183.818712326,
+        "max": 189.107371954
+      },
+      "event_tflops_median": 183.955749424,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 94.26600632102564,
+      "clock_adjusted_reference": 207.290368,
+      "clock_adjusted_percent": 88.67691928937094,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 5,
+          "min": 3162,
+          "median": 3163,
+          "max": 3165
+        },
+        "memory_clock_report_MHz": {
+          "samples": 5,
+          "min": 216,
+          "median": 475,
+          "max": 664
+        },
+        "edge_C": {
+          "samples": 5,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 5,
+          "min": 85,
+          "median": 86,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 5,
+          "min": 271,
+          "median": 276,
+          "max": 277
+        }
+      },
+      "max_wall_event_difference_percent": 0.17926944035080217
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 8,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 192.888316789,
+        "median": 193.000774714,
+        "max": 193.359579807
+      },
+      "event_tflops_median": 193.398721911,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 98.97475626358974,
+      "clock_adjusted_reference": 208.044032,
+      "clock_adjusted_percent": 92.76919547204315,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3172,
+          "median": 3174.5,
+          "max": 3205
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 193,
+          "median": 282.0,
+          "max": 421
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 84,
+          "median": 84.0,
+          "max": 85
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 262,
+          "median": 265.0,
+          "max": 276
+        }
+      },
+      "max_wall_event_difference_percent": 0.25020404514281586
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 204.165537583,
+        "median": 204.244097694,
+        "max": 204.314582314
+      },
+      "event_tflops_median": 204.623143047,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 104.74056292,
+      "clock_adjusted_reference": 206.962688,
+      "clock_adjusted_percent": 98.68643457800471,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3158,
+          "median": 3158,
+          "max": 3158
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 68,
+          "median": 194,
+          "max": 351
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 87,
+          "median": 87,
+          "max": 87
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 279,
+          "median": 280,
+          "max": 281
+        }
+      },
+      "max_wall_event_difference_percent": 0.2808959144949873
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 8,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 189.72123443,
+        "median": 191.841856943,
+        "max": 194.457554543
+      },
+      "event_tflops_median": 192.025583048,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 98.38043945794873,
+      "clock_adjusted_reference": 207.2576,
+      "clock_adjusted_percent": 92.56203726328975,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3159,
+          "median": 3162.5,
+          "max": 3165
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 894,
+          "median": 1454.5,
+          "max": 1655
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 85,
+          "median": 86.0,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 275,
+          "median": 282.0,
+          "max": 285
+        }
+      },
+      "max_wall_event_difference_percent": 0.11438543995927217
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 16,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 194.001711362,
+        "median": 194.247747982,
+        "max": 196.363903878
+      },
+      "event_tflops_median": 194.444529548,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 99.61422973435897,
+      "clock_adjusted_reference": 207.683584,
+      "clock_adjusted_percent": 93.5306220360681,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3159,
+          "median": 3169,
+          "max": 3171
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 240,
+          "median": 379,
+          "max": 655
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 85,
+          "median": 85,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 267,
+          "median": 269,
+          "max": 270
+        }
+      },
+      "max_wall_event_difference_percent": 0.19182141394282334
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 16,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 192.203411426,
+        "median": 194.733075541,
+        "max": 195.772180707
+      },
+      "event_tflops_median": 194.956456835,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 99.86311566205129,
+      "clock_adjusted_reference": 207.618048,
+      "clock_adjusted_percent": 93.79390540315649,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 5,
+          "min": 3166,
+          "median": 3168,
+          "max": 3169
+        },
+        "memory_clock_report_MHz": {
+          "samples": 5,
+          "min": 345,
+          "median": 1099,
+          "max": 1144
+        },
+        "edge_C": {
+          "samples": 5,
+          "min": 54,
+          "median": 55,
+          "max": 55
+        },
+        "hotspot_C": {
+          "samples": 5,
+          "min": 85,
+          "median": 85,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 5,
+          "min": 269,
+          "median": 275,
+          "max": 277
+        }
+      },
+      "max_wall_event_difference_percent": 0.12712121817578526
+    },
+    {
+      "run": "initial",
+      "kind": "fp16",
+      "accumulators": 16,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 192.116828822,
+        "median": 193.039651545,
+        "max": 194.426392335
+      },
+      "event_tflops_median": 193.178427857,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 98.99469309999999,
+      "clock_adjusted_reference": 207.486976,
+      "clock_adjusted_percent": 93.03699695589567,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 8,
+          "min": 3163,
+          "median": 3166.0,
+          "max": 3190
+        },
+        "memory_clock_report_MHz": {
+          "samples": 8,
+          "min": 507,
+          "median": 1373.5,
+          "max": 1538
+        },
+        "edge_C": {
+          "samples": 8,
+          "min": 55,
+          "median": 55.0,
+          "max": 55
+        },
+        "hotspot_C": {
+          "samples": 8,
+          "min": 85,
+          "median": 86.0,
+          "max": 86
+        },
+        "board_W": {
+          "samples": 8,
+          "min": 250,
+          "median": 277.0,
+          "max": 281
+        }
+      },
+      "max_wall_event_difference_percent": 0.07183841083037958
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 1,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 13.862474767,
+        "median": 14.018622019,
+        "max": 14.062325333
+      },
+      "event_tflops_median": 14.060812248,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 28.785671496919917,
+      "clock_adjusted_reference": 53.624832,
+      "clock_adjusted_percent": 26.142034382503986,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3273,
+          "median": 3273,
+          "max": 3274
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 78,
+          "median": 79,
+          "max": 230
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 55
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 71,
+          "median": 71,
+          "max": 73
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 154,
+          "median": 156,
+          "max": 157
+        }
+      },
+      "max_wall_event_difference_percent": 0.3164538949673534
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 1,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 21.022343358,
+        "median": 21.116879618,
+        "max": 21.206681867
+      },
+      "event_tflops_median": 21.16140983,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 43.361149112936346,
+      "clock_adjusted_reference": 52.166656,
+      "clock_adjusted_percent": 40.47964971724466,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3183,
+          "median": 3184,
+          "max": 3186
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 106,
+          "median": 109,
+          "max": 223
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 83,
+          "median": 84,
+          "max": 84
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 249,
+          "median": 250,
+          "max": 252
+        }
+      },
+      "max_wall_event_difference_percent": 0.3274018597515448
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 1,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 24.185587341,
+        "median": 24.269808276,
+        "max": 24.32444524
+      },
+      "event_tflops_median": 24.333335534,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 49.83533526899384,
+      "clock_adjusted_reference": 51.666944,
+      "clock_adjusted_percent": 46.97357032767411,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3150,
+          "median": 3153.5,
+          "max": 3164
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 65,
+          "median": 72.0,
+          "max": 78
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.5,
+          "max": 55
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 86,
+          "median": 88.0,
+          "max": 89
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 270,
+          "median": 280.0,
+          "max": 281
+        }
+      },
+      "max_wall_event_difference_percent": 0.2947089161851902
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 2,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 16.777078897,
+        "median": 16.885815773,
+        "max": 16.912523931
+      },
+      "event_tflops_median": 16.927522917,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 34.673133004106774,
+      "clock_adjusted_reference": 53.297152,
+      "clock_adjusted_percent": 31.682397913119264,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3230,
+          "median": 3253,
+          "max": 3253
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 74,
+          "median": 76,
+          "max": 77
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 55
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 74,
+          "median": 75,
+          "max": 80
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 178,
+          "median": 180,
+          "max": 202
+        }
+      },
+      "max_wall_event_difference_percent": 0.3415241425524472
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 2,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 23.622272502,
+        "median": 23.663731658,
+        "max": 23.69865592
+      },
+      "event_tflops_median": 23.721800436,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 48.590824759753595,
+      "clock_adjusted_reference": 52.658176,
+      "clock_adjusted_percent": 44.938380809088414,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3213,
+          "median": 3214,
+          "max": 3214
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 82,
+          "median": 86,
+          "max": 91
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 80,
+          "median": 80,
+          "max": 80
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 223,
+          "median": 223,
+          "max": 223
+        }
+      },
+      "max_wall_event_difference_percent": 0.3001648007934148
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 2,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 25.432146615,
+        "median": 25.478282181,
+        "max": 25.514939149
+      },
+      "event_tflops_median": 25.529374807,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 52.31680119301848,
+      "clock_adjusted_reference": 52.461568,
+      "clock_adjusted_percent": 48.56561317610637,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3201,
+          "median": 3202,
+          "max": 3202
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 60,
+          "median": 64,
+          "max": 76
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 82,
+          "median": 82,
+          "max": 82
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 235,
+          "median": 236,
+          "max": 237
+        }
+      },
+      "max_wall_event_difference_percent": 0.23424627544434418
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 4,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 20.787835003,
+        "median": 21.061610152,
+        "max": 21.403335571
+      },
+      "event_tflops_median": 21.100297527,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 43.24765944969199,
+      "clock_adjusted_reference": 53.035008,
+      "clock_adjusted_percent": 39.712655746181845,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3236,
+          "median": 3237,
+          "max": 3239
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 69,
+          "median": 77,
+          "max": 84
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 77,
+          "median": 77,
+          "max": 77
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 194,
+          "median": 197,
+          "max": 197
+        }
+      },
+      "max_wall_event_difference_percent": 0.37857744613287625
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 4,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 24.932758336,
+        "median": 24.996766747,
+        "max": 25.037048802
+      },
+      "event_tflops_median": 25.036560578,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 51.32806313552361,
+      "clock_adjusted_reference": 52.609024,
+      "clock_adjusted_percent": 47.514218752661144,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3211,
+          "median": 3211,
+          "max": 3212
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 70,
+          "median": 74,
+          "max": 75
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 80,
+          "median": 80,
+          "max": 80
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 224,
+          "median": 224,
+          "max": 224
+        }
+      },
+      "max_wall_event_difference_percent": 0.16862552180767335
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 4,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 25.285595903,
+        "median": 25.753133221,
+        "max": 25.798885109
+      },
+      "event_tflops_median": 25.792912755,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 52.88117704517453,
+      "clock_adjusted_reference": 52.543488,
+      "clock_adjusted_percent": 49.01298752949176,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3207,
+          "median": 3207,
+          "max": 3207
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 56,
+          "median": 61,
+          "max": 72
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 81,
+          "median": 81,
+          "max": 81
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 229,
+          "median": 230,
+          "max": 231
+        }
+      },
+      "max_wall_event_difference_percent": 0.22663099091287064
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 8,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 22.634559849,
+        "median": 23.052084357,
+        "max": 23.15034252
+      },
+      "event_tflops_median": 23.090020585,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 47.33487547638603,
+      "clock_adjusted_reference": 53.035008,
+      "clock_adjusted_percent": 43.46578840338819,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3237,
+          "median": 3237,
+          "max": 3238
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 63,
+          "median": 67,
+          "max": 67
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 77,
+          "median": 77,
+          "max": 77
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 196,
+          "median": 196,
+          "max": 196
+        }
+      },
+      "max_wall_event_difference_percent": 0.24656394077705915
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 25.75244387,
+        "median": 25.768825941,
+        "max": 25.792141613
+      },
+      "event_tflops_median": 25.805026253,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 52.913400289527715,
+      "clock_adjusted_reference": 52.805632,
+      "clock_adjusted_percent": 48.79938931703345,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3222,
+          "median": 3223,
+          "max": 3223
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 60,
+          "median": 61,
+          "max": 65
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 79,
+          "median": 79,
+          "max": 79
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 215,
+          "median": 215,
+          "max": 215
+        }
+      },
+      "max_wall_event_difference_percent": 0.16605856030085897
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 8,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 25.289064585,
+        "median": 25.829079496,
+        "max": 26.171837967
+      },
+      "event_tflops_median": 25.85807567,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 53.03712422176591,
+      "clock_adjusted_reference": 52.75648,
+      "clock_adjusted_percent": 48.959065305342584,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3220,
+          "median": 3220.0,
+          "max": 3221
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 59,
+          "median": 171.5,
+          "max": 270
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 79,
+          "median": 79.0,
+          "max": 80
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 217,
+          "median": 218.0,
+          "max": 219
+        }
+      },
+      "max_wall_event_difference_percent": 0.16566023551732878
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 16,
+      "groups": 64,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 23.631963219,
+        "median": 23.709735529,
+        "max": 24.055124437
+      },
+      "event_tflops_median": 23.773036148,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 48.685288560574946,
+      "clock_adjusted_reference": 52.723712,
+      "clock_adjusted_percent": 44.96977665191707,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 3,
+          "min": 3218,
+          "median": 3218,
+          "max": 3219
+        },
+        "memory_clock_report_MHz": {
+          "samples": 3,
+          "min": 65,
+          "median": 68,
+          "max": 196
+        },
+        "edge_C": {
+          "samples": 3,
+          "min": 54,
+          "median": 54,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 3,
+          "min": 80,
+          "median": 80,
+          "max": 80
+        },
+        "board_W": {
+          "samples": 3,
+          "min": 217,
+          "median": 217,
+          "max": 219
+        }
+      },
+      "max_wall_event_difference_percent": 0.26627065255614973
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 16,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 25.89488532,
+        "median": 25.925938109,
+        "max": 25.945690072
+      },
+      "event_tflops_median": 25.964708924,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 53.23601254414784,
+      "clock_adjusted_reference": 52.502528,
+      "clock_adjusted_percent": 49.38036147326087,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3199,
+          "median": 3204.5,
+          "max": 3205
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 51,
+          "median": 62.5,
+          "max": 65
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 82,
+          "median": 82.0,
+          "max": 82
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 233,
+          "median": 233.0,
+          "max": 233
+        }
+      },
+      "max_wall_event_difference_percent": 0.14932120201570867
+    },
+    {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 16,
+      "groups": 1024,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 24.281025949,
+        "median": 24.800641218,
+        "max": 25.362127392
+      },
+      "event_tflops_median": 24.821635998,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 50.9253413100616,
+      "clock_adjusted_reference": 52.46976,
+      "clock_adjusted_percent": 47.26654213398346,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3202,
+          "median": 3202.5,
+          "max": 3205
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 288,
+          "median": 326.0,
+          "max": 487
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 81,
+          "median": 81.0,
+          "max": 81
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 229,
+          "median": 230.5,
+          "max": 234
+        }
+      },
+      "max_wall_event_difference_percent": 0.1826727319967436
+    },
+    {
+      "run": "repeat-fp16",
+      "kind": "fp16",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 9,
+      "wall_tflops": {
+        "min": 201.869492055,
+        "median": 204.300571882,
+        "max": 205.934797888
+      },
+      "event_tflops_median": 204.509865675,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 104.76952404205129,
+      "clock_adjusted_reference": 207.945728,
+      "clock_adjusted_percent": 98.2470637155864,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 10,
+          "min": 3136,
+          "median": 3173.0,
+          "max": 3183
+        },
+        "memory_clock_report_MHz": {
+          "samples": 10,
+          "min": 57,
+          "median": 79.0,
+          "max": 293
+        },
+        "edge_C": {
+          "samples": 10,
+          "min": 49,
+          "median": 50.0,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 10,
+          "min": 80,
+          "median": 82.5,
+          "max": 84
+        },
+        "board_W": {
+          "samples": 10,
+          "min": 256,
+          "median": 276.5,
+          "max": 278
+        }
+      },
+      "max_wall_event_difference_percent": 0.2506217598211552
+    },
+    {
+      "run": "repeat-fp32d",
+      "kind": "fp32d",
+      "accumulators": 16,
+      "groups": 256,
+      "samples": 9,
+      "wall_tflops": {
+        "min": 49.840841924,
+        "median": 49.920660672,
+        "max": 50.026794446
+      },
+      "event_tflops_median": 50.00218171,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 102.50649008624228,
+      "clock_adjusted_reference": 51.789824,
+      "clock_adjusted_percent": 96.39086758047294,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 11,
+          "min": 3152,
+          "median": 3161,
+          "max": 3165
+        },
+        "memory_clock_report_MHz": {
+          "samples": 11,
+          "min": 61,
+          "median": 65,
+          "max": 72
+        },
+        "edge_C": {
+          "samples": 11,
+          "min": 48,
+          "median": 51,
+          "max": 51
+        },
+        "hotspot_C": {
+          "samples": 11,
+          "min": 82,
+          "median": 87,
+          "max": 87
+        },
+        "board_W": {
+          "samples": 11,
+          "min": 294,
+          "median": 296,
+          "max": 298
+        }
+      },
+      "max_wall_event_difference_percent": 0.2597793989575753
+    },
+    {
+      "run": "repeat-fp8",
+      "kind": "fp8",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 9,
+      "wall_tflops": {
+        "min": 404.748655772,
+        "median": 405.279597407,
+        "max": 408.677824785
+      },
+      "event_tflops_median": 405.695464933,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 104.18498647994858,
+      "clock_adjusted_reference": 408.158208,
+      "clock_adjusted_percent": 99.29473166615823,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 7,
+          "min": 3110,
+          "median": 3114,
+          "max": 3137
+        },
+        "memory_clock_report_MHz": {
+          "samples": 7,
+          "min": 66,
+          "median": 74,
+          "max": 179
+        },
+        "edge_C": {
+          "samples": 7,
+          "min": 47,
+          "median": 49,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 7,
+          "min": 87,
+          "median": 88,
+          "max": 89
+        },
+        "board_W": {
+          "samples": 7,
+          "min": 329,
+          "median": 330,
+          "max": 335
+        }
+      },
+      "max_wall_event_difference_percent": 0.32428833789682865
+    }
+  ],
+  "best": {
+    "fp8": {
+      "run": "repeat-fp8",
+      "kind": "fp8",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 9,
+      "wall_tflops": {
+        "min": 404.748655772,
+        "median": 405.279597407,
+        "max": 408.677824785
+      },
+      "event_tflops_median": 405.695464933,
+      "nominal_tflops": 389.0,
+      "nominal_percent": 104.18498647994858,
+      "clock_adjusted_reference": 408.158208,
+      "clock_adjusted_percent": 99.29473166615823,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 7,
+          "min": 3110,
+          "median": 3114,
+          "max": 3137
+        },
+        "memory_clock_report_MHz": {
+          "samples": 7,
+          "min": 66,
+          "median": 74,
+          "max": 179
+        },
+        "edge_C": {
+          "samples": 7,
+          "min": 47,
+          "median": 49,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 7,
+          "min": 87,
+          "median": 88,
+          "max": 89
+        },
+        "board_W": {
+          "samples": 7,
+          "min": 329,
+          "median": 330,
+          "max": 335
+        }
+      },
+      "max_wall_event_difference_percent": 0.32428833789682865
+    },
+    "fp16": {
+      "run": "repeat-fp16",
+      "kind": "fp16",
+      "accumulators": 8,
+      "groups": 256,
+      "samples": 9,
+      "wall_tflops": {
+        "min": 201.869492055,
+        "median": 204.300571882,
+        "max": 205.934797888
+      },
+      "event_tflops_median": 204.509865675,
+      "nominal_tflops": 195.0,
+      "nominal_percent": 104.76952404205129,
+      "clock_adjusted_reference": 207.945728,
+      "clock_adjusted_percent": 98.2470637155864,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 10,
+          "min": 3136,
+          "median": 3173.0,
+          "max": 3183
+        },
+        "memory_clock_report_MHz": {
+          "samples": 10,
+          "min": 57,
+          "median": 79.0,
+          "max": 293
+        },
+        "edge_C": {
+          "samples": 10,
+          "min": 49,
+          "median": 50.0,
+          "max": 50
+        },
+        "hotspot_C": {
+          "samples": 10,
+          "min": 80,
+          "median": 82.5,
+          "max": 84
+        },
+        "board_W": {
+          "samples": 10,
+          "min": 256,
+          "median": 276.5,
+          "max": 278
+        }
+      },
+      "max_wall_event_difference_percent": 0.2506217598211552
+    },
+    "fp32": {
+      "run": "initial",
+      "kind": "fp32",
+      "accumulators": 16,
+      "groups": 256,
+      "samples": 5,
+      "wall_tflops": {
+        "min": 25.89488532,
+        "median": 25.925938109,
+        "max": 25.945690072
+      },
+      "event_tflops_median": 25.964708924,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 53.23601254414784,
+      "clock_adjusted_reference": 52.502528,
+      "clock_adjusted_percent": 49.38036147326087,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 4,
+          "min": 3199,
+          "median": 3204.5,
+          "max": 3205
+        },
+        "memory_clock_report_MHz": {
+          "samples": 4,
+          "min": 51,
+          "median": 62.5,
+          "max": 65
+        },
+        "edge_C": {
+          "samples": 4,
+          "min": 54,
+          "median": 54.0,
+          "max": 54
+        },
+        "hotspot_C": {
+          "samples": 4,
+          "min": 82,
+          "median": 82.0,
+          "max": 82
+        },
+        "board_W": {
+          "samples": 4,
+          "min": 233,
+          "median": 233.0,
+          "max": 233
+        }
+      },
+      "max_wall_event_difference_percent": 0.14932120201570867
+    },
+    "fp32d": {
+      "run": "repeat-fp32d",
+      "kind": "fp32d",
+      "accumulators": 16,
+      "groups": 256,
+      "samples": 9,
+      "wall_tflops": {
+        "min": 49.840841924,
+        "median": 49.920660672,
+        "max": 50.026794446
+      },
+      "event_tflops_median": 50.00218171,
+      "nominal_tflops": 48.7,
+      "nominal_percent": 102.50649008624228,
+      "clock_adjusted_reference": 51.789824,
+      "clock_adjusted_percent": 96.39086758047294,
+      "telemetry": {
+        "core_MHz": {
+          "samples": 11,
+          "min": 3152,
+          "median": 3161,
+          "max": 3165
+        },
+        "memory_clock_report_MHz": {
+          "samples": 11,
+          "min": 61,
+          "median": 65,
+          "max": 72
+        },
+        "edge_C": {
+          "samples": 11,
+          "min": 48,
+          "median": 51,
+          "max": 51
+        },
+        "hotspot_C": {
+          "samples": 11,
+          "min": 82,
+          "median": 87,
+          "max": 87
+        },
+        "board_W": {
+          "samples": 11,
+          "min": 294,
+          "median": 296,
+          "max": 298
+        }
+      },
+      "max_wall_event_difference_percent": 0.2597793989575753
+    }
+  }
+}

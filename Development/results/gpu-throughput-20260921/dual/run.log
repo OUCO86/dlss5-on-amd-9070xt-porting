@@ -1,0 +1,18 @@
+device=AMD Radeon RX 9070 XT arch=gfx1201 MPs=32 warp=32 max_threads_MP=2048 shared_MP=65536
+RESOURCE kernel=fp32d_2 blocks_per_MP=8 resident_waves_bound=64
+RESULT kind=fp32d accum=2 groups=64 wall_median_TFLOPS=16.723 launches=237 checksum=PASS
+RESULT kind=fp32d accum=2 groups=256 wall_median_TFLOPS=19.965 launches=77 checksum=PASS
+RESULT kind=fp32d accum=2 groups=1024 wall_median_TFLOPS=20.495 launches=22 checksum=PASS
+RESOURCE kernel=fp32d_4 blocks_per_MP=8 resident_waves_bound=64
+RESULT kind=fp32d accum=4 groups=64 wall_median_TFLOPS=25.379 launches=197 checksum=PASS
+RESULT kind=fp32d accum=4 groups=256 wall_median_TFLOPS=30.501 launches=62 checksum=PASS
+RESULT kind=fp32d accum=4 groups=1024 wall_median_TFLOPS=31.245 launches=17 checksum=PASS
+RESOURCE kernel=fp32d_8 blocks_per_MP=8 resident_waves_bound=64
+RESULT kind=fp32d accum=8 groups=64 wall_median_TFLOPS=37.498 launches=147 checksum=PASS
+RESULT kind=fp32d accum=8 groups=256 wall_median_TFLOPS=43.674 launches=46 checksum=PASS
+RESULT kind=fp32d accum=8 groups=1024 wall_median_TFLOPS=44.166 launches=12 checksum=PASS
+RESOURCE kernel=fp32d_16 blocks_per_MP=8 resident_waves_bound=64
+RESULT kind=fp32d accum=16 groups=64 wall_median_TFLOPS=44.093 launches=94 checksum=PASS
+RESULT kind=fp32d accum=16 groups=256 wall_median_TFLOPS=49.707 launches=27 checksum=PASS
+RESULT kind=fp32d accum=16 groups=1024 wall_median_TFLOPS=49.586 launches=7 checksum=PASS
+PASS configurations=12

@@ -1,0 +1,32 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\gpu-throughput\\gfx1200.hsaco",
+        "sha":  "CA5D8F477B1F62E018402AB2E6EBA30C52D87FDAA92580A84AC05BCC10A712C6",
+        "version":  null
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\gpu-throughput\\gfx1201.hsaco",
+        "sha":  "FCE4C74C04E1F5F5D06BF52C21EA82D0CC321D25AD5CA69338219F411104C5E5",
+        "version":  null
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\gpu-throughput\\bench.exe",
+        "sha":  "A358F9CA9A3C1E7DEDB7499EA1F483D81D3C46DE5C5E006F01E294B23803D81C",
+        "version":  null
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\gpu-throughput\\kernel.hip",
+        "sha":  "5027543F1D5DADFD5BC54B4D4CD336C026CFFF5CCC503889F1AC98080DDDD153",
+        "version":  null
+    },
+    {
+        "path":  "C:\\Windows\\System32\\amdhip64_7.dll",
+        "sha":  "F6AC69C322B0BA729FDC2DBDCBA8A62A9D52CC2C18E5B690E9FF14258E49C5E7",
+        "version":  "10.0.3679.0"
+    },
+    {
+        "path":  "C:\\Windows\\System32\\amd_comgr_3.dll",
+        "sha":  "5DBB6E593536BC5CA900C294B2E1F8C6C8873014C593D0F7CC245260AE99C4D2",
+        "version":  "3.0.0.0"
+    }
+]

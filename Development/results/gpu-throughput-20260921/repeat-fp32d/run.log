@@ -1,0 +1,4 @@
+device=AMD Radeon RX 9070 XT arch=gfx1201 MPs=32 warp=32 max_threads_MP=2048 shared_MP=65536
+RESOURCE kernel=fp32d_16 blocks_per_MP=8 resident_waves_bound=64
+RESULT kind=fp32d accum=16 groups=256 wall_median_TFLOPS=49.921 launches=44 checksum=PASS
+PASS configurations=1
