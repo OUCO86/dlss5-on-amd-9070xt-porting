@@ -2994,3 +2994,7 @@ RE9入口实测1506×848 RGB9E5→2560×1440。split-original首次被aliasing�
 ## 2026-09-22 06:56：RE9前置HIP候选已安装并启动，待用户实玩
 
 完整链在游戏中初始化并运行：入口1506×848 RGB9E5，网络1600×900，输出2560×1440 Borderless；前5帧记录证明HIP enqueue返回0、producer/continuation同步增长、skip和提交失败均0。主菜单截图正常，持续两分钟以上进程存活无神经路径失败记录；不把菜单表现当实玩画质或性能结论。旧post-present addon两份均停用，帧生成暂关便于验证。宿主6d1eea79…、runtime50b97a1a…，root/_storage_读回hash一致，清单与原始日志在RE9/presr/results。游戏保持主菜单供用户测试。脚本支持恢复原始备份；下一步观察实玩运动/切场景与输入尺寸变化，再决定发布，未打包。
+
+## 2026-09-22 07:25：RE9前置版关闭颜色迁移，保留细节作实玩对照
+
+用户报告开DLSS5明显褪色，F6关闭后颜色大体恢复，仅余少量泛白。按用户确认，将RE9 root与_storage_的OptiScaler.ini设置ColourStrength=0、TransferStrength=1、Enabled=true；正常退出游戏并确认进程消失后修改，再启动。配置备份D:\DLSSNR-Lab\re9-presr\backups\colour-20260922-072524。安装脚本同设颜色0，新增set-colour-control.ps1便于复现。此为保留原RGB比例、继续传递神经明暗/细节的对照，不宣称修复了曝光或色彩空间根因；DLL与shader未改，实际颜色待用户复测。

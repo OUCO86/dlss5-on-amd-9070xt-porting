@@ -22,7 +22,7 @@ foreach($d in @($g,"$g\_storage_")){
 $ini=Get-Content "$g\OptiScaler.ini" -Raw
 $ini=$ini -replace '(?ms)^\[DlssNr\].*?(?=^\[|\z)',''
 $ini=$ini -replace '(?m)^LoadReshade=.*$','LoadReshade=false'
-$ini+="`r`n[DlssNr]`r`nEnabled=true`r`nRunBeforeSR=true`r`nNrBackend=lmxxf`r`nLmxxfDiagnostic=$Diagnostic`r`nAmdEveryFrame=true`r`nTransferStrength=1.0`r`nColourStrength=1.0`r`nToggleKey=117`r`n"
+$ini+="`r`n[DlssNr]`r`nEnabled=true`r`nRunBeforeSR=true`r`nNrBackend=lmxxf`r`nLmxxfDiagnostic=$Diagnostic`r`nAmdEveryFrame=true`r`nTransferStrength=1.0`r`nColourStrength=0.0`r`nToggleKey=117`r`n"
 [IO.File]::WriteAllText("$g\OptiScaler.ini",$ini)
 Copy-Item "$g\OptiScaler.ini" "$g\_storage_\OptiScaler.ini" -Force
 $config=Get-Content "$g\config.ini" -Raw
