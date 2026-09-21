@@ -1,0 +1,272 @@
+{
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8": {
+    "NumVgprs": 153,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 30
+  },
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_ffn": {
+    "NumVgprs": 152,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 33
+  },
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_pack": {
+    "NumVgprs": 155,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 32
+  },
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_qkv": {
+    "NumVgprs": 122,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 36
+  },
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_scores": {
+    "NumVgprs": 215,
+    "NumVGPRsForWavesPerEU": 215,
+    "LDSByteSize": 15360,
+    "Occupancy": 7,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 31
+  },
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_norm": {
+    "NumVgprs": 146,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 34
+  },
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_av": {
+    "NumVgprs": 176,
+    "NumVGPRsForWavesPerEU": 176,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 32
+  },
+  "main:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_project": {
+    "NumVgprs": 153,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 31
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain": {
+    "NumVgprs": 177,
+    "NumVGPRsForWavesPerEU": 177,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 43
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain_probe_ffn": {
+    "NumVgprs": 154,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 46
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain_probe_pack": {
+    "NumVgprs": 154,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 45
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain_probe_qkv": {
+    "NumVgprs": 113,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 49
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain_probe_scores": {
+    "NumVgprs": 212,
+    "NumVGPRsForWavesPerEU": 212,
+    "LDSByteSize": 15360,
+    "Occupancy": 7,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 44
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain_probe_norm": {
+    "NumVgprs": 141,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 47
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain_probe_av": {
+    "NumVgprs": 191,
+    "NumVGPRsForWavesPerEU": 191,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 45
+  },
+  "main:c32_fast_ffn_attention_fused_half_chain_probe_project": {
+    "NumVgprs": 177,
+    "NumVGPRsForWavesPerEU": 177,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 46
+  },
+  "main:c32_post_merge_head_half": {
+    "NumVgprs": 158,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 6
+  },
+  "main:c32_post_merge_head_half_probe_ffn": {
+    "NumVgprs": 158,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 8
+  },
+  "main:c32_post_merge_head_half_probe_pack": {
+    "NumVgprs": 158,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 8
+  },
+  "main:c32_post_merge_head_half_probe_qkv": {
+    "NumVgprs": 117,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 12
+  },
+  "main:c32_post_merge_head_half_probe_scores": {
+    "NumVgprs": 194,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 7
+  },
+  "main:c32_post_merge_head_half_probe_norm": {
+    "NumVgprs": 125,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 10
+  },
+  "main:c32_post_merge_head_half_probe_av": {
+    "NumVgprs": 180,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 8
+  },
+  "main:c32_post_merge_head_half_probe_project": {
+    "NumVgprs": 158,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 7
+  },
+  "packv:c32_fast_ffn_attention_fused_half_prefix_finish_main8": {
+    "NumVgprs": 153,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 30
+  },
+  "packv:c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_packv": {
+    "NumVgprs": 155,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 74,
+    "branch_ops": 32
+  },
+  "packv:c32_fast_ffn_attention_fused_half_chain": {
+    "NumVgprs": 177,
+    "NumVGPRsForWavesPerEU": 177,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 43
+  },
+  "packv:c32_fast_ffn_attention_fused_half_chain_probe_packv": {
+    "NumVgprs": 154,
+    "NumVGPRsForWavesPerEU": 169,
+    "LDSByteSize": 15360,
+    "Occupancy": 8,
+    "ScratchSize": 0,
+    "static_wmma": 70,
+    "branch_ops": 45
+  },
+  "packv:c32_post_merge_head_half": {
+    "NumVgprs": 158,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 6
+  },
+  "packv:c32_post_merge_head_half_probe_packv": {
+    "NumVgprs": 158,
+    "NumVGPRsForWavesPerEU": 217,
+    "LDSByteSize": 19712,
+    "Occupancy": 6,
+    "ScratchSize": 0,
+    "static_wmma": 58,
+    "branch_ops": 8
+  }
+}

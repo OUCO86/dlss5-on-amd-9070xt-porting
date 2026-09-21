@@ -1,0 +1,10 @@
+PHASE_DONE c32_post_merge_head_half ffn
+PHASE_DONE c32_post_merge_head_half pack
+PHASE_DONE c32_post_merge_head_half qkv
+PHASE_DONE c32_post_merge_head_half scores
+PHASE_DONE c32_post_merge_head_half norm
+PHASE_DONE c32_post_merge_head_half av
+PHASE_DONE c32_post_merge_head_half project
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS C32 phase controls

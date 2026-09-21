@@ -1,0 +1,2060 @@
+{
+  "1080-chain": {
+    "validated_slots": 96,
+    "checked_bytes_per_slot": 36179968,
+    "raw_network_checks": 4,
+    "phases": {
+      "ffn": {
+        "calibration_percent": 6.687217567060205,
+        "extra_one_us": 59.79276047000002,
+        "extra_three_us": 180.17932506500006,
+        "per_extra_from_three_us": 60.05977502166669,
+        "comparisons": [
+          {
+            "slots_us": [
+              369.227436823,
+              402.623188406,
+              398.429423459,
+              381.614726027
+            ],
+            "base_us": 375.421081425,
+            "test_us": 400.5263059325,
+            "delta_us": 25.105224507499997
+          },
+          {
+            "slots_us": [
+              400.447761194,
+              459.645435244,
+              459.204210526,
+              398.816363636
+            ],
+            "base_us": 399.632062415,
+            "test_us": 459.424822885,
+            "delta_us": 59.79276047000002
+          },
+          {
+            "slots_us": [
+              400.306422018,
+              579.37254902,
+              579.63434903,
+              398.341825902
+            ],
+            "base_us": 399.32412395999995,
+            "test_us": 579.503449025,
+            "delta_us": 180.17932506500006
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "pack": {
+        "calibration_percent": 14.308558019359225,
+        "extra_one_us": 100.37712822550003,
+        "extra_three_us": 315.3527562170001,
+        "per_extra_from_three_us": 105.1175854056667,
+        "comparisons": [
+          {
+            "slots_us": [
+              384.208251473,
+              436.301149425,
+              437.148401826,
+              379.907372401
+            ],
+            "base_us": 382.057811937,
+            "test_us": 436.7247756255,
+            "delta_us": 54.666963688500005
+          },
+          {
+            "slots_us": [
+              440.120728929,
+              540.274853801,
+              540.1875,
+              439.587368421
+            ],
+            "base_us": 439.854048675,
+            "test_us": 540.2311769005,
+            "delta_us": 100.37712822550003
+          },
+          {
+            "slots_us": [
+              436.02247191,
+              753.76369863,
+              751.714285714,
+              438.75
+            ],
+            "base_us": 437.38623595499996,
+            "test_us": 752.738992172,
+            "delta_us": 315.3527562170001
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "qkv": {
+        "calibration_percent": -2.1695573809714155,
+        "extra_one_us": 16.330662005999955,
+        "extra_three_us": 58.207249966999996,
+        "per_extra_from_three_us": 19.402416655666666,
+        "comparisons": [
+          {
+            "slots_us": [
+              383.681109185,
+              374.393410853,
+              375.158699809,
+              382.493601463
+            ],
+            "base_us": 383.087355324,
+            "test_us": 374.77605533099995,
+            "delta_us": -8.311299993000034
+          },
+          {
+            "slots_us": [
+              376.6,
+              392.678,
+              393.280669145,
+              376.697345133
+            ],
+            "base_us": 376.6486725665,
+            "test_us": 392.97933457249997,
+            "delta_us": 16.330662005999955
+          },
+          {
+            "slots_us": [
+              373.411764706,
+              431.561728395,
+              434.920731707,
+              376.656195462
+            ],
+            "base_us": 375.033980084,
+            "test_us": 433.241230051,
+            "delta_us": 58.207249966999996
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "scores": {
+        "calibration_percent": 3.9165931088201145,
+        "extra_one_us": 39.223532131500065,
+        "extra_three_us": 112.18444423000005,
+        "per_extra_from_three_us": 37.39481474333335,
+        "comparisons": [
+          {
+            "slots_us": [
+              384.039179104,
+              392.157323689,
+              390.945326279,
+              369.548507463
+            ],
+            "base_us": 376.7938432835,
+            "test_us": 391.551324984,
+            "delta_us": 14.757481700500023
+          },
+          {
+            "slots_us": [
+              375.587548638,
+              414.948979592,
+              414.889135255,
+              375.803501946
+            ],
+            "base_us": 375.69552529199996,
+            "test_us": 414.9190574235,
+            "delta_us": 39.223532131500065
+          },
+          {
+            "slots_us": [
+              375.491902834,
+              488.133333333,
+              487.990719258,
+              376.263261297
+            ],
+            "base_us": 375.87758206549995,
+            "test_us": 488.0620262955,
+            "delta_us": 112.18444423000005
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "norm": {
+        "calibration_percent": -0.11819222279076691,
+        "extra_one_us": 69.08795952049996,
+        "extra_three_us": 236.85701135850002,
+        "per_extra_from_three_us": 78.9523371195,
+        "comparisons": [
+          {
+            "slots_us": [
+              367.928994083,
+              367.679856115,
+              367.154954955,
+              367.775362319
+            ],
+            "base_us": 367.852178201,
+            "test_us": 367.417405535,
+            "delta_us": -0.43477266600001485
+          },
+          {
+            "slots_us": [
+              367.134765625,
+              436.302713987,
+              436.337579618,
+              367.329608939
+            ],
+            "base_us": 367.23218728200004,
+            "test_us": 436.3201468025,
+            "delta_us": 69.08795952049996
+          },
+          {
+            "slots_us": [
+              367.160142349,
+              604.357348703,
+              603.820289855,
+              367.303473492
+            ],
+            "base_us": 367.23180792050005,
+            "test_us": 604.0888192790001,
+            "delta_us": 236.85701135850002
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "av": {
+        "calibration_percent": 0.465173816489803,
+        "extra_one_us": 21.8400328985,
+        "extra_three_us": 63.71052415499997,
+        "per_extra_from_three_us": 21.23684138499999,
+        "comparisons": [
+          {
+            "slots_us": [
+              367.914448669,
+              369.562624254,
+              369.780487805,
+              368.005357143
+            ],
+            "base_us": 367.959902906,
+            "test_us": 369.67155602950004,
+            "delta_us": 1.7116531235000139
+          },
+          {
+            "slots_us": [
+              369.784735812,
+              391.629558541,
+              391.421933086,
+              369.586690018
+            ],
+            "base_us": 369.685712915,
+            "test_us": 391.5257458135,
+            "delta_us": 21.8400328985
+          },
+          {
+            "slots_us": [
+              369.472949389,
+              432.646817248,
+              433.589285714,
+              369.342105263
+            ],
+            "base_us": 369.40752732600004,
+            "test_us": 433.118051481,
+            "delta_us": 63.71052415499997
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "project": {
+        "calibration_percent": -1.6745522806855182,
+        "extra_one_us": 22.297569353499966,
+        "extra_three_us": 66.14623429699998,
+        "per_extra_from_three_us": 22.048744765666658,
+        "comparisons": [
+          {
+            "slots_us": [
+              368.326820604,
+              362.006908463,
+              362.218114603,
+              368.232269504
+            ],
+            "base_us": 368.279545054,
+            "test_us": 362.112511533,
+            "delta_us": -6.167033521000008
+          },
+          {
+            "slots_us": [
+              361.851351351,
+              384.20662768,
+              383.885880077,
+              361.646017699
+            ],
+            "base_us": 361.74868452500004,
+            "test_us": 384.0462538785,
+            "delta_us": 22.297569353499966
+          },
+          {
+            "slots_us": [
+              361.775092937,
+              427.976138829,
+              428.181818182,
+              362.09039548
+            ],
+            "base_us": 361.9327442085,
+            "test_us": 428.0789785055,
+            "delta_us": 66.14623429699998
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "packv": {
+        "calibration_percent": 3.8252119398965316,
+        "extra_one_us": 80.32074478599998,
+        "extra_three_us": 239.18336612899998,
+        "per_extra_from_three_us": 79.72778870966665,
+        "comparisons": [
+          {
+            "slots_us": [
+              369.912087912,
+              387.879377432,
+              389.100358423,
+              378.441535777
+            ],
+            "base_us": 374.1768118445,
+            "test_us": 388.4898679275,
+            "delta_us": 14.313056082999992
+          },
+          {
+            "slots_us": [
+              388.927304965,
+              468.760084926,
+              469.486315789,
+              388.677606178
+            ],
+            "base_us": 388.8024555715,
+            "test_us": 469.12320035749997,
+            "delta_us": 80.32074478599998
+          },
+          {
+            "slots_us": [
+              391.103636364,
+              634.118309859,
+              627.203910615,
+              391.851851852
+            ],
+            "base_us": 391.477744108,
+            "test_us": 630.661110237,
+            "delta_us": 239.18336612899998
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      }
+    }
+  },
+  "1080-post": {
+    "validated_slots": 96,
+    "checked_bytes_per_slot": 26542080,
+    "raw_network_checks": 4,
+    "phases": {
+      "ffn": {
+        "calibration_percent": 7.752023107734482,
+        "extra_one_us": 230.0673986815002,
+        "extra_three_us": 680.7748964805,
+        "per_extra_from_three_us": 226.92496549350003,
+        "comparisons": [
+          {
+            "slots_us": [
+              1644.939849624,
+              1788.136752137,
+              1791.833333333,
+              1677.475806452
+            ],
+            "base_us": 1661.2078280380001,
+            "test_us": 1789.985042735,
+            "delta_us": 128.77721469699986
+          },
+          {
+            "slots_us": [
+              1802.043478261,
+              2019.852941176,
+              2033.855769231,
+              1791.530434783
+            ],
+            "base_us": 1796.7869565219999,
+            "test_us": 2026.8543552035,
+            "delta_us": 230.0673986815002
+          },
+          {
+            "slots_us": [
+              1808.869565217,
+              2492.535714286,
+              2483.761904762,
+              1805.87826087
+            ],
+            "base_us": 1807.3739130435001,
+            "test_us": 2488.148809524,
+            "delta_us": 680.7748964805
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "pack": {
+        "calibration_percent": 22.14736945902641,
+        "extra_one_us": 460.2026951895,
+        "extra_three_us": 1346.0462372719999,
+        "per_extra_from_three_us": 448.6820790906666,
+        "comparisons": [
+          {
+            "slots_us": [
+              1662.516129032,
+              2034.201923077,
+              2044.633663366,
+              1676.758064516
+            ],
+            "base_us": 1669.637096774,
+            "test_us": 2039.4177932215,
+            "delta_us": 369.7806964475001
+          },
+          {
+            "slots_us": [
+              2023.058252427,
+              2471.204819277,
+              2496.258823529,
+              2024.0
+            ],
+            "base_us": 2023.5291262135001,
+            "test_us": 2483.731821403,
+            "delta_us": 460.2026951895
+          },
+          {
+            "slots_us": [
+              2035.596153846,
+              3386.827586207,
+              3379.322580645,
+              2038.461538462
+            ],
+            "base_us": 2037.028846154,
+            "test_us": 3383.0750834259998,
+            "delta_us": 1346.0462372719999
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "qkv": {
+        "calibration_percent": 5.660818515552693,
+        "extra_one_us": 96.02546502200016,
+        "extra_three_us": 268.2995648514998,
+        "per_extra_from_three_us": 89.43318828383326,
+        "comparisons": [
+          {
+            "slots_us": [
+              1665.176,
+              1761.516949153,
+              1754.917355372,
+              1662.864
+            ],
+            "base_us": 1664.02,
+            "test_us": 1758.2171522625,
+            "delta_us": 94.19715226249991
+          },
+          {
+            "slots_us": [
+              1745.871794872,
+              1851.596491228,
+              1849.699115044,
+              1763.372881356
+            ],
+            "base_us": 1754.622338114,
+            "test_us": 1850.6478031360002,
+            "delta_us": 96.02546502200016
+          },
+          {
+            "slots_us": [
+              1674.696721311,
+              1942.18627451,
+              1944.891089109,
+              1675.781512605
+            ],
+            "base_us": 1675.239116958,
+            "test_us": 1943.5386818094998,
+            "delta_us": 268.2995648514998
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "scores": {
+        "calibration_percent": 4.284448407043874,
+        "extra_one_us": 149.82245596099983,
+        "extra_three_us": 438.32841537600007,
+        "per_extra_from_three_us": 146.10947179200002,
+        "comparisons": [
+          {
+            "slots_us": [
+              1599.869918699,
+              1669.042372881,
+              1668.525,
+              1600.576
+            ],
+            "base_us": 1600.2229593495,
+            "test_us": 1668.7836864404999,
+            "delta_us": 68.56072709099999
+          },
+          {
+            "slots_us": [
+              1669.714285714,
+              1819.889908257,
+              1817.486238532,
+              1668.016949153
+            ],
+            "base_us": 1668.8656174335001,
+            "test_us": 1818.6880733945,
+            "delta_us": 149.82245596099983
+          },
+          {
+            "slots_us": [
+              1669.457627119,
+              2107.172043011,
+              2108.589473684,
+              1669.647058824
+            ],
+            "base_us": 1669.5523429715,
+            "test_us": 2107.8807583475,
+            "delta_us": 438.32841537600007
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "norm": {
+        "calibration_percent": 2.300718771359804,
+        "extra_one_us": 277.5656050355001,
+        "extra_three_us": 938.4565590890002,
+        "per_extra_from_three_us": 312.81885302966674,
+        "comparisons": [
+          {
+            "slots_us": [
+              1599.569105691,
+              1637.314049587,
+              1636.082644628,
+              1600.209677419
+            ],
+            "base_us": 1599.889391555,
+            "test_us": 1636.6983471075,
+            "delta_us": 36.80895555250004
+          },
+          {
+            "slots_us": [
+              1637.491803279,
+              1914.932692308,
+              1914.913461538,
+              1637.223140496
+            ],
+            "base_us": 1637.3574718875,
+            "test_us": 1914.923076923,
+            "delta_us": 277.5656050355001
+          },
+          {
+            "slots_us": [
+              1636.31147541,
+              2573.615384615,
+              2574.493506494,
+              1634.884297521
+            ],
+            "base_us": 1635.5978864654999,
+            "test_us": 2574.0544455545,
+            "delta_us": 938.4565590890002
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "av": {
+        "calibration_percent": 2.423634973736869,
+        "extra_one_us": 78.94083659550006,
+        "extra_three_us": 239.75829816300006,
+        "per_extra_from_three_us": 79.91943272100002,
+        "comparisons": [
+          {
+            "slots_us": [
+              1599.346774194,
+              1637.67768595,
+              1639.553719008,
+              1600.336
+            ],
+            "base_us": 1599.841387097,
+            "test_us": 1638.615702479,
+            "delta_us": 38.77431538199994
+          },
+          {
+            "slots_us": [
+              1639.958677686,
+              1718.640350877,
+              1718.0,
+              1638.8
+            ],
+            "base_us": 1639.379338843,
+            "test_us": 1718.3201754385,
+            "delta_us": 78.94083659550006
+          },
+          {
+            "slots_us": [
+              1639.768595041,
+              1880.828571429,
+              1878.214953271,
+              1639.758333333
+            ],
+            "base_us": 1639.763464187,
+            "test_us": 1879.52176235,
+            "delta_us": 239.75829816300006
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "project": {
+        "calibration_percent": 1.380727410533254,
+        "extra_one_us": 54.184001929999795,
+        "extra_three_us": 155.68084799550002,
+        "per_extra_from_three_us": 51.8936159985,
+        "comparisons": [
+          {
+            "slots_us": [
+              1603.549180328,
+              1624.859504132,
+              1624.636363636,
+              1601.691056911
+            ],
+            "base_us": 1602.6201186194999,
+            "test_us": 1624.7479338839998,
+            "delta_us": 22.127815264499986
+          },
+          {
+            "slots_us": [
+              1622.258064516,
+              1677.769230769,
+              1677.273504274,
+              1624.416666667
+            ],
+            "base_us": 1623.3373655915002,
+            "test_us": 1677.5213675215,
+            "delta_us": 54.184001929999795
+          },
+          {
+            "slots_us": [
+              1622.861788618,
+              1778.857142857,
+              1778.063063063,
+              1622.696721311
+            ],
+            "base_us": 1622.7792549645,
+            "test_us": 1778.46010296,
+            "delta_us": 155.68084799550002
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "packv": {
+        "calibration_percent": 8.960876830208667,
+        "extra_one_us": 291.3235210509997,
+        "extra_three_us": 902.1496332929999,
+        "per_extra_from_three_us": 300.71654443099993,
+        "comparisons": [
+          {
+            "slots_us": [
+              1638.842105263,
+              1801.660869565,
+              1799.453781513,
+              1666.119047619
+            ],
+            "base_us": 1652.4805764409998,
+            "test_us": 1800.557325539,
+            "delta_us": 148.07674909800016
+          },
+          {
+            "slots_us": [
+              1788.591304348,
+              2076.584158416,
+              2078.62,
+              1783.965811966
+            ],
+            "base_us": 1786.2785581570001,
+            "test_us": 2077.602079208,
+            "delta_us": 291.3235210509997
+          },
+          {
+            "slots_us": [
+              1771.318965517,
+              2698.428571429,
+              2678.139240506,
+              1800.949579832
+            ],
+            "base_us": 1786.1342726745,
+            "test_us": 2688.2839059675,
+            "delta_us": 902.1496332929999
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      }
+    }
+  },
+  "1080-prefix": {
+    "validated_slots": 96,
+    "checked_bytes_per_slot": 141557760,
+    "raw_network_checks": 4,
+    "phases": {
+      "ffn": {
+        "calibration_percent": 5.473150436585346,
+        "extra_one_us": 209.243116396,
+        "extra_three_us": 607.5808546890003,
+        "per_extra_from_three_us": 202.5269515630001,
+        "comparisons": [
+          {
+            "slots_us": [
+              1607.984375,
+              1708.508196721,
+              1709.677419355,
+              1632.826771654
+            ],
+            "base_us": 1620.405573327,
+            "test_us": 1709.092808038,
+            "delta_us": 88.68723471099997
+          },
+          {
+            "slots_us": [
+              1708.951219512,
+              1918.394495413,
+              1918.231481481,
+              1709.18852459
+            ],
+            "base_us": 1709.069872051,
+            "test_us": 1918.312988447,
+            "delta_us": 209.243116396
+          },
+          {
+            "slots_us": [
+              1709.336065574,
+              2317.703296703,
+              2317.604395604,
+              1710.809917355
+            ],
+            "base_us": 1710.0729914644999,
+            "test_us": 2317.6538461535,
+            "delta_us": 607.5808546890003
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "pack": {
+        "calibration_percent": 26.419933946447237,
+        "extra_one_us": 396.16747271250006,
+        "extra_three_us": 1114.9879389125,
+        "per_extra_from_three_us": 371.6626463041667,
+        "comparisons": [
+          {
+            "slots_us": [
+              1638.984496124,
+              2224.315217391,
+              1918.181818182,
+              1637.790697674
+            ],
+            "base_us": 1638.387596899,
+            "test_us": 2071.2485177865,
+            "delta_us": 432.8609208875
+          },
+          {
+            "slots_us": [
+              1915.018348624,
+              2310.489130435,
+              2312.725274725,
+              1915.861111111
+            ],
+            "base_us": 1915.4397298674999,
+            "test_us": 2311.60720258,
+            "delta_us": 396.16747271250006
+          },
+          {
+            "slots_us": [
+              1914.398148148,
+              3029.214285714,
+              3031.914285714,
+              1916.754545455
+            ],
+            "base_us": 1915.5763468015,
+            "test_us": 3030.564285714,
+            "delta_us": 1114.9879389125
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "qkv": {
+        "calibration_percent": 3.2181381637652327,
+        "extra_one_us": 84.88593616050025,
+        "extra_three_us": 243.5210598204999,
+        "per_extra_from_three_us": 81.1736866068333,
+        "comparisons": [
+          {
+            "slots_us": [
+              1635.4921875,
+              1688.592,
+              1690.463414634,
+              1638.2109375
+            ],
+            "base_us": 1636.8515625,
+            "test_us": 1689.527707317,
+            "delta_us": 52.67614481700002
+          },
+          {
+            "slots_us": [
+              1689.620967742,
+              1774.462184874,
+              1775.117647059,
+              1690.18699187
+            ],
+            "base_us": 1689.9039798059998,
+            "test_us": 1774.7899159665,
+            "delta_us": 84.88593616050025
+          },
+          {
+            "slots_us": [
+              1688.756097561,
+              1932.018348624,
+              1932.481481481,
+              1688.701612903
+            ],
+            "base_us": 1688.7288552320001,
+            "test_us": 1932.2499150525,
+            "delta_us": 243.5210598204999
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "scores": {
+        "calibration_percent": 6.657688587546484,
+        "extra_one_us": 155.73408979250007,
+        "extra_three_us": 450.94290868149983,
+        "per_extra_from_three_us": 150.3143028938333,
+        "comparisons": [
+          {
+            "slots_us": [
+              1638.3984375,
+              1747.302521008,
+              1746.595041322,
+              1637.40625
+            ],
+            "base_us": 1637.90234375,
+            "test_us": 1746.9487811650001,
+            "delta_us": 109.04643741500013
+          },
+          {
+            "slots_us": [
+              1747.066666667,
+              1901.71559633,
+              1903.953703704,
+              1747.134453782
+            ],
+            "base_us": 1747.1005602245,
+            "test_us": 1902.834650017,
+            "delta_us": 155.73408979250007
+          },
+          {
+            "slots_us": [
+              1748.842975207,
+              2204.747368421,
+              2196.157894737,
+              1750.176470588
+            ],
+            "base_us": 1749.5097228975,
+            "test_us": 2200.452631579,
+            "delta_us": 450.94290868149983
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "norm": {
+        "calibration_percent": 2.943140880349272,
+        "extra_one_us": 304.47950076050006,
+        "extra_three_us": 981.3835129700003,
+        "per_extra_from_three_us": 327.12783765666677,
+        "comparisons": [
+          {
+            "slots_us": [
+              1640.0625,
+              1688.693548387,
+              1688.632,
+              1640.705426357
+            ],
+            "base_us": 1640.3839631785,
+            "test_us": 1688.6627741935,
+            "delta_us": 48.278811014999974
+          },
+          {
+            "slots_us": [
+              1688.935483871,
+              1993.819047619,
+              1996.067307692,
+              1691.991869919
+            ],
+            "base_us": 1690.463676895,
+            "test_us": 1994.9431776555,
+            "delta_us": 304.47950076050006
+          },
+          {
+            "slots_us": [
+              1691.870967742,
+              2674.897435897,
+              2671.797468354,
+              1692.056910569
+            ],
+            "base_us": 1691.9639391555,
+            "test_us": 2673.3474521255002,
+            "delta_us": 981.3835129700003
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "av": {
+        "calibration_percent": 1.3966210120466502,
+        "extra_one_us": 88.91035901049986,
+        "extra_three_us": 272.572911598,
+        "per_extra_from_three_us": 90.85763719933334,
+        "comparisons": [
+          {
+            "slots_us": [
+              1642.8046875,
+              1662.023622047,
+              1666.222222222,
+              1639.598425197
+            ],
+            "base_us": 1641.2015563485002,
+            "test_us": 1664.1229221345,
+            "delta_us": 22.921365785999797
+          },
+          {
+            "slots_us": [
+              1665.206349206,
+              1755.168067227,
+              1752.875,
+              1665.016
+            ],
+            "base_us": 1665.111174603,
+            "test_us": 1754.0215336135,
+            "delta_us": 88.91035901049986
+          },
+          {
+            "slots_us": [
+              1664.902439024,
+              1938.768518519,
+              1938.073394495,
+              1666.793650794
+            ],
+            "base_us": 1665.848044909,
+            "test_us": 1938.420956507,
+            "delta_us": 272.572911598
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "project": {
+        "calibration_percent": 0.5175715045312016,
+        "extra_one_us": 45.32362618449997,
+        "extra_three_us": 131.05673903200022,
+        "per_extra_from_three_us": 43.68557967733341,
+        "comparisons": [
+          {
+            "slots_us": [
+              1640.850393701,
+              1646.527559055,
+              1646.8,
+              1635.519607843
+            ],
+            "base_us": 1638.185000772,
+            "test_us": 1646.6637795275,
+            "delta_us": 8.478778755500116
+          },
+          {
+            "slots_us": [
+              1647.828125,
+              1693.096774194,
+              1693.704,
+              1648.325396825
+            ],
+            "base_us": 1648.0767609125,
+            "test_us": 1693.400387097,
+            "delta_us": 45.32362618449997
+          },
+          {
+            "slots_us": [
+              1648.4375,
+              1778.495726496,
+              1778.779661017,
+              1646.724409449
+            ],
+            "base_us": 1647.5809547244999,
+            "test_us": 1778.6376937565,
+            "delta_us": 131.05673903200022
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "packv": {
+        "calibration_percent": 6.586151382110071,
+        "extra_one_us": 268.06754589850016,
+        "extra_three_us": 830.803981265,
+        "per_extra_from_three_us": 276.93466042166665,
+        "comparisons": [
+          {
+            "slots_us": [
+              1676.0,
+              1790.655737705,
+              1805.952380952,
+              1698.3671875
+            ],
+            "base_us": 1687.18359375,
+            "test_us": 1798.3040593285,
+            "delta_us": 111.12046557849999
+          },
+          {
+            "slots_us": [
+              1793.25203252,
+              2056.0,
+              2067.239583333,
+              1793.852459016
+            ],
+            "base_us": 1793.552245768,
+            "test_us": 2061.6197916665,
+            "delta_us": 268.06754589850016
+          },
+          {
+            "slots_us": [
+              1794.049180328,
+              2627.880952381,
+              2627.80952381,
+              1800.033333333
+            ],
+            "base_us": 1797.0412568305,
+            "test_us": 2627.8452380955,
+            "delta_us": 830.803981265
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      }
+    }
+  },
+  "900-chain": {
+    "validated_slots": 96,
+    "checked_bytes_per_slot": 25235456,
+    "raw_network_checks": 4,
+    "phases": {
+      "ffn": {
+        "calibration_percent": 7.089532633715514,
+        "extra_one_us": 41.084372067000004,
+        "extra_three_us": 127.30286496100001,
+        "per_extra_from_three_us": 42.43428832033334,
+        "comparisons": [
+          {
+            "slots_us": [
+              253.135135135,
+              276.361613352,
+              278.43774574,
+              264.93544137
+            ],
+            "base_us": 259.0352882525,
+            "test_us": 277.399679546,
+            "delta_us": 18.364391293500034
+          },
+          {
+            "slots_us": [
+              279.078205128,
+              320.34551495,
+              319.033536585,
+              278.132102273
+            ],
+            "base_us": 278.60515370049995,
+            "test_us": 319.68952576749996,
+            "delta_us": 41.084372067000004
+          },
+          {
+            "slots_us": [
+              279.282868526,
+              405.661654135,
+              405.297348485,
+              277.070404172
+            ],
+            "base_us": 278.176636349,
+            "test_us": 405.47950131,
+            "delta_us": 127.30286496100001
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "pack": {
+        "calibration_percent": 14.807845823056006,
+        "extra_one_us": 74.25012985699999,
+        "extra_three_us": 215.40520103699998,
+        "per_extra_from_three_us": 71.801733679,
+        "comparisons": [
+          {
+            "slots_us": [
+              266.295597484,
+              304.655864198,
+              305.265822785,
+              264.958762887
+            ],
+            "base_us": 265.6271801855,
+            "test_us": 304.9608434915,
+            "delta_us": 39.333663306000005
+          },
+          {
+            "slots_us": [
+              305.612809316,
+              379.230366492,
+              378.424610052,
+              303.541907514
+            ],
+            "base_us": 304.577358415,
+            "test_us": 378.827488272,
+            "delta_us": 74.25012985699999
+          },
+          {
+            "slots_us": [
+              307.189147287,
+              521.581683168,
+              521.617283951,
+              305.199417758
+            ],
+            "base_us": 306.1942825225,
+            "test_us": 521.5994835595,
+            "delta_us": 215.40520103699998
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "qkv": {
+        "calibration_percent": -1.6297816107329757,
+        "extra_one_us": 13.515488071499988,
+        "extra_three_us": 40.56615140550002,
+        "per_extra_from_three_us": 13.522050468500007,
+        "comparisons": [
+          {
+            "slots_us": [
+              266.149509804,
+              262.651226158,
+              262.799468792,
+              268.0067659
+            ],
+            "base_us": 267.078137852,
+            "test_us": 262.72534747500004,
+            "delta_us": -4.3527903769999625
+          },
+          {
+            "slots_us": [
+              259.787261146,
+              272.211875843,
+              273.860791826,
+              259.25443038
+            ],
+            "base_us": 259.520845763,
+            "test_us": 273.0363338345,
+            "delta_us": 13.515488071499988
+          },
+          {
+            "slots_us": [
+              262.568677792,
+              302.888888889,
+              300.961309524,
+              260.14921781
+            ],
+            "base_us": 261.358947801,
+            "test_us": 301.9250992065,
+            "delta_us": 40.56615140550002
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "scores": {
+        "calibration_percent": 2.9490536976919746,
+        "extra_one_us": 27.52475918199997,
+        "extra_three_us": 76.43562798899995,
+        "per_extra_from_three_us": 25.478542662999985,
+        "comparisons": [
+          {
+            "slots_us": [
+              266.930203046,
+              270.807692308,
+              270.678571429,
+              259.044776119
+            ],
+            "base_us": 262.98748958249996,
+            "test_us": 270.7431318685,
+            "delta_us": 7.755642286000011
+          },
+          {
+            "slots_us": [
+              261.149232915,
+              288.919191919,
+              288.657512116,
+              261.377952756
+            ],
+            "base_us": 261.26359283550005,
+            "test_us": 288.7883520175,
+            "delta_us": 27.52475918199997
+          },
+          {
+            "slots_us": [
+              261.383825417,
+              337.97865353,
+              337.507389163,
+              261.230961298
+            ],
+            "base_us": 261.3073933575,
+            "test_us": 337.7430213465,
+            "delta_us": 76.43562798899995
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "norm": {
+        "calibration_percent": -0.24722544762766444,
+        "extra_one_us": 48.22955514400002,
+        "extra_three_us": 165.48647766050001,
+        "per_extra_from_three_us": 55.16215922016667,
+        "comparisons": [
+          {
+            "slots_us": [
+              255.344072165,
+              254.61038961,
+              254.87125,
+              255.4002574
+            ],
+            "base_us": 255.3721647825,
+            "test_us": 254.740819805,
+            "delta_us": -0.6313449774999924
+          },
+          {
+            "slots_us": [
+              254.962962963,
+              303.174603175,
+              302.897865854,
+              254.650395778
+            ],
+            "base_us": 254.80667937049998,
+            "test_us": 303.0362345145,
+            "delta_us": 48.22955514400002
+          },
+          {
+            "slots_us": [
+              254.934666667,
+              420.540275049,
+              420.567346939,
+              255.2
+            ],
+            "base_us": 255.0673333335,
+            "test_us": 420.553810994,
+            "delta_us": 165.48647766050001
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "av": {
+        "calibration_percent": 0.7659822279945375,
+        "extra_one_us": 14.77515206999999,
+        "extra_three_us": 44.13303679850003,
+        "per_extra_from_three_us": 14.711012266166676,
+        "comparisons": [
+          {
+            "slots_us": [
+              255.336411609,
+              257.260130719,
+              257.436260623,
+              255.447466007
+            ],
+            "base_us": 255.39193880800002,
+            "test_us": 257.348195671,
+            "delta_us": 1.9562568629999646
+          },
+          {
+            "slots_us": [
+              256.934010152,
+              271.934316354,
+              271.582763338,
+              257.0327654
+            ],
+            "base_us": 256.983387776,
+            "test_us": 271.75853984599996,
+            "delta_us": 14.77515206999999
+          },
+          {
+            "slots_us": [
+              256.959156785,
+              301.099693252,
+              300.975218659,
+              256.849681529
+            ],
+            "base_us": 256.904419157,
+            "test_us": 301.03745595550004,
+            "delta_us": 44.13303679850003
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "project": {
+        "calibration_percent": -1.5831060528371061,
+        "extra_one_us": 14.987402355,
+        "extra_three_us": 46.03203782600002,
+        "per_extra_from_three_us": 15.344012608666674,
+        "comparisons": [
+          {
+            "slots_us": [
+              255.259452412,
+              251.558645707,
+              251.260107817,
+              255.6475
+            ],
+            "base_us": 255.453476206,
+            "test_us": 251.40937676200002,
+            "delta_us": -4.044099443999983
+          },
+          {
+            "slots_us": [
+              251.327563249,
+              266.657738095,
+              266.52639087,
+              251.881761006
+            ],
+            "base_us": 251.6046621275,
+            "test_us": 266.5920644825,
+            "delta_us": 14.987402355
+          },
+          {
+            "slots_us": [
+              251.376044568,
+              297.297965116,
+              297.435816165,
+              251.293661061
+            ],
+            "base_us": 251.33485281449998,
+            "test_us": 297.3668906405,
+            "delta_us": 46.03203782600002
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "packv": {
+        "calibration_percent": 4.476438738409811,
+        "extra_one_us": 55.745093704,
+        "extra_three_us": 166.36482816800003,
+        "per_extra_from_three_us": 55.45494272266668,
+        "comparisons": [
+          {
+            "slots_us": [
+              252.063421829,
+              269.837944664,
+              270.737437186,
+              265.350253807
+            ],
+            "base_us": 258.706837818,
+            "test_us": 270.287690925,
+            "delta_us": 11.580853106999996
+          },
+          {
+            "slots_us": [
+              270.389355742,
+              327.22826087,
+              327.937595129,
+              273.286312849
+            ],
+            "base_us": 271.8378342955,
+            "test_us": 327.5829279995,
+            "delta_us": 55.745093704
+          },
+          {
+            "slots_us": [
+              272.885790173,
+              437.963340122,
+              438.314851485,
+              270.662745098
+            ],
+            "base_us": 271.7742676355,
+            "test_us": 438.1390958035,
+            "delta_us": 166.36482816800003
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      }
+    }
+  },
+  "900-post": {
+    "validated_slots": 96,
+    "checked_bytes_per_slot": 18432000,
+    "raw_network_checks": 4,
+    "phases": {
+      "ffn": {
+        "calibration_percent": 8.944401024601586,
+        "extra_one_us": 166.128698149,
+        "extra_three_us": 467.02075193149994,
+        "per_extra_from_three_us": 155.67358397716666,
+        "comparisons": [
+          {
+            "slots_us": [
+              1123.284210526,
+              1245.362573099,
+              1238.090909091,
+              1156.276243094
+            ],
+            "base_us": 1139.78022681,
+            "test_us": 1241.7267410949999,
+            "delta_us": 101.94651428499992
+          },
+          {
+            "slots_us": [
+              1240.674698795,
+              1409.47972973,
+              1404.879194631,
+              1241.426829268
+            ],
+            "base_us": 1241.0507640315,
+            "test_us": 1407.1794621805,
+            "delta_us": 166.128698149
+          },
+          {
+            "slots_us": [
+              1247.826347305,
+              1718.049180328,
+              1711.611570248,
+              1247.792899408
+            ],
+            "base_us": 1247.8096233565,
+            "test_us": 1714.830375288,
+            "delta_us": 467.02075193149994
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "pack": {
+        "calibration_percent": 22.39876051651545,
+        "extra_one_us": 294.9692912024998,
+        "extra_three_us": 936.9738756575002,
+        "per_extra_from_three_us": 312.32462521916676,
+        "comparisons": [
+          {
+            "slots_us": [
+              1150.167597765,
+              1408.120805369,
+              1407.84,
+              1150.477272727
+            ],
+            "base_us": 1150.322435246,
+            "test_us": 1407.9804026845,
+            "delta_us": 257.6579674385
+          },
+          {
+            "slots_us": [
+              1411.743421053,
+              1706.578512397,
+              1706.680672269,
+              1411.577181208
+            ],
+            "base_us": 1411.6603011305,
+            "test_us": 1706.629592333,
+            "delta_us": 294.9692912024998
+          },
+          {
+            "slots_us": [
+              1408.026490066,
+              2348.202247191,
+              2348.887640449,
+              1415.115646259
+            ],
+            "base_us": 1411.5710681625,
+            "test_us": 2348.5449438200003,
+            "delta_us": 936.9738756575002
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "qkv": {
+        "calibration_percent": 4.912061282113439,
+        "extra_one_us": 66.53383609449997,
+        "extra_three_us": 220.79413806699995,
+        "per_extra_from_three_us": 73.59804602233332,
+        "comparisons": [
+          {
+            "slots_us": [
+              1148.760869565,
+              1213.571428571,
+              1207.058479532,
+              1158.533333333
+            ],
+            "base_us": 1153.6471014489998,
+            "test_us": 1210.3149540515,
+            "delta_us": 56.66785260250026
+          },
+          {
+            "slots_us": [
+              1205.421052632,
+              1280.036585366,
+              1273.51572327,
+              1215.063583815
+            ],
+            "base_us": 1210.2423182235,
+            "test_us": 1276.776154318,
+            "delta_us": 66.53383609449997
+          },
+          {
+            "slots_us": [
+              1207.273809524,
+              1405.348993289,
+              1404.073333333,
+              1160.560240964
+            ],
+            "base_us": 1183.917025244,
+            "test_us": 1404.7111633109998,
+            "delta_us": 220.79413806699995
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "scores": {
+        "calibration_percent": 4.313700487084917,
+        "extra_one_us": 104.77897957999994,
+        "extra_three_us": 307.01537486300003,
+        "per_extra_from_three_us": 102.33845828766668,
+        "comparisons": [
+          {
+            "slots_us": [
+              1106.983240223,
+              1154.99408284,
+              1154.682352941,
+              1107.18079096
+            ],
+            "base_us": 1107.0820155914998,
+            "test_us": 1154.8382178905,
+            "delta_us": 47.75620229900005
+          },
+          {
+            "slots_us": [
+              1154.313609467,
+              1259.256410256,
+              1260.326923077,
+              1155.711764706
+            ],
+            "base_us": 1155.0126870865001,
+            "test_us": 1259.7916666665,
+            "delta_us": 104.77897957999994
+          },
+          {
+            "slots_us": [
+              1155.906432749,
+              1462.818181818,
+              1463.444444444,
+              1156.325443787
+            ],
+            "base_us": 1156.115938268,
+            "test_us": 1463.131313131,
+            "delta_us": 307.01537486300003
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "norm": {
+        "calibration_percent": 2.3358463336049495,
+        "extra_one_us": 191.87625227800004,
+        "extra_three_us": 649.0125585129999,
+        "per_extra_from_three_us": 216.3375195043333,
+        "comparisons": [
+          {
+            "slots_us": [
+              1107.553672316,
+              1134.155172414,
+              1133.971428571,
+              1108.802259887
+            ],
+            "base_us": 1108.1779661015,
+            "test_us": 1134.0633004924998,
+            "delta_us": 25.885334390999788
+          },
+          {
+            "slots_us": [
+              1133.375722543,
+              1325.389261745,
+              1325.204081633,
+              1133.465116279
+            ],
+            "base_us": 1133.420419411,
+            "test_us": 1325.296671689,
+            "delta_us": 191.87625227800004
+          },
+          {
+            "slots_us": [
+              1132.781609195,
+              1782.0,
+              1781.945454545,
+              1133.138728324
+            ],
+            "base_us": 1132.9601687595,
+            "test_us": 1781.9727272725,
+            "delta_us": 649.0125585129999
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "av": {
+        "calibration_percent": 2.3063956879573064,
+        "extra_one_us": 55.925507057500226,
+        "extra_three_us": 168.2169038410002,
+        "per_extra_from_three_us": 56.0723012803334,
+        "comparisons": [
+          {
+            "slots_us": [
+              1108.308988764,
+              1133.686046512,
+              1133.98255814,
+              1108.237288136
+            ],
+            "base_us": 1108.27313845,
+            "test_us": 1133.834302326,
+            "delta_us": 25.56116387599991
+          },
+          {
+            "slots_us": [
+              1133.913294798,
+              1189.779141104,
+              1189.496932515,
+              1133.511764706
+            ],
+            "base_us": 1133.712529752,
+            "test_us": 1189.6380368095001,
+            "delta_us": 55.925507057500226
+          },
+          {
+            "slots_us": [
+              1134.298850575,
+              1302.527027027,
+              1302.637583893,
+              1134.431952663
+            ],
+            "base_us": 1134.3654016189998,
+            "test_us": 1302.58230546,
+            "delta_us": 168.2169038410002
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "project": {
+        "calibration_percent": 1.334660766381399,
+        "extra_one_us": 35.7322460649998,
+        "extra_three_us": 105.71129412949995,
+        "per_extra_from_three_us": 35.23709804316665,
+        "comparisons": [
+          {
+            "slots_us": [
+              1110.724137931,
+              1125.023255814,
+              1125.514285714,
+              1110.171974522
+            ],
+            "base_us": 1110.4480562265,
+            "test_us": 1125.268770764,
+            "delta_us": 14.820714537499953
+          },
+          {
+            "slots_us": [
+              1125.056497175,
+              1161.276470588,
+              1161.005882353,
+              1125.761363636
+            ],
+            "base_us": 1125.4089304055,
+            "test_us": 1161.1411764704999,
+            "delta_us": 35.7322460649998
+          },
+          {
+            "slots_us": [
+              1124.890804598,
+              1230.825,
+              1229.83125,
+              1124.342857143
+            ],
+            "base_us": 1124.6168308705,
+            "test_us": 1230.328125,
+            "delta_us": 105.71129412949995
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "packv": {
+        "calibration_percent": 8.464067835902025,
+        "extra_one_us": 191.89431623050018,
+        "extra_three_us": 633.1992111474999,
+        "per_extra_from_three_us": 211.0664037158333,
+        "comparisons": [
+          {
+            "slots_us": [
+              1139.760204082,
+              1248.821428571,
+              1240.74691358,
+              1155.532967033
+            ],
+            "base_us": 1147.6465855575,
+            "test_us": 1244.7841710755001,
+            "delta_us": 97.13758551800015
+          },
+          {
+            "slots_us": [
+              1240.63253012,
+              1433.406896552,
+              1445.191780822,
+              1254.177514793
+            ],
+            "base_us": 1247.4050224564999,
+            "test_us": 1439.299338687,
+            "delta_us": 191.89431623050018
+          },
+          {
+            "slots_us": [
+              1241.722891566,
+              1879.675675676,
+              1873.954954955,
+              1245.50931677
+            ],
+            "base_us": 1243.616104168,
+            "test_us": 1876.8153153155,
+            "delta_us": 633.1992111474999
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      }
+    }
+  },
+  "900-prefix": {
+    "validated_slots": 96,
+    "checked_bytes_per_slot": 98304000,
+    "raw_network_checks": 4,
+    "phases": {
+      "ffn": {
+        "calibration_percent": 5.0442971661572225,
+        "extra_one_us": 149.11211849849997,
+        "extra_three_us": 434.71483940550024,
+        "per_extra_from_three_us": 144.90494646850007,
+        "comparisons": [
+          {
+            "slots_us": [
+              1157.256830601,
+              1232.783783784,
+              1232.903743316,
+              1190.026737968
+            ],
+            "base_us": 1173.6417842844999,
+            "test_us": 1232.84376355,
+            "delta_us": 59.201979265500086
+          },
+          {
+            "slots_us": [
+              1242.735135135,
+              1394.937106918,
+              1379.639751553,
+              1233.617486339
+            ],
+            "base_us": 1238.176310737,
+            "test_us": 1387.2884292355,
+            "delta_us": 149.11211849849997
+          },
+          {
+            "slots_us": [
+              1233.62295082,
+              1671.832061069,
+              1665.992307692,
+              1234.77173913
+            ],
+            "base_us": 1234.1973449749999,
+            "test_us": 1668.9121843805,
+            "delta_us": 434.71483940550024
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "pack": {
+        "calibration_percent": 17.167612700558568,
+        "extra_one_us": 281.50718152850004,
+        "extra_three_us": 1150.6472298430003,
+        "per_extra_from_three_us": 383.54907661433344,
+        "comparisons": [
+          {
+            "slots_us": [
+              1178.074074074,
+              1378.327044025,
+              1383.625,
+              1179.191709845
+            ],
+            "base_us": 1178.6328919595,
+            "test_us": 1380.9760220125,
+            "delta_us": 202.34313005299987
+          },
+          {
+            "slots_us": [
+              1381.75625,
+              1665.175572519,
+              1668.526717557,
+              1388.931677019
+            ],
+            "base_us": 1385.3439635095,
+            "test_us": 1666.8511450380001,
+            "delta_us": 281.50718152850004
+          },
+          {
+            "slots_us": [
+              1394.527950311,
+              2884.089552239,
+              2193.683168317,
+              1381.950310559
+            ],
+            "base_us": 1388.2391304349999,
+            "test_us": 2538.886360278,
+            "delta_us": 1150.6472298430003
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "qkv": {
+        "calibration_percent": 2.7462210537977128,
+        "extra_one_us": 70.88796632100002,
+        "extra_three_us": 169.79634399049974,
+        "per_extra_from_three_us": 56.59878133016658,
+        "comparisons": [
+          {
+            "slots_us": [
+              1189.690721649,
+              1217.038043478,
+              1220.489247312,
+              1182.685863874
+            ],
+            "base_us": 1186.1882927615,
+            "test_us": 1218.763645395,
+            "delta_us": 32.57535263349996
+          },
+          {
+            "slots_us": [
+              1229.026737968,
+              1278.107954545,
+              1279.646067416,
+              1186.951351351
+            ],
+            "base_us": 1207.9890446595,
+            "test_us": 1278.8770109805,
+            "delta_us": 70.88796632100002
+          },
+          {
+            "slots_us": [
+              1168.540540541,
+              1338.811688312,
+              1337.908496732,
+              1168.586956522
+            ],
+            "base_us": 1168.5637485315,
+            "test_us": 1338.3600925219998,
+            "delta_us": 169.79634399049974
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "scores": {
+        "calibration_percent": 6.725810918855746,
+        "extra_one_us": 107.59129494450008,
+        "extra_three_us": 310.99794052000016,
+        "per_extra_from_three_us": 103.66598017333338,
+        "comparisons": [
+          {
+            "slots_us": [
+              1134.322916667,
+              1212.75,
+              1208.175141243,
+              1134.036649215
+            ],
+            "base_us": 1134.179782941,
+            "test_us": 1210.4625706215002,
+            "delta_us": 76.28278768050018
+          },
+          {
+            "slots_us": [
+              1211.728813559,
+              1319.031055901,
+              1319.335403727,
+              1211.45505618
+            ],
+            "base_us": 1211.5919348695,
+            "test_us": 1319.183229814,
+            "delta_us": 107.59129494450008
+          },
+          {
+            "slots_us": [
+              1212.758426966,
+              1525.4,
+              1524.365671642,
+              1215.011363636
+            ],
+            "base_us": 1213.884895301,
+            "test_us": 1524.882835821,
+            "delta_us": 310.99794052000016
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "norm": {
+        "calibration_percent": 3.2156279821873253,
+        "extra_one_us": 209.70450091400016,
+        "extra_three_us": 680.5143512745003,
+        "per_extra_from_three_us": 226.8381170915001,
+        "comparisons": [
+          {
+            "slots_us": [
+              1134.71957672,
+              1171.27027027,
+              1171.037234043,
+              1134.614583333
+            ],
+            "base_us": 1134.6670800265001,
+            "test_us": 1171.1537521565,
+            "delta_us": 36.48667212999999
+          },
+          {
+            "slots_us": [
+              1172.016042781,
+              1381.032679739,
+              1382.080536913,
+              1171.688172043
+            ],
+            "base_us": 1171.852107412,
+            "test_us": 1381.556608326,
+            "delta_us": 209.70450091400016
+          },
+          {
+            "slots_us": [
+              1172.681081081,
+              1852.115044248,
+              1853.383928571,
+              1171.789189189
+            ],
+            "base_us": 1172.2351351349998,
+            "test_us": 1852.7494864095002,
+            "delta_us": 680.5143512745003
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "av": {
+        "calibration_percent": 1.2324369276782359,
+        "extra_one_us": 62.87400286600018,
+        "extra_three_us": 191.70071618550014,
+        "per_extra_from_three_us": 63.90023872850005,
+        "comparisons": [
+          {
+            "slots_us": [
+              1134.932642487,
+              1150.090425532,
+              1149.413043478,
+              1136.57591623
+            ],
+            "base_us": 1135.7542793585,
+            "test_us": 1149.751734505,
+            "delta_us": 13.997455146499988
+          },
+          {
+            "slots_us": [
+              1152.111111111,
+              1214.547486034,
+              1214.731843575,
+              1151.420212766
+            ],
+            "base_us": 1151.7656619385,
+            "test_us": 1214.6396648045002,
+            "delta_us": 62.87400286600018
+          },
+          {
+            "slots_us": [
+              1152.654255319,
+              1342.243589744,
+              1342.664556962,
+              1148.852459016
+            ],
+            "base_us": 1150.7533571674999,
+            "test_us": 1342.454073353,
+            "delta_us": 191.70071618550014
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "project": {
+        "calibration_percent": 0.35919394009365185,
+        "extra_one_us": 30.68234966650016,
+        "extra_three_us": 92.23701304200017,
+        "per_extra_from_three_us": 30.745671014000056,
+        "comparisons": [
+          {
+            "slots_us": [
+              1136.77486911,
+              1139.973544974,
+              1141.333333333,
+              1136.367021277
+            ],
+            "base_us": 1136.5709451935,
+            "test_us": 1140.6534391535001,
+            "delta_us": 4.082493960000193
+          },
+          {
+            "slots_us": [
+              1140.879581152,
+              1172.403225806,
+              1171.559139785,
+              1141.718085106
+            ],
+            "base_us": 1141.2988331289998,
+            "test_us": 1171.9811827955,
+            "delta_us": 30.68234966650016
+          },
+          {
+            "slots_us": [
+              1141.455497382,
+              1233.388571429,
+              1233.195402299,
+              1140.654450262
+            ],
+            "base_us": 1141.054973822,
+            "test_us": 1233.2919868640001,
+            "delta_us": 92.23701304200017
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      },
+      "packv": {
+        "calibration_percent": 6.03239450239511,
+        "extra_one_us": 183.370739297,
+        "extra_three_us": 575.0589980425,
+        "per_extra_from_three_us": 191.68633268083332,
+        "comparisons": [
+          {
+            "slots_us": [
+              1158.243243243,
+              1239.367567568,
+              1241.668478261,
+              1181.64171123
+            ],
+            "base_us": 1169.9424772365,
+            "test_us": 1240.5180229144999,
+            "delta_us": 70.5755456779998
+          },
+          {
+            "slots_us": [
+              1251.12972973,
+              1430.105263158,
+              1428.61038961,
+              1240.844444444
+            ],
+            "base_us": 1245.987087087,
+            "test_us": 1429.357826384,
+            "delta_us": 183.370739297
+          },
+          {
+            "slots_us": [
+              1240.327868852,
+              1823.898305085,
+              1819.608333333,
+              1253.060773481
+            ],
+            "base_us": 1246.6943211665,
+            "test_us": 1821.753319209,
+            "delta_us": 575.0589980425
+          }
+        ],
+        "note": "Controlled hot-repeat marginal cost; not a native phase duration or additive time share."
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain ffn
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain pack
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain qkv
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain scores
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain norm
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain av
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain project
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS C32 phase controls

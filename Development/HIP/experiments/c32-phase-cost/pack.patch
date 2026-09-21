@@ -1,0 +1,27 @@
+--- original-body
++++ pack-diagnostic-body
+@@ -2 +2,2 @@
+-DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f,float*main=nullptr,float*down=nullptr,const float*rgba=nullptr,const float*hist=nullptr,uint seed=0,uint temporal=0){
++DEV void c32_probe_pack_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f,float*main=nullptr,float*down=nullptr,const float*rgba=nullptr,const float*hist=nullptr,uint seed=0,uint temporal=0){
++ uint probe_repeats=windows>>28;windows&=0x0fffffffu;if(!probe_repeats)probe_repeats=1;
+@@ -85 +86,5 @@
+-  for(uint e=0;e<8;e++){float v=sum[e],g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(fp8(v*p));}
++ _Pragma("clang loop unroll(disable)") for(uint probe_it=0;probe_it<probe_repeats;probe_it++){
++ _Pragma("unroll 8")
++  for(uint e=0;e<8;e++){float v=sum[e];asm volatile("" : "+v"(v));float g=clampf(v,-4.f,4.f),q=absf(g)*(-.055908203125f)+.447265625f,p=g*q+.89453125f;uint probe_byte=fp8(v*p);asm volatile("" : : "v"(probe_byte));scratch.hidden[(first+gr()*8+e)*132+col+rc()]=static_cast<unsigned char>(probe_byte);}
++}
++
+@@ -95 +100 @@
+- if(residual_mode==0){for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();float x;
++ if(residual_mode==0){_Pragma("unroll 2") for(uint ci=0;ci<2;ci++) _Pragma("unroll 8") for(uint e=0;e<8;e++){uint row=first+gr()*8+e,c=ci*16+rc();float x;
+@@ -125,3 +130,4 @@
+- for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++){
+-#if HIP_C32_REGISTER_FFN
+-  float v=Hrtz(acc[ci][e]);saved_ffn[ci][e]=(_Float16)v;ffn8[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(fp8(v));
++ _Pragma("clang loop unroll(disable)") for(uint probe_it=0;probe_it<probe_repeats;probe_it++){
++ _Pragma("unroll 2") for(uint ci=0;ci<2;ci++) _Pragma("unroll 8") for(uint e=0;e<8;e++){
++#if HIP_C32_REGISTER_FFN
++  float source=acc[ci][e];asm volatile("" : "+v"(source));float v=Hrtz(source);saved_ffn[ci][e]=(_Float16)v;uint probe_byte=fp8(v);asm volatile("" : : "v"(probe_byte));ffn8[(first+gr()*8+e)*36+ci*16+rc()]=static_cast<unsigned char>(probe_byte);
+@@ -131,0 +138,2 @@
++}
++

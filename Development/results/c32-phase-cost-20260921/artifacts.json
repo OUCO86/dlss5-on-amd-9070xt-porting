@@ -1,0 +1,34 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\kernel.hip",
+        "sha":  "79F15DBDD865E07CDB2B60181F0FC518042A74EDC65FEFABF93E0E85549FB1BF"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\pure.exe",
+        "sha":  "362771D5717312A4788FA5606AACB025D184EFA1FDFD9D4853450C94D9F3072E"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\gfx1200.hsaco",
+        "sha":  "65879DA9F461436CA9CD43CB230D8819415C6F70267D38A10C068700C9B600AF"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\modules\\c32_fused_ffn_attention-packed.hsaco",
+        "sha":  "46F26C8EBD6E961C70FD00E9433A80F3FC1D69AFAFFA5A185E6F6D339ED753FB"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\packv.hip",
+        "sha":  "4946EA69B59F1CE3160EAB0C45D2D221735185CEBE66D4509A9679DDE1146F51"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\pure-filter.exe",
+        "sha":  "D8F2F20CA0427AB79E15A924AA0E7B20D707DB8ACA57AF4840E93A7CA18C2575"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\packv-gfx1200.hsaco",
+        "sha":  "CC7C0409D7526F4B946FCA99D3FD4B2E8581C9F96824E9A00BB247EA6185D489"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-phase-cost\\modules-packv\\c32_fused_ffn_attention-packed.hsaco",
+        "sha":  "3561588EF7B3C456A9EC42BD21C94FC86EBE15B1B00EE876F248A2DCC1621E28"
+    }
+]

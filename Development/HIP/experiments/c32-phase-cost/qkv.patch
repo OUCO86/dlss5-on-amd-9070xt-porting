@@ -1,0 +1,12 @@
+--- original-body
++++ qkv-diagnostic-body
+@@ -2 +2,2 @@
+-DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f,float*main=nullptr,float*down=nullptr,const float*rgba=nullptr,const float*hist=nullptr,uint seed=0,uint temporal=0){
++DEV void c32_probe_qkv_body(const float*raw_input,const float*fw,const float*w,float*out,uint windows,uint residual_mode,uint raw_output,uint sourcew=0,uint sourceh=0,uint sx=0,uint sy=0,uint prevw=0,uint prevsx=0,uint prevsy=0,const float*skip=nullptr,const float*scales=nullptr,const float*color=nullptr,const float*headw=nullptr,float*rgb=nullptr,float rgb_scale=0.f,float*main=nullptr,float*down=nullptr,const float*rgba=nullptr,const float*hist=nullptr,uint seed=0,uint temporal=0){
++ uint probe_repeats=windows>>28;windows&=0x0fffffffu;if(!probe_repeats)probe_repeats=1;
+@@ -135,0 +137,2 @@
++ _Pragma("clang loop unroll(disable)") for(uint probe_it=0;probe_it<probe_repeats;probe_it++){asm volatile("" ::: "memory");
++acc=f8{};
+@@ -144,0 +148,2 @@
++asm volatile("" : : "v"(acc[0]) : "memory");asm volatile("" : : "v"(acc[1]) : "memory");asm volatile("" : : "v"(acc[2]) : "memory");asm volatile("" : : "v"(acc[3]) : "memory");asm volatile("" : : "v"(acc[4]) : "memory");asm volatile("" : : "v"(acc[5]) : "memory");asm volatile("" : : "v"(acc[6]) : "memory");asm volatile("" : : "v"(acc[7]) : "memory");asm volatile("" ::: "memory");}
++
