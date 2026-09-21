@@ -1,0 +1,32 @@
+--- a/hip/multihead_fast_padded.hip
++++ b/hip/multihead_fast_padded.hip
+@@ -628,6 +628,21 @@
+  }
+ #endif
+  f8 expand[4]{};
++ if constexpr(C==256&&Frag){
++  typedef int i4 __attribute__((ext_vector_type(4)));
++  for(uint k=0;k<C;k+=32){i2 a0{},a1{};
++#if HIP_FFN_COOP_INPUT
++   if constexpr(ByteIn){a0=ffn_input8_fragment<C,Mapped>(in8,first+rc,k+group*8,width,height,workw,sx,sy);a1=ffn_input8_fragment<C,Mapped>(in8,first+rc,k+16+group*8,width,height,workw,sx,sy);}
++   else{__builtin_memcpy(&a0,hidden+rc*(C+4)+k+group*8,8);__builtin_memcpy(&a1,hidden+rc*(C+4)+k+16+group*8,8);}
++#else
++   for(uint e=0;e<8;e++){pack(a0,e,load_in(first+rc,k+group*8+e));pack(a1,e,load_in(first+rc,k+16+group*8+e));}
++#endif
++   for(uint tile=0;tile<4;tile++){uint row=wave*64+tile*16+rc;size_t offset=((row/16)*(C/32)+k/32)*512+l*16;i4 b;__builtin_memcpy(&b,reinterpret_cast<const unsigned char*>(w)+offset,16);
++    expand[tile]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a0,i2{b[0],b[1]},expand[tile]);
++    expand[tile]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a1,i2{b[2],b[3]},expand[tile]);
++   }
++  }
++ }else{
+  for(uint k=0;k<C;k+=16){i2 a{};
+ #if HIP_FFN_COOP_INPUT
+   if constexpr(ByteIn)a=ffn_input8_fragment<C,Mapped>(in8,first+rc,k+group*8,width,height,workw,sx,sy);else __builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);
+@@ -635,6 +650,7 @@
+   for(uint e=0;e<8;e++)pack(a,e,load_in(first+rc,k+group*8+e));
+ #endif
+   for(uint tile=0;tile<4;tile++){uint row=wave*64+tile*16+rc,offset=(row*C+k+group*8)/4;i2 b{};if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(w),row,C,k,group);else if constexpr(Tiled){const unsigned char*wb=reinterpret_cast<const unsigned char*>(w);uint off=((row/16)*(C/32)+k/32)*512+(k%32+group*8)*16+row%16;for(uint e=0;e<8;e++)b[e/4]=int(uint(b[e/4])|(uint(wb[off+e*16])<<(8*(e%4))));}else b={int(pw[offset]),int(pw[offset+1])};expand[tile]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,expand[tile]);}
++ }
+  }
+ #if HIP_FFN_COOP_INPUT
+  // ByteIn reads global memory; only the f32 staging aliases the hidden buffer.
