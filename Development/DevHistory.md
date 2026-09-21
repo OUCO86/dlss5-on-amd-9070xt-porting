@@ -2844,3 +2844,5 @@ AMD官方RDNA4 WMMA part2明确FP8每lane8字节片段未用满16字节读宽。
 改真实编码输入一次上传、纯HIP进程（不建D3D设备），post_shift按实际Frame设3；首次设0被逐值检查抓住，修正后控制通过。每目标首调用重复10000，捕获第3000起16dispatch，全部三例首/尾原始网络float输出逐位同参考。C32 post访存busy99.056/stalled5.461/L2hit96.188%；C128融合FFN93.021/49.480/98.086%；C256 76.498/15.560/99.201%；LDS冲突0/2.062/1.585%。是热cache隔离、profiling时钟，非普通帧时间归因，但明确C128值得优先追。工具experiments/kernel-bottleneck，证据results/kernel-bottleneck-20260921，旧pipeline-gap报告已加撤回说明。
 
 步骤2前的资源读数校正：C32 post实际NumVgprs158，而217为NumVGPRsForWavesPerEU/保留指标；LDS19712、Occupancy6、private0。拆RGB的post核实际153仍Occupancy6，不能只削寄存器。旧no-unroll降寄存器反而慢0.64～1ms，不盲重做。下一候选针对post的4KiB半精度输入暂存，改为残差阶段重读同样输入，检验能否降低LDS并提升驻留。
+
+步骤2完成：C32 post取消64×34 half暂存，在残差处按原Hrtz顺序重读输入。实际VGPR158→155，ForWaves/保留217→169，LDS19712→15360，编译器Occupancy6→8，scratch0；双架构编译，48对静止/平移画面逐位同。普通整网ABBA900慢0.08745ms、1080慢0.12402ms，不采用。更高驻留上限不足抵消新增读取/逻辑，不能笼统归因高寄存器。工具experiments/c32-post-lds，数据results/c32-post-lds-20260921。按用户顺序转步骤3：先独立C128展开M16/M32共用权重微基准验证潜力，再考虑融合回整核。
