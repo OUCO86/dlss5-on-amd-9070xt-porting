@@ -1,0 +1,32 @@
+--- a/hip/multihead_fast_padded.hip
++++ b/hip/multihead_fast_padded.hip
+@@ -610,6 +610,7 @@
+  union Storage {unsigned char bytes[16*(4*C+4)];float raw[(BatchNorm?2:1)*16*(C/32)*33];};
+  __attribute__((shared)) Storage storage;unsigned char*hidden=storage.bytes;
+  __attribute__((shared)) unsigned char qfeature[16*(C+4)];
++ __attribute__((shared)) unsigned char contract_buffer[C==128?16*(C+4):1];
+  __attribute__((shared)) float inverse[(BatchNorm?2:1)*16*(C/32)];
+  const uint*pw=reinterpret_cast<const uint*>(w);
+ #if HIP_FFN_COOP_INPUT
+@@ -661,8 +662,10 @@
+  const uint first_k=Grouped?(wave/2)*128:0,last_k=Grouped?first_k+128:4*C;
+  for(uint k=first_k;k<last_k;k+=16){i2 a;__builtin_memcpy(&a,hidden+rc*(4*C+4)+k+group*8,8);uint offset=4*C*C+((wave*16+rc)*(4*C)+k+group*8)/4;i2 b{};if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(w+4*C*C),wave*16+rc,4*C,k,group);else if constexpr(Tiled){const unsigned char*wb=reinterpret_cast<const unsigned char*>(w+4*C*C);uint row=wave*16+rc,off=((row/16)*(4*C/32)+k/32)*512+(k%32+group*8)*16+row%16;for(uint e=0;e<8;e++)b[e/4]=int(uint(b[e/4])|(uint(wb[off+e*16])<<(8*(e%4))));}else b={int(pw[offset]),int(pw[offset+1])};accum=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,accum);}
+  if constexpr(Project){
+-  __builtin_amdgcn_s_barrier();
+-  for(uint e=0;e<8;e++)hidden[(group*8+e)*(C+4)+wave*16+rc]=static_cast<unsigned char>(q8_fused_round(Hrtz(accum[e])));
++  // C128 contraction output has separate storage, so it cannot overwrite unread expansion inputs.
++  unsigned char*project_input=C==128?contract_buffer:hidden;
++  if constexpr(C!=128)__builtin_amdgcn_s_barrier();
++  for(uint e=0;e<8;e++)project_input[(group*8+e)*(C+4)+wave*16+rc]=static_cast<unsigned char>(q8_fused_round(Hrtz(accum[e])));
+   __builtin_amdgcn_s_barrier();
+ #if HIP_FFN_HOIST_RES
+   f8 result{};{const float rs=w[9*C*C+wave*16+rc];float rv[8];
+@@ -671,7 +674,7 @@
+ #else
+   f8 result{};for(uint e=0;e<8;e++)result[e]=Hrtz(load_in(first+group*8+e,wave*16+rc)*w[9*C*C+wave*16+rc]);
+ #endif
+-  for(uint k=0;k<C;k+=16){i2 a,b;__builtin_memcpy(&a,hidden+rc*(C+4)+k+group*8,8);uint off=8*C*C+((wave*16+rc)*C+k+group*8)/4;if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(w+8*C*C),wave*16+rc,C,k,group);else b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
++  for(uint k=0;k<C;k+=16){i2 a,b;__builtin_memcpy(&a,project_input+rc*(C+4)+k+group*8,8);uint off=8*C*C+((wave*16+rc)*C+k+group*8)/4;if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(w+8*C*C),wave*16+rc,C,k,group);else b={int(pw[off]),int(pw[off+1])};result=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(a,b,result);}
+   for(uint e=0;e<8;e++){uint byte=q8_fused_round(result[e]);float v=__builtin_amdgcn_cvt_f32_fp8(int(byte),0);if constexpr(ByteFeature)out[(first+group*8+e)*C+wave*16+rc]=static_cast<unsigned char>(byte);else reinterpret_cast<float*>(out)[(first+group*8+e)*C+wave*16+rc]=v;qfeature[(group*8+e)*(C+4)+wave*16+rc]=static_cast<unsigned char>(byte);}
+   __builtin_amdgcn_s_barrier();
+   const uint*aq=reinterpret_cast<const uint*>(aw);
