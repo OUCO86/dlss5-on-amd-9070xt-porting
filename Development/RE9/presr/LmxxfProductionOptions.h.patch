@@ -1,0 +1,8 @@
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfProductionOptions.h
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfProductionOptions.h
+@@ -60,4 +60,5 @@
+     o.vit_contract_frag = true;
+     o.prefix_inline = true;
++    o.mh_feature_byte=o.mh_proj_diag_fb=o.mh_byte_stream=o.decoder_byte=o.mh_ffn_frag256=true;
+     return o;
+ }

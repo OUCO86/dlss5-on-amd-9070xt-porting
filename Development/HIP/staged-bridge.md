@@ -18,6 +18,8 @@ bridge.RecordOutputReadable(consumerList);
 bridge.NotifyOutputSubmitted(queue);
 ```
 
+The consumer may also be recorded immediately after `RecordInputCopy`, before producer submission. This supports hosts that finish recording the whole frame before Execute. Submission order remains producer → EnqueueAfterProducer → consumer → NotifyOutputSubmitted; an early acknowledgement is rejected.
+
 `NotifyOutputSubmitted` acknowledges submission, not GPU completion. It prevents starting another staged frame while the output list has not been acknowledged. The queue order protects input/output reuse, so the CPU need not wait between correctly queued frames. Input buffers, consumer bindings and command allocators must remain alive until their GPU use completes. Do not replay a recorded stage or submit it to another queue.
 
 `WaitForSubmittedWork()` is an explicit teardown wait, returning false if stages are incomplete or work cannot be safely retired. The bridge and `NativeHipNetwork` wrapper retain backing/input references on that failure path. An abandoned recorded list cannot be assumed cancelled; discard the whole integration on error rather than retrying partial work. GPU/API failures poison the bridge. Invalid order, queue or history-flag checks fail before submitting more work.

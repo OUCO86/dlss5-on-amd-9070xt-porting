@@ -1,0 +1,53 @@
+from pathlib import Path
+import subprocess,shutil,difflib,json
+root=Path(__file__).resolve().parents[3];here=Path(__file__).resolve().parent
+host=Path('/tmp/re9-upstream-bridge-review');rev='8f71f73bfc836a37936e7cee6701750ad4e8bfec'
+assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=host,text=True).strip()==rev
+prefix='OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/'
+def original(name):return subprocess.check_output(['git','show',rev+':'+prefix+name],cwd=host,text=True)
+def write(name,s):
+ old=original(name);(host/prefix/name).write_text(s)
+ (here/(Path(name).name+'.patch')).write_text(''.join(difflib.unified_diff(old.splitlines(True),s.splitlines(True),fromfile='a/'+prefix+name,tofile='b/'+prefix+name,n=2)))
+name='dlssnr/backend/lmxxf_runtime/LmxxfNrRuntime.cpp';s=original(name)
+s=s.replace('JoinPath(dll, L"shaders"),','JoinPath(dll, L"DLSS5-AMD\\\\native-game-tiled-assets"),\n        JoinPath(dll, L"..\\\\DLSS5-AMD\\\\native-game-tiled-assets"),\n        JoinPath(dll, L"shaders"),')
+s=s.replace('session->bridge->EnqueueAfterProducer(j->seed, false);','session->bridge->EnqueueAfterProducer(session->queue, j->seed, false);')
+s=s.replace('1.f, j->transfer_strength, j->color_strength, j->debug_view);','1.f, NativeCodecParameters{j->transfer_strength, j->color_strength, NativeCodecDebugView(j->debug_view)});')
+s=s.replace('    uint32_t state = LMXXF_NR_JOB_NONE;', '    uint32_t state = LMXXF_NR_JOB_NONE;\n    bool hipQueued = false, outputsRecorded = false;')
+s=s.replace('        j->state = LMXXF_NR_JOB_NR_COMPLETE;', '        j->hipQueued = true;\n        j->state = LMXXF_NR_JOB_NR_COMPLETE;')
+s=s.replace('        j->state = LMXXF_NR_JOB_CONSUMER_COMPLETE;', '        j->outputsRecorded = true;\n        j->state = LMXXF_NR_JOB_CONSUMER_COMPLETE;')
+s=s.replace('        if (j)\n            j->state = LMXXF_NR_JOB_RETIRED;', '        if (!j || !j->hipQueued || !j->outputsRecorded)\n            return Fail(LMXXF_NR_INVALID_ARGUMENT, "Retire: producer/HIP/consumer incomplete");\n        session->bridge->NotifyOutputSubmitted(session->queue);\n        j->state = LMXXF_NR_JOB_RETIRED;')
+s=s.replace('        if (FAILED(DrainGpu()))','        if ((bridge && !bridge->WaitForSubmittedWork()) || FAILED(DrainGpu()))')
+# Establish independent CRT values for the actual linear pre-SR input. Do not reuse post-present sRGB mode.
+s=s.replace('        NativeResolveNetworkGeometry(info->color_width, info->color_height);','        _wputenv_s(L"DLSS5_CODEC_SRGB", L"0");\n        NativeResolveNetworkGeometry(info->color_width, info->color_height);')
+s=s.replace('enc->Create(session->device, {color}, session->shaderDir);', 'enc->Create(session->device, {color}, session->shaderDir, true);')
+s=s.replace('dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir);', 'dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir, true);')
+write(name,s)
+name='dlssnr/backend/lmxxf_runtime/LmxxfProductionOptions.h';s=original(name).replace('    return o;','    o.mh_feature_byte=o.mh_proj_diag_fb=o.mh_byte_stream=o.decoder_byte=o.mh_ffn_frag256=true;\n    return o;');write(name,s)
+name='dlssnr/backend/LmxxfBackend.cpp';s=original(name)
+s=s.replace('    const auto nextToDll = directory / L"lmxxf-modules";','    for(const auto& base : {directory, directory.parent_path()}){\n        const auto bundled=base / L"DLSS5-AMD" / L"native-game-tiled-assets" / L"HIP";\n        if(std::filesystem::exists(bundled / L"SHA256SUMS"))return bundled;\n    }\n    const auto nextToDll = directory / L"lmxxf-modules";')
+s=s.replace('    LmxxfCut::ClearPendingEnqueue();\n    pendingJob = nullptr;','    if(pendingJob){SetStatus("lmxxf: prior job not yet submitted; original SR");return nullptr;}\n    LmxxfCut::ClearPendingEnqueue();\n    pendingJob = nullptr;',1)
+s=s.replace('void LmxxfBackend::Submitted(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *)\n{','void LmxxfBackend::Submitted(ID3D12CommandQueue *submittedQueue, UINT, ID3D12CommandList *const *)\n{\n    if(DlssNr::Submission::InsideLogicalExecute() || submittedQueue != queue || LmxxfCut::Pending().job)return;')
+s=s.replace('        api->table.Retire(session, pendingJob);','        const auto rc=api->table.Retire(session, pendingJob);\n        if(rc != LMXXF_NR_OK){SetStatus("lmxxf: consumer retirement failed");return;}')
+write(name,s)
+name='dlssnr/amd/AmdBridge.cpp';s=original(name).replace('    return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);','    if(DlssNr::Backend::RequestedKind()==DlssNr::Backend::Kind::Lmxxf)\n        return std::filesystem::exists(Directory() / L"LmxxfNrRuntime.dll", ec);\n    return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);');write(name,s)
+# Aliasing barriers are forwarded verbatim into the current segment. A completed
+# barrier before the cut requires no replay; splitting must not overlap an open
+# transition. Aliasing does not itself change resource transition states.
+name='dlssnr/submission/ResourceStateBook.h';s=original(name)
+s=s.replace('                if (reasonOut)\n                    *reasonOut = "aliasing_barrier";\n                return false;','                if (openSplitBarrier || bar.Flags != D3D12_RESOURCE_BARRIER_FLAG_NONE)\n                {\n                    if (reasonOut) *reasonOut = "aliasing_during_split_transition";\n                    return false;\n                }\n                continue;',1)
+s=s.replace('        if (sawAliasing)\n        {\n            if (reasonOut)\n                *reasonOut = "aliasing_barrier";\n            return false;\n        }\n','')
+write(name,s)
+# Current core headers/shaders are MIT; keep the host's existing GPL license separately.
+for folder,patterns in [('src',('*.h',)),('Development/HIP',('*.h',)),('shaders',('*.hlsl','*.hlsli'))]:
+ target=host/'third_party/lmxxf'/folder;target.mkdir(parents=True,exist_ok=True)
+ for pattern in patterns:
+  for p in (root/folder).glob(pattern):shutil.copyfile(p,target/p.name)
+shutil.copyfile(root/'LICENSE',host/'third_party/lmxxf/LICENSE')
+(here/'upstream.json').write_text(json.dumps({'repository':'https://github.com/TheAutomatic/dlss-5-amd-project','branch':'release/1.9.0','commit':rev,'core_base':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'host_license':'GPL-3.0 (retained upstream)','core_license':'MIT'},indent=2)+'\n')
+print('prepared external host',rev)
+
+# Harnesses are patched against the same pinned host revision.
+for patch in here.glob("lmxxf_*.cpp.patch"):
+    name="tests/"+patch.name.removesuffix(".patch")
+    (host/name).write_text(subprocess.check_output(["git","show",rev+":"+name],cwd=host,text=True))
+    subprocess.run(["git","apply",str(patch)],cwd=host,check=True)

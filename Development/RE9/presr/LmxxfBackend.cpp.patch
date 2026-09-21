@@ -1,0 +1,32 @@
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/LmxxfBackend.cpp
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/LmxxfBackend.cpp
+@@ -24,4 +24,8 @@
+     if (GetEnvironmentVariableW(L"LMXXF_MODULES_DIR", env, MAX_PATH) && env[0])
+         return env;
++    for(const auto& base : {directory, directory.parent_path()}){
++        const auto bundled=base / L"DLSS5-AMD" / L"native-game-tiled-assets" / L"HIP";
++        if(std::filesystem::exists(bundled / L"SHA256SUMS"))return bundled;
++    }
+     const auto nextToDll = directory / L"lmxxf-modules";
+     if (std::filesystem::exists(nextToDll))
+@@ -238,4 +242,5 @@
+                                      const AmdPreSr::Settings &settings)
+ {
++    if(pendingJob){SetStatus("lmxxf: prior job not yet submitted; original SR");return nullptr;}
+     LmxxfCut::ClearPendingEnqueue();
+     pendingJob = nullptr;
+@@ -624,9 +629,11 @@
+ void LmxxfBackend::TraceBoundary(const std::string &) {}
+ 
+-void LmxxfBackend::Submitted(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *)
+-{
++void LmxxfBackend::Submitted(ID3D12CommandQueue *submittedQueue, UINT, ID3D12CommandList *const *)
++{
++    if(DlssNr::Submission::InsideLogicalExecute() || submittedQueue != queue || LmxxfCut::Pending().job)return;
+     if (session && pendingJob && api && api->table.Retire)
+     {
+-        api->table.Retire(session, pendingJob);
++        const auto rc=api->table.Retire(session, pendingJob);
++        if(rc != LMXXF_NR_OK){SetStatus("lmxxf: consumer retirement failed");return;}
+         pendingJob = nullptr;
+     }

@@ -2983,3 +2983,9 @@ gfx1201真GPU验证：31次原始FP32同，覆盖900/1080、history、多个seed
 ## 2026-09-22 06:07起：用户授权将672e0eb候选安装到RE9
 
 确认re9进程退出后，备份并安装RE9专用addon与配套decode shader；root和_storage_两份DLL均为cc2cdbcaa9e41e39b5db25796822ac4ccad969567d1d2d2c15fb8eed8f1d4861，shader为c0f294d8a2b1b11b47e5d14aaea9896406ad71395f15fb4e84427f1ba5a305b0，安装后全部读回hash一致。备份D:\DLSSNR-Lab\re9-opti\backups\staged-20260922-060932-480，含原文件和恢复manifest。config.ini、native-game-flags.txt、re9-present-mode.txt前后hash不变，HIP模块未替换。脚本Development/RE9/install-staged.ps1支持RestoreBackup，安装记录RE9/results/staged-install-20260922.json。没有启动游戏；仍是原后置路径，分阶段接口尚未接入RE9超分前，不宣称修复全屏。设计贡献沿用672e0eb中对TheAutomatic/PR5的署名。
+
+## 2026-09-22 06:19起：RE9真正超分前接入，拆分命令列表与RGB9E5路径验证
+
+用户要求继续完成前置适配。找到TheAutomatic配套release/1.9.0宿主（8f71f73），采用其GPL命令列表代理依赖，独立桥接实现未merge PR5；署名和补丁保存在RE9/presr。桥接支持先录制consumer再提交producer，提交顺序不变，900/1080与旧Graph测试过。安装独立MSVC v143/SDK26100工具链，OptiScaler宿主编译成功；四组命令列表测试通过，修正两处落后于宿主接口的测试。
+
+RE9入口实测1506×848 RGB9E5→2560×1440。split-original首次被aliasing屏障一律拒绝；保留屏障原位与顺序，仅允许已完整记录屏障后的cut，未结束transition仍拒绝。补真实重叠placed纹理、别名切换与逐字节当前帧比较，16次split/replay通过；游戏随后producer/continuation均正常提交、FSR rc=0。codec新增显式privateFloatOutput选项，允许RGB9E5输入并返回私有FP16，普通addon格式契约不变。实际9070 runtime烟测PrepareFrame/HIP/consumer ack/完成/销毁均过，尚不代表画质验证。首次原版备份D:\DLSSNR-Lab\re9-presr\backups\20260922-064814-585，全部部署先检查游戏退出。当前继续完整NR游戏验证，未打包。

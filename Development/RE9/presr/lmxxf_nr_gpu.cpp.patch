@@ -1,0 +1,90 @@
+--- a/tests/lmxxf_nr_gpu.cpp
++++ b/tests/lmxxf_nr_gpu.cpp
+@@ -80,12 +80,12 @@
+     hp.Type = D3D12_HEAP_TYPE_DEFAULT;
+     D3D12_RESOURCE_DESC td {};
+     td.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+-    td.Width = 1920;
+-    td.Height = 1080;
++    td.Width = 1506;
++    td.Height = 848;
+     td.DepthOrArraySize = td.MipLevels = 1;
+-    td.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
++    td.Format = DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
+     td.SampleDesc.Count = 1;
+-    td.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
++    td.Flags = D3D12_RESOURCE_FLAG_NONE;
+     ID3D12Resource *color = nullptr;
+     Check(device->CreateCommittedResource(&hp, D3D12_HEAP_FLAG_NONE, &td, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                           nullptr, IID_PPV_ARGS(&color)),
+@@ -110,46 +110,38 @@
+ 
+     LmxxfNrFrameInfo frame {};
+     frame.struct_size = sizeof(frame);
+-    frame.color_width = 1920;
+-    frame.color_height = 1080;
++    frame.color_width = 1506;
++    frame.color_height = 848;
+     frame.color = color;
+     frame.color_state = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+     LmxxfNrJob job {};
+     job.struct_size = sizeof(job);
+-    Require(api.PrepareFrame(ctx, &frame, &job) == LMXXF_NR_OK, "PrepareFrame");
++    const auto frc=api.PrepareFrame(ctx,&frame,&job);char ferr[512]{};api.GetLastError(ferr,sizeof ferr);std::printf("PrepareFrame rc=%d error=%s\n",frc,ferr);Require(frc==LMXXF_NR_OK,"PrepareFrame");
+     Require(job.private_output != nullptr, "private_output");
+     Require(api.RecordInputs(ctx, job.handle, list) == LMXXF_NR_OK, "RecordInputs");
+     Check(list->Close(), "close producer");
+-    ID3D12CommandList *lists[] = {list};
+-    queue->ExecuteCommandLists(1, lists);
+-    const int32_t hip = api.EnqueueHip(ctx, job.handle);
+-    char err[256] {};
+-    api.GetLastError(err, sizeof err);
+-    std::printf("EnqueueHip rc=%d last_error=%s\n", hip, err);
+-    Require(hip == LMXXF_NR_OK || hip == LMXXF_NR_UNAVAILABLE, "EnqueueHip wired (OK or missing weights)");
+-
+-    // EnqueueHip only schedules GPU work; wait before Reset of the same allocator.
+-    {
+-        ID3D12Fence *fence = nullptr;
+-        Check(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)), "fence");
+-        Check(queue->Signal(fence, 1), "signal");
+-        HANDLE ev = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+-        Require(ev != nullptr, "event");
+-        Check(fence->SetEventOnCompletion(1, ev), "set event");
+-        WaitForSingleObject(ev, 30000);
+-        CloseHandle(ev);
+-        fence->Release();
+-    }
+-    // Prefer a fresh allocator for outputs so producer storage is never Reset early.
+     Check(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&outAlloc)), "out alloc");
+-    Check(list->Reset(outAlloc, nullptr), "reset list on out alloc");
+-    const int32_t outs = api.RecordOutputs(ctx, job.handle, list);
+-    Require(outs == LMXXF_NR_OK || outs == LMXXF_NR_FAILED, "RecordOutputs called");
+-    if (outs == LMXXF_NR_OK)
+-    {
+-        Check(list->Close(), "close outputs");
+-        queue->ExecuteCommandLists(1, lists);
+-    }
++    ID3D12GraphicsCommandList* consumer=nullptr;
++    Check(device->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,outAlloc,nullptr,IID_PPV_ARGS(&consumer)),"consumer");
++    Require(api.RecordOutputs(ctx,job.handle,consumer)==LMXXF_NR_OK,"prerecord outputs");
++    Check(consumer->Close(),"close consumer");
++    ID3D12CommandList* producerLists[]={list};
++    queue->ExecuteCommandLists(1,producerLists);
++    const auto hip=api.EnqueueHip(ctx,job.handle);
++    char err[512]{};api.GetLastError(err,sizeof err);
++    std::printf("HIP rc=%d error=%s\n",hip,err);
++    Require(hip==LMXXF_NR_OK,"HIP enqueue succeeds");
++    ID3D12CommandList* consumerLists[]={consumer};queue->ExecuteCommandLists(1,consumerLists);
++    Require(api.Retire(ctx,job.handle)==LMXXF_NR_OK,"consumer acknowledgment");
++    ID3D12Fence* fence=nullptr;
++    Check(device->CreateFence(0,D3D12_FENCE_FLAG_NONE,IID_PPV_ARGS(&fence)),"fence");
++    Check(queue->Signal(fence,1),"signal");
++    HANDLE ev=CreateEventW(nullptr,FALSE,FALSE,nullptr);
++    Check(fence->SetEventOnCompletion(1,ev),"completion");
++    Require(WaitForSingleObject(ev,30000)==WAIT_OBJECT_0,"completion timeout");
++    Require(fence->GetCompletedValue()!=UINT64_MAX,"no device removal");
++    Check(device->GetDeviceRemovedReason(),"device healthy");
++    CloseHandle(ev);fence->Release();consumer->Release();
+ 
+     Require(api.Destroy(ctx) == LMXXF_NR_OK, "Destroy");
+     color->Release();

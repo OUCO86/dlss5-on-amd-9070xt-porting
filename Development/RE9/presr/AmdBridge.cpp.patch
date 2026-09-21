@@ -1,0 +1,9 @@
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/amd/AmdBridge.cpp
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/amd/AmdBridge.cpp
+@@ -196,4 +196,6 @@
+     // frame". Recheck until the package path becomes available.
+     std::error_code ec;
++    if(DlssNr::Backend::RequestedKind()==DlssNr::Backend::Kind::Lmxxf)
++        return std::filesystem::exists(Directory() / L"LmxxfNrRuntime.dll", ec);
+     return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);
+ }

@@ -25,6 +25,7 @@ class NativeGameCodec {
  static constexpr size_t binding_limit=8;
  void ClearBindings(){for(auto&b:bindings){b.heap->Release();for(auto*r:b.sources)if(r)r->Release();}bindings.clear();}
  UINT count{};bool recorded{};NativeInputGeometry geometry{};UINT out_width{},out_height{},row_pitch{};
+ bool private_float_output{};
  bool unorm_out{},unorm8_out{},r11_out{};DXGI_FORMAT out_format{};
  static void step(ID3D12Device*d,const char*what){if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-game-oneshot.txt").c_str(),L"ab")){fprintf(f,"pid=%lu tick=%llu event=codec_step detail=%s removed=%08x\n",GetCurrentProcessId(),GetTickCount64(),what,unsigned(d->GetDeviceRemovedReason()));fclose(f);}}
  static void check(HRESULT hr,const char*what="?"){if(FAILED(hr))throw std::runtime_error(std::string("codec ")+what+" HRESULT="+std::to_string(unsigned(hr)));}
@@ -35,12 +36,13 @@ public:
  NativeGameCodec()=default;NativeGameCodec(const NativeGameCodec&)=delete;
  ~NativeGameCodec(){ClearBindings();for(auto*r:source)if(r)r->Release();if(output)output->Release();if(heap)heap->Release();if(root)root->Release();if(pso)pso->Release();}
  // Encode: {linear original}. Decode: {encoded proxy, encoded neural, linear original}.
- void Create(ID3D12Device*d,const std::vector<ID3D12Resource*>&inputs,const std::wstring&dir){
+ void Create(ID3D12Device*d,const std::vector<ID3D12Resource*>&inputs,const std::wstring&dir,bool privateFloatOutput=false){
+  private_float_output=privateFloatOutput;
   if(count||!d||(inputs.size()!=1&&inputs.size()!=3))throw std::runtime_error("codec initialization contract");
   const auto network=NativeCurrentNetworkGeometry();
   for(size_t i=0;i<inputs.size();i++){
    auto*r=inputs[i];if(!r)throw std::runtime_error("codec null input");auto desc=r->GetDesc();
-   if(desc.Dimension!=D3D12_RESOURCE_DIMENSION_TEXTURE2D||!NativeInputGeometry::Supported(desc.Width,desc.Height)||desc.DepthOrArraySize!=1||desc.MipLevels!=1||desc.SampleDesc.Count!=1||!NativeIsGameColor(desc.Format)||(desc.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE))throw std::runtime_error("codec unverified input format/geometry");
+   if(desc.Dimension!=D3D12_RESOURCE_DIMENSION_TEXTURE2D||!NativeInputGeometry::Supported(desc.Width,desc.Height)||desc.DepthOrArraySize!=1||desc.MipLevels!=1||desc.SampleDesc.Count!=1||!(NativeIsGameColor(desc.Format)||(private_float_output&&desc.Format==DXGI_FORMAT_R9G9B9E5_SHAREDEXP))||(desc.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE))throw std::runtime_error("codec unverified input format/geometry");
    if(inputs.size()==3&&i<2&&(desc.Width!=network.valid_width||desc.Height!=network.valid_height))throw std::runtime_error("codec network surface geometry");
    for(size_t j=0;j<i;j++)if(inputs[j]==r)throw std::runtime_error("codec aliased inputs");
    ID3D12Device*owner=nullptr;check(r->GetDevice(IID_PPV_ARGS(&owner)),"input-getdevice");bool same=NativeSameDevice(owner,d);owner->Release();if(!same)throw std::runtime_error("codec device mismatch");
@@ -51,9 +53,9 @@ public:
   out_width=count==3?geometry.width:network.valid_width;out_height=count==3?geometry.height:network.valid_height;
   auto desc=source[0]->GetDesc();desc.Width=out_width;desc.Height=out_height;desc.Flags=D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   /* Typeless game textures: the encoder's output (our intermediate) is FP16; the decoder's output is copied raw into the game texture, so it takes the game's interpretation (UNORM for Ronin). */
-  unorm_out=count==3&&NativeViewFormat(source[2]->GetDesc().Format)==DXGI_FORMAT_R16G16B16A16_UNORM;
+  unorm_out=!private_float_output&&count==3&&NativeViewFormat(source[2]->GetDesc().Format)==DXGI_FORMAT_R16G16B16A16_UNORM;
   /* 8-bit UNORM game texture (Magpie): UNORM8 bits in a raw buffer (row pitch 1920*4), copied into the texture by the frame; BGRA order for B8G8R8A8. */
-  unorm8_out=count==3&&NativeIsRgba8Unorm(source[2]->GetDesc().Format);r11_out=count==3&&NativeIsR11G11B10(source[2]->GetDesc().Format);out_format=count==3?NativeViewFormat(source[2]->GetDesc().Format):DXGI_FORMAT_UNKNOWN;
+  unorm8_out=!private_float_output&&count==3&&NativeIsRgba8Unorm(source[2]->GetDesc().Format);r11_out=!private_float_output&&count==3&&NativeIsR11G11B10(source[2]->GetDesc().Format);out_format=private_float_output?DXGI_FORMAT_R16G16B16A16_FLOAT:count==3?NativeViewFormat(source[2]->GetDesc().Format):DXGI_FORMAT_UNKNOWN;
   row_pitch=geometry.RowPitch((unorm8_out||r11_out)?4:8);
   desc.Format=DXGI_FORMAT_R16G16B16A16_FLOAT;
   if(unorm8_out||r11_out){desc={};desc.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;desc.Width=UINT64(row_pitch)*out_height;desc.Height=1;desc.DepthOrArraySize=desc.MipLevels=1;desc.SampleDesc.Count=1;desc.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;desc.Flags=D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;}
@@ -85,7 +87,7 @@ public:
   if(!pso||index>=count||!replacement)throw std::runtime_error("codec rebind contract");
   if(replacement==source[index])return;
   auto desc=replacement->GetDesc();
-  if(desc.Dimension!=D3D12_RESOURCE_DIMENSION_TEXTURE2D||desc.Width!=source[index]->GetDesc().Width||desc.Height!=source[index]->GetDesc().Height||desc.Format!=source[index]->GetDesc().Format||desc.DepthOrArraySize!=1||desc.MipLevels!=1||desc.SampleDesc.Count!=1||!NativeIsGameColor(desc.Format)||(desc.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE))throw std::runtime_error("codec rebind geometry/format");
+  if(desc.Dimension!=D3D12_RESOURCE_DIMENSION_TEXTURE2D||desc.Width!=source[index]->GetDesc().Width||desc.Height!=source[index]->GetDesc().Height||desc.Format!=source[index]->GetDesc().Format||desc.DepthOrArraySize!=1||desc.MipLevels!=1||desc.SampleDesc.Count!=1||!(NativeIsGameColor(desc.Format)||(private_float_output&&desc.Format==DXGI_FORMAT_R9G9B9E5_SHAREDEXP))||(desc.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE))throw std::runtime_error("codec rebind geometry/format");
   if(replacement==output)throw std::runtime_error("codec rebind output alias");
   for(UINT i=0;i<count;i++)if(i!=index&&source[i]==replacement)throw std::runtime_error("codec rebind input alias");
   ID3D12Device*d=nullptr,*owner=nullptr;check(heap->GetDevice(IID_PPV_ARGS(&d)));

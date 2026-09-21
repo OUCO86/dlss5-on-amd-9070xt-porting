@@ -1,0 +1,74 @@
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrRuntime.cpp
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrRuntime.cpp
+@@ -89,4 +89,6 @@
+     const std::wstring dll = DllDirectory();
+     const std::wstring candidates[] = {
++        JoinPath(dll, L"DLSS5-AMD\\native-game-tiled-assets"),
++        JoinPath(dll, L"..\\DLSS5-AMD\\native-game-tiled-assets"),
+         JoinPath(dll, L"shaders"),
+         JoinPath(dll, L"..\\..\\third_party\\lmxxf\\shaders"),
+@@ -221,4 +223,5 @@
+ {
+     uint32_t state = LMXXF_NR_JOB_NONE;
++    bool hipQueued = false, outputsRecorded = false;
+     ID3D12Resource *color = nullptr;
+     D3D12_RESOURCE_STATES colorState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+@@ -329,5 +332,5 @@
+     {
+         // GPU may still be reading codec/bridge resources; drain before teardown.
+-        if (FAILED(DrainGpu()))
++        if ((bridge && !bridge->WaitForSubmittedWork()) || FAILED(DrainGpu()))
+         {
+             AbandonSessionResources();
+@@ -548,4 +551,5 @@
+         if (!std::getenv("DLSS5_NETWORK_HEIGHT"))
+             _putenv("DLSS5_NETWORK_HEIGHT=auto");
++        _wputenv_s(L"DLSS5_CODEC_SRGB", L"0");
+         NativeResolveNetworkGeometry(info->color_width, info->color_height);
+         if (!session->hipPrepared)
+@@ -620,5 +624,5 @@
+             {
+                 enc = new NativeGameCodec();
+-                enc->Create(session->device, {color}, session->shaderDir);
++                enc->Create(session->device, {color}, session->shaderDir, true);
+                 rgbIn = new NativeGameRgbInput();
+                 rgbIn->Create(session->device, enc->Output(), session->shaderDir);
+@@ -626,5 +630,5 @@
+                 rgbOut->Create(session->device, session->bridge->Output(), session->shaderDir);
+                 dec = new NativeGameCodec();
+-                dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir);
++                dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir, true);
+                 if (dec->BufferOutput())
+                 {
+@@ -736,5 +740,6 @@
+                         "EnqueueHip: weights not found (set LMXXF_WEIGHTS_DIR to tiled assets, not 0.24.2 HIP/)");
+         auto *j = static_cast<Job *>(job ? job : &session->job);
+-        session->bridge->EnqueueAfterProducer(j->seed, false);
++        session->bridge->EnqueueAfterProducer(session->queue, j->seed, false);
++        j->hipQueued = true;
+         j->state = LMXXF_NR_JOB_NR_COMPLETE;
+         SetError("");
+@@ -762,5 +767,5 @@
+                                 {D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                                  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, j->colorState},
+-                                1.f, j->transfer_strength, j->color_strength, j->debug_view);
++                                1.f, NativeCodecParameters{j->transfer_strength, j->color_strength, NativeCodecDebugView(j->debug_view)});
+         if (session->decode->BufferOutput())
+         {
+@@ -798,4 +803,5 @@
+             list->ResourceBarrier(2, barriers);
+         }
++        j->outputsRecorded = true;
+         j->state = LMXXF_NR_JOB_CONSUMER_COMPLETE;
+         SetError("");
+@@ -837,6 +843,8 @@
+             return Fail(LMXXF_NR_INVALID_ARGUMENT, "null context");
+         auto *j = static_cast<Job *>(job ? job : &session->job);
+-        if (j)
+-            j->state = LMXXF_NR_JOB_RETIRED;
++        if (!j || !j->hipQueued || !j->outputsRecorded)
++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "Retire: producer/HIP/consumer incomplete");
++        session->bridge->NotifyOutputSubmitted(session->queue);
++        j->state = LMXXF_NR_JOB_RETIRED;
+         SetError("");
+         return static_cast<int32_t>(LMXXF_NR_OK);

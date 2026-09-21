@@ -49,6 +49,17 @@ int main(int argc,char**argv){try{
   // All three frames were queued before this wait: shared-buffer reuse must follow queue dependencies.
   submit.Flush();if(!bridge.WaitForSubmittedWork())throw std::runtime_error("completed stages did not retire");for(unsigned slot=0;slot<3;slot++)compare(get(slot),references[slot],"staged queued output");
  }
+ if(!graph){
+  ID3D12CommandAllocator*a[2]{};ID3D12GraphicsCommandList*c[2]{};
+  for(unsigned i=0;i<2;i++){ck(d->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&a[i])));ck(d->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,a[i],nullptr,IID_PPV_ARGS(&c[i])));}
+  bridge.RecordInputCopy(c[0],rgb);ck(c[0]->Close());
+  bridge.RecordOutputReadable(c[1]);record_readback(c[1],0);ck(c[1]->Close());
+  rejects("ack before enqueue",[&]{bridge.NotifyOutputSubmitted(q);},"stage order");
+  ID3D12CommandList*producer[]={c[0]},*consumer[]={c[1]};q->ExecuteCommandLists(1,producer);
+  bridge.EnqueueAfterProducer(q,0);q->ExecuteCommandLists(1,consumer);bridge.NotifyOutputSubmitted(q);
+  if(!bridge.WaitForSubmittedWork())throw std::runtime_error("pre-recorded output retirement");compare(get(0),expected,"pre-recorded consumer golden");
+  for(unsigned i=0;i<2;i++){c[i]->Release();a[i]->Release();}
+ }
  rejects("duplicate acknowledgement",[&]{bridge.NotifyOutputSubmitted(q);});
  if(!graph){
   submit.Submit([&](ID3D12GraphicsCommandList*c){bridge.RecordInputCopy(c,rgb);});
