@@ -1,0 +1,25 @@
+--- a/hip/multihead_fast_padded.hip
++++ b/hip/multihead_fast_padded.hip
+@@ -606,6 +606,22 @@
+  uint tid=__builtin_amdgcn_workitem_id_x(),wave=tid/32,l=tid%32,rc=l&15,group=l>>4;
+  uint first=__builtin_amdgcn_workgroup_id_x()*16;
+  if(first>=tokens)return;
++ // The mapped input is identically zero outside its valid rectangle; all weight
++ // transforms are bias-free, and q8 canonicalizes signed zero. Skip a wholly
++ // empty16-row tile, writing both complete outputs without entering LDS/barriers.
++ if constexpr(C==128&&Mapped){
++  if(workw>=16){
++   uint y=first/workw,x=first%workw,n0=workw-x;if(n0>16)n0=16;
++   bool valid0=y>=sy&&y-sy<height&&x<sx+width&&x+n0>sx;
++   uint n1=16-n0;bool valid1=n1&&y+1>=sy&&y+1-sy<height&&n1>sx;
++   if(!valid0&&!valid1){
++    for(uint i=tid;i<16*C;i+=2*C){if constexpr(ByteFeature)out[first*C+i]=0;else reinterpret_cast<float*>(out)[first*C+i]=0.f;}
++    for(uint i=tid;i<16*3*C;i+=2*C)norm[first*3*C+i]=0;
++    return;
++   }
++  }
++ }
++
+  static_assert(Project&&Grouped,"FFN/QKV requires grouped project");
+  union Storage {unsigned char bytes[16*(4*C+4)];float raw[(BatchNorm?2:1)*16*(C/32)*33];};
+  __attribute__((shared)) Storage storage;unsigned char*hidden=storage.bytes;

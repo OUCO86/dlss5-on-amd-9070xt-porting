@@ -1,0 +1,9 @@
+# C128 normalization marginal-cost probe
+
+`prepare.py` pins source79c1654 and emits an isolated copy of the current mapped C128 byte-in/byte-feature fused kernel with runtime mode/repetition parameters. All repetitions execute the same compiled function, preserve the original32-term order, and keep FP8 outputs identical. Production defines are prepended. Compiler barriers and a consumed scalar inverse prevent removal; repetition loops disable unrolling. The ordinary kernel is still present as a control.
+
+Modes:0 repeats rawLDS write → barrier →32-term read/square/sum/rsqrt/inverse store → barrier;1 repeats only the read/arithmetic/inverse-store section;2 adds empty barrier pairs after the original computation. Empty barriers have no new traffic or work imbalance and do NOT measure the waiting time of a real producer/consumer barrier.
+
+`timing.inc` intercepts the first mapped C128 launch in the validated pure-HIP harness (real captured input, post_shift3). It saves the full feature and normalized outputs, verifies every byte after every timing slot, and asserts a nonzero count, matching launch geometry and argument shape. Typed memcpy avoids alias-dependent argument inspection. Each case is localABBA:1000warmup/6000measured calls, host wall/sync; raw network output is also compared first/final. NoD3D capture/profiler is used.
+
+Build emitted pure.cpp with MinGW -std=c++17 -O2 -static -D_WIN32_WINNT=0x0A00 as pure.exe. Upload it and kernel.hip under hip-backend/c128-norm-cost; run.ps1 builds both architectures then measures gfx1201 with game guards. No source/game deployment. Results: Development/results/c128-norm-cost-20260921. Earlier exploratory logs with a missing rows printf argument were discarded; final logged rows26624, nonzero shape assertion,28ABBA slots and all byte checks are required.

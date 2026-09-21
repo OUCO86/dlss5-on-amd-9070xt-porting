@@ -1,0 +1,1 @@
+shapes=1012 tiles=72276 fast_empty=13160 vertical_empty=13371 false_skips=0

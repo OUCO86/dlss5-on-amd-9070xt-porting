@@ -1,0 +1,8 @@
+{
+  "NumVgprs": 108,
+  "NumVGPRsForWavesPerEU": 108,
+  "LDSByteSize": 10816,
+  "Occupancy": 12,
+  "ScratchSize": 0,
+  "static_barrier_pairs": 12
+}

@@ -1,0 +1,84 @@
+{
+  "controls": [
+    {
+      "base": "base-900-0",
+      "candidate": "candidate-900-0",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-900-1",
+      "candidate": "candidate-900-1",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-1080-0",
+      "candidate": "candidate-1080-0",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-1080-1",
+      "candidate": "candidate-1080-1",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-720-motion-False",
+      "candidate": "extra-720-motion-True",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-900-history-False",
+      "candidate": "extra-900-history-True",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-900-float-in-False",
+      "candidate": "extra-900-float-in-True",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-900-float-feature-False",
+      "candidate": "extra-900-float-feature-True",
+      "matching_frames": 12
+    }
+  ],
+  "kernel_only": false,
+  "timing": {
+    "time-900": {
+      "slots_ms": [
+        13.26100125,
+        13.2582025,
+        13.27360625,
+        13.35686625
+      ],
+      "base_ms": 13.30893375,
+      "candidate_ms": 13.265904375,
+      "saved_ms": 0.0430293749999997,
+      "saved_percent": 0.3233119632893184
+    },
+    "time-1080": {
+      "slots_ms": [
+        18.72596375,
+        18.74682625,
+        18.7582275,
+        18.83261625
+      ],
+      "base_ms": 18.77929,
+      "candidate_ms": 18.752526875,
+      "saved_ms": 0.026763124999998666,
+      "saved_percent": 0.14251404073316226
+    }
+  },
+  "isolated_fused_kernel": {
+    "slots_us": [
+      90.4877,
+      85.4107,
+      85.6859,
+      90.7112
+    ],
+    "base_us": 90.59945,
+    "candidate_us": 85.54830000000001,
+    "saved_percent": 5.575254595916412,
+    "raw_fp32_comparisons": 8,
+    "bitdiff": 0
+  }
+}

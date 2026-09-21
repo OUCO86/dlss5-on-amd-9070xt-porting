@@ -1,0 +1,16 @@
+seed=0 pattern=0
+input format=RGBA16_FLOAT W=1296 H=720 invalid=0 min=0 max=34.53125 luma=0.0157641119 roi_luma=0.0250669576
+adapter=AMD Radeon RX 9070 XT
+frame=0 reset=1 wall_ms=1341.669 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=1 reset=1 wall_ms=24.375 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=2 reset=1 wall_ms=15.377 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=3 reset=1 wall_ms=19.139 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=4 reset=1 wall_ms=15.786 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=5 reset=1 wall_ms=15.120 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=6 reset=1 wall_ms=17.689 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=7 reset=1 wall_ms=16.427 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=8 reset=1 wall_ms=15.036 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=9 reset=1 wall_ms=15.044 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=10 reset=1 wall_ms=18.944 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+frame=11 reset=1 wall_ms=15.079 invalid=0 luma=0.01001326 roi=0.01569723 dark=841990 roi_dark=273935 changed_first=0 maxabs_first=0
+RESULT frames=12 temporal=0 mean_wall_ms=127.474 invalid_total=0 restored_capture_every_frame=1 HDR_preserved=1

@@ -1,0 +1,30 @@
+NORM_COST slot=0 original=1 mode=0 repeats=1 us=90.238667 byte_diff=0 rows=26624
+NORM_COST slot=1 original=0 mode=0 repeats=1 us=90.132333 byte_diff=0 rows=26624
+NORM_COST slot=2 original=0 mode=0 repeats=1 us=90.677500 byte_diff=0 rows=26624
+NORM_COST slot=3 original=1 mode=0 repeats=1 us=90.492667 byte_diff=0 rows=26624
+NORM_COST slot=4 original=0 mode=0 repeats=1 us=90.681167 byte_diff=0 rows=26624
+NORM_COST slot=5 original=0 mode=0 repeats=2 us=93.998667 byte_diff=0 rows=26624
+NORM_COST slot=6 original=0 mode=0 repeats=2 us=94.034000 byte_diff=0 rows=26624
+NORM_COST slot=7 original=0 mode=0 repeats=1 us=90.903333 byte_diff=0 rows=26624
+NORM_COST slot=8 original=0 mode=0 repeats=1 us=90.854167 byte_diff=0 rows=26624
+NORM_COST slot=9 original=0 mode=0 repeats=4 us=102.401667 byte_diff=0 rows=26624
+NORM_COST slot=10 original=0 mode=0 repeats=4 us=102.477833 byte_diff=0 rows=26624
+NORM_COST slot=11 original=0 mode=0 repeats=1 us=91.062000 byte_diff=0 rows=26624
+NORM_COST slot=12 original=0 mode=1 repeats=1 us=90.899500 byte_diff=0 rows=26624
+NORM_COST slot=13 original=0 mode=1 repeats=2 us=93.537500 byte_diff=0 rows=26624
+NORM_COST slot=14 original=0 mode=1 repeats=2 us=89.673500 byte_diff=0 rows=26624
+NORM_COST slot=15 original=0 mode=1 repeats=1 us=87.122667 byte_diff=0 rows=26624
+NORM_COST slot=16 original=0 mode=1 repeats=1 us=87.141500 byte_diff=0 rows=26624
+NORM_COST slot=17 original=0 mode=1 repeats=4 us=94.405333 byte_diff=0 rows=26624
+NORM_COST slot=18 original=0 mode=1 repeats=4 us=94.453333 byte_diff=0 rows=26624
+NORM_COST slot=19 original=0 mode=1 repeats=1 us=87.102833 byte_diff=0 rows=26624
+NORM_COST slot=20 original=0 mode=2 repeats=1 us=87.105500 byte_diff=0 rows=26624
+NORM_COST slot=21 original=0 mode=2 repeats=2 us=87.150000 byte_diff=0 rows=26624
+NORM_COST slot=22 original=0 mode=2 repeats=2 us=87.237333 byte_diff=0 rows=26624
+NORM_COST slot=23 original=0 mode=2 repeats=1 us=87.170167 byte_diff=0 rows=26624
+NORM_COST slot=24 original=0 mode=2 repeats=1 us=87.195167 byte_diff=0 rows=26624
+NORM_COST slot=25 original=0 mode=2 repeats=4 us=87.325500 byte_diff=0 rows=26624
+NORM_COST slot=26 original=0 mode=2 repeats=4 us=87.405000 byte_diff=0 rows=26624
+NORM_COST slot=27 original=0 mode=2 repeats=1 us=87.257500 byte_diff=0 rows=26624
+PURE frame=0 bitdiff=0
+PURE frame=1 bitdiff=0

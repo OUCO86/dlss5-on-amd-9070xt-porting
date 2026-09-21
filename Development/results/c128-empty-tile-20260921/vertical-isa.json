@@ -1,0 +1,7 @@
+{
+  "NumVgprs": 109,
+  "NumVGPRsForWavesPerEU": 109,
+  "LDSByteSize": 10816,
+  "Occupancy": 12,
+  "ScratchSize": 0
+}
