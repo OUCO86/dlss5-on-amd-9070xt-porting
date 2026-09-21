@@ -1,0 +1,9 @@
+# Whole pipeline gap investigation
+
+prepare.py builds a diagnostic benchmark from current benchmark_live_capture.cpp. Compile /tmp/pipeline-gap/benchmark.cpp with normal HIP benchmark flags plus DLSS5_BENCH_BRIDGE_ISOLATE. Runner name benchmark_pipeline_gap.exe. run.ps1 compares full pipeline before/after, same-network privateHIP input/output with one upload, CPU Enqueue/wait timing, and burst4/16 submission. Both resolutions, Graph0/1, temporal/reuse off, game guards. All local/burst/full-after raw outputs checked bit-exact. Tests do not modify production.
+
+capture.ps1 uses installed RDP CLI to capture400 HIP dispatches beginning at3000 with hardware counters. Must explicitly supply --rgp-render-op-count400: auto-capture dispatch:3000:400 alone produced count1 in this tool version. Keep benchmark alive long enough for capture processing (2000frames); an80-frame run disconnected during86MB transfer and failed. CLI also connects the process's D3D12 client; that client aborts on exit, so inspect HIP success/RDF ApiInfo and TraceConfig rather than assume the last generic CLI error describes HIP. Logs verify both clock modes restored.
+
+read-counters.py reads RDF3 uncompressed selected chunks, validates lengths/versions, and decodes observed DerivedSpmCtr v1 data. Container format matches AMD's public libamdrdf specification; derived payload schema is inferred from self-describing names/lengths/references, with every ratio sample cross-checked against its referenced count arrays. It does not decode SQTT or infer clock frequency/bandwidth. Counter percentages are ratios of sums, not unweighted means including idle zeros.
+
+Raw trace remains D:/DLSSNR-Lab/hip-backend/pipeline-gap-rgp/hip.rgp (local/tmp/pipeline-gap-400.rgp),94,749,063bytes; not committed. Reports/data in results/pipeline-gap-20260921. No gameplay version/config changes.

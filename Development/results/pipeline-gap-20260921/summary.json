@@ -1,0 +1,46 @@
+{
+  "900-g0": {
+    "full_before_median_ms": 13.1555,
+    "enqueue_median_ms": 0.454,
+    "wait_median_ms": 12.432,
+    "hip_total_median_ms": 12.894,
+    "burst_ms": {
+      "4": 12.704753906,
+      "16": 12.705580078
+    },
+    "full_after_median_ms": 13.267
+  },
+  "900-g1": {
+    "full_before_median_ms": 13.0335,
+    "enqueue_median_ms": 0.142,
+    "wait_median_ms": 12.725,
+    "hip_total_median_ms": 12.869,
+    "burst_ms": {
+      "4": 12.740464844,
+      "16": 12.738585937
+    },
+    "full_after_median_ms": 13.154
+  },
+  "1080-g0": {
+    "full_before_median_ms": 18.65,
+    "enqueue_median_ms": 0.4465,
+    "wait_median_ms": 17.938499999999998,
+    "hip_total_median_ms": 18.398,
+    "burst_ms": {
+      "4": 18.187914062,
+      "16": 18.185915039
+    },
+    "full_after_median_ms": 18.832
+  },
+  "1080-g1": {
+    "full_before_median_ms": 18.704,
+    "enqueue_median_ms": 0.143,
+    "wait_median_ms": 18.1725,
+    "hip_total_median_ms": 18.3215,
+    "burst_ms": {
+      "4": 18.18471875,
+      "16": 18.205243164
+    },
+    "full_after_median_ms": 18.731
+  }
+}

@@ -2808,3 +2808,11 @@ ELF核函数确有变化：C128 bytein_fb非映射10044→9980字节、映射117
 用户要求搜硬件资料并计算差距。AMD官方规格核实：稠密FP8/INT8 389T、FP16矩阵195T、FP32向量48.7T，稀疏FP8才779T；GDDR6最高640GB/s、16GB。按现有主要矩阵尺寸/窗口填充/分组收缩、skip42/43/46、reuse0建立解析估算，非硬件计数器：900约0.728TFLOP/帧、1080约1.043TFLOP/帧，对最新干净回放13.2069/18.6881ms，主要矩阵有效吞吐约55/56TFLOPS（FP8峰值约14%）。按FP8/FP16/FP32各自峰值粗折算纯矩阵预算约2.0/2.86ms，实际约6.6/6.5倍，但漏计归一化/激活/对角模拟MMA/搬运同步等，不能叫精确GPU利用率或承诺可加速6倍。
 
 独立大FFN严格矩阵量2×400×1024×4096=3.355G FLOP，含pack/激活实测约34.5µs对应97.3TFLOPS；裸矩阵峰值预算8.63µs，约4倍差。没有显存流量计数，不臆测实测带宽。公式、逐族数据、边界和AMD来源记录在results/9070-theoretical-20260921，估算脚本可复算。未改生产或游戏。
+
+## 2026-09-21 10:07起：理论缺口的全流水线隔离与HIP硬件捕获
+
+用户要求盯大缺口，排查是否其他环节拖慢。最新main含RGB-head，复用/历史关闭，同网络实例完整before→HIP私有缓冲一次上传→burst4/16→完整after逐float位核对全同。Graph0：900完整13.1555/13.267、私有HIP12.894、CPU enqueue0.454、burst16每帧12.7056ms；1080完整18.65/18.832、私有18.398、enqueue0.4465、burst16每帧18.1859。Graph1实际3build/1479replay，enqueue降约0.142ms，但私有仍12.869/18.3215、burst16约12.7386/18.2052。说明本样本桥接/CPU提交/帧间等待没有藏数毫秒大头，私有HIP仍含驱动/队列等待，不能叫纯GPU忙时；不从分阶段中位数相减宣称严格单环节成本，不采用Graph为新优化。
+
+查官方确认Windows RGP支持HIP，并用现有RDP CLI抓到400 dispatch（start3000）+硬件计数器。第一次只auto-capture参数实际count1；补--rgp-render-op-count400后80帧生命周期太短、传输时断开失败；改2000帧成功。有效HIP ApiInfo8，17775SPM样本，94,749,063字节trace在D:\DLSSNR-Lab\hip-backend\pipeline-gap-rgp\hip.rgp（本地/tmp/pipeline-gap-400.rgp）。D3D12并行客户端退出后abort不能混作HIP失败，日志确认两边时钟恢复。
+
+按RDF公开容器+自描述derived字段解析，并逐样本核对百分比与引用原计数：指令cache99.954%、scalar97.139%、L0 73.351%、L2 95.425%；memory unit busy90.812%、stalled21.695%、write stalled3.100%、LDS bank conflict0。均此400dispatch区间、分母加权，不是逐核归因；提示GPU内部访问侧值得追，不等于DRAM满640GB/s，也不是可直接省21.7%。尚未把SQTT时间线对应到每个核。工具experiments/pipeline-gap，全部隔离CSV/日志/解析计数results/pipeline-gap-20260921；原trace不入git。游戏/生产代码不改，下一步按核定位停顿。
