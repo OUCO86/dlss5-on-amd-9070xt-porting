@@ -1,0 +1,85 @@
+[
+  {
+    "name": "AMD Radeon RX 9070 XT",
+    "pci": {
+      "bus": 4,
+      "device": 0,
+      "function": 0
+    },
+    "asic": {
+      "gpuIndex": 0,
+      "gpuCounterFreq": 100000000,
+      "numShaderEngines": 4,
+      "numShaderArraysPerEngine": 2,
+      "numCus": 64,
+      "cuMask": [
+        [
+          255,
+          255
+        ],
+        [
+          255,
+          255
+        ],
+        [
+          255,
+          255
+        ],
+        [
+          255,
+          255
+        ]
+      ],
+      "engineClockHz": {
+        "min": 500000000,
+        "max": 2520000000
+      },
+      "ids": {
+        "gfxEngine": 13,
+        "family": 152,
+        "eRev": 81,
+        "revision": 192,
+        "device": 30032,
+        "subsystem": 606344280,
+        "vendor": 4098,
+        "luid": "de77010000000000"
+      }
+    },
+    "memory": {
+      "type": "Gddr6",
+      "memOpsPerClock": 16,
+      "busBitWidth": 256,
+      "bandwidthBytesPerSec": 644608000000,
+      "memClockHz": {
+        "min": 96000000,
+        "max": 1259000000
+      },
+      "heaps": {
+        "local": {
+          "physicalAddress": 0,
+          "size": 17095983104
+        },
+        "invisible": {
+          "physicalAddress": 17095983104,
+          "size": 0
+        }
+      },
+      "excludedVaRanges": [
+        {
+          "base": 0,
+          "size": 4096
+        },
+        {
+          "base": 140737488355328,
+          "size": 18446462598732840959
+        }
+      ]
+    },
+    "bigSw": {
+      "major": 2023,
+      "minor": 0,
+      "misc": 33413048
+    },
+    "driverIndex": 0
+  }
+]

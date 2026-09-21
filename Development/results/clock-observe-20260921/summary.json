@@ -1,0 +1,172 @@
+{
+  "900": {
+    "warm_frames": 900,
+    "wall_median_ms": 13.2325,
+    "samples": 57,
+    "sensors": {
+      "1": {
+        "supported_samples": 57,
+        "min": 2774,
+        "median": 2786,
+        "max": 2807
+      },
+      "2": {
+        "supported_samples": 57,
+        "min": 2505,
+        "median": 2505,
+        "max": 2505
+      },
+      "3": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "8": {
+        "supported_samples": 57,
+        "min": 48,
+        "median": 52,
+        "max": 54
+      },
+      "19": {
+        "supported_samples": 57,
+        "min": 98,
+        "median": 98,
+        "max": 100
+      },
+      "20": {
+        "supported_samples": 57,
+        "min": 24,
+        "median": 25,
+        "max": 29
+      },
+      "23": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "27": {
+        "supported_samples": 57,
+        "min": 79,
+        "median": 82,
+        "max": 84
+      },
+      "30": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "35": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "44": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "55": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "73": {
+        "supported_samples": 57,
+        "min": 297,
+        "median": 324,
+        "max": 348
+      }
+    }
+  },
+  "1080": {
+    "warm_frames": 900,
+    "wall_median_ms": 18.704,
+    "samples": 80,
+    "sensors": {
+      "1": {
+        "supported_samples": 80,
+        "min": 2728,
+        "median": 2739.0,
+        "max": 2780
+      },
+      "2": {
+        "supported_samples": 80,
+        "min": 2505,
+        "median": 2505.0,
+        "max": 2505
+      },
+      "3": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "8": {
+        "supported_samples": 80,
+        "min": 53,
+        "median": 55.0,
+        "max": 57
+      },
+      "19": {
+        "supported_samples": 80,
+        "min": 97,
+        "median": 99.0,
+        "max": 100
+      },
+      "20": {
+        "supported_samples": 80,
+        "min": 17,
+        "median": 27.0,
+        "max": 32
+      },
+      "23": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "27": {
+        "supported_samples": 80,
+        "min": 82,
+        "median": 85.0,
+        "max": 87
+      },
+      "30": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "35": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "44": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "55": {
+        "supported_samples": 0,
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "73": {
+        "supported_samples": 80,
+        "min": 318,
+        "median": 325.0,
+        "max": 362
+      }
+    }
+  }
+}

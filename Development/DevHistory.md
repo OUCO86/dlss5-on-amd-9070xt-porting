@@ -2816,3 +2816,9 @@ ELF核函数确有变化：C128 bytein_fb非映射10044→9980字节、映射117
 查官方确认Windows RGP支持HIP，并用现有RDP CLI抓到400 dispatch（start3000）+硬件计数器。第一次只auto-capture参数实际count1；补--rgp-render-op-count400后80帧生命周期太短、传输时断开失败；改2000帧成功。有效HIP ApiInfo8，17775SPM样本，94,749,063字节trace在D:\DLSSNR-Lab\hip-backend\pipeline-gap-rgp\hip.rgp（本地/tmp/pipeline-gap-400.rgp）。D3D12并行客户端退出后abort不能混作HIP失败，日志确认两边时钟恢复。
 
 按RDF公开容器+自描述derived字段解析，并逐样本核对百分比与引用原计数：指令cache99.954%、scalar97.139%、L0 73.351%、L2 95.425%；memory unit busy90.812%、stalled21.695%、write stalled3.100%、LDS bank conflict0。均此400dispatch区间、分母加权，不是逐核归因；提示GPU内部访问侧值得追，不等于DRAM满640GB/s，也不是可直接省21.7%。尚未把SQTT时间线对应到每个核。工具experiments/pipeline-gap，全部隔离CSV/日志/解析计数results/pipeline-gap-20260921；原trace不入git。游戏/生产代码不改，下一步按核定位停顿。
+
+## 2026-09-21 12:38起：普通推理实际频率/功耗与RGP口径
+
+根据网友提高功率后涨FPS线索继续查，先只读、不改时钟/功耗设置。复用ADL查询工具扩展传感器，1000帧900/1080推理，用GetTickCount64对齐200ms遥测，取100–999热帧、adapter0/status0/supported。900中位13.2325ms，核心2774–2807/中位2786MHz，显存2505MHz，板功耗297–348/中位324W；1080中位18.704ms，核心2728–2780/中位2739MHz，显存2505，板功耗318–362/中位325W。edge/hotspot中位52/82与55/85°C。功耗/温度限制原因传感器不支持，不能归因为某种降频；自然频率变化窄，未做因果扫频。
+
+按实测核心频率线性修正此前矩阵理想预算约2.13/3.10ms，实测仍约6.2/6.0倍，正常频率只比标称Boost低6–8%，无法解释全部缺口。另核实旧RGP capture开启peak后恢复，文件SystemInfo/AsicInfo核心字段记录2.52GHz，与普通推理2.74–2.79不同；之前访存百分比属于剖析条件，不与游戏默认时钟混用。不同API显存时钟域也不直接比较2505/1259为翻倍。RGP字节计数器范围不一，未据其臆测外部DRAM带宽饱和。工具experiments/clock-observe，全部遥测/逐帧时间/元数据/折算在results/clock-observe-20260921；用户设置、游戏和生产均未改。

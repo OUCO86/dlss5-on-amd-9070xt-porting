@@ -1,0 +1,18 @@
+{
+  "900": {
+    "observed_core_median_mhz": 2786,
+    "rated_boost_mhz": 2970,
+    "scaled_fp8_peak_tflops": 364.9003367003367,
+    "clock_scaled_ideal_matrix_ms": 2.126754514395318,
+    "observed_frame_median_ms": 13.2325,
+    "actual_over_scaled_matrix_budget": 6.221921670053342
+  },
+  "1080": {
+    "observed_core_median_mhz": 2739.0,
+    "rated_boost_mhz": 2970,
+    "scaled_fp8_peak_tflops": 358.74444444444447,
+    "clock_scaled_ideal_matrix_ms": 3.1003859760358674,
+    "observed_frame_median_ms": 18.704,
+    "actual_over_scaled_matrix_budget": 6.0327972531713
+  }
+}
