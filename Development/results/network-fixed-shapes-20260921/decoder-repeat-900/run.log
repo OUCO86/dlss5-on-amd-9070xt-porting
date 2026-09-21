@@ -1,0 +1,5 @@
+NETWORK mode=3 slot=0 ms=12.662900 bitdiff=0 replaced=6400
+NETWORK mode=7 slot=1 ms=12.661088 bitdiff=0 replaced=8400
+NETWORK mode=7 slot=2 ms=12.709068 bitdiff=0 replaced=8400
+NETWORK mode=3 slot=3 ms=12.746507 bitdiff=0 replaced=6400
+PASS fixed shape controls

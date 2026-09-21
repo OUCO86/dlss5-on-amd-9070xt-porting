@@ -206,17 +206,19 @@ DEV void decoder_project2x_h16w_body(const float*in,const float*w,const float*sk
 #else
  for(uint e=0;e<8;e++){uint token=first+gr()*8+e;if(!FullTile&&token>=iw*ih)continue;float t=H(total[e]);for(uint dy=0;dy<2;dy++)for(uint dx=0;dx<2;dx++){uint x=(token%iw)*2+dx,y=(token/iw)*2+dy;if(x>=ow||y>=oh)continue;uint i=(y*ow+x)*outputs+row+rc();float merged=H(t+F(skip[i])*w[inputs*outputs+row+rc()]);if constexpr(ByteOutput)reinterpret_cast<unsigned char*>(out)[i]=static_cast<unsigned char>(__builtin_amdgcn_cvt_pk_fp8_f32(F(merged),0.f,0,false));else out[i]=outputs==32?merged:F(merged);}}}
 #endif
-WAVE void decoder_project2x_h16w(const float*in,const float*w,const float*skip,float*out,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){
+DEV void decoder_project2x_h16w_fixed_body(const float*in,const float*w,const float*skip,float*out,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){
  uint first=bid()/(outputs/16)*16,n=iw*ih;
  if(first<n&&n-first>=16)decoder_project2x_h16w_body<true>(in,w,skip,out,iw,ih,ow,oh,inputs,outputs);
  else decoder_project2x_h16w_body<false>(in,w,skip,out,iw,ih,ow,oh,inputs,outputs);
 }
+WAVE void decoder_project2x_h16w(const float*in,const float*w,const float*skip,float*out,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){if(inputs==1024&&outputs==512)decoder_project2x_h16w_fixed_body(in,w,skip,out,iw,ih,ow,oh,1024,512);else if(inputs==512&&outputs==256)decoder_project2x_h16w_fixed_body(in,w,skip,out,iw,ih,ow,oh,512,256);else if(inputs==256&&outputs==128)decoder_project2x_h16w_fixed_body(in,w,skip,out,iw,ih,ow,oh,256,128);else if(inputs==128&&outputs==64)decoder_project2x_h16w_fixed_body(in,w,skip,out,iw,ih,ow,oh,128,64);else if(inputs==64&&outputs==32)decoder_project2x_h16w_fixed_body(in,w,skip,out,iw,ih,ow,oh,64,32);else decoder_project2x_h16w_fixed_body(in,w,skip,out,iw,ih,ow,oh,inputs,outputs);}
 
-WAVE void decoder_project2x_h16w_byteout(const float*in,const float*w,const float*skip,float*out,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){
+DEV void decoder_project2x_h16w_byteout_fixed_body(const float*in,const float*w,const float*skip,float*out,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){
  uint first=bid()/(outputs/16)*16,n=iw*ih;
  if(first<n&&n-first>=16)decoder_project2x_h16w_body<true,true>(in,w,skip,out,iw,ih,ow,oh,inputs,outputs);
  else decoder_project2x_h16w_body<false,true>(in,w,skip,out,iw,ih,ow,oh,inputs,outputs);
 }
+WAVE void decoder_project2x_h16w_byteout(const float*in,const float*w,const float*skip,float*out,uint iw,uint ih,uint ow,uint oh,uint inputs,uint outputs){if(inputs==1024&&outputs==512)decoder_project2x_h16w_byteout_fixed_body(in,w,skip,out,iw,ih,ow,oh,1024,512);else if(inputs==512&&outputs==256)decoder_project2x_h16w_byteout_fixed_body(in,w,skip,out,iw,ih,ow,oh,512,256);else if(inputs==256&&outputs==128)decoder_project2x_h16w_byteout_fixed_body(in,w,skip,out,iw,ih,ow,oh,256,128);else if(inputs==128&&outputs==64)decoder_project2x_h16w_byteout_fixed_body(in,w,skip,out,iw,ih,ow,oh,128,64);else if(inputs==64&&outputs==32)decoder_project2x_h16w_byteout_fixed_body(in,w,skip,out,iw,ih,ow,oh,64,32);else decoder_project2x_h16w_byteout_fixed_body(in,w,skip,out,iw,ih,ow,oh,inputs,outputs);}
 
 template<bool ByteInput=false>
 DEV f8 dot16(const float*in,const float*w,uint first,uint row,uint instride,uint kcols,uint inoff,uint woff,f8 a){for(uint k=0;k<kcols;k+=16){h8 x{},y{};for(uint e=0;e<8;e++){uint j=k+gr()*8+e;if constexpr(ByteInput)x[e]=(_Float16)__builtin_amdgcn_cvt_f32_fp8(int(reinterpret_cast<const unsigned char*>(in)[(first+rc())*instride+inoff+j]),0);else x[e]=(_Float16)in[(first+rc())*instride+inoff+j];y[e]=(_Float16)w[woff+(row+rc())*kcols+j];}a=__builtin_amdgcn_wmma_f32_16x16x16_f16_w32_gfx12(x,y,a);}return a;}
@@ -382,7 +384,8 @@ WAVE void vit_expand_blocked_fp8_bytein(const float*in,const float*w,float*out,u
 
 WAVE void vit_expand_blocked_fp8_tiled_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs,const uint*reuse_gate){if(reuse_gate&&reuse_gate[0])return;vit_expand_blocked_body<true,true>(in,w,out,tokens,inputs,outputs);}
 // Fragment-native weight layout (FragmentPackedMatrix): one 8-byte load per B fragment instead of eight byte gathers.
-WAVE void vit_expand_blocked_fp8_frag_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs,const uint*reuse_gate){if(reuse_gate&&reuse_gate[0])return;vit_expand_blocked_body<true,true,true>(in,w,out,tokens,inputs,outputs);}
+// Fixed model dimensions expose the K-loop schedule; retain the generic ABI fallback.
+WAVE void vit_expand_blocked_fp8_frag_bytein(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs,const uint*reuse_gate){if(reuse_gate&&reuse_gate[0])return;if(inputs==1024&&outputs==4096)vit_expand_blocked_body<true,true,true>(in,w,out,tokens,1024,4096);else vit_expand_blocked_body<true,true,true>(in,w,out,tokens,inputs,outputs);}
 // Tile-layout input (vit_pack_input_tiled) + fragment-native weights: both operands are contiguous 8-byte lane loads.
 WAVE void vit_expand_blocked_fp8_frag_tiledin(const float*in,const float*w,float*out,uint tokens,uint inputs,uint outputs,const uint*reuse_gate){if(reuse_gate&&reuse_gate[0])return;vit_expand_blocked_body<true,true,true,true>(in,w,out,tokens,inputs,outputs);}
 
@@ -567,7 +570,7 @@ DEV f8 dot8_frag(const float*in,const unsigned char*wf,uint first,uint row,uint 
   a=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(x,y,a);
  }return a;
 }
-WAVE void vit_project_frag(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs,const uint*reuse_gate){if(reuse_gate&&reuse_gate[0])return;uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=tokens)return;f8 total{};
+DEV void vit_project_frag_fixed_body(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs,const uint*reuse_gate){if(reuse_gate&&reuse_gate[0])return;uint first=bid()/(outputs/16)*16,row=bid()%(outputs/16)*16;if(first>=tokens)return;f8 total{};
  const unsigned char*wf=reinterpret_cast<const unsigned char*>(w);
 #if HIP_VIT_HOIST_SCALE
  const float rs=w[inputs*outputs+row+rc()]; // residual scale once per lane (was re-read per element: 7 identical loads in the ISA)
@@ -579,6 +582,7 @@ WAVE void vit_project_frag(const float*in,const float*w,const float*skip,float*o
 #endif
  for(uint e=0;e<8;e++)out[(first+gr()*8+e)*outputs+row+rc()]=F(H(total[e]));
 }
+WAVE void vit_project_frag(const float*in,const float*w,const float*skip,float*out,uint tokens,uint inputs,uint outputs,const uint*reuse_gate){if(inputs==1024&&outputs==1024)vit_project_frag_fixed_body(in,w,skip,out,tokens,1024,1024,reuse_gate);else vit_project_frag_fixed_body(in,w,skip,out,tokens,inputs,outputs,reuse_gate);}
 WAVE void vit_qkv_project_normalize_fused_f16compact_fp8_frag(const float*in,const float*w,unsigned char*out,uint tokens,const uint*reuse_gate){if(reuse_gate&&reuse_gate[0])return;
  uint perpart=(tokens/16)*32,part=bid()/perpart,local=bid()%perpart,first=local/32*16,row=local%32*32;if(part>=3)return;f8 acc[2]{};
  const _Float16*w16=reinterpret_cast<const _Float16*>(w)+part*1048576;

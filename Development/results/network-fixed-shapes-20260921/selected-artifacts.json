@@ -1,0 +1,34 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\raw-check.exe",
+        "sha":  "D6F3064DA997F47F495D667B1D7155250BC612DDB1C8F47A20E033A04AE27FDE"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-packed.hip",
+        "sha":  "89C515D52F0F040E1CC2A90B17AE5466DC391AB148F561F9AD1CA8D51F361618"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-unpacked.hip",
+        "sha":  "8D6113DDC6FAACDE152321B6B03BA7FB81962138DE797D3621DCC52A8E77321B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\network-repeat.exe",
+        "sha":  "2AFD890EBE8566A78CEA6D58C87F0D00ADCBCE7E7FAD536A4D808FA4EE2534F9"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-gfx1200\\deep_fast-packed.hsaco",
+        "sha":  "1436B01D0791A77AC6FAFB058033C29EE42447D4E1AAF7447AFB1E1242CC8F3E"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-gfx1200\\deep_fast.hsaco",
+        "sha":  "DC4342B5C8108DBCC442F295053CCF234E3031E311F1F55D2B49EE1F42F193C5"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-modules\\deep_fast-packed.hsaco",
+        "sha":  "4893E31A822CC71BD9A45DC407E10619488A0A6AA902CB7FC07445BBF25B38D7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-modules\\deep_fast.hsaco",
+        "sha":  "775321241860F43CEF7BFBF1E3459712A953FDA41C98956F5C7B452FA14791FE"
+    }
+]

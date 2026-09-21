@@ -1,0 +1,74 @@
+{
+  "probe_vit_expand_blocked_fp8_frag_bytein": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_vit_project_frag": {
+    "NumVgprs": 79,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_decoder_project2x_h16w": {
+    "NumVgprs": 64,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_decoder_project2x_h16w_byteout": {
+    "NumVgprs": 64,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_vit_attention_fused_256_bytein": {
+    "NumVgprs": 76,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 1536
+  },
+  "probe_vit_attention_fused_400_bytein": {
+    "NumVgprs": 76,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 1536
+  },
+  "probe_vit_attention_fused_640_bytein": {
+    "NumVgprs": 76,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 1536
+  },
+  "probe_vit_qkv_project_normalize_fused_f16compact_fp8_frag": {
+    "NumVgprs": 60,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 2112
+  },
+  "probe_mh_pool_project_production_h16w": {
+    "NumVgprs": 45,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_mh_attention_fused_fp8_out": {
+    "NumVgprs": 106,
+    "ScratchSize": 0,
+    "Occupancy": 8,
+    "LDSByteSize": 15360
+  },
+  "probe_mh_shift_pack": {
+    "NumVgprs": 6,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_mh_pool": {
+    "NumVgprs": 11,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "900": {
+    "baseline_ms": 13.158995625,
+    "candidate_ms": 12.999305625,
+    "saved_ms": 0.15968999999999944,
+    "saved_percent": 1.2135424659357272
+  },
+  "1080": {
+    "baseline_ms": 18.60748875,
+    "candidate_ms": 18.297279375000002,
+    "saved_ms": 0.31020937499999945,
+    "saved_percent": 1.6671211207906786
+  },
+  "rgb_frame_pairs": 96,
+  "timing_frames": 8000
+}
