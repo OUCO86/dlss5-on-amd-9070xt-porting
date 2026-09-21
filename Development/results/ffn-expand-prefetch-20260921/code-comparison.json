@@ -1,0 +1,26 @@
+[
+  {
+    "name": "mh_ffn_fused_c128_project_g128_qkv_bytein_fb",
+    "baseline_bytes": 10044,
+    "candidate_bytes": 9972,
+    "identical": false
+  },
+  {
+    "name": "mh_ffn_fused_c128_project_mapped_g128_qkv_bytein_fb",
+    "baseline_bytes": 11756,
+    "candidate_bytes": 11756,
+    "identical": true
+  },
+  {
+    "name": "mh_ffn_fused_c256_frag_project_g128_qkv_bytein_fb",
+    "baseline_bytes": 12572,
+    "candidate_bytes": 12572,
+    "identical": true
+  },
+  {
+    "name": "mh_ffn_fused_c256_frag_project_mapped_g128_qkv_bytein_fb",
+    "baseline_bytes": 14472,
+    "candidate_bytes": 14472,
+    "identical": true
+  }
+]
