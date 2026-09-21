@@ -1,0 +1,18 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-ffn-ladder\\kernel.hip",
+        "sha":  "71FDD890E7B1277DE278B5D537F381F075F0EEE9CEEEB6F2879C9E39184BCA99"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-ffn-ladder\\pure.exe",
+        "sha":  "066C6F2C131E3D2E349744900D77546529F6EC9AE8FD8C9BAEE1970AC5774184"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-ffn-ladder\\gfx1200.hsaco",
+        "sha":  "BD1940B4E908298F6D83E4491AFAB477A2A2CC108471D00E49C8C9EEDC6505B8"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-ffn-ladder\\modules\\deep_fast-packed.hsaco",
+        "sha":  "3CD709C2B755F73706CCF5900D7CA68C6228BE277B81DF8D135772A11C52C782"
+    }
+]

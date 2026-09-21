@@ -1,0 +1,4 @@
+PHASE_DONE c32_fast_ffn_attention_fused_half_chain input
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS C32 phase controls

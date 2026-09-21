@@ -1,0 +1,18 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-edge-cost\\kernel.hip",
+        "sha":  "2AA63C28D2395AA9F623A3AFC246B0DF06109107FE0C7D155DE7B63C43CC004B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-edge-cost\\pure.exe",
+        "sha":  "2FB8FA91675D8004118B0DFA7DE2BF5DA6684891C186B1FF2C28029DF785054C"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-edge-cost\\gfx1200.hsaco",
+        "sha":  "1358F90E17B9249D93895DA1A51ECC0227AD31122702E036BBA52F0177A17A8E"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-edge-cost\\modules\\c32_fused_ffn_attention-packed.hsaco",
+        "sha":  "50CF8B00331822262A4D7857F5E96B475357810A393944D413150B02B9C09E19"
+    }
+]

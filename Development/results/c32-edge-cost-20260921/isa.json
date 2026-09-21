@@ -1,0 +1,98 @@
+{
+  "c32_fast_ffn_attention_fused": {
+    "NumVgprs": 178,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half": {
+    "NumVgprs": 178,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half_mapped": {
+    "NumVgprs": 177,
+    "ScratchSize": 0,
+    "LDSByteSize": 19712,
+    "Occupancy": 6
+  },
+  "c32_fast_ffn_attention_fused_half_chain": {
+    "NumVgprs": 177,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half_finish_main8": {
+    "NumVgprs": 182,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half_chain_finish": {
+    "NumVgprs": 182,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half_prefix_finish_main8": {
+    "NumVgprs": 153,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": {
+    "NumVgprs": 181,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_post_merge_head_half": {
+    "NumVgprs": 158,
+    "ScratchSize": 0,
+    "LDSByteSize": 19712,
+    "Occupancy": 6
+  },
+  "c32_post_merge_fused_half": {
+    "NumVgprs": 153,
+    "ScratchSize": 0,
+    "LDSByteSize": 19712,
+    "Occupancy": 6
+  },
+  "c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_input": {
+    "NumVgprs": 179,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half_chain_probe_input": {
+    "NumVgprs": 177,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_post_merge_head_half_probe_input": {
+    "NumVgprs": 158,
+    "ScratchSize": 0,
+    "LDSByteSize": 19712,
+    "Occupancy": 6
+  },
+  "c32_fast_ffn_attention_fused_half_prefix_finish_main8_probe_tail": {
+    "NumVgprs": 153,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_fast_ffn_attention_fused_half_chain_probe_tail": {
+    "NumVgprs": 177,
+    "ScratchSize": 0,
+    "LDSByteSize": 15360,
+    "Occupancy": 8
+  },
+  "c32_post_merge_head_half_probe_tail": {
+    "NumVgprs": 157,
+    "ScratchSize": 0,
+    "LDSByteSize": 19712,
+    "Occupancy": 6
+  }
+}

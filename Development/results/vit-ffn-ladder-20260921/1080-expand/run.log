@@ -1,0 +1,6 @@
+LADDER_DONE vit_expand_blocked_fp8_frag_bytein raw
+LADDER_DONE vit_expand_blocked_fp8_frag_bytein act
+LADDER_DONE vit_expand_blocked_fp8_frag_bytein split
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT ladder controls
