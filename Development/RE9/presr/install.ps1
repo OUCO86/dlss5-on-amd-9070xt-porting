@@ -9,6 +9,7 @@ if($RestoreBackup){
  "RESTORED $RestoreBackup";exit
 }
 $names=@('config.ini','OptiScaler.ini','dxgi.dll','LmxxfNrRuntime.dll','re9-present.addon64','_storage_\OptiScaler.ini','_storage_\dxgi.dll','_storage_\LmxxfNrRuntime.dll','_storage_\re9-present.addon64','DLSS5-AMD\native-game-tiled-assets\HIP\SHA256SUMS')
+$names+=@('DLSS5-AMD\native-game-tiled-assets\native_codec_encode.hlsl','DLSS5-AMD\native-game-tiled-assets\native_codec_decode.hlsl')
 $b="$lab\backups\$(Get-Date -Format yyyyMMdd-HHmmss-fff)"
 New-Item -ItemType Directory $b -Force|Out-Null
 $files=@(foreach($n in $names){$exists=Test-Path "$g\$n";if($exists){$dest=Join-Path $b $n;New-Item -ItemType Directory (Split-Path $dest) -Force|Out-Null;Copy-Item "$g\$n" $dest};[pscustomobject]@{name=$n;existed=$exists}})
@@ -19,10 +20,11 @@ foreach($d in @($g,"$g\_storage_")){
  Copy-Item "$lab\LmxxfNrRuntime.dll" "$d\LmxxfNrRuntime.dll" -Force
  if(Test-Path "$d\re9-present.addon64"){Remove-Item "$d\re9-present.addon64"}
 }
+foreach($n in @('native_codec_encode.hlsl','native_codec_decode.hlsl')){Copy-Item "$lab\shaders\$n" "$g\DLSS5-AMD\native-game-tiled-assets\$n" -Force}
 $ini=Get-Content "$g\OptiScaler.ini" -Raw
 $ini=$ini -replace '(?ms)^\[DlssNr\].*?(?=^\[|\z)',''
 $ini=$ini -replace '(?m)^LoadReshade=.*$','LoadReshade=false'
-$ini+="`r`n[DlssNr]`r`nEnabled=true`r`nRunBeforeSR=true`r`nNrBackend=lmxxf`r`nLmxxfDiagnostic=$Diagnostic`r`nAmdEveryFrame=true`r`nTransferStrength=1.0`r`nColourStrength=0.0`r`nToggleKey=117`r`n"
+$ini+="`r`n[DlssNr]`r`nEnabled=true`r`nRunBeforeSR=true`r`nNrBackend=lmxxf`r`nLmxxfDiagnostic=$Diagnostic`r`nAmdEveryFrame=true`r`nTransferStrength=1.0`r`nColourStrength=1.0`r`nToggleKey=117`r`n"
 [IO.File]::WriteAllText("$g\OptiScaler.ini",$ini)
 Copy-Item "$g\OptiScaler.ini" "$g\_storage_\OptiScaler.ini" -Force
 $config=Get-Content "$g\config.ini" -Raw

@@ -1,0 +1,138 @@
+{
+  "frame": {
+    "frame": 0,
+    "pre_exposure": 1,
+    "exposure_scale": 1,
+    "has_exposure": true
+  },
+  "input": {
+    "shape": [
+      848,
+      1506,
+      3
+    ],
+    "finite_fraction": 1.0,
+    "quantiles": [
+      0.25,
+      0.25,
+      0.25,
+      0.5,
+      0.75,
+      0.75,
+      0.75
+    ],
+    "fraction_over_075": 0.0,
+    "fraction_over_1": 0.0,
+    "mean_rgb": [
+      0.25,
+      0.5,
+      0.75
+    ],
+    "near_white_pixel_fraction": 0.0
+  },
+  "proxy": {
+    "shape": [
+      900,
+      1600,
+      4
+    ],
+    "finite_fraction": 1.0,
+    "quantiles": [
+      0.0,
+      0.53662109375,
+      0.53662109375,
+      0.7353515625,
+      0.88037109375,
+      0.88037109375,
+      0.88037109375
+    ],
+    "fraction_over_075": 0.3329166666666667,
+    "fraction_over_1": 0.0,
+    "mean_rgb": [
+      0.5359503173828125,
+      0.734432373046875,
+      0.8792706298828125
+    ],
+    "near_white_pixel_fraction": 0.0
+  },
+  "neural": {
+    "shape": [
+      900,
+      1600,
+      4
+    ],
+    "finite_fraction": 1.0,
+    "quantiles": [
+      0.0,
+      0.5341796875,
+      0.53759765625,
+      0.73828125,
+      0.8818359375,
+      0.88330078125,
+      0.88671875
+    ],
+    "fraction_over_075": 0.3329166666666667,
+    "fraction_over_1": 0.0,
+    "mean_rgb": [
+      0.53780187766672,
+      0.7369848237318711,
+      0.8796917784909407
+    ],
+    "near_white_pixel_fraction": 0.0
+  },
+  "result": {
+    "shape": [
+      848,
+      1506,
+      4
+    ],
+    "finite_fraction": 1.0,
+    "quantiles": [
+      0.2388916015625,
+      0.2470703125,
+      0.250732421875,
+      0.50390625,
+      0.751953125,
+      0.75390625,
+      0.76025390625
+    ],
+    "fraction_over_075": 0.18600989125259967,
+    "fraction_over_1": 0.0,
+    "mean_rgb": [
+      0.2513740838922648,
+      0.503815432313408,
+      0.7499529817939572
+    ],
+    "near_white_pixel_fraction": 0.0
+  },
+  "exposure": {
+    "shape": [
+      1,
+      1,
+      1
+    ],
+    "finite_fraction": 1.0,
+    "quantiles": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "fraction_over_075": 1.0,
+    "fraction_over_1": 0.0,
+    "first_values": [
+      1.0
+    ]
+  },
+  "result_vs_input": {
+    "mae": 0.002763744074725975,
+    "channel_ratio_median": [
+      1.0068359375,
+      1.0078125,
+      1.0006510416666667
+    ]
+  }
+}

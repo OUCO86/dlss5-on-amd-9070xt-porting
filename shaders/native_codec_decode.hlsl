@@ -4,6 +4,22 @@ cbuffer CodecConstants : register(b0) {
  float4 Padding;
  uint OutputRowPitch; uint3 Reserved;
 };
+#ifndef NATIVE_CODEC_EXPOSURE
+#define NATIVE_CODEC_EXPOSURE 0
+#endif
+#if NATIVE_CODEC_EXPOSURE
+Texture2D<float> GameExposure : register(t4);
+#endif
+float EffectivePaperWhite() {
+#if NATIVE_CODEC_EXPOSURE
+ float e=GameExposure.Load(int3(0,0,0));
+ float pre=asfloat(Reserved.y),scale=asfloat(Reserved.z);
+ float exposure=e*scale/pre;
+ return PaperWhiteScale / ((isfinite(exposure)&&exposure>0)?exposure:1.0);
+#else
+ return PaperWhiteScale;
+#endif
+}
 #ifndef NATIVE_CODEC_FIT
 #define NATIVE_CODEC_FIT 0
 #endif
@@ -126,7 +142,7 @@ void main(uint3 id:SV_DispatchThreadID) {
  /* DLSS5_CODEC_SRGB (Magpie): the source is display-referred sRGB; linearize it for the blend and re-encode the result */
  float3 original=Decode(saturate(source.rgb));
 #else
- float3 original=max(source.rgb,0)/PaperWhiteScale;
+ float3 original=max(source.rgb,0)/EffectivePaperWhite();
 #endif
  #if NATIVE_CODEC_FIT
  float2 network_p=Padding.xy+(float2(id.xy)+.5)*Padding.zw/float2(Size)-.5;
@@ -151,6 +167,6 @@ void main(uint3 id:SV_DispatchThreadID) {
  result=saturate(result);result=result<=0.0031308?result*12.92:1.055*pow(result,1.0/2.4)-0.055;
  Store(id.xy,float4(result,source.a));
 #else
- Store(id.xy,float4(result*PaperWhiteScale,source.a));
+ Store(id.xy,float4(result*EffectivePaperWhite(),source.a));
 #endif
 }

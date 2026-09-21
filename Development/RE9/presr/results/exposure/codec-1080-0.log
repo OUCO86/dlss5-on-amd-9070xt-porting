@@ -1,0 +1,13 @@
+CODEC legacy-env bytes=16588800 diff=0
+CODEC explicit-full bytes=16588800 diff=0
+CODEC legacy-env bytes=16588800 diff=0
+CODEC explicit-full bytes=16588800 diff=0
+CODEC legacy-env bytes=16588800 diff=0
+CODEC explicit-full bytes=16588800 diff=0
+DEBUG view=1 changed=1
+DEBUG view=2 changed=1
+DEBUG view=3 changed=1
+DEBUG view=4 changed=1
+CODEC reset-full bytes=16588800 diff=0
+CODEC legacy-after-override bytes=16588800 diff=0
+PASS codec parameters

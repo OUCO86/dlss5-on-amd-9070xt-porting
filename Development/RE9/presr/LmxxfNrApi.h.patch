@@ -1,0 +1,17 @@
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrApi.h
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrApi.h
+@@ -11,5 +11,5 @@
+ #endif
+ 
+-#define LMXXF_NR_ABI_VERSION 1u
++#define LMXXF_NR_ABI_VERSION 2u
+ 
+ enum LmxxfNrStatus
+@@ -75,4 +75,7 @@
+     uint32_t debug_view;     /* 0=normal, 1=proxy, 2=neural solo, 3=diff 20x, 4=tint */
+     float model_scale;       /* 0.25..1.0, default 1.0 */
++    void *exposure;
++    uint32_t exposure_state;
++    float pre_exposure, exposure_scale;
+ } LmxxfNrFrameInfo;
+ 

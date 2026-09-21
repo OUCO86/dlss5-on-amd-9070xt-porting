@@ -15,7 +15,14 @@
 +    if(pendingJob){SetStatus("lmxxf: prior job not yet submitted; original SR");return nullptr;}
      LmxxfCut::ClearPendingEnqueue();
      pendingJob = nullptr;
-@@ -624,9 +629,11 @@
+@@ -281,4 +286,6 @@
+     fi.debug_view = Config::Instance()->DlssNrDebugView.value_or_default();
+     fi.model_scale = settings.modelScale;
++    fi.exposure=frame.exposure;fi.exposure_state=uint32_t(frame.exposureState);
++    fi.pre_exposure=frame.preExposure;fi.exposure_scale=frame.exposureScale;
+ 
+     LmxxfNrJob job {};
+@@ -624,9 +631,11 @@
  void LmxxfBackend::TraceBoundary(const std::string &) {}
  
 -void LmxxfBackend::Submitted(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *)

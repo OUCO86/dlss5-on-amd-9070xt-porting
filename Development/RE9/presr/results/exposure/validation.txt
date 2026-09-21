@@ -1,0 +1,12 @@
+GPU: AMD RX 9070 XT gfx1201, Windows HIP 7.
+Known RGB9E5 capture (.25,.5,.75): every pixel matches packed upload word.
+Exposure normalization: source RGB x32, exposure /32:
+- encoded proxy: bitwise identical
+- neural RGB surface: bitwise identical
+- decoded RGB: exactly x32 (alpha unchanged)
+Warmup versus cold: all six complete proxy/neural/result buffers identical across scales 1 and 32.
+Legacy no-exposure codec: 24 comparisons with original 613c278 reference, diff=0; 12 debug-view checks pass.
+Game before exposure (capture 239587750): e=.044189453125, proxy near-white pixels58.660486%, neural59.518958%.
+Game after exposure (capture 240239156): e=.044189453125, proxy near-white pixels.085347%, neural.043194%.
+Game captures are different menu frames, not pixel-aligned A/B. Synthetic exposure equivalence is the controlled comparison.
+Two early game launches stalled inside first HIP enqueue; third trace build ran. Added explicit pre-record kernel/weight preparation to remove lazy upload synchronization from producer wait callback; final startup validation follows in DevHistory.

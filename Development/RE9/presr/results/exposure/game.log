@@ -1,0 +1,616 @@
+[07:52:27.913109] [W] OptiScaler v10.0.0-dev (8f71f73_lmxxf_staged) (20260922_RE9_PreSR) loaded
+[07:52:27.913149] [W] ---------------------------------
+[07:52:27.913155] [W] OptiScaler is freely downloadable from
+[07:52:27.913158] [W] GitHub : https://github.com/optiscaler/OptiScaler/releases
+[07:52:27.913161] [W] Nexus  : https://www.nexusmods.com/site/mods/986
+[07:52:27.913164] [W] If you paid for these files, you've been scammed!
+[07:52:27.913168] [W] DO NOT USE IN MULTIPLAYER GAMES
+[07:52:27.913171] [I] 
+[07:52:27.913177] [I] LogLevel: 2
+[07:52:27.913180] [I] 
+[07:52:27.913204] [I] Windows version: Windows 11 (10.0.26340)
+[07:52:27.913207] [I] 
+[07:52:27.913210] [I] Config parameters:
+[07:52:27.913214] [I] Upscalers.Dx12Upscaler: fsr31
+[07:52:27.913217] [I] FrameGen.FGInput: nofg
+[07:52:27.913220] [I] FrameGen.FGOutput: nofg
+[07:52:27.913223] [I] DlssNr.Enabled: true
+[07:52:27.913226] [I] DlssNr.RunBeforeSR: true
+[07:52:27.913229] [I] DlssNr.ToggleKey: 117
+[07:52:27.913232] [I] DlssNr.TransferStrength: 1.0
+[07:52:27.913235] [I] DlssNr.ColourStrength: 1.0
+[07:52:27.913238] [I] DlssNr.AmdEveryFrame: true
+[07:52:27.913240] [I] DlssNr.NrBackend: lmxxf
+[07:52:27.913243] [I] DlssNr.LmxxfDiagnostic: off
+[07:52:27.913246] [I] Log.LogToFile: true
+[07:52:27.913249] [I] Log.LogLevel: 2
+[07:52:27.913252] [I] Spoofing.Dxgi: false
+[07:52:27.913255] [I] Plugins.LoadReShade: false
+[07:52:27.913258] [I] 
+[07:52:27.913262] [I] Setting DllPath to C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem
+[07:52:27.913265] [I] 
+[07:52:27.913303] [I] 
+[07:52:27.913315] [W] IsRunningOnWine Wine not detected
+[07:52:27.913358] [I] 
+[07:52:27.913362] [I] Check for DLSS files
+[07:52:27.913420] [I] Util::FindFilePath nvngx_dlss.dll found at C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem
+[07:52:27.913452] [I] Util::FindFilePath nvngx_dlssd.dll found at C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem
+[07:52:27.913480] [I] Util::FindFilePath nvngx_dlssg.dll found at C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem
+[07:52:27.913484] [I] 
+[07:52:27.913580] [I] CheckQuirks Game's Exe: re9.exe
+[07:52:27.913584] [I] CheckQuirks Game Name: RESIDENT EVIL requiem
+[07:52:27.913588] [I] CheckQuirks Game Version: 1.3.1.0
+[07:52:27.913602] [I] CheckQuirks Game Engine: Other
+[07:52:27.913729] [I] Quirk: Enabling restore compute signature on AMD/Intel
+[07:52:27.913733] [I] 
+[07:52:27.914857] [I] CheckWorkingMode OptiScaler working as dxgi.dll, system dll loaded
+[07:52:27.914943] [W] Config::CheckUpscalerFiles nvngx.dll not found!
+[07:52:27.914986] [I] Util::FindFilePath nvngx_dlss.dll found at C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem
+[07:52:27.915006] [I] Config::CheckUpscalerFiles libxess.dll found in game folder
+[07:52:27.917459] [I] Util::LoadProxyLibrary libxess.dll already loaded at memory: 7FFA8F830000
+[07:52:27.917507] [I] Util::LoadProxyLibrary libxess.dll loaded from Opti dll path: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxess.dll
+[07:52:27.917514] [I] XeSSProxy::InitXeSS Loaded from C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxess.dll
+[07:52:27.917744] [I] XeSSProxy::InitXeSS LoadResult: true
+[07:52:27.917769] [I] 
+[07:52:27.917778] [I] Util::LoadProxyLibrary amd_fidelityfx_loader_dx12.dll already loaded at memory: 7FFB63F40000
+[07:52:27.917823] [I] Util::LoadProxyLibrary amd_fidelityfx_loader_dx12.dll loaded from Opti dll path: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\amd_fidelityfx_loader_dx12.dll
+[07:52:27.917828] [I] FfxApiProxy::InitFfxDx12 Loaded from C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\amd_fidelityfx_loader_dx12.dll
+[07:52:27.917884] [I] 
+[07:52:27.918404] [I] Util::LoadProxyLibrary amd_fidelityfx_upscaler_dx12.dll loaded from Opti dll path: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\amd_fidelityfx_upscaler_dx12.dll
+[07:52:27.919899] [I] FfxApiProxy::InitFfxDx12_SR Loaded from C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\amd_fidelityfx_upscaler_dx12.dll
+[07:52:27.919939] [I] FfxApiProxy::InitFfxDx12_SR LoadResult: true
+[07:52:27.919944] [I] 
+[07:52:27.920517] [I] Util::LoadProxyLibrary amd_fidelityfx_framegeneration_dx12.dll loaded from Opti dll path: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\amd_fidelityfx_framegeneration_dx12.dll
+[07:52:27.920529] [I] FfxApiProxy::InitFfxDx12_FG Loaded from C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\amd_fidelityfx_framegeneration_dx12.dll
+[07:52:27.920582] [I] FfxApiProxy::InitFfxDx12_FG LoadResult: true
+[07:52:27.920586] [I] 
+[07:52:27.920829] [W] Util::LoadProxyLibrary Can't find amd_fidelityfx_denoiser_dx12.dll, returning nullptr!
+[07:52:27.920835] [I] FfxApiProxy::InitFfxDx12_Denoiser LoadResult: false
+[07:52:27.920843] [I] 
+[07:52:27.921044] [W] Util::LoadProxyLibrary Can't find amd_fidelityfx_radiancecache_dx12.dll, returning nullptr!
+[07:52:27.921049] [I] FfxApiProxy::InitFfxDx12_Radiance LoadResult: false
+[07:52:27.921052] [I] FfxApiProxy::InitFfxDx12 LoadResult: true
+[07:52:27.921191] [I] 
+[07:52:27.921398] [W] Util::LoadProxyLibrary Can't find amd_fidelityfx_denoiser_dx12.dll, returning nullptr!
+[07:52:27.921406] [I] FfxApiProxy::InitFfxDx12_Denoiser LoadResult: false
+[07:52:27.921409] [I] 
+[07:52:27.921599] [W] Util::LoadProxyLibrary Can't find amd_fidelityfx_radiancecache_dx12.dll, returning nullptr!
+[07:52:27.921603] [I] FfxApiProxy::InitFfxDx12_Radiance LoadResult: false
+[07:52:27.921896] [I] Util::LoadProxyLibrary libxess_dx11.dll loaded from Opti dll path: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxess_dx11.dll
+[07:52:27.921905] [I] XeSSProxy::InitXeSSDx11 Loaded from C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxess_dx11.dll
+[07:52:27.922069] [I] XeSSProxy::InitXeSSDx11 LoadResult: true
+[07:52:27.922079] [I] Util::LoadProxyLibrary libxess_fg.dll already loaded at memory: 7FFA8E240000
+[07:52:27.922125] [I] Util::LoadProxyLibrary libxess_fg.dll loaded from Opti dll path: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxess_fg.dll
+[07:52:27.922130] [I] XeFGProxy::InitXeFG Loaded from C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxess_fg.dll
+[07:52:27.922134] [I] 
+[07:52:27.922141] [I] XeFGProxy::HookXeFG LoadResult: true
+[07:52:27.922151] [I] Util::LoadProxyLibrary libxell.dll already loaded at memory: 7FFB583B0000
+[07:52:27.922182] [I] Util::LoadProxyLibrary libxell.dll loaded from Opti dll path: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxell.dll
+[07:52:27.922188] [I] XeLLProxy::InitXeLLProper Loaded from C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\libxell.dll
+[07:52:27.922191] [I] 
+[07:52:27.922200] [I] XeLLProxy::HookXeLL LoadResult: true
+[07:52:27.922256] [I] NVNGXProxy::InitNVNGX 
+[07:52:27.922468] [W] Util::LoadProxyLibrary Can't find _nvngx.dll, returning nullptr!
+[07:52:27.922657] [W] Util::LoadProxyLibrary Can't find nvngx.dll, returning nullptr!
+[07:52:27.922661] [I] Util::NvngxPath trying to load nvngx from registry path!
+[07:52:27.922677] [I] 
+[07:52:27.922692] [I] HookFSR2ExeInputs Trying to hook FSR2 methods
+[07:52:27.922772] [I] HookFSR3ExeInputs Trying to hook FSR3 methods
+[07:52:27.922809] [I] 
+[07:52:27.922812] [I] Init done
+[07:52:27.922815] [I] ---------------------------------------------
+[07:52:27.922818] [I] 
+[07:52:27.948579] [I] LibraryLoadHooks::LoadLibraryCheckW Calling CreateDxgiFactory methods for overlay!
+[07:52:27.973647] [I] Amdxc64Hooks::Init amdxc64.dll loaded
+[07:52:29.324100] [I] StreamlineHooks::hookInterposer Streamline version: 2.8.0
+[07:52:29.361656] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:038ms:316us]pluginManager.cpp:406[setHostSDKVersion] Streamline v2.8.0.b735fd37 - built on Wed Jun 18 09:59:34 2025 - host SDK v2.8.0
+[07:52:29.361936] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:038ms:622us]file.h:96[open] File 'C:\ProgramData/NVIDIA/NGX/models/nvngx_config.txt' does not exist
+[07:52:29.361946] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:038ms:634us]ota.cpp:255[readServerManifest] Failed to open manifest file at: C:\ProgramData/NVIDIA/NGX/models/nvngx_config.txt
+[07:52:29.365969] [I] LibraryLoadHooks::LoadLibraryCheckW nvapi64.dll call!
+[07:52:29.365991] [I] NvApiHooks::Hook NvAPI_QueryInterface found, hooking!
+[07:52:29.366467] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:149us]ota.cpp:314[getNVDAArchitecture] Found NVIDIA GPUs, [00000000007F8A60]: 1
+[07:52:29.366550] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:225us]ota.cpp:320[getNVDAArchitecture] Found GPU 0, arch=0x190
+[07:52:29.366560] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:17892][0s:043ms:248us]ota.cpp:223[getDriverPath] unable to find driver path
+[07:52:29.366568] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:256us]ota.cpp:357[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_dlss_0 -api bootstrap
+[07:52:29.366575] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:264us]ota.cpp:382[checkForOTA] Requesting optional updates!
+[07:52:29.366583] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:271us]ota.cpp:393[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_dlss_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.366591] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:279us]ota.cpp:314[getNVDAArchitecture] Found NVIDIA GPUs, [00000000007F8A60]: 1
+[07:52:29.366608] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:286us]ota.cpp:320[getNVDAArchitecture] Found GPU 0, arch=0x190
+[07:52:29.366624] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:17892][0s:043ms:305us]ota.cpp:223[getDriverPath] unable to find driver path
+[07:52:29.366633] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:320us]ota.cpp:357[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_dlss_d_0 -api bootstrap
+[07:52:29.366643] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:331us]ota.cpp:393[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_dlss_d_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.366651] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:339us]ota.cpp:314[getNVDAArchitecture] Found NVIDIA GPUs, [00000000007F8A60]: 1
+[07:52:29.366660] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:346us]ota.cpp:320[getNVDAArchitecture] Found GPU 0, arch=0x190
+[07:52:29.366668] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:17892][0s:043ms:356us]ota.cpp:223[getDriverPath] unable to find driver path
+[07:52:29.366676] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:364us]ota.cpp:357[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_dlss_g_0 -api bootstrap
+[07:52:29.366690] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:378us]ota.cpp:393[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_dlss_g_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.366697] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:385us]ota.cpp:314[getNVDAArchitecture] Found NVIDIA GPUs, [00000000007F8A60]: 1
+[07:52:29.366707] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:395us]ota.cpp:320[getNVDAArchitecture] Found GPU 0, arch=0x190
+[07:52:29.366715] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:17892][0s:043ms:403us]ota.cpp:223[getDriverPath] unable to find driver path
+[07:52:29.366723] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:410us]ota.cpp:357[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_reflex_0 -api bootstrap
+[07:52:29.366732] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:421us]ota.cpp:393[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_reflex_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.366742] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:428us]ota.cpp:314[getNVDAArchitecture] Found NVIDIA GPUs, [00000000007F8A60]: 1
+[07:52:29.366750] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:439us]ota.cpp:320[getNVDAArchitecture] Found GPU 0, arch=0x190
+[07:52:29.366757] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:17892][0s:043ms:446us]ota.cpp:223[getDriverPath] unable to find driver path
+[07:52:29.366765] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:453us]ota.cpp:357[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_common_0 -api bootstrap
+[07:52:29.366775] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:463us]ota.cpp:393[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_common_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.366782] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:471us]ota.cpp:314[getNVDAArchitecture] Found NVIDIA GPUs, [00000000007F8A60]: 1
+[07:52:29.366790] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:478us]ota.cpp:320[getNVDAArchitecture] Found GPU 0, arch=0x190
+[07:52:29.366800] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:17892][0s:043ms:485us]ota.cpp:223[getDriverPath] unable to find driver path
+[07:52:29.366807] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:495us]ota.cpp:357[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_pcl_0 -api bootstrap
+[07:52:29.366817] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:505us]ota.cpp:393[checkForOTA] Running \nvngx_update.exe -cmsid 0 -feature sl_pcl_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.366824] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:512us]pluginManager.cpp:525[findPlugins] Looking for plugins in c:\program files (x86)\steam\steamapps\common\resident evil requiem biohazard requiem\_storage_\ ...
+[07:52:29.366929] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:043ms:613us]pluginManager.cpp:938[loadPlugins] eLoadDownloadedPlugins flag not passed to preferences, OTA'd plugins will not be loaded!
+[07:52:29.367057] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:22752][0s:043ms:740us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_dlss_0 -api bootstrap
+[07:52:29.367076] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:22752][0s:043ms:763us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_dlss_0 -api bootstrap
+[07:52:29.367151] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:7668][0s:043ms:838us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_dlss_g_0 -api bootstrap
+[07:52:29.367198] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:7668][0s:043ms:886us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_dlss_g_0 -api bootstrap
+[07:52:29.367209] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:28568][0s:043ms:897us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_dlss_d_0 -api bootstrap
+[07:52:29.367231] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:28568][0s:043ms:905us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_dlss_d_0 -api bootstrap
+[07:52:29.367458] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:32180][0s:044ms:146us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_dlss_d_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367477] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:32180][0s:044ms:164us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_dlss_d_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367515] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:11536][0s:044ms:202us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_reflex_0 -api bootstrap
+[07:52:29.367524] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:8428][0s:044ms:211us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_dlss_g_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367532] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:11536][0s:044ms:220us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_reflex_0 -api bootstrap
+[07:52:29.367540] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:8428][0s:044ms:228us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_dlss_g_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367603] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:5016][0s:044ms:288us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_common_0 -api bootstrap
+[07:52:29.367613] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:5016][0s:044ms:301us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_common_0 -api bootstrap
+[07:52:29.367796] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:24096][0s:044ms:483us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_reflex_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367806] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:24096][0s:044ms:494us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_reflex_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367911] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:14324][0s:044ms:599us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_dlss_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367921] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:14324][0s:044ms:608us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_dlss_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367969] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:11564][0s:044ms:655us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_common_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.367979] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:11564][0s:044ms:667us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_common_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.368104] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:30400][0s:044ms:790us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_pcl_0 -api bootstrap
+[07:52:29.368117] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:30400][0s:044ms:805us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_pcl_0 -api bootstrap
+[07:52:29.368187] [E] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][error][tid:25384][0s:044ms:867us]ota.cpp:136[execThreadProc] Failed to create process \nvngx_update.exe -cmsid 0 -feature sl_pcl_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.368207] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:25384][0s:044ms:894us]ota.cpp:147[execThreadProc] execThreadProc: \nvngx_update.exe -cmsid 0 -feature sl_pcl_0 -api update -type dll -gpuarch 0x190 -optional
+[07:52:29.380058] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:056ms:739us]commonInterface.cpp:150[getSystemCaps] Enumerating up to 8 adapters but only one of them can be used to create a device - no mGPU support in this SDK
+[07:52:29.382386] [W] DxgiSpoofing::AttachToAdapter DxgiSpoofing and DxgiVRAM is disabled, skipping hooking
+[07:52:29.384704] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:061ms:362us]commonEntry.cpp:1807[updateEmbeddedJSON] Detected Windows OS version 10.0.26340
+[07:52:29.384791] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:061ms:478us]pluginManager.cpp:828[mapPlugins] Loaded plugin 'sl.common' - version 2.8.0.b735fd37 - id 4294967295 - priority 0 - adapter mask 0x3 - interposer 'no'
+[07:52:29.434828] [I] LibraryLoadHooks::LoadLibraryCheckW dxgi.dll call, returning this dll!
+[07:52:29.436335] [I] LibraryLoadHooks::LoadLibraryCheckW nvngx call: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\nvngx.dll, returning this dll!
+[07:52:29.436777] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:113ms:457us]commonEntry.cpp:821[getNGXFeatureRequirements] NGX feature 1 requirements - minOS 10.0.0 minHW 0x0
+[07:52:29.436801] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:113ms:487us]commonEntry.cpp:1160[updateCommonEmbeddedJSONConfig] Registering required tag 'kBufferTypeDepth' life-cycle 'ResourceLifecycle::eValidUntilEvaluate' for feature `kFeatureDLSS`
+[07:52:29.436861] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:113ms:542us]commonEntry.cpp:1160[updateCommonEmbeddedJSONConfig] Registering required tag 'kBufferTypeMotionVectors' life-cycle 'ResourceLifecycle::eValidUntilEvaluate' for feature `kFeatureDLSS`
+[07:52:29.436880] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:113ms:566us]commonEntry.cpp:1160[updateCommonEmbeddedJSONConfig] Registering required tag 'kBufferTypeScalingInputColor' life-cycle 'ResourceLifecycle::eValidUntilEvaluate' for feature `kFeatureDLSS`
+[07:52:29.436889] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:113ms:577us]commonEntry.cpp:1160[updateCommonEmbeddedJSONConfig] Registering required tag 'kBufferTypeScalingOutputColor' life-cycle 'ResourceLifecycle::eValidUntilEvaluate' for feature `kFeatureDLSS`
+[07:52:29.499409] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:176ms:087us]pluginManager.cpp:828[mapPlugins] Loaded plugin 'sl.dlss' - version 2.8.0.b735fd37 - id 0 - priority 100 - adapter mask 0x3 - interposer 'no'
+[07:52:29.511481] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:188ms:161us]commonEntry.cpp:810[getNGXFeatureRequirements] NGX_*_GetFeatureRequirements returned 0xbad00001 for adapter: 0 feature: 13
+[07:52:29.511506] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:188ms:192us]commonEntry.cpp:810[getNGXFeatureRequirements] NGX_*_GetFeatureRequirements returned 0xbad00001 for adapter: 1 feature: 13
+[07:52:29.511516] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:188ms:203us]dlss_dEntry.cpp:215[updateEmbeddedJSON] DLSSD feature is not supported. Please check if you have a valid nvngx_dlssd.dll or your driver is supporting DLSSD.
+[07:52:29.511534] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:188ms:222us]pluginManager.cpp:828[mapPlugins] Loaded plugin 'sl.dlss_d' - version 2.8.0.b735fd37 - id 1001 - priority 100 - adapter mask 0x0 - interposer 'no'
+[07:52:29.523333] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:200ms:013us]commonEntry.cpp:810[getNGXFeatureRequirements] NGX_*_GetFeatureRequirements returned 0xbad00001 for adapter: 0 feature: 11
+[07:52:29.523356] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:200ms:043us]commonEntry.cpp:810[getNGXFeatureRequirements] NGX_*_GetFeatureRequirements returned 0xbad00001 for adapter: 1 feature: 11
+[07:52:29.523385] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:200ms:073us]dlss_gEntry.cpp:115[updateEmbeddedJSON] Failed to obtain DLSS-G min spec requirements from NGX, using SL defaults
+[07:52:29.523393] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:200ms:081us]dlss_gEntry.cpp:302[updateEmbeddedJSON] Disabling DLSS-G since it is not supported on current hardware
+[07:52:29.523477] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:200ms:164us]pluginManager.cpp:828[mapPlugins] Loaded plugin 'sl.dlss_g' - version 2.8.0.b735fd37 - id 1000 - priority 1000 - adapter mask 0x0 - interposer 'no'
+[07:52:29.535201] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:211ms:849us]pluginManager.cpp:828[mapPlugins] Loaded plugin 'sl.pcl' - version 2.8.0.b735fd37 - id 4 - priority 2 - adapter mask 0x3 - interposer 'no'
+[07:52:29.544730] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:221ms:397us]pluginManager.cpp:828[mapPlugins] Loaded plugin 'sl.reflex' - version 2.8.0.b735fd37 - id 3 - priority 100 - adapter mask 0x3 - interposer 'no'
+[07:52:29.544755] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:221ms:443us]pluginManager.cpp:973[loadPlugins] Ignoring plugin 'sl.dlss_d' since it is not supported on this platform
+[07:52:29.544764] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:221ms:452us]pluginManager.cpp:973[loadPlugins] Ignoring plugin 'sl.dlss_g' since it is not supported on this platform
+[07:52:29.545175] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:221ms:862us]pluginManager.cpp:1073[loadPlugins] Plugin execution order based on priority:
+[07:52:29.545183] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:221ms:871us]pluginManager.cpp:1076[loadPlugins] P0 - sl.common
+[07:52:29.545190] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:221ms:879us]pluginManager.cpp:1076[loadPlugins] P2 - sl.pcl
+[07:52:29.545197] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:221ms:886us]pluginManager.cpp:1076[loadPlugins] P100 - sl.dlss
+[07:52:29.545210] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:221ms:893us]pluginManager.cpp:1076[loadPlugins] P100 - sl.reflex
+[07:52:29.545218] [W] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][warn][tid:17892][0s:221ms:906us]pluginManager.cpp:465[setFeatureEnabled] Feature 'kFeatureDLSS_G' not loaded
+[07:52:29.545390] [I] LibraryLoadHooks::LoadLibraryCheckW dxgi.dll call, returning this dll!
+[07:52:29.546653] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:223ms:330us]dxgi.cpp:306[CreateDXGIFactoryInternal] Using DXGI proxy interface
+[07:52:29.546676] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:223ms:363us]dxgiFactory.cpp:172[checkAndUpgradeInterface] Upgraded IDXGIFactory v0 to v4
+[07:52:29.546685] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:223ms:373us]dxgiFactory.cpp:172[checkAndUpgradeInterface] Upgraded IDXGIFactory v4 to v5
+[07:52:29.546693] [I] StreamlineHooks::streamlineLogCallback [07-52-29][streamline][info][tid:17892][0s:223ms:381us]dxgiFactory.cpp:172[checkAndUpgradeInterface] Upgraded IDXGIFactory v5 to v6
+[07:52:29.589230] [I] `anonymous-namespace'::RunVersionCheck OptiScaler is up to date (current 10.0.0)
+[07:52:29.667399] [I] Detected GPUs:
+                      AMD Radeon RX 9070 XT
+                          vendorId: 1002, deviceId: 7550, VRAM: 15721MB
+                          dxvk: false, vkd3d-proton: false
+                          Upscaler support - fsr4: fp8, dlss: false
+                      Intel(R) Graphics
+                          vendorId: 8086, deviceId: 7D67, VRAM: 128MB
+                          dxvk: false, vkd3d-proton: false
+                          Upscaler support - fsr4: false, dlss: false
+                      Microsoft Basic Render Driver
+                          vendorId: 1414, deviceId: 8C, VRAM: 0MB
+                          dxvk: false, vkd3d-proton: false
+                          Upscaler support - fsr4: false, dlss: false
+
+[07:52:29.667424] [I] hkD3D12CreateDevice Adapter Desc: AMD Radeon RX 9070 XT
+[07:52:29.679704] [I] hkD3D12CreateDevice Adapter Desc: AMD Radeon RX 9070 XT
+[07:52:29.740581] [I] HookToDevice lmxxf same-frame: open-list proxy diagnostic=true
+[07:52:29.740624] [I] HookToDevice lmxxf ArmCreate ok; CreateCommandList ProxyWrap deferred until swapchain (graphics tracker skipped)
+[07:52:29.985011] [I] hkD3D12CreateDevice Adapter Desc: AMD Radeon RX 9070 XT
+[07:52:30.100708] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:777ms:386us]pluginManager.cpp:1261[initializePlugins] Initializing plugins - api 0.0.1 - application ID 104317100
+[07:52:30.101253] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:777ms:937us]d3d12.cpp:1178[createKernel] Creating DXBC kernel copy_to_buffer.cs:main hash 12564409127886710297
+[07:52:30.101265] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:777ms:953us]commonEntry.cpp:1280[slOnPluginStartup] At least one plugin requires NGX, trying to initialize ...
+[07:52:30.101325] [I] NVSDK_NGX_D3D12_Init_Ext AppId: 104317100
+[07:52:30.101347] [I] NVSDK_NGX_D3D12_Init_Ext SDK: 15
+[07:52:30.101352] [I] NVSDK_NGX_D3D12_Init_Ext InApplicationDataPath C:\Users\lmxxf\AppData\Local\Temp\
+[07:52:30.101419] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:107us]commonEntry.cpp:1406[slOnPluginStartup] NGX loaded - app id 104317100 - application data path C:\Users\lmxxf\AppData\Local\Temp\
+[07:52:30.101439] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:119us]pluginManager.cpp:1367[mapPluginCallbacks] Callback sl.common:slSetData:0x0
+[07:52:30.101448] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:136us]pluginManager.cpp:1368[mapPluginCallbacks] Callback sl.common:slGetData:0x0
+[07:52:30.101456] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:145us]pluginManager.cpp:1369[mapPluginCallbacks] Callback sl.common:slAllocateResources:0x0
+[07:52:30.101472] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:152us]pluginManager.cpp:1370[mapPluginCallbacks] Callback sl.common:slFreeResources:0x0
+[07:52:30.101480] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:168us]pluginManager.cpp:1371[mapPluginCallbacks] Callback sl.common:slEvaluateFeature:0x7ffaa898fdc0
+[07:52:30.101516] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:204us]pluginManager.cpp:1372[mapPluginCallbacks] Callback sl.common:slSetTag:0x7ffaa898ec90
+[07:52:30.101525] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:213us]pluginManager.cpp:1373[mapPluginCallbacks] Callback sl.common:slSetTagForFrame:0x7ffaa898ee00
+[07:52:30.101542] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:230us]pluginManager.cpp:1374[mapPluginCallbacks] Callback sl.common:slSetConsts:0x7ffaa898fb70
+[07:52:30.101549] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:238us]pluginManager.cpp:1149[processPluginHooks] Hook sl.common:slHookVkPresent:before - skipped
+[07:52:30.101557] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:245us]pluginManager.cpp:1149[processPluginHooks] Hook sl.common:slHookVkAfterPresent:after - skipped
+[07:52:30.101565] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:253us]pluginManager.cpp:1149[processPluginHooks] Hook sl.common:slHookVkCmdBindPipeline:after - skipped
+[07:52:30.101572] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:260us]pluginManager.cpp:1149[processPluginHooks] Hook sl.common:slHookVkCmdBindDescriptorSets:after - skipped
+[07:52:30.101580] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:268us]pluginManager.cpp:1149[processPluginHooks] Hook sl.common:slHookVkBeginCommandBuffer:after - skipped
+[07:52:30.101612] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:275us]pluginManager.cpp:1173[processPluginHooks] Hook sl.common:slHookResizeSwapChainPre:before - OK
+[07:52:30.101621] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:308us]pluginManager.cpp:1173[processPluginHooks] Hook sl.common:slHookPresent:before - OK
+[07:52:30.101628] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:317us]pluginManager.cpp:1173[processPluginHooks] Hook sl.common:slHookAfterPresent:after - OK
+[07:52:30.101644] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:324us]pluginManager.cpp:1173[processPluginHooks] Hook sl.common:slHookPresent1:before - OK
+[07:52:30.101655] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:343us]pluginManager.cpp:1367[mapPluginCallbacks] Callback sl.pcl:slSetData:0x7ffb473e8a80
+[07:52:30.101662] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:351us]pluginManager.cpp:1368[mapPluginCallbacks] Callback sl.pcl:slGetData:0x7ffb473e8a90
+[07:52:30.101669] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:358us]pluginManager.cpp:1369[mapPluginCallbacks] Callback sl.pcl:slAllocateResources:0x0
+[07:52:30.101686] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:374us]pluginManager.cpp:1370[mapPluginCallbacks] Callback sl.pcl:slFreeResources:0x0
+[07:52:30.101694] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:382us]pluginManager.cpp:1371[mapPluginCallbacks] Callback sl.pcl:slEvaluateFeature:0x0
+[07:52:30.101700] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:389us]pluginManager.cpp:1372[mapPluginCallbacks] Callback sl.pcl:slSetTag:0x0
+[07:52:30.101707] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:396us]pluginManager.cpp:1373[mapPluginCallbacks] Callback sl.pcl:slSetTagForFrame:0x0
+[07:52:30.101714] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:403us]pluginManager.cpp:1374[mapPluginCallbacks] Callback sl.pcl:slSetConsts:0x0
+[07:52:30.101722] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:411us]pluginManager.cpp:1134[processPluginHooks] Plugin 'sl.pcl' has no registered hooks
+[07:52:30.101737] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:778ms:419us]d3d12.cpp:1178[createKernel] Creating DXBC kernel mvec.cs:main hash 16878813813918631183
+[07:52:30.137800] [I] LibraryLoadHooks::LoadLibraryCheckW nvngx call: C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\nvngx.dll, returning this dll!
+[07:52:30.138144] [I] NVSDK_NGX_UpdateFeature Update ApplicationId: 637C0AC
+[07:52:30.138231] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:893us]pluginManager.cpp:1367[mapPluginCallbacks] Callback sl.dlss:slSetData:0x7ffb22e9a4e0
+[07:52:30.138254] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:941us]pluginManager.cpp:1368[mapPluginCallbacks] Callback sl.dlss:slGetData:0x7ffb22e9e830
+[07:52:30.138262] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:950us]pluginManager.cpp:1369[mapPluginCallbacks] Callback sl.dlss:slAllocateResources:0x7ffb22e9eeb0
+[07:52:30.138271] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:959us]pluginManager.cpp:1370[mapPluginCallbacks] Callback sl.dlss:slFreeResources:0x7ffb22e9ef50
+[07:52:30.138278] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:967us]pluginManager.cpp:1371[mapPluginCallbacks] Callback sl.dlss:slEvaluateFeature:0x0
+[07:52:30.138286] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:974us]pluginManager.cpp:1372[mapPluginCallbacks] Callback sl.dlss:slSetTag:0x0
+[07:52:30.138293] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:981us]pluginManager.cpp:1373[mapPluginCallbacks] Callback sl.dlss:slSetTagForFrame:0x0
+[07:52:30.138308] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:814ms:988us]pluginManager.cpp:1374[mapPluginCallbacks] Callback sl.dlss:slSetConsts:0x0
+[07:52:30.138316] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:004us]pluginManager.cpp:1134[processPluginHooks] Plugin 'sl.dlss' has no registered hooks
+[07:52:30.138324] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:012us]pluginManager.cpp:1367[mapPluginCallbacks] Callback sl.reflex:slSetData:0x7ffb21948d50
+[07:52:30.138331] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:019us]pluginManager.cpp:1368[mapPluginCallbacks] Callback sl.reflex:slGetData:0x7ffb21949640
+[07:52:30.138338] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:026us]pluginManager.cpp:1369[mapPluginCallbacks] Callback sl.reflex:slAllocateResources:0x0
+[07:52:30.138345] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:034us]pluginManager.cpp:1370[mapPluginCallbacks] Callback sl.reflex:slFreeResources:0x0
+[07:52:30.138352] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:041us]pluginManager.cpp:1371[mapPluginCallbacks] Callback sl.reflex:slEvaluateFeature:0x0
+[07:52:30.138369] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:048us]pluginManager.cpp:1372[mapPluginCallbacks] Callback sl.reflex:slSetTag:0x0
+[07:52:30.138377] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:065us]pluginManager.cpp:1373[mapPluginCallbacks] Callback sl.reflex:slSetTagForFrame:0x0
+[07:52:30.138384] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:072us]pluginManager.cpp:1374[mapPluginCallbacks] Callback sl.reflex:slSetConsts:0x0
+[07:52:30.138394] [I] StreamlineHooks::streamlineLogCallback [07-52-30][streamline][info][tid:17892][0s:815ms:083us]pluginManager.cpp:1134[processPluginHooks] Plugin 'sl.reflex' has no registered hooks
+[07:52:30.200456] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:30.201474] [W] Util::LoadProxyLibrary Can't find amdxcffx64.dll, returning nullptr!
+[07:52:30.202314] [I] AmdExtFfxApi::UpdateFfxApiProvider amdxcffx64 loaded from C:\WINDOWS\System32\DriverStore\FileRepository\u0202641.inf_amd64_0bb782420ab6071e\B026286\amdxcffx64.dll
+[07:52:30.253724] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:30.253756] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:30.256540] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:30.260253] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:30.260277] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:30.260290] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:30.260312] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:30.260319] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:30.260326] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:30.260332] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:30.260338] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:32.771953] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 1 -- buffer, 16 bytes
+[07:52:32.772513] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 2 -- buffer, 16 bytes
+[07:52:32.780855] [I] StreamlineHooks::streamlineLogCallback [07-52-32][streamline][info][tid:17892][3s:457ms:522us]dxgi.cpp:306[CreateDXGIFactoryInternal] Using DXGI proxy interface
+[07:52:32.780879] [I] StreamlineHooks::streamlineLogCallback [07-52-32][streamline][info][tid:17892][3s:457ms:565us]dxgiFactory.cpp:172[checkAndUpgradeInterface] Upgraded IDXGIFactory v0 to v1
+[07:52:32.781659] [I] StreamlineHooks::streamlineLogCallback [07-52-32][streamline][info][tid:17892][3s:458ms:345us]dxgiFactory.cpp:222[Release] Destroyed DXGIFactory proxy 0x83dbe00 - native factory 0x988b4b70 ref count 1
+[07:52:32.789702] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #1: UAV dim 1 268435456x1x1 fmt 0 (filter rejected)
+[07:52:32.797868] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #2: UAV dim 1 268435456x1x1 fmt 0 (filter rejected)
+[07:52:32.797924] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #3: UAV dim 1 524288x1x1 fmt 0 (filter rejected)
+[07:52:32.800574] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #4: UAV dim 1 25165824x1x1 fmt 0 (filter rejected)
+[07:52:32.800615] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #5: UAV dim 1 32768x1x1 fmt 0 (filter rejected)
+[07:52:32.800626] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 3 -- buffer, 16 bytes
+[07:52:32.800652] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #6: UAV dim 1 1048576x1x1 fmt 0 (filter rejected)
+[07:52:32.800659] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 4 -- buffer, 32 bytes
+[07:52:32.800673] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 5 -- buffer, 4 bytes
+[07:52:32.800681] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #7: UAV dim 1 16384x1x1 fmt 0 (filter rejected)
+[07:52:33.599004] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #8: UAV dim 1 262144x1x1 fmt 0 (filter rejected)
+[07:52:33.599039] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #9: UAV dim 1 262144x1x1 fmt 0 (filter rejected)
+[07:52:33.604555] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #10: UAV dim 1 524288x1x1 fmt 0 (filter rejected)
+[07:52:33.606117] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #11: UAV dim 1 4864x1x1 fmt 0 (filter rejected)
+[07:52:33.606139] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #12: UAV dim 1 2560x1x1 fmt 0 (filter rejected)
+[07:52:33.606150] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 6 -- buffer, 124 bytes
+[07:52:33.609431] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 7 -- buffer, 8 bytes
+[07:52:33.610510] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #13: UAV dim 2 512x1x64 fmt 54 (filter rejected)
+[07:52:33.610548] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #14: UAV dim 1 131072x1x1 fmt 0 (filter rejected)
+[07:52:33.612482] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #15: UAV dim 3 2048x1024x1 fmt 42 (filter rejected)
+[07:52:33.625824] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #16: UAV dim 1 1024x1x1 fmt 0 (filter rejected)
+[07:52:33.625847] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #17: UAV dim 1 256x1x1 fmt 0 (filter rejected)
+[07:52:33.626927] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #18: UAV dim 4 32x96x32 fmt 42 (filter rejected)
+[07:52:33.626951] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 8 -- buffer, 32 bytes
+[07:52:33.626962] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 9 -- buffer, 80 bytes
+[07:52:33.626969] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 10 -- buffer, 16 bytes
+[07:52:33.627613] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #19: UAV dim 1 12288x1x1 fmt 0 (filter rejected)
+[07:52:33.627627] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 11 -- buffer, 32 bytes
+[07:52:33.627649] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #20: UAV dim 1 6144x1x1 fmt 0 (filter rejected)
+[07:52:33.627656] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #21: UAV dim 1 8192x1x1 fmt 0 (filter rejected)
+[07:52:33.627673] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 12 -- buffer, 80 bytes
+[07:52:33.627679] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 13 -- buffer, 80 bytes
+[07:52:33.627685] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 14 -- buffer, 80 bytes
+[07:52:33.627692] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 15 -- buffer, 80 bytes
+[07:52:33.627697] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 16 -- buffer, 80 bytes
+[07:52:33.627702] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 17 -- buffer, 80 bytes
+[07:52:33.627717] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #22: UAV dim 1 4096x1x1 fmt 0 (filter rejected)
+[07:52:33.627723] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #23: UAV dim 1 4096x1x1 fmt 0 (filter rejected)
+[07:52:33.627729] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #24: UAV dim 1 4096x1x1 fmt 0 (filter rejected)
+[07:52:33.627741] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 18 -- buffer, 36 bytes
+[07:52:33.628064] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #25: UAV dim 1 196608x1x1 fmt 0 (filter rejected)
+[07:52:33.628074] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #26: UAV dim 1 229376x1x1 fmt 0 (filter rejected)
+[07:52:33.628081] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #27: UAV dim 1 32768x1x1 fmt 0 (filter rejected)
+[07:52:33.628087] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 19 -- buffer, 48 bytes
+[07:52:33.628097] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 20 -- buffer, 128 bytes
+[07:52:33.628116] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 21 -- buffer, 64 bytes
+[07:52:33.628450] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #28: UAV dim 3 4x4x1 fmt 28 (filter rejected)
+[07:52:33.628785] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #29: UAV dim 3 4x4x1 fmt 10 (filter rejected)
+[07:52:33.629162] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #30: UAV dim 3 256x64x1 fmt 67 (filter rejected)
+[07:52:33.629242] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 22 -- buffer, 16 bytes
+[07:52:33.630538] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #31: UAV dim 1 32768x1x1 fmt 0 (filter rejected)
+[07:52:33.642716] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #32: UAV dim 1 2555904x1x1 fmt 0 (filter rejected)
+[07:52:33.642750] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #33: UAV dim 1 638976x1x1 fmt 0 (filter rejected)
+[07:52:33.642759] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #34: UAV dim 1 319488x1x1 fmt 0 (filter rejected)
+[07:52:33.644066] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #35: UAV dim 1 10485760x1x1 fmt 0 (filter rejected)
+[07:52:33.644875] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #36: UAV dim 1 10485760x1x1 fmt 0 (filter rejected)
+[07:52:33.644908] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #37: UAV dim 1 2097152x1x1 fmt 0 (filter rejected)
+[07:52:33.644917] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #38: UAV dim 1 2097152x1x1 fmt 0 (filter rejected)
+[07:52:33.644942] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #39: UAV dim 1 2097152x1x1 fmt 0 (filter rejected)
+[07:52:33.645900] [I] DlssNr::ExposureScan::NoteResource DLSS-NR scan near-miss #40: UAV dim 1 8388608x1x1 fmt 0 (filter rejected)
+[07:52:33.645945] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 23 -- buffer, 36 bytes
+[07:52:33.645953] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 24 -- buffer, 4 bytes
+[07:52:33.645959] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 25 -- buffer, 4 bytes
+[07:52:33.645982] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 26 -- buffer, 4 bytes
+[07:52:33.645994] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 27 -- buffer, 4 bytes
+[07:52:33.648151] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 28 -- buffer, 4 bytes
+[07:52:33.648167] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 29 -- buffer, 4 bytes
+[07:52:33.648175] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 30 -- buffer, 4 bytes
+[07:52:33.648182] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 31 -- buffer, 4 bytes
+[07:52:33.648190] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 32 -- buffer, 4 bytes
+[07:52:33.648200] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 33 -- buffer, 4 bytes
+[07:52:33.648214] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 34 -- buffer, 4 bytes
+[07:52:33.648220] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 35 -- buffer, 4 bytes
+[07:52:33.648227] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 36 -- buffer, 4 bytes
+[07:52:33.648234] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 37 -- buffer, 4 bytes
+[07:52:33.648241] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 38 -- buffer, 4 bytes
+[07:52:33.648247] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 39 -- buffer, 4 bytes
+[07:52:33.648255] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 40 -- buffer, 4 bytes
+[07:52:33.648261] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 41 -- buffer, 4 bytes
+[07:52:33.648268] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 42 -- buffer, 4 bytes
+[07:52:33.648284] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 43 -- buffer, 4 bytes
+[07:52:33.648293] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 44 -- buffer, 36 bytes
+[07:52:33.650920] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 45 -- buffer, 12 bytes
+[07:52:33.650956] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 46 -- buffer, 6 bytes
+[07:52:33.650970] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 47 -- buffer, 48 bytes
+[07:52:33.650991] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 48 -- buffer, 6 bytes
+[07:52:33.650997] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 49 -- buffer, 48 bytes
+[07:52:33.652174] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 50 -- buffer, 4 bytes
+[07:52:33.653585] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 51 -- buffer, 4 bytes
+[07:52:33.673392] [I] XeSSProxy::Version XeSS Version: v2.0.2
+[07:52:33.906821] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 52 -- buffer, 16 bytes
+[07:52:33.906858] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 53 -- buffer, 128 bytes
+[07:52:33.906865] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 54 -- buffer, 4 bytes
+[07:52:33.910419] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 55 -- buffer, 80 bytes
+[07:52:33.910445] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 56 -- buffer, 64 bytes
+[07:52:33.910456] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 57 -- buffer, 64 bytes
+[07:52:33.911105] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 58 -- buffer, 48 bytes
+[07:52:33.916162] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 59 -- buffer, 8 bytes
+[07:52:33.916193] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 60 -- buffer, 12 bytes
+[07:52:33.922641] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 61 -- buffer, 16 bytes
+[07:52:33.922662] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 62 -- buffer, 80 bytes
+[07:52:33.977620] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 63 -- buffer, 128 bytes
+[07:52:33.983997] [W] FGHooks::CreateSwapChainForHwnd Can't init FG Feature or invalid FGOutput setting!
+[07:52:33.994407] [I] WrappedIDXGISwapChain4::WrappedIDXGISwapChain4 1 created, real: D119F850, refCount: 2
+[07:52:33.999975] [I] WrappedIDXGISwapChain4::WrappedIDXGISwapChain4 lmxxf ProxyWrap after swapchain 1: true (submission hook must be ready)
+[07:52:34.119838] [E] StreamlineHooks::streamlineLogCallback [07-52-34][streamline][error][tid:30756][4s:796ms:513us]sl.cpp:185[slValidateFeatureContext] 'kFeatureDLSS_G' context is missing.
+[07:52:34.127505] [I] LibraryLoadHooks::LoadLibraryCheckW nvapi64.dll call!
+[07:52:34.130729] [I] AntiLag2::init FSR Anti-Lag 2.0 DX12 initialized
+[07:52:34.130740] [I] LowLatency::update_low_latency_tech LowLatency algo: FSR Anti-Lag 2.0
+[07:52:34.182024] [I] OptiInput::Initialize Initialize requested target:0xe409ac input:0x0 isUwp:0 useSubclass:1 currentPid:5748
+[07:52:34.182052] [I] OptiInput::SetTargetWindow target window set hwnd:0xe409ac root:0xe409ac pid:5748 tid:17892 currentPid:5748 external:0 isUwp:0 useSubclass:1
+[07:52:34.182058] [I] OptiInput::SetInputWindow input window set hwnd:0xe409ac root:0xe409ac pid:5748 tid:17892 explicitInput:0 useSubclass:1
+[07:52:34.182069] [I] OptiInput::InstallWindowSubclass subclass installed hwnd:0xe409ac previousWndProc:5455999952 optiWndProc:140714205113952
+[07:52:34.182075] [I] OptiInput::InstallHooks installing Win32 input hooks currentPid:5748 targetPid:5748 inputPid:5748
+[07:52:34.182136] [I] OptiInput::InstallHooks Win32 message hooks installed
+[07:52:34.182169] [I] OptiInput::InstallHooks Win32 key state hooks installed
+[07:52:34.182207] [I] OptiInput::InstallHooks Win32 GetMessagePos hooks installed
+[07:52:34.182233] [I] OptiInput::InstallHooks Win32 clip cursor hooks installed
+[07:52:34.182294] [I] OptiInput::InstallHooks Win32 message hooks installed
+[07:52:34.182356] [I] OptiInput::InstallHooks Win32 HID hooks installed
+[07:52:34.182385] [I] OptiInput::InstallHooks Win32 raw input hooks installed
+[07:52:34.182422] [I] OptiInput::InstallHooks Win32 windows input hooks installed
+[07:52:34.182455] [I] OptiInput::InstallHooks Win32 position input hooks installed
+[07:52:34.182461] [I] OptiInput::Initialize Initialize completed hooksInstalled:1 target:0xe409ac targetPid:5748 input:0xe409ac inputPid:5748 externalTarget:0 subclassed:1
+[07:52:34.182510] [I] OptiInput::UpdateXInputIntegrationLocked XInput hooks installed module:0x7ffb3e4b0000 getState:1 getStateEx:1 getKeystroke:1 setState:1
+[07:52:34.182538] [I] OptiInput::`anonymous-namespace'::InstallDirectInputExportHookLocked DirectInput8Create hook installed module:0x7ffa95b90000
+[07:52:34.183674] [I] LibraryLoadHooks::LoadLibraryCheckW dxgi.dll call, returning this dll!
+[07:52:34.192526] [W] DxgiFactoryHooks::CreateSwapChainForComposition Composition overlay/helper call! Width: 1, Height: 1
+[07:52:34.266129] [I] CreateRenderTargetDx12 done!
+[07:52:34.306830] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 64 -- buffer, 4 bytes
+[07:52:34.306868] [W] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: more than 64 candidates, so the filter is too loose here rather than the game having 64 exposures
+[07:52:35.666942] [I] OptiInput::`anonymous-namespace'::HookDirectInputInterfaceLocked DirectInput CreateDevice hook installed wide:1
+[07:52:35.667046] [I] OptiInput::`anonymous-namespace'::TrackDirectInputDeviceLocked DirectInput device captured device:0x174903000 kind:keyboard
+[07:52:35.670613] [W] OptiInput::ValidateWindowSubclassLocked subclass lost input:0xe409ac currentWndProc:4294901983 previousOriginal:5455999952 restoredToOriginal:0
+[07:52:35.670631] [W] OptiInput::ValidateWindowSubclassLocked subclass lost to another WndProc; preserving previous original to avoid recursive WndProc chain input:0xe409ac current:4294901983 preservedOriginal:5455999952
+[07:52:36.797972] [W] FGHooks::CreateSwapChainForHwnd Can't init FG Feature or invalid FGOutput setting!
+[07:52:36.815796] [I] WrappedIDXGISwapChain4::WrappedIDXGISwapChain4 2 created, real: D119F850, refCount: 2
+[07:52:36.816384] [I] WrappedIDXGISwapChain4::SetColorSpace1 DLSS-NR: swapchain colour space 0 -- sRGB (SDR) (relative -- no scale to be had)
+[07:52:36.816409] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:23056][7s:493ms:086us]dxgiSwapchain.cpp:95[checkAndUpgradeInterface] Upgraded IDXGISwapChain v0 to v1
+[07:52:36.816432] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:23056][7s:493ms:119us]dxgiSwapchain.cpp:95[checkAndUpgradeInterface] Upgraded IDXGISwapChain v1 to v3
+[07:52:36.816454] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:23056][7s:493ms:129us]dxgiSwapchain.cpp:95[checkAndUpgradeInterface] Upgraded IDXGISwapChain v3 to v4
+[07:52:36.826435] [I] TryCreateOptiFeature Creating OptiScaler feature, HandleId: 1000000
+[07:52:36.826465] [I] TryCreateOptiFeature Creating FSR 3.X upscaler feature
+[07:52:36.826517] [I] IFeature::SetHandle Handle: 1000000
+[07:52:36.826526] [I] IFeature::SetInitParameters Init Flag AutoExposure: false
+[07:52:36.826531] [I] IFeature::SetInitParameters Init Flag DepthInverted: true
+[07:52:36.826539] [I] IFeature::SetInitParameters Init Flag IsHdr: true
+[07:52:36.826542] [I] IFeature::SetInitParameters Init Flag JitteredMV: false
+[07:52:36.826546] [I] IFeature::SetInitParameters Init Flag LowResMV: true
+[07:52:36.826550] [I] IFeature::SetInitParameters Init Flag SharpenEnabled: false
+[07:52:36.826558] [I] IFeature::SetInitParameters Render Resolution: 1129x635, Display Resolution 1920x1080, Quality: 1
+[07:52:36.826564] [I] FFXFeatureDx12::FFXFeatureDx12 amd_fidelityfx_dx12.dll methods loaded!
+[07:52:36.826574] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:36.826599] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:36.826614] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.826631] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.826639] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.826645] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.826673] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:36.826683] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:36.826690] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.826696] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.826702] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.826706] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.826714] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:36.826722] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:36.826728] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.826736] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.826812] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.826819] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.855345] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:532ms:020us]dlssEntry.cpp:473[dlssBeginEvent] Created DLSSContext feature (1129,635)(optimal) -> (1920,1080) for viewport 0
+[07:52:36.855373] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:532ms:058us]dlssEntry.cpp:475[dlssBeginEvent] DLSSContext color_in extents (0,0,1130,636)
+[07:52:36.855394] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:532ms:069us]dlssEntry.cpp:476[dlssBeginEvent] DLSSContext color_out extents (0,0,1920,1080)
+[07:52:36.855402] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:532ms:090us]dlssEntry.cpp:477[dlssBeginEvent] DLSSContext depth extents (0,0,1130,636)
+[07:52:36.855410] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:532ms:098us]dlssEntry.cpp:478[dlssBeginEvent] DLSSContext mvec extents (0,0,1130,636)
+[07:52:36.855430] [I] `anonymous-namespace'::ReportSkipOnce DLSS-NR did not run: AMD neural: the upscaler could not restore state this frame
+[07:52:36.878999] [I] NVSDK_NGX_D3D12_ReleaseFeature releasing feature with id 1000000
+[07:52:36.879028] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:555ms:701us]dlssEntry.cpp:371[dlssBeginEvent] Detected resize, recreating DLSSContext feature
+[07:52:36.880741] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 1 -- buffer, 32 bytes
+[07:52:36.885021] [I] TryCreateOptiFeature Creating OptiScaler feature, HandleId: 1000001
+[07:52:36.885039] [I] TryCreateOptiFeature Creating FSR 3.X upscaler feature
+[07:52:36.885046] [I] IFeature::SetHandle Handle: 1000001
+[07:52:36.885052] [I] IFeature::SetInitParameters Init Flag AutoExposure: false
+[07:52:36.885056] [I] IFeature::SetInitParameters Init Flag DepthInverted: true
+[07:52:36.885061] [I] IFeature::SetInitParameters Init Flag IsHdr: true
+[07:52:36.885102] [I] IFeature::SetInitParameters Init Flag JitteredMV: false
+[07:52:36.885108] [I] IFeature::SetInitParameters Init Flag LowResMV: true
+[07:52:36.885112] [I] IFeature::SetInitParameters Init Flag SharpenEnabled: false
+[07:52:36.885119] [I] IFeature::SetInitParameters Render Resolution: 1505x847, Display Resolution 2560x1440, Quality: 1
+[07:52:36.885123] [I] FFXFeatureDx12::FFXFeatureDx12 amd_fidelityfx_dx12.dll methods loaded!
+[07:52:36.885131] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:36.885153] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:36.885164] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.885182] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.885191] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.885197] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.885204] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:36.885213] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:36.885219] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.885224] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.885230] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.885235] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.885240] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtFfxApi queried, returning custom AmdExtFfxApi
+[07:52:36.885247] [I] UpdateFfxApiProviderEx for: Upscaling, result: 0x0
+[07:52:36.885254] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.885259] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.885357] [I] Amdxc64Hooks::hkAmdExtD3DCreateInterface IAmdExtD3DFactory queried, returning custom AmdExtD3DFactory
+[07:52:36.885364] [I] AmdExtD3DFactory::CreateInterface Custom IAmdExtD3DShaderIntrinsics queried, returning custom AmdExtD3DShaderIntrinsics
+[07:52:36.894435] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 2 -- 2x1 R32_FLOAT
+[07:52:36.909395] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:586ms:071us]dlssEntry.cpp:473[dlssBeginEvent] Created DLSSContext feature (1505,847)(optimal) -> (2560,1440) for viewport 0
+[07:52:36.909423] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:586ms:109us]dlssEntry.cpp:475[dlssBeginEvent] DLSSContext color_in extents (0,0,1506,848)
+[07:52:36.909431] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:586ms:119us]dlssEntry.cpp:476[dlssBeginEvent] DLSSContext color_out extents (0,0,2560,1440)
+[07:52:36.909440] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:586ms:127us]dlssEntry.cpp:477[dlssBeginEvent] DLSSContext depth extents (0,0,1506,848)
+[07:52:36.909448] [I] StreamlineHooks::streamlineLogCallback [07-52-36][streamline][info][tid:5988][7s:586ms:136us]dlssEntry.cpp:478[dlssBeginEvent] DLSSContext mvec extents (0,0,1506,848)
+[07:52:36.909743] [I] LibraryLoadHooks::LoadLibraryCheckW dxgi.dll call, returning this dll!
+[07:52:36.912526] [I] DlssNr::AmdBridge::`anonymous-namespace'::IsAmd AMD pre-SR physical adapter vendor: 1002, AMD: true
+[07:52:36.913399] [I] DlssNr::Backend::LmxxfBackend::LmxxfBackend lmxxf diagnostic: mode=off (restart to change; off/original/copy-current/staging-current/staging-previous/proxy-original/split-original)
+[07:52:36.913411] [I] DlssNr::Backend::LmxxfBackend::SetStatus lmxxf status: lmxxf: constructed (session not ready)
+[07:52:37.008170] [I] CreateRenderTargetDx12 done!
+[07:52:37.008202] [I] StreamlineHooks::streamlineLogCallback [07-52-37][streamline][info][tid:23056][7s:684ms:872us]commonInterface.cpp:587[presentCommon] Total VRAM used: 2.87 GB
+[07:52:37.022308] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 3 -- buffer, 24 bytes
+[07:52:37.022374] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 4 -- buffer, 4 bytes
+[07:52:37.025222] [I] DlssNr::AmdBridge::`anonymous-namespace'::IsAmd AMD pre-SR physical adapter vendor: 1002, AMD: true
+[07:52:37.044085] [I] DlssNr::AmdBridge::`anonymous-namespace'::IsAmd AMD pre-SR physical adapter vendor: 1002, AMD: true
+[07:52:37.051172] [I] DlssNr::AmdBridge::`anonymous-namespace'::IsAmd AMD pre-SR physical adapter vendor: 1002, AMD: true
+[07:52:37.080489] [I] DlssNr::AmdBridge::`anonymous-namespace'::IsAmd AMD pre-SR physical adapter vendor: 1002, AMD: true
+[07:52:37.264820] [I] DlssNr::Backend::LmxxfBackend::EnsureSession lmxxf: DLSS5_NETWORK_HEIGHT defaulted to auto
+[07:52:37.264886] [W] DlssNr::Backend::LmxxfBackend::EnsureSession lmxxf: LMXXF_WEIGHTS_DIR unset (PrepareSession may fail without tiled weights)
+[07:52:37.264915] [I] DlssNr::Backend::LmxxfBackend::EnsureSession lmxxf: assets/modules dir=C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem\DLSS5-AMD\native-game-tiled-assets\HIP
+[07:52:37.265848] [I] DlssNr::Backend::LmxxfBackend::EnsureSession lmxxf: after Create status=lmxxf modules_ok=24 hip=0 prepared=0 queue=0 weights=1
+[07:52:37.265856] [I] DlssNr::Backend::LmxxfBackend::SetStatus lmxxf status: lmxxf: session ready
+[07:52:38.666158] [I] DlssNr::Backend::LmxxfBackend::Record lmxxf: after PrepareFrame HIP/net geometry status=lmxxf modules_ok=24 hip=1 net=1600x900 color_job=1506x848 weights=1
+[07:52:38.666382] [I] DlssNr::Backend::LmxxfBackend::SetStatus lmxxf status: lmxxf: Record ok (pending EnqueueHip)
+[07:52:38.666411] [I] DlssNr::Backend::LmxxfBackend::Record lmxxf nr: eval=1 output=0x1a7d7cfd0 betweenHits=0 enqueueCalls=0 skippedHits=0 lastEnqueueRc=0 transfer=1.00 color=1.00 debugView=0 scale=1.00 producerSubmitted=0 continuationSubmitted=0 submitFailures=0
+[07:52:38.667512] [I] StreamlineHooks::streamlineLogCallback [07-52-38][streamline][info][tid:23056][9s:344ms:175us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.72 GB
+[07:52:38.672523] [I] DlssNr::Backend::LmxxfBackend::Record lmxxf nr: eval=2 output=0x1a7d7cfd0 betweenHits=1 enqueueCalls=1 skippedHits=0 lastEnqueueRc=0 transfer=1.00 color=1.00 debugView=0 scale=1.00 producerSubmitted=1 continuationSubmitted=1 submitFailures=0
+[07:52:38.684833] [I] StreamlineHooks::streamlineLogCallback [07-52-38][streamline][info][tid:23056][9s:361ms:466us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.72 GB
+[07:52:38.689777] [I] DlssNr::Backend::LmxxfBackend::Record lmxxf nr: eval=3 output=0x1a7d7cfd0 betweenHits=2 enqueueCalls=2 skippedHits=0 lastEnqueueRc=0 transfer=1.00 color=1.00 debugView=0 scale=1.00 producerSubmitted=2 continuationSubmitted=2 submitFailures=0
+[07:52:38.710842] [I] DlssNr::Backend::LmxxfBackend::Record lmxxf nr: eval=4 output=0x1a7d7cfd0 betweenHits=3 enqueueCalls=3 skippedHits=0 lastEnqueueRc=0 transfer=1.00 color=1.00 debugView=0 scale=1.00 producerSubmitted=3 continuationSubmitted=3 submitFailures=0
+[07:52:38.737076] [I] DlssNr::Backend::LmxxfBackend::Record lmxxf nr: eval=5 output=0x1a7d7cfd0 betweenHits=4 enqueueCalls=4 skippedHits=0 lastEnqueueRc=0 transfer=1.00 color=1.00 debugView=0 scale=1.00 producerSubmitted=4 continuationSubmitted=4 submitFailures=0
+[07:52:38.918262] [I] StreamlineHooks::streamlineLogCallback [07-52-38][streamline][info][tid:23056][9s:594ms:938us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.72 GB
+[07:52:46.274496] [W] OptiInput::LogInputHealthSnapshotLocked InputHwnd is set but WndProc is not subclassed: input:0xe409ac inputPid:5748 useSubclass:yes externalTarget:no
+[07:52:47.657870] [I] StreamlineHooks::streamlineLogCallback [07-52-47][streamline][info][tid:23056][18s:334ms:547us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.73 GB
+[07:52:47.724599] [I] StreamlineHooks::streamlineLogCallback [07-52-47][streamline][info][tid:23056][18s:401ms:273us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.74 GB
+[07:52:47.740771] [I] StreamlineHooks::streamlineLogCallback [07-52-47][streamline][info][tid:23056][18s:417ms:447us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.82 GB
+[07:52:47.757587] [I] StreamlineHooks::streamlineLogCallback [07-52-47][streamline][info][tid:23056][18s:434ms:262us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.85 GB
+[07:52:47.790583] [I] StreamlineHooks::streamlineLogCallback [07-52-47][streamline][info][tid:23056][18s:467ms:259us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.94 GB
+[07:52:47.807442] [I] StreamlineHooks::streamlineLogCallback [07-52-47][streamline][info][tid:23056][18s:484ms:118us]commonInterface.cpp:587[presentCommon] Total VRAM used: 3.99 GB
+[07:52:47.824561] [I] StreamlineHooks::streamlineLogCallback [07-52-47][streamline][info][tid:23056][18s:501ms:237us]commonInterface.cpp:587[presentCommon] Total VRAM used: 4.05 GB
+[07:52:53.105911] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 5 -- buffer, 24 bytes
+[07:52:53.106008] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 6 -- buffer, 4 bytes
+[07:52:55.136820] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 7 -- buffer, 24 bytes
+[07:52:55.136894] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 8 -- buffer, 4 bytes
+[07:52:56.137268] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 9 -- buffer, 16 bytes
+[07:52:56.138932] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 10 -- buffer, 32 bytes
+[07:52:56.148342] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 11 -- buffer, 4 bytes
+[07:52:56.148399] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 12 -- buffer, 128 bytes
+[07:52:56.188935] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 13 -- buffer, 4 bytes
+[07:52:56.188978] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 14 -- buffer, 128 bytes
+[07:52:56.210585] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 15 -- buffer, 4 bytes
+[07:52:56.210637] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 16 -- buffer, 128 bytes
+[07:52:56.210694] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 17 -- buffer, 32 bytes
+[07:52:56.224994] [I] StreamlineHooks::streamlineLogCallback [07-52-56][streamline][info][tid:23056][26s:901ms:643us]commonInterface.cpp:587[presentCommon] Total VRAM used: 4.05 GB
+[07:52:56.226019] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 18 -- buffer, 4 bytes
+[07:52:56.226056] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 19 -- buffer, 128 bytes
+[07:52:56.226114] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 20 -- buffer, 32 bytes
+[07:52:56.364820] [W] OptiInput::LogInputHealthSnapshotLocked InputHwnd is set but WndProc is not subclassed: input:0xe409ac inputPid:5748 useSubclass:yes externalTarget:no
+[07:53:05.432550] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 21 -- buffer, 4 bytes
+[07:53:05.432605] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 22 -- buffer, 128 bytes
+[07:53:05.432661] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 23 -- buffer, 32 bytes
+[07:53:05.450045] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 24 -- buffer, 4 bytes
+[07:53:05.450128] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 25 -- buffer, 128 bytes
+[07:53:05.450188] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 26 -- buffer, 32 bytes
+[07:53:05.468523] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 27 -- buffer, 4 bytes
+[07:53:05.468569] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 28 -- buffer, 128 bytes
+[07:53:05.468646] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 29 -- buffer, 32 bytes
+[07:53:05.501664] [I] StreamlineHooks::streamlineLogCallback [07-53-05][streamline][info][tid:23056][36s:178ms:338us]commonInterface.cpp:587[presentCommon] Total VRAM used: 4.07 GB
+[07:53:05.519424] [I] StreamlineHooks::streamlineLogCallback [07-53-05][streamline][info][tid:23056][36s:196ms:099us]commonInterface.cpp:587[presentCommon] Total VRAM used: 4.08 GB
+[07:53:05.554406] [I] StreamlineHooks::streamlineLogCallback [07-53-05][streamline][info][tid:23056][36s:231ms:081us]commonInterface.cpp:587[presentCommon] Total VRAM used: 4.10 GB
+[07:53:06.931287] [W] OptiInput::LogInputHealthSnapshotLocked InputHwnd is set but WndProc is not subclassed: input:0xe409ac inputPid:5748 useSubclass:yes externalTarget:no
+[07:53:14.737101] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 30 -- buffer, 4 bytes
+[07:53:14.737172] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 31 -- buffer, 128 bytes
+[07:53:14.737225] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 32 -- buffer, 32 bytes
+[07:53:14.755723] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 33 -- buffer, 4 bytes
+[07:53:14.755777] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 34 -- buffer, 128 bytes
+[07:53:14.755847] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 35 -- buffer, 32 bytes
+[07:53:17.542764] [W] OptiInput::LogInputHealthSnapshotLocked InputHwnd is set but WndProc is not subclassed: input:0xe409ac inputPid:5748 useSubclass:yes externalTarget:no
+[07:53:24.016454] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 36 -- buffer, 4 bytes
+[07:53:24.016508] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 37 -- buffer, 128 bytes
+[07:53:24.016582] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 38 -- buffer, 32 bytes
+[07:53:24.052092] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 39 -- buffer, 4 bytes
+[07:53:24.052143] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 40 -- buffer, 128 bytes
+[07:53:24.052200] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 41 -- buffer, 32 bytes
+[07:53:24.070514] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 42 -- buffer, 4 bytes
+[07:53:24.070569] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 43 -- buffer, 128 bytes
+[07:53:24.070622] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 44 -- buffer, 32 bytes
+[07:53:28.194488] [W] OptiInput::LogInputHealthSnapshotLocked InputHwnd is set but WndProc is not subclassed: input:0xe409ac inputPid:5748 useSubclass:yes externalTarget:no
+[07:53:33.329211] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 45 -- buffer, 4 bytes
+[07:53:33.329257] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 46 -- buffer, 128 bytes
+[07:53:33.329355] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 47 -- buffer, 32 bytes
+[07:53:33.347300] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 48 -- buffer, 4 bytes
+[07:53:33.347340] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 49 -- buffer, 128 bytes
+[07:53:33.347394] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 50 -- buffer, 32 bytes
+[07:53:33.364946] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 51 -- buffer, 4 bytes
+[07:53:33.365008] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 52 -- buffer, 128 bytes
+[07:53:33.365066] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 53 -- buffer, 32 bytes
+[07:53:38.806786] [W] OptiInput::LogInputHealthSnapshotLocked InputHwnd is set but WndProc is not subclassed: input:0xe409ac inputPid:5748 useSubclass:yes externalTarget:no
+[07:53:42.628134] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 54 -- buffer, 4 bytes
+[07:53:42.628193] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 55 -- buffer, 128 bytes
+[07:53:42.628258] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 56 -- buffer, 32 bytes
+[07:53:42.645351] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 57 -- buffer, 4 bytes
+[07:53:42.645400] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 58 -- buffer, 128 bytes
+[07:53:42.645483] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 59 -- buffer, 32 bytes
+[07:53:42.663993] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 60 -- buffer, 4 bytes
+[07:53:42.664041] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 61 -- buffer, 128 bytes
+[07:53:42.664104] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 62 -- buffer, 32 bytes
+[07:53:49.434600] [W] OptiInput::LogInputHealthSnapshotLocked InputHwnd is set but WndProc is not subclassed: input:0xe409ac inputPid:5748 useSubclass:yes externalTarget:no
+[07:53:51.938865] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 63 -- buffer, 4 bytes
+[07:53:51.938926] [I] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: candidate 64 -- buffer, 128 bytes
+[07:53:51.939013] [W] DlssNr::ExposureScan::Adopt DLSS-NR exposure scan: more than 64 candidates, so the filter is too loose here rather than the game having 64 exposures

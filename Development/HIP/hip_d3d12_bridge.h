@@ -107,6 +107,16 @@ public:
  // The consumer may also be recorded/closed before EnqueueAfterProducer, but must
  // only be submitted AFTER it. Recording order does not replace queue dependencies.
  // Resources must be SRV-readable before input recording. Do not replay recorded lists.
+ // Optional host preparation before recording the first staged frame. Lazy
+ // weight uploads synchronize the HIP stream; perform them before inserting an
+ // external producer wait, rather than inside a game's Execute callback.
+ void PrepareStagedKernels(){
+  Require(Phase::Ready);
+  if(pending||value||readable||network->GraphEnabled())throw std::runtime_error("bridge preparation requires fresh graph-off session");
+  auto&api=network->Runtime();
+  try{api.Check(api.hipMemsetAsync(input.mapped,0,pixels*16,network->Stream()),"prepare input");network->Enqueue(input.mapped,nullptr,output.mapped,1);network->Synchronize();}
+  catch(...){failed=true;throw;}
+ }
  void RecordInputCopy(ID3D12GraphicsCommandList*c,ID3D12Resource*rgba,ID3D12Resource*temporal=nullptr){RecordInput(c,rgba,temporal,true);}
  void EnqueueAfterProducer(ID3D12CommandQueue*producer,U seed,bool temporal=false){Enqueue(producer,seed,temporal,true);}
  void RecordOutputReadable(ID3D12GraphicsCommandList*c){

@@ -48,3 +48,10 @@ The independent codec harness now initializes/binds all 20 root words, including
 ## Validation
 
 See `tests/bridge-stages` and `../results/bridge-stages-20260922`. Real gfx1201 tests cover 900/1080 output equality, queued frames with distinct seeds, history, legacy Graph, invalid order/queue/history, acknowledgement/retirement, and an injected HIP launch error. Codec tests compare the old shader/class against the new default/legacy/explicit paths, exercise per-frame debug/reset, and validate 44 shader variants. HIP addon, RE9 addon and HLSL compatibility build are compiled. Fullscreen and external multi-GPU/Fake-NVAPI hosts still require their own integration tests.
+
+
+## Optional exposure and first-frame preparation (RE9)
+
+A host may call `PrepareStagedKernels()` once on a fresh, graph-off bridge before recording input. It enqueues a zero-input warmup and synchronizes, moving lazy weight uploads out of the external-wait submission callback. Normal `Run` callers do not opt in automatically.
+
+The codec can optionally retain a validated 1×1 R16F/R32F exposure texture (t4). With exposure enabled, append its resource state to the `Record` input-state vector. `NativeCodecParameters.pre_exposure` and `.exposure_scale` default to 1; encode normalizes using same-frame GPU exposure and decode restores the original scene units. Nonfinite/nonpositive sampled exposure falls back to 1. Exposure descriptors are preserved in cached colour rebind heaps. Changing the exposure resource requires recreating this codec after GPU completion. Existing no-exposure callers retain their previous results.

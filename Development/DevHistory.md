@@ -2998,3 +2998,11 @@ RE9入口实测1506×848 RGB9E5→2560×1440。split-original首次被aliasing�
 ## 2026-09-22 07:25：RE9前置版关闭颜色迁移，保留细节作实玩对照
 
 用户报告开DLSS5明显褪色，F6关闭后颜色大体恢复，仅余少量泛白。按用户确认，将RE9 root与_storage_的OptiScaler.ini设置ColourStrength=0、TransferStrength=1、Enabled=true；正常退出游戏并确认进程消失后修改，再启动。配置备份D:\DLSSNR-Lab\re9-presr\backups\colour-20260922-072524。安装脚本同设颜色0，新增set-colour-control.ps1便于复现。此为保留原RGB比例、继续传递神经明暗/细节的对照，不宣称修复了曝光或色彩空间根因；DLL与shader未改，实际颜色待用户复测。
+
+## 2026-09-22 07:32–07:54：RE9褪色定位为曝光遗漏，接通同帧GPU曝光并部署完整强度候选
+
+按用户要求继续查。加可选同帧input/proxy/neural/result/exposure读回，RGB9E5已知输入逐像素校验。游戏曝光纹理实际0.044189453125，preExposure/scale均1；旧codec白点固定1，原输入中位1.457，编码proxy近白像素58.66%，网络前已大片丢色。新增codec可选1×1 R16F/R32F曝光SRV，GPU编码归一化、解码恢复场景单位；宿主/runtime实验ABI升2传曝光资源/状态/预曝光/scale。普通addon不启用新参数。
+
+受控32倍输入、1/32曝光：proxy与neural逐位相同、最终RGB严格32倍、alpha同。旧codec24次完整比较diff0、12视图检查通过。修复后游戏抓帧proxy近白0.08535%、neural0.04319%，恢复Detail/Colour=1；前后不同菜单帧，不当像素对齐画质A/B。数据/工具/完整调查在RE9/presr及results/exposure，原始GPU读回留D:\DLSSNR-Lab\re9-presr\colour-capture-*。
+
+中途两次启动停在首次HIP enqueue，追踪后第三次可运行；权重延迟Upload包含stream同步，增加显式PrepareStagedKernels，在录制/外部producer wait前预热权重和核。预热前后6个完整读回缓冲逐字节相同。移除高频追踪后连续两次正常启动，前5帧HIP/提交均成功，无skip；不声称由此完全证明此前挂起根因。最终runtime F5CF76979D1753CE3E4498F85A45046B984CA8B0E54C80F17A41C45481E7CB68，host62A948A6…（ABI2），两份配置完整强度，备份exposure-20260922-075132。游戏留主菜单供实玩，未打包。曝光纹理换指针目前保守drain重建，需关注切场景性能；持续实玩稳定性/画质仍待用户反馈。TheAutomatic曝光与前置宿主设计贡献沿用并署名。
