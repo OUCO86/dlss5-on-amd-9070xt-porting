@@ -608,7 +608,7 @@ DEV void mh_ffn_qkv_body(const float*in,const float*w,unsigned char*out,uint tok
  if(first>=tokens)return;
  // A complete16-row tile in top/bottom mapped padding has exactly zero
  // bias-free FFN and normalized QKV outputs. The test is workgroup-uniform.
- if constexpr(C==128&&Mapped){
+ if constexpr((C==128||C==256)&&Mapped){
   if(first+15<sy*workw||first>=(sy+height)*workw){
    for(uint i=tid;i<16*C;i+=2*C){if constexpr(ByteFeature)out[first*C+i]=0;else reinterpret_cast<float*>(out)[first*C+i]=0.f;}
    for(uint i=tid;i<16*3*C;i+=2*C)norm[first*3*C+i]=0;

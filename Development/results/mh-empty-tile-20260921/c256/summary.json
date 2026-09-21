@@ -1,0 +1,105 @@
+{
+  "controls": [
+    {
+      "base": "base-900-0",
+      "candidate": "candidate-900-0",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-900-1",
+      "candidate": "candidate-900-1",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-1080-0",
+      "candidate": "candidate-1080-0",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-1080-1",
+      "candidate": "candidate-1080-1",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-720-motion-False",
+      "candidate": "extra-720-motion-True",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-900-history-False",
+      "candidate": "extra-900-history-True",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-900-float-in-False",
+      "candidate": "extra-900-float-in-True",
+      "matching_frames": 12
+    },
+    {
+      "base": "extra-900-float-feature-False",
+      "candidate": "extra-900-float-feature-True",
+      "matching_frames": 12
+    }
+  ],
+  "timing": {
+    "time-900": {
+      "slots_ms": [
+        13.1923359375,
+        13.1214375,
+        13.1380078125,
+        13.2104609375
+      ],
+      "base_ms": 13.2013984375,
+      "candidate_ms": 13.12972265625,
+      "saved_ms": 0.07167578125000063
+    },
+    "time-1080": {
+      "slots_ms": [
+        18.6045859375,
+        18.5321640625,
+        18.539703125,
+        18.56934375
+      ],
+      "base_ms": 18.586964843750003,
+      "candidate_ms": 18.535933593750002,
+      "saved_ms": 0.051031250000001194
+    },
+    "repeat-900": {
+      "slots_ms": [
+        13.2232425,
+        13.2074625,
+        13.2389175,
+        13.3172375
+      ],
+      "base_ms": 13.27024,
+      "candidate_ms": 13.223189999999999,
+      "saved_ms": 0.04705000000000048
+    },
+    "repeat-1080": {
+      "slots_ms": [
+        18.7648975,
+        18.68694125,
+        18.71315875,
+        18.81317
+      ],
+      "base_ms": 18.78903375,
+      "candidate_ms": 18.70005,
+      "saved_ms": 0.08898375000000058
+    }
+  },
+  "kernels": {
+    "c256": {
+      "slots_us": [
+        68.5745,
+        65.2878,
+        65.6044,
+        68.6741
+      ],
+      "base_us": 68.6243,
+      "candidate_us": 65.4461,
+      "saved_percent": 4.631304071589807,
+      "raw_fp32_comparisons": 8,
+      "bitdiff": 0
+    }
+  }
+}

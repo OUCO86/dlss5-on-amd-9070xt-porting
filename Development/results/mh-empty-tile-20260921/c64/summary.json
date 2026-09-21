@@ -1,0 +1,74 @@
+{
+  "controls": [
+    {
+      "base": "base-900-0",
+      "candidate": "candidate-900-0",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-900-1",
+      "candidate": "candidate-900-1",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-1080-0",
+      "candidate": "candidate-1080-0",
+      "matching_frames": 12
+    },
+    {
+      "base": "base-1080-1",
+      "candidate": "candidate-1080-1",
+      "matching_frames": 12
+    }
+  ],
+  "timing": {
+    "time-900": {
+      "slots_ms": [
+        13.1641875,
+        13.15978125,
+        13.17696875,
+        13.2135859375
+      ],
+      "base_ms": 13.18888671875,
+      "candidate_ms": 13.168375000000001,
+      "saved_ms": 0.02051171874999902
+    },
+    "time-1080": {
+      "slots_ms": [
+        18.587062500000002,
+        18.6000859375,
+        18.6286328125,
+        18.6334296875
+      ],
+      "base_ms": 18.61024609375,
+      "candidate_ms": 18.614359375,
+      "saved_ms": -0.004113281249999545
+    },
+    "repeat-1080": {
+      "slots_ms": [
+        18.64354875,
+        18.71845,
+        18.728381249999998,
+        18.76679625
+      ],
+      "base_ms": 18.7051725,
+      "candidate_ms": 18.723415625,
+      "saved_ms": -0.01824312500000147
+    }
+  },
+  "kernels": {
+    "c64": {
+      "slots_us": [
+        130.3721,
+        126.0631,
+        126.9858,
+        130.3329
+      ],
+      "base_us": 130.3525,
+      "candidate_us": 126.52445,
+      "saved_percent": 2.9366908958401186,
+      "raw_fp32_comparisons": 8,
+      "bitdiff": 0
+    }
+  }
+}

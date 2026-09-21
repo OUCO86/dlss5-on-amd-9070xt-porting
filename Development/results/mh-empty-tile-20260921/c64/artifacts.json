@@ -1,0 +1,22 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\mh-empty-c64-modules\\multihead-fast-padded-wave-packed.hsaco",
+        "sha":  "F237AC9D898DF380D75D0E36EB3DE3A3C08CD977F3124A82165DD684F48E23E0"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\mh-empty-c64-gfx1200.hsaco",
+        "sha":  "5795C8BE0F2AFD9D27AA9AB38BB56291E9A4F7A6C93BA6E5DE7CE3D1E60EC1A7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c128-empty-vertical-modules\\multihead-fast-padded-wave-packed.hsaco",
+        "sha":  "26A7C2CAA43353D739BBF73540FD54F6BECF138F8F134C7AD19A8ABE0E54521B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\pure_mh_empty.exe",
+        "sha":  "F94E282C741D5AA28360453335444759210AE30FEFC3D7A09DB8CC5FF1690D55"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\benchmark_main_reuse.exe",
+        "sha":  "E8EB033BA4C353E70E33078743144374C399E15B22D9C5E402F6DB61E6229360"
+    }
+]

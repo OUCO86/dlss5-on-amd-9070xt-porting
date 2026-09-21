@@ -1,0 +1,30 @@
+{
+  "c64-base": {
+    "NumVgprs": 97,
+    "NumVGPRsForWavesPerEU": 97,
+    "LDSByteSize": 5440,
+    "Occupancy": 12,
+    "ScratchSize": 0
+  },
+  "c64-candidate": {
+    "NumVgprs": 93,
+    "NumVGPRsForWavesPerEU": 93,
+    "LDSByteSize": 5440,
+    "Occupancy": 16,
+    "ScratchSize": 0
+  },
+  "c256-base": {
+    "NumVgprs": 101,
+    "NumVGPRsForWavesPerEU": 101,
+    "LDSByteSize": 21568,
+    "Occupancy": 12,
+    "ScratchSize": 0
+  },
+  "c256-candidate": {
+    "NumVgprs": 102,
+    "NumVGPRsForWavesPerEU": 102,
+    "LDSByteSize": 21568,
+    "Occupancy": 12,
+    "ScratchSize": 0
+  }
+}
