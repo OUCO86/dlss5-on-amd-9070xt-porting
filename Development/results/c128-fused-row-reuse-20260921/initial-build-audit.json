@@ -1,0 +1,56 @@
+{
+  "error": "Initial experimental module omitted HIP_PREPACKED_WEIGHTS=1; generic fallback reads packed weights as floats. Corrected before final validation.",
+  "initial_720_and_cross_checks": [
+    {
+      "tag": "extra-720-motion-False",
+      "file": "rgb.f16",
+      "sha": "9B53BE7A73C0D397DC56BF5810778E69D123BFD81C48FCDBCB642526361A5F53"
+    },
+    {
+      "tag": "extra-720-motion-True",
+      "file": "rgb.f16",
+      "sha": "FE71F399A7B12E6C0870A745FA807D114066B0E0EABCEFD2AC4DE072CB06B82B"
+    },
+    {
+      "tag": "diag-oldhost-newmodule",
+      "file": "rgb.f16",
+      "sha": "FE71F399A7B12E6C0870A745FA807D114066B0E0EABCEFD2AC4DE072CB06B82B"
+    },
+    {
+      "tag": "diag-newhost-oldkernel",
+      "file": "rgb.f16",
+      "sha": "FE71F399A7B12E6C0870A745FA807D114066B0E0EABCEFD2AC4DE072CB06B82B"
+    },
+    {
+      "tag": "diag-newhost-newkernel",
+      "file": "rgb.f16",
+      "sha": "FE71F399A7B12E6C0870A745FA807D114066B0E0EABCEFD2AC4DE072CB06B82B"
+    }
+  ],
+  "timing_before_macro_correction": {
+    "time-900": [
+      13.19565625,
+      13.165359375,
+      13.1846796875,
+      13.2367265625
+    ],
+    "time-1080": [
+      18.6370390625,
+      18.6108125,
+      18.6161640625,
+      18.6968203125
+    ],
+    "repeat-900": [
+      13.26772,
+      13.2853725,
+      13.30194625,
+      13.3543825
+    ],
+    "repeat-1080": [
+      18.82693375,
+      18.77269375,
+      18.79486,
+      18.8551275
+    ]
+  }
+}

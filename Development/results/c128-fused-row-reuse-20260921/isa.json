@@ -1,0 +1,26 @@
+{
+  "mh_ffn_fused_c128_project_mapped_g128_qkv_bytein_fb": {
+    "NumVgprs": 108,
+    "NumVGPRsForWavesPerEU": 108,
+    "LDSByteSize": 10816,
+    "Occupancy": 12,
+    "ScratchSize": 0,
+    "global_load_b64": 80,
+    "global_load_b128": 0,
+    "v_wmma_f32_16x16x16_fp8_fp8": 72,
+    "barrier_signal": 8,
+    "barrier_wait": 8
+  },
+  "mh_ffn_fused_c128_project_mapped_g128_qkv_bytein_fb_m32": {
+    "NumVgprs": 103,
+    "NumVGPRsForWavesPerEU": 103,
+    "LDSByteSize": 21632,
+    "Occupancy": 12,
+    "ScratchSize": 0,
+    "global_load_b64": 72,
+    "global_load_b128": 0,
+    "v_wmma_f32_16x16x16_fp8_fp8": 72,
+    "barrier_signal": 8,
+    "barrier_wait": 8
+  }
+}
