@@ -2979,3 +2979,7 @@ ViT台阶直接用block31真实输入/权重，M400/640，展开K1024/N4096、�
 SetNoise在fast_prefix接受空vector，保留同步/Graph清理；共用FastPrefixFromEnvironment让普通addon先读flags再决定噪声加载，RE9初始化也跳过未使用192MiB表，非fast/HLSL照旧。NativeCodecParameters支持每次Record强度/四种调试视图，旧调用保留DLSS5_STRENGTH语义；保留诊断并增强shader编译错误文本。旧独立codec测试更新到20根常量，初始化debug字段。
 
 gfx1201真GPU验证：31次原始FP32同，覆盖900/1080、history、多个seed、三帧排队后统一等待及旧Graph；133次无效顺序/队列/历史/Graph/故障后复用拒绝，含注入hipModuleLaunchKernel错误；空噪声、root/arch及flat模块路径通过。Codec旧新24组字节同，12种视图切换有变化并可恢复，旧harness三组26万half值比较同，44shader变体编译过。HIP、RE9、HLSL兼容三种addon编译成功。证据results/bridge-stages-20260922，API契约HIP/staged-bridge.md，测试HIP/tests/bridge-stages。没有部署游戏/打包，仍不宣称RE9全屏已修；实际宿主命令提交边界/前置接入要另验。算力缺口研究下一步仍为ViT平衡M32×N32。
+
+## 2026-09-22 06:07起：用户授权将672e0eb候选安装到RE9
+
+确认re9进程退出后，备份并安装RE9专用addon与配套decode shader；root和_storage_两份DLL均为cc2cdbcaa9e41e39b5db25796822ac4ccad969567d1d2d2c15fb8eed8f1d4861，shader为c0f294d8a2b1b11b47e5d14aaea9896406ad71395f15fb4e84427f1ba5a305b0，安装后全部读回hash一致。备份D:\DLSSNR-Lab\re9-opti\backups\staged-20260922-060932-480，含原文件和恢复manifest。config.ini、native-game-flags.txt、re9-present-mode.txt前后hash不变，HIP模块未替换。脚本Development/RE9/install-staged.ps1支持RestoreBackup，安装记录RE9/results/staged-install-20260922.json。没有启动游戏；仍是原后置路径，分阶段接口尚未接入RE9超分前，不宣称修复全屏。设计贡献沿用672e0eb中对TheAutomatic/PR5的署名。

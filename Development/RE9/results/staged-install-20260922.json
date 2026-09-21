@@ -1,0 +1,25 @@
+{
+    "game":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\RESIDENT EVIL requiem BIOHAZARD requiem",
+    "source_commit":  "672e0eb",
+    "backup":  "D:\\DLSSNR-Lab\\re9-opti\\backups\\staged-20260922-060932-480",
+    "files":  [
+                  {
+                      "relative":  "re9-present.addon64",
+                      "existed":  true,
+                      "before":  "F7C10735B1447C7ED5ED29C92D3BC4E6A3A97A3583220A1E7AE515F4C0B6420A",
+                      "after":  "cc2cdbcaa9e41e39b5db25796822ac4ccad969567d1d2d2c15fb8eed8f1d4861"
+                  },
+                  {
+                      "relative":  "DLSS5-AMD\\native-game-tiled-assets\\native_codec_decode.hlsl",
+                      "existed":  true,
+                      "before":  "98A790D928E61C3EAB905F43374DC9A1E560AFF22946CD17B166CD0CA3E6C5F8",
+                      "after":  "c0f294d8a2b1b11b47e5d14aaea9896406ad71395f15fb4e84427f1ba5a305b0"
+                  },
+                  {
+                      "relative":  "_storage_\\re9-present.addon64",
+                      "existed":  true,
+                      "before":  "F7C10735B1447C7ED5ED29C92D3BC4E6A3A97A3583220A1E7AE515F4C0B6420A",
+                      "after":  "cc2cdbcaa9e41e39b5db25796822ac4ccad969567d1d2d2c15fb8eed8f1d4861"
+                  }
+              ]
+}
