@@ -18,4 +18,4 @@ Completed checks so far:
 
 Aliasing semantics reference: https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12 . A same-queue cut preserves the ordering of the actual alias barrier; do not replay it on the continuation or treat it as a resource-state transition.
 
-Full NR game validation is in progress. No release/quality claim yet.
+Full NR candidate installed and started successfully: 1506×848 scene input, 1600×900 network, 2560×1440 borderless output. First five evaluations show successful HIP enqueue, producer/continuation submission, zero skips and zero submission failures. Main menu screenshot renders normally; process remained live for over two minutes without a neural failure status. Real gameplay, motion quality and frame generation remain user validation. The old post-present addon is disabled, so there is no duplicate neural pass. Candidate hashes and game log are under `results/`. The game is left running at the main menu for testing.

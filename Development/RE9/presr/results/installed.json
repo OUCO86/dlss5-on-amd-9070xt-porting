@@ -1,0 +1,26 @@
+{
+    "timestamp":  "2026-09-22T06:56:33.3750029+08:00",
+    "pid":  10244,
+    "cpu":  113.90625,
+    "files":  [
+                  {
+                      "file":  "dxgi.dll",
+                      "sha256":  "6d1eea79eb32ecf3ccde15a16d2617ab9f3b37dee7b2debdfdab3ee80b1e8676"
+                  },
+                  {
+                      "file":  "LmxxfNrRuntime.dll",
+                      "sha256":  "50b97a1a783ae6c3b9149cf66df4bc2b1c368435ed7851526f1252bbb2c3ac8e"
+                  },
+                  {
+                      "file":  "_storage_\\dxgi.dll",
+                      "sha256":  "6d1eea79eb32ecf3ccde15a16d2617ab9f3b37dee7b2debdfdab3ee80b1e8676"
+                  },
+                  {
+                      "file":  "_storage_\\LmxxfNrRuntime.dll",
+                      "sha256":  "50b97a1a783ae6c3b9149cf66df4bc2b1c368435ed7851526f1252bbb2c3ac8e"
+                  }
+              ],
+    "original_backup":  "D:\\DLSSNR-Lab\\re9-presr\\backups\\20260922-064814-585",
+    "candidate_backup":  "D:\\DLSSNR-Lab\\re9-presr\\backups\\20260922-065409-451",
+    "diagnostic":  "off"
+}

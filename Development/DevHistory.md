@@ -2989,3 +2989,8 @@ gfx1201真GPU验证：31次原始FP32同，覆盖900/1080、history、多个seed
 用户要求继续完成前置适配。找到TheAutomatic配套release/1.9.0宿主（8f71f73），采用其GPL命令列表代理依赖，独立桥接实现未merge PR5；署名和补丁保存在RE9/presr。桥接支持先录制consumer再提交producer，提交顺序不变，900/1080与旧Graph测试过。安装独立MSVC v143/SDK26100工具链，OptiScaler宿主编译成功；四组命令列表测试通过，修正两处落后于宿主接口的测试。
 
 RE9入口实测1506×848 RGB9E5→2560×1440。split-original首次被aliasing屏障一律拒绝；保留屏障原位与顺序，仅允许已完整记录屏障后的cut，未结束transition仍拒绝。补真实重叠placed纹理、别名切换与逐字节当前帧比较，16次split/replay通过；游戏随后producer/continuation均正常提交、FSR rc=0。codec新增显式privateFloatOutput选项，允许RGB9E5输入并返回私有FP16，普通addon格式契约不变。实际9070 runtime烟测PrepareFrame/HIP/consumer ack/完成/销毁均过，尚不代表画质验证。首次原版备份D:\DLSSNR-Lab\re9-presr\backups\20260922-064814-585，全部部署先检查游戏退出。当前继续完整NR游戏验证，未打包。
+
+
+## 2026-09-22 06:56：RE9前置HIP候选已安装并启动，待用户实玩
+
+完整链在游戏中初始化并运行：入口1506×848 RGB9E5，网络1600×900，输出2560×1440 Borderless；前5帧记录证明HIP enqueue返回0、producer/continuation同步增长、skip和提交失败均0。主菜单截图正常，持续两分钟以上进程存活无神经路径失败记录；不把菜单表现当实玩画质或性能结论。旧post-present addon两份均停用，帧生成暂关便于验证。宿主6d1eea79…、runtime50b97a1a…，root/_storage_读回hash一致，清单与原始日志在RE9/presr/results。游戏保持主菜单供用户测试。脚本支持恢复原始备份；下一步观察实玩运动/切场景与输入尺寸变化，再决定发布，未打包。
