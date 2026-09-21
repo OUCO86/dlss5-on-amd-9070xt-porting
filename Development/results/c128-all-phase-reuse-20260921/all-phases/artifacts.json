@@ -1,0 +1,22 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c128-all-phase-reuse-modules\\multihead-fast-padded-wave-packed.hsaco",
+        "sha":  "47A2CC6510B32A370BE550FA406D50340613B03996D7BBD6C12485E3C8EF0334"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c128-all-phase-reuse-gfx1200.hsaco",
+        "sha":  "AF96E5E01FF55E7B0681ED6E022019CF3581E6A0412694E5B09790D545C60EDF"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\benchmark_c128_all.exe",
+        "sha":  "182B4596E2DBB2024C8E90A70881F64A5E0CA92FEE66D5172A95FA787E8B406E"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\benchmark_main_reuse.exe",
+        "sha":  "E8EB033BA4C353E70E33078743144374C399E15B22D9C5E402F6DB61E6229360"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\post-head-shared-input-modules\\multihead-fast-padded-wave-packed.hsaco",
+        "sha":  "FD24B2FFC9AF63FDA50359BE6C0C7FF91058DBC807500FB64B078942E4E435E3"
+    }
+]

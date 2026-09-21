@@ -1,0 +1,18 @@
+{
+  "controls": [],
+  "kernel_only": true,
+  "timing": {},
+  "isolated_fused_kernel": {
+    "slots_us": [
+      90.7817,
+      96.9018,
+      97.1229,
+      90.9928
+    ],
+    "base_us": 90.88725,
+    "candidate_us": 97.01235,
+    "saved_percent": -6.7392290997912285,
+    "raw_fp32_comparisons": 8,
+    "bitdiff": 0
+  }
+}

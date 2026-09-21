@@ -1,0 +1,6 @@
+device=AMD Radeon RX 9070 XT warpSize=32 multiprocessors=32 maxThreadsPerMP=2048 sharedPerMP=65536 sharedPerCU=65536 sharedPerBlock=65536
+case=post-head-shared-input-modules threads=256 active_blocks_per_MP=6 resident_threads_bound=1536 resident_waves_bound=48
+case=c128-fused-row-reuse-modules threads=512 active_blocks_per_MP=3 resident_threads_bound=1536 resident_waves_bound=48
+case=c128-all-phase-reuse-modules threads=256 active_blocks_per_MP=3 resident_threads_bound=768 resident_waves_bound=24
+case=c128-hybrid-reuse-modules threads=512 active_blocks_per_MP=3 resident_threads_bound=1536 resident_waves_bound=48
+case=c128-compact-reuse-modules threads=256 active_blocks_per_MP=4 resident_threads_bound=1024 resident_waves_bound=32

@@ -1,0 +1,3 @@
+ROW_REUSE kernel=mh_ffn_fused_c128_project_mapped_g128_qkv_bytein_fb_m32 groups=832 threads=256 mean_us=88.993400
+PURE frame=0 bitdiff=0
+PURE frame=1 bitdiff=0
