@@ -52,7 +52,11 @@ static void present(reshade::api::command_queue*queue,reshade::api::swapchain*sw
  if(active&&(owner!=swap||active->q!=q||!active->bridge.Matches(back))){if(active->init==1){hud.state="INITIALIZING";return;}if(!active->failed&&active->init!=3)delete active;active=nullptr;}
  if(!active){active=new Runtime;owner=swap;active->q=q;q->AddRef();active->bridge.Create(q,UINT(d.Width),d.Height);log("bridge ready "+std::to_string(d.Width)+"x"+std::to_string(d.Height));}
  auto*r=active;if(r->failed){hud.safe=false;return;}if(r->init==3){hud.state="INIT FAILED - SEE LOGS";return;}
- if(mode==1&&r->init==0){hud.state="INITIALIZING";if(!info)info=new InfoOverlay(q,back);r->init=1;std::thread([r]{try{flags();auto noise=NativeReadF32(NativeLabPath(L"native-game-tiled-assets\\noise.f32"),"noise");r->frame.Create(r->q,r->bridge.Color(),noise,NativeLabPath(L"native-game-tiled-assets"));r->frame.SuppressFps();log("HIP ready");r->init=2;}catch(const std::exception&e){log(std::string("init failed: ")+e.what());r->init=3;}}).detach();return;}
+ if(mode==1&&r->init==0){hud.state="INITIALIZING";if(!info)info=new InfoOverlay(q,back);r->init=1;std::thread([r]{try{flags();std::vector<float>noise;
+#ifdef DLSS5_USE_HIP
+if(!hip_reference::FastPrefixFromEnvironment())
+#endif
+noise=NativeReadF32(NativeLabPath(L"native-game-tiled-assets\\noise.f32"),"noise");r->frame.Create(r->q,r->bridge.Color(),noise,NativeLabPath(L"native-game-tiled-assets"));r->frame.SuppressFps();log("HIP ready");r->init=2;}catch(const std::exception&e){log(std::string("init failed: ")+e.what());r->init=3;}}).detach();return;}
  if(r->init==1){hud.state="INITIALIZING";return;}
  hud.state=mode==1?"ON":"CONVERSION";
  r->bridge.Read(back);

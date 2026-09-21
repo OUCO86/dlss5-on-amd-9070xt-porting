@@ -1,0 +1,10 @@
+{
+  "bridge_raw_comparisons": 31,
+  "rejected_invalid_or_failed_calls": 133,
+  "codec_old_new_byte_comparisons": 24,
+  "debug_view_checks": 12,
+  "legacy_harness_comparisons": 3,
+  "shader_variants": 44,
+  "executed_arch": "gfx1201",
+  "game_deployed": false
+}

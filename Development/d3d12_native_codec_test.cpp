@@ -47,7 +47,7 @@ int wmain(int argc,wchar_t**argv){try{
  ID3D12DescriptorHeap*heap=nullptr;D3D12_DESCRIPTOR_HEAP_DESC hd{D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,inputs+2,D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,0};ck(d->CreateDescriptorHeap(&hd,IID_PPV_ARGS(&heap)));UINT stride=d->GetDescriptorHandleIncrementSize(hd.Type);auto cpu=heap->GetCPUDescriptorHandleForHeapStart();
  D3D12_SHADER_RESOURCE_VIEW_DESC sv{};sv.Format=td.Format;sv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;sv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;sv.Texture2D.MipLevels=1;for(UINT j=0;j<inputs;j++){if(j)cpu.ptr+=stride;d->CreateShaderResourceView(input[j],&sv,cpu);}
  D3D12_UNORDERED_ACCESS_VIEW_DESC uv{};uv.Format=td.Format;uv.ViewDimension=D3D12_UAV_DIMENSION_TEXTURE2D;for(auto*v:out){cpu.ptr+=stride;d->CreateUnorderedAccessView(v,nullptr,&uv,cpu);}
- D3D12_DESCRIPTOR_RANGE ranges[2]={{D3D12_DESCRIPTOR_RANGE_TYPE_SRV,inputs,decode?1u:0u,0,0},{D3D12_DESCRIPTOR_RANGE_TYPE_UAV,1,0,0,0}};D3D12_ROOT_PARAMETER p[3]{};for(UINT i=0;i<2;i++){p[i].ParameterType=D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;p[i].DescriptorTable={1,&ranges[i]};}p[2].ParameterType=D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;p[2].Constants={0,0,16};
+ D3D12_DESCRIPTOR_RANGE ranges[2]={{D3D12_DESCRIPTOR_RANGE_TYPE_SRV,inputs,decode?1u:0u,0,0},{D3D12_DESCRIPTOR_RANGE_TYPE_UAV,1,0,0,0}};D3D12_ROOT_PARAMETER p[3]{};for(UINT i=0;i<2;i++){p[i].ParameterType=D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;p[i].DescriptorTable={1,&ranges[i]};}p[2].ParameterType=D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;p[2].Constants={0,0,20};
  D3D12_ROOT_SIGNATURE_DESC rd{};rd.NumParameters=3;rd.pParameters=p;ID3DBlob*b=nullptr,*err=nullptr;ck(D3D12SerializeRootSignature(&rd,D3D_ROOT_SIGNATURE_VERSION_1,&b,&err));ID3D12RootSignature*root=nullptr;ck(d->CreateRootSignature(0,b->GetBufferPointer(),b->GetBufferSize(),IID_PPV_ARGS(&root)));b->Release();if(err)err->Release();
  auto*stage=stage_dir?new NativeGameCodec:nullptr;
  if(stage)stage->Create(d,std::vector<ID3D12Resource*>(input,input+inputs),stage_dir);
@@ -63,8 +63,8 @@ int wmain(int argc,wchar_t**argv){try{
  }
  for(UINT test=0;test<3;test++){
   if(rebind){UINT index=decode?2:0;auto*replacement=test==1?alternate:input[index];stage->RebindInputAfterCompletion(index,replacement);auto descriptor=heap->GetCPUDescriptorHandleForHeapStart();descriptor.ptr+=index*stride;d->CreateShaderResourceView(replacement,&sv,descriptor);std::printf("codec rebind_frame=%u source=%c\n",test,test==1?'B':'A');}
-  uint32_t words[16]={W,H,W,H,0,0,W,H,0x3f800000,0x3f800000,0x3f800000,1};float scale=test==0?1.f:test==1?.5f:2.f;std::memcpy(words+8,&scale,4);
-  submit.Submit([&](ID3D12GraphicsCommandList*c){c->SetDescriptorHeaps(1,&heap);c->SetComputeRootSignature(root);auto gpu=heap->GetGPUDescriptorHandleForHeapStart();c->SetComputeRootDescriptorTable(0,gpu);c->SetComputeRoot32BitConstants(2,16,words,0);
+  uint32_t words[20]={W,H,W,H,0,0,W,H,0x3f800000,0x3f800000,0x3f800000,1};float scale=test==0?1.f:test==1?.5f:2.f;std::memcpy(words+8,&scale,4);
+  submit.Submit([&](ID3D12GraphicsCommandList*c){c->SetDescriptorHeaps(1,&heap);c->SetComputeRootSignature(root);auto gpu=heap->GetGPUDescriptorHandleForHeapStart();c->SetComputeRootDescriptorTable(0,gpu);c->SetComputeRoot32BitConstants(2,20,words,0);
    for(UINT i=0;i<2;i++){if(i==1&&stage){
     stage->Record(c,std::vector<D3D12_RESOURCE_STATES>(inputs,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),scale);
     transition(c,stage->Output(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_COPY_SOURCE);

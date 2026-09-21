@@ -2971,3 +2971,11 @@ ViT台阶直接用block31真实输入/权重，M400/640，展开K1024/N4096、�
 用户提供PR5要求查看。公开网页+git pull ref获取head4d14a32、两提交base70656f8，未切分支/合并/发评论。作者说明已在燕云外部接入跑通，四文件改动提供拆分bridge、fast_prefix空噪声、动态codec参数，不含RE9接入或全屏修复。隔离base/head最小C++编译：base两项均过；head HIP入口因bridge五诊断字段被删而失败，codec独立include因CompileNativeShader声明丢失失败。另确认删除gfx1200/1201目录选择会破坏现有整包路径，删除DLSS5_STRENGTH读取会让旧调用方强度静默恢复1,1。
 
 审阅及编译证据Development/reviews/pr-5-20260922。建议保留原兼容契约后增量采用接口；LUID原版已支持，应只处理伪装VendorId门槛，避免硬偏移和单HIP设备盲选；异步入口需补失败状态和提交顺序契约。RE9同列表后续51～53命令的接入难点仍需宿主解决，不能将接口拆分等同已修全屏。原算力缺口研究进度不变，下一项仍是ViT平衡M32×N32。
+
+## 2026-09-22 05:28起：按TheAutomatic PR5设计独立实现分阶段桥接，保留兼容契约
+
+用户要求不merge PR、自己实现，并明确最终commit记TheAutomatic贡献。设计来源https://github.com/TheAutomatic 与PR5，文档/提交记录署明。新增RecordInputCopy/EnqueueAfterProducer/RecordOutputReadable及NotifyOutputSubmitted；用阶段状态、同队列/同设备/列表类型、历史一致性检查约束调用，GPU错误后停用。旧Run复用内部实现，Graph旧路径/诊断保留，外部分阶段在录制前拒绝Graph。WaitForSubmittedWork让包装器等消费者退休后才释放输入引用；不完整/失败状态保留可能在途资源。LUID仍用typed属性，移除伪装VendorId硬门槛但保留架构检查/双架构目录/诊断字段，名字fallback要求无LUID且唯一AMD匹配，不盲选单卡。
+
+SetNoise在fast_prefix接受空vector，保留同步/Graph清理；共用FastPrefixFromEnvironment让普通addon先读flags再决定噪声加载，RE9初始化也跳过未使用192MiB表，非fast/HLSL照旧。NativeCodecParameters支持每次Record强度/四种调试视图，旧调用保留DLSS5_STRENGTH语义；保留诊断并增强shader编译错误文本。旧独立codec测试更新到20根常量，初始化debug字段。
+
+gfx1201真GPU验证：31次原始FP32同，覆盖900/1080、history、多个seed、三帧排队后统一等待及旧Graph；133次无效顺序/队列/历史/Graph/故障后复用拒绝，含注入hipModuleLaunchKernel错误；空噪声、root/arch及flat模块路径通过。Codec旧新24组字节同，12种视图切换有变化并可恢复，旧harness三组26万half值比较同，44shader变体编译过。HIP、RE9、HLSL兼容三种addon编译成功。证据results/bridge-stages-20260922，API契约HIP/staged-bridge.md，测试HIP/tests/bridge-stages。没有部署游戏/打包，仍不宣称RE9全屏已修；实际宿主命令提交边界/前置接入要另验。算力缺口研究下一步仍为ViT平衡M32×N32。

@@ -1,0 +1,84 @@
+DEVICE arch=gfx1201 match=luid modules=D:\DLSSNR-Lab\hip-backend\network-fixed-shapes\selected-modules runtime=70260201 noise_bytes=0 graph=0
+REJECT uninitialized order bridge stage order
+CHECK legacy golden bitdiff=0
+DISTINCT_SEEDS 1
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+DISTINCT_SEEDS 1
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+DISTINCT_SEEDS 1
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+DISTINCT_SEEDS 1
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+REJECT wrong producer queue bridge submission queue mismatch
+REJECT wrong history flag bridge temporal input mismatch
+REJECT duplicate enqueue bridge stage order
+REJECT reuse before acknowledgement bridge stage order
+REJECT wrong consumer queue bridge submission queue mismatch
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+CHECK staged queued output bitdiff=0
+REJECT duplicate acknowledgement bridge stage order
+REJECT injected enqueue error c32_fast_ffn_attention_fused_half_prefix_finish_main8: hipErrorInvalidValue (1)
+REJECT poisoned staged reuse bridge unavailable
+REJECT poisoned legacy reuse bridge unavailable
+PASS staged bridge

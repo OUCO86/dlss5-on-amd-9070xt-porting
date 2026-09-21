@@ -1,0 +1,17 @@
+[
+  {
+    "path": "/tmp/bridge-stages/dlss5-staged.addon64",
+    "bytes": 3932357,
+    "sha256": "83b3b177084052591ea15f2c07063a7f20db749206360e5f56e798174d2ff799"
+  },
+  {
+    "path": "/tmp/bridge-stages/re9-staged.addon64",
+    "bytes": 3822768,
+    "sha256": "cc2cdbcaa9e41e39b5db25796822ac4ccad969567d1d2d2c15fb8eed8f1d4861"
+  },
+  {
+    "path": "/tmp/bridge-stages/dlss5-hlsl-compat.addon64",
+    "bytes": 3441887,
+    "sha256": "33155fb83a09b22881e0f6c2e751be0549dc52f2e3ad4a9009076994d4a4c82f"
+  }
+]

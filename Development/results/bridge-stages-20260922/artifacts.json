@@ -1,0 +1,34 @@
+[
+    {
+        "path":  "test.exe",
+        "sha":  "BA744EE1FDD72FAA82B8B967FB0E1DDB00F91DF8D732C05A0CC290C71F9F6EAC"
+    },
+    {
+        "path":  "codec.exe",
+        "sha":  "90FB36CDE1C937E1F8D28BB8FB24AF323A9D304052C46C73621B23DBBC97B4A1"
+    },
+    {
+        "path":  "compile-shaders.exe",
+        "sha":  "36F26B9B388730915F6E2BD52386311823D91067668AD061B76589687A445869"
+    },
+    {
+        "path":  "codec-harness.exe",
+        "sha":  "A7CCF534C604E3CE0899C6FE61D9F2B1C7A8B6957B3EED44D9F0114A3B2BB27D"
+    },
+    {
+        "path":  "old-decode.cso",
+        "sha":  "A67FBEE6EF1426B8B6896E1132D27CA9345B9F4E01FD6C07E848A6F9D3A31CAB"
+    },
+    {
+        "path":  "new-decode.cso",
+        "sha":  "56EB37872FA7DE44E75B041A863E8232210EE659F0A3402A8184D8074BEB0159"
+    },
+    {
+        "path":  "new-shaders\\native_codec_decode.hlsl",
+        "sha":  "C0F294D8A2B1B11B47E5D14AAEA9896406AD71395F15FB4E84427F1BA5A305B0"
+    },
+    {
+        "path":  "new-shaders\\native_codec_encode.hlsl",
+        "sha":  "E97477AD12055D2338325D24ECD69019EFC7B7BA03805B58B5C25276CA630615"
+    }
+]

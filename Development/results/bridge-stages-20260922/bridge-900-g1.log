@@ -1,0 +1,11 @@
+DEVICE arch=gfx1201 match=luid modules=D:\DLSSNR-Lab\hip-backend\bridge-stages\modules\gfx1201 runtime=70260201 noise_bytes=0 graph=1
+REJECT uninitialized order bridge stage order
+REJECT staged graph staged bridge requires HIP graph off
+CHECK legacy golden bitdiff=0
+CHECK legacy graph repeat bitdiff=0
+CHECK legacy graph repeat bitdiff=0
+CHECK legacy graph repeat bitdiff=0
+CHECK legacy graph repeat bitdiff=0
+REJECT duplicate acknowledgement bridge stage order
+graph_stats builds=4 replays=4
+PASS staged bridge
