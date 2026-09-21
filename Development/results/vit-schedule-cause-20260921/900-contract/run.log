@@ -1,0 +1,4 @@
+SCHEDULE_DONE vit_contract_blocked_fp8_frag contract_roll
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT schedule controls

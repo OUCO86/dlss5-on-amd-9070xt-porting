@@ -1,0 +1,180 @@
+{
+  "1080-contract": {
+    "contract_roll": {
+      "baseline_us": 36.10609233,
+      "candidate_us": 76.68206365575,
+      "change_percent": 112.37984702109686,
+      "baseline_clock": {
+        "samples": 4,
+        "median_core_mhz": 2763.5,
+        "min_core_mhz": 2250,
+        "max_core_mhz": 2865
+      },
+      "candidate_clock": {
+        "samples": 5,
+        "median_core_mhz": 3121,
+        "min_core_mhz": 2983,
+        "max_core_mhz": 3126
+      }
+    }
+  },
+  "1080-expand": {
+    "expand_dynamic_u4": {
+      "baseline_us": 56.82072130975,
+      "candidate_us": 56.90731634375,
+      "change_percent": 0.15240044829409882,
+      "baseline_clock": {
+        "samples": 4,
+        "median_core_mhz": 2866.0,
+        "min_core_mhz": 2859,
+        "max_core_mhz": 2872
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 2873.5,
+        "min_core_mhz": 2870,
+        "max_core_mhz": 2875
+      }
+    },
+    "expand_fixed": {
+      "baseline_us": 56.18537212725,
+      "candidate_us": 36.18130357525,
+      "change_percent": -35.60369504484957,
+      "baseline_clock": {
+        "samples": 4,
+        "median_core_mhz": 2772.5,
+        "min_core_mhz": 2634,
+        "max_core_mhz": 2971
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 2485.0,
+        "min_core_mhz": 2461,
+        "max_core_mhz": 2688
+      }
+    },
+    "expand_fixed_roll": {
+      "baseline_us": 56.610053109,
+      "candidate_us": 54.30090118575,
+      "change_percent": -4.079049208457441,
+      "baseline_clock": {
+        "samples": 4,
+        "median_core_mhz": 2869.0,
+        "min_core_mhz": 2865,
+        "max_core_mhz": 2871
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 2865.5,
+        "min_core_mhz": 2858,
+        "max_core_mhz": 2875
+      }
+    },
+    "expand_fixed_u4": {
+      "baseline_us": 56.82337928175,
+      "candidate_us": 36.209889402,
+      "change_percent": -36.276423789477874,
+      "baseline_clock": {
+        "samples": 3,
+        "median_core_mhz": 2856,
+        "min_core_mhz": 2798,
+        "max_core_mhz": 2880
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 2488.0,
+        "min_core_mhz": 2474,
+        "max_core_mhz": 2634
+      }
+    }
+  },
+  "900-contract": {
+    "contract_roll": {
+      "baseline_us": 24.52868653125,
+      "candidate_us": 67.3748747345,
+      "change_percent": 174.67787420522157,
+      "baseline_clock": {
+        "samples": 4,
+        "median_core_mhz": 3013.0,
+        "min_core_mhz": 1941,
+        "max_core_mhz": 3112
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 3132.5,
+        "min_core_mhz": 3033,
+        "max_core_mhz": 3142
+      }
+    }
+  },
+  "900-expand": {
+    "expand_dynamic_u4": {
+      "baseline_us": 32.939421286750004,
+      "candidate_us": 32.8920376585,
+      "change_percent": -0.14385082189972698,
+      "baseline_clock": {
+        "samples": 4,
+        "median_core_mhz": 2837.0,
+        "min_core_mhz": 2824,
+        "max_core_mhz": 2844
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 2831.5,
+        "min_core_mhz": 2824,
+        "max_core_mhz": 2843
+      }
+    },
+    "expand_fixed": {
+      "baseline_us": 32.77113926275,
+      "candidate_us": 24.1566247335,
+      "change_percent": -26.286893660245337,
+      "baseline_clock": {
+        "samples": 3,
+        "median_core_mhz": 2785,
+        "min_core_mhz": 2718,
+        "max_core_mhz": 2805
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 2604.5,
+        "min_core_mhz": 2338,
+        "max_core_mhz": 2771
+      }
+    },
+    "expand_fixed_roll": {
+      "baseline_us": 32.780919468,
+      "candidate_us": 31.70117155925,
+      "change_percent": -3.2938304546461183,
+      "baseline_clock": {
+        "samples": 4,
+        "median_core_mhz": 2838.5,
+        "min_core_mhz": 2836,
+        "max_core_mhz": 2843
+      },
+      "candidate_clock": {
+        "samples": 4,
+        "median_core_mhz": 2840.0,
+        "min_core_mhz": 2832,
+        "max_core_mhz": 2852
+      }
+    },
+    "expand_fixed_u4": {
+      "baseline_us": 32.9503625735,
+      "candidate_us": 24.2631768605,
+      "change_percent": -26.36446167662684,
+      "baseline_clock": {
+        "samples": 3,
+        "median_core_mhz": 2820,
+        "min_core_mhz": 2789,
+        "max_core_mhz": 2836
+      },
+      "candidate_clock": {
+        "samples": 2,
+        "median_core_mhz": 2609.0,
+        "min_core_mhz": 2597,
+        "max_core_mhz": 2621
+      }
+    }
+  }
+}

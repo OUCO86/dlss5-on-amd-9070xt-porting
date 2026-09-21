@@ -1,0 +1,7 @@
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein expand_fixed
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein expand_fixed_roll
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein expand_dynamic_u4
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein expand_fixed_u4
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT schedule controls

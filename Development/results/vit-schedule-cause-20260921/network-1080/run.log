@@ -1,0 +1,17 @@
+NETWORK mode=0 slot=0 ms=18.275820 bitdiff=0 replaced=0
+NETWORK mode=1 slot=1 ms=18.058230 bitdiff=0 replaced=800
+NETWORK mode=1 slot=2 ms=18.080140 bitdiff=0 replaced=800
+NETWORK mode=0 slot=3 ms=18.273380 bitdiff=0 replaced=0
+NETWORK mode=0 slot=4 ms=18.272920 bitdiff=0 replaced=0
+NETWORK mode=1 slot=5 ms=18.088170 bitdiff=0 replaced=800
+NETWORK mode=1 slot=6 ms=18.109480 bitdiff=0 replaced=800
+NETWORK mode=0 slot=7 ms=18.338110 bitdiff=0 replaced=0
+NETWORK mode=0 slot=0 ms=18.358070 bitdiff=0 replaced=0
+NETWORK mode=2 slot=1 ms=18.787260 bitdiff=0 replaced=800
+NETWORK mode=2 slot=2 ms=18.780220 bitdiff=0 replaced=800
+NETWORK mode=0 slot=3 ms=18.345590 bitdiff=0 replaced=0
+NETWORK mode=0 slot=4 ms=18.359360 bitdiff=0 replaced=0
+NETWORK mode=2 slot=5 ms=18.791180 bitdiff=0 replaced=800
+NETWORK mode=2 slot=6 ms=18.829570 bitdiff=0 replaced=800
+NETWORK mode=0 slot=7 ms=18.386030 bitdiff=0 replaced=0
+PASS whole network schedule controls

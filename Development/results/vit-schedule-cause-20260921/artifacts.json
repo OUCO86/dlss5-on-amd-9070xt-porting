@@ -1,0 +1,22 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-schedule-cause\\network.exe",
+        "sha":  "28A5F15313F392547E6020309EAB9F95CD5405F917EC72DB86FE6404FDF5A66D"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-schedule-cause\\kernel.hip",
+        "sha":  "5619219C302CFB8DC9E4DA70074A63042A10E85B657844583171E4EE7E809556"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-schedule-cause\\pure.exe",
+        "sha":  "49C7CC1A5B876FDF3FDC7B736483925AA2F5F2110D03FF15E51F1350F7FB8816"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-schedule-cause\\gfx1200.hsaco",
+        "sha":  "0F63B9E4B7D25F6C52A4CAFDA90570E5FF3D82EE3DA9E1259692E7239B37F113"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-schedule-cause\\modules\\deep_fast-packed.hsaco",
+        "sha":  "8FBB02F1E79D7F5FB3D07917F3ADCF9F44E93B02B73AC5390C7199F8148194EE"
+    }
+]
