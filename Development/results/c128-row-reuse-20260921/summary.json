@@ -1,0 +1,51 @@
+{
+  "timings": [
+    {
+      "candidate": 1,
+      "baseline_ms": 0.043008975,
+      "candidate_ms": 0.04255135,
+      "saved_percent": 1.0640221023635044
+    },
+    {
+      "candidate": 2,
+      "baseline_ms": 0.0422482,
+      "candidate_ms": 0.035143325,
+      "saved_percent": 16.81698865277099
+    },
+    {
+      "candidate": 2,
+      "baseline_ms": 0.041399075,
+      "candidate_ms": 0.033440700000000004,
+      "saved_percent": 19.223557531176716
+    },
+    {
+      "candidate": 1,
+      "baseline_ms": 0.0414427,
+      "candidate_ms": 0.041146975,
+      "saved_percent": 0.7135756116276148
+    }
+  ],
+  "resources": {
+    "expand16": {
+      "NumVgprs": "106",
+      "ScratchSize": "0",
+      "Occupancy": "12",
+      "global_load_b64": 40,
+      "wmma": 32
+    },
+    "expand32": {
+      "NumVgprs": "108",
+      "ScratchSize": "0",
+      "Occupancy": "12",
+      "global_load_b64": 48,
+      "wmma": 64
+    },
+    "expand32n32": {
+      "NumVgprs": "98",
+      "ScratchSize": "0",
+      "Occupancy": "12",
+      "global_load_b64": 32,
+      "wmma": 32
+    }
+  }
+}

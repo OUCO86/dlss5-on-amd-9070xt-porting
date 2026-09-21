@@ -21,7 +21,7 @@ for tier,W,H,n,ms in [(900,1600,960,400,13.206886719),(1080,1920,1152,640,18.688
    add('C512',t*(512*512+8*64*256),'fp16') # mix and grouped expansion
    add('C512',t*(8*256*64+512*512+3*512*512+512*512+128*512))
  # input/output full-raster C32, middle half-raster C32 chains
- block(0,32,W,H,0);block(70,32,W,H,0)
+ block(0,32,W,H,0);block(70,32,W,H,3)
  for b in range(1,5):block(b,32,W//2,H//2,shifts[b-1])
  for c,start,end,div in [(64,5,9,4),(128,9,15,8),(256,15,23,16),(512,23,31,32)]:
   for b in range(start,end):block(b,c,W//div,H//div,shifts[b-start])

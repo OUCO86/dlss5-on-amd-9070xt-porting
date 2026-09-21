@@ -1,7 +1,7 @@
 {
   "900": {
     "stages_GFLOP": {
-      "C32/fp8": 202.672963584,
+      "C32/fp8": 203.346149376,
       "C64/fp8": 83.983597568,
       "C128/fp8": 109.414711296,
       "C256/fp8": 139.58643712,
@@ -15,18 +15,18 @@
       "up/fp16": 1.9922944,
       "RGB/fp32": 0.294912
     },
-    "total_GFLOP": 727.753949184,
-    "fp8_GFLOP": 680.98195456,
+    "total_GFLOP": 728.427134976,
+    "fp8_GFLOP": 681.655140352,
     "fp16_GFLOP": 46.477082624,
     "measured_ms": 13.206886719,
-    "effective_TFLOPS": 55.10412595097235,
-    "fp8_peak_ratio": 0.14165585077370785,
-    "optimistic_matrix_ms": 1.9949959855573587,
-    "actual_over_optimistic": 6.620006663978465
+    "effective_TFLOPS": 55.15509828126663,
+    "fp8_peak_ratio": 0.14178688504181652,
+    "optimistic_matrix_ms": 1.9967265402925773,
+    "actual_over_optimistic": 6.614269131247594
   },
   "1080": {
     "stages_GFLOP": {
-      "C32/fp8": 291.52509952,
+      "C32/fp8": 292.33250304,
       "C64/fp8": 120.406933504,
       "C128/fp8": 156.197978112,
       "C256/fp8": 197.63560448,
@@ -40,14 +40,14 @@
       "up/fp16": 2.9360128,
       "RGB/fp32": 0.42467328
     },
-    "total_GFLOP": 1043.098238976,
-    "fp8_GFLOP": 976.151904256,
+    "total_GFLOP": 1043.905642496,
+    "fp8_GFLOP": 976.959307776,
     "fp16_GFLOP": 66.52166144,
     "measured_ms": 18.688054688,
-    "effective_TFLOPS": 55.81630920878007,
-    "fp8_peak_ratio": 0.14348665606370198,
-    "optimistic_matrix_ms": 2.8592448445664114,
-    "actual_over_optimistic": 6.53601062655197
+    "effective_TFLOPS": 55.85951346591008,
+    "fp8_peak_ratio": 0.14359772099205675,
+    "optimistic_matrix_ms": 2.861320432021424,
+    "actual_over_optimistic": 6.531269437305746
   },
   "single_ffn": {
     "FLOP": 3355443200,
