@@ -1,0 +1,2348 @@
+{
+  "1080-expand": {
+    "m1-major-r1": {
+      "baseline": {
+        "per_copy_us": 35.607749773500004,
+        "slot_us": [
+          35.028779254,
+          35.721973572,
+          35.853300482,
+          35.826945786
+        ],
+        "principal_tflops": 150.7736140067885,
+        "clock_reference_tf": 322.174976,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2458,
+            "min": 2450,
+            "max": 2532
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 327,
+            "min": 322,
+            "max": 374
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 36.08466134025,
+        "slot_us": [
+          36.116404352,
+          35.976619273,
+          36.087615148,
+          36.158006588
+        ],
+        "principal_tflops": 148.78092021918377,
+        "clock_reference_tf": 323.813376,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2470.5,
+            "min": 2452,
+            "max": 2514
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 329.0,
+            "min": 322,
+            "max": 333
+          }
+        }
+      },
+      "change_percent": 1.3393476694922413
+    },
+    "m1-major-r2": {
+      "baseline": {
+        "per_copy_us": 35.844654749,
+        "slot_us": [
+          35.79193634,
+          35.762583893,
+          35.869472252,
+          35.954626511
+        ],
+        "principal_tflops": 149.77711900404836,
+        "clock_reference_tf": 321.191936,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2450.5,
+            "min": 2439,
+            "max": 2486
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 329.0,
+            "min": 321,
+            "max": 332
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 35.3292857935,
+        "slot_us": [
+          35.27324829,
+          35.317360196,
+          35.340287901,
+          35.386246787
+        ],
+        "principal_tflops": 151.96200544160882,
+        "clock_reference_tf": 314.048512,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2396,
+            "min": 2386,
+            "max": 2437
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 321,
+            "max": 330
+          }
+        }
+      },
+      "change_percent": -1.4377846825665896
+    },
+    "m1-major-r4": {
+      "baseline": {
+        "per_copy_us": 36.116531813,
+        "slot_us": [
+          35.943851652,
+          36.148558758,
+          36.113466706,
+          36.260250136
+        ],
+        "principal_tflops": 148.6496308061217,
+        "clock_reference_tf": 321.323008,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2451.5,
+            "min": 2447,
+            "max": 2496
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 329.0,
+            "min": 322,
+            "max": 346
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 35.32065469175,
+        "slot_us": [
+          35.223239191,
+          35.313582251,
+          35.353831351,
+          35.391965974
+        ],
+        "principal_tflops": 151.9991395078527,
+        "clock_reference_tf": 308.609024,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2354.5,
+            "min": 2347,
+            "max": 2435
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 329.5,
+            "min": 327,
+            "max": 359
+          }
+        }
+      },
+      "change_percent": -2.203636620954641
+    },
+    "m1-major-r8": {
+      "baseline": {
+        "per_copy_us": 36.45292588375,
+        "slot_us": [
+          36.201611237,
+          36.313715455,
+          36.309183673,
+          36.98719317
+        ],
+        "principal_tflops": 147.27786562650832,
+        "clock_reference_tf": 321.1264,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2450.0,
+            "min": 2302,
+            "max": 2475
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 329.0,
+            "min": 306,
+            "max": 337
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 35.1664404805,
+        "slot_us": [
+          35.1796875,
+          35.129718661,
+          35.209683099,
+          35.146672662
+        ],
+        "principal_tflops": 152.66569623323068,
+        "clock_reference_tf": 305.987584,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2334.5,
+            "min": 2285,
+            "max": 2382
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 329.5,
+            "min": 327,
+            "max": 343
+          }
+        }
+      },
+      "change_percent": -3.5291691189691
+    },
+    "m1-interleave-r1": {
+      "baseline": {
+        "per_copy_us": 36.486891685749995,
+        "slot_us": [
+          36.613778055,
+          36.444422291,
+          36.489237392,
+          36.400129005
+        ],
+        "principal_tflops": 147.14076403764358,
+        "clock_reference_tf": 322.568192,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2461,
+            "min": 2452,
+            "max": 2494
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 325,
+            "max": 341
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 36.25445563775,
+        "slot_us": [
+          36.285857372,
+          36.287682586,
+          36.197865528,
+          36.246417065
+        ],
+        "principal_tflops": 148.08411891888468,
+        "clock_reference_tf": 322.633728,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2461.5,
+            "min": 2459,
+            "max": 2499
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.0,
+            "min": 324,
+            "max": 329
+          }
+        }
+      },
+      "change_percent": -0.6370398717487236
+    },
+    "m1-interleave-r2": {
+      "baseline": {
+        "per_copy_us": 36.42381746025,
+        "slot_us": [
+          36.427350427,
+          36.397110009,
+          36.388668498,
+          36.482140907
+        ],
+        "principal_tflops": 147.39556406625894,
+        "clock_reference_tf": 321.388544,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2452,
+            "min": 2443,
+            "max": 2485
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 323,
+            "max": 335
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 34.65867363175,
+        "slot_us": [
+          34.62884097,
+          34.636560694,
+          34.680643362,
+          34.688649501
+        ],
+        "principal_tflops": 154.90232479877278,
+        "clock_reference_tf": 313.393152,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2391,
+            "min": 2379,
+            "max": 2438
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 323,
+            "max": 338
+          }
+        }
+      },
+      "change_percent": -4.846125287186975
+    },
+    "m1-interleave-r4": {
+      "baseline": {
+        "per_copy_us": 36.54229653175,
+        "slot_us": [
+          36.462641509,
+          36.554495174,
+          36.556403214,
+          36.59564623
+        ],
+        "principal_tflops": 146.91767156274278,
+        "clock_reference_tf": 323.682304,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2469.5,
+            "min": 2450,
+            "max": 2483
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 336.5,
+            "min": 322,
+            "max": 347
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 33.32652164075,
+        "slot_us": [
+          33.311714771,
+          33.295416245,
+          33.354332068,
+          33.344623479
+        ],
+        "principal_tflops": 161.0941933236564,
+        "clock_reference_tf": 305.004544,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2327.0,
+            "min": 2311,
+            "max": 2393
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 329.0,
+            "min": 308,
+            "max": 330
+          }
+        }
+      },
+      "change_percent": -8.80014447971531
+    },
+    "m1-interleave-r8": {
+      "baseline": {
+        "per_copy_us": 36.758593145999995,
+        "slot_us": [
+          36.563724971,
+          36.973635523,
+          36.794392523,
+          36.702619567
+        ],
+        "principal_tflops": 146.05317180329067,
+        "clock_reference_tf": 321.716224,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2454.5,
+            "min": 2127,
+            "max": 2501
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 326.0,
+            "min": 287,
+            "max": 335
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 31.74829258875,
+        "slot_us": [
+          31.773695929,
+          31.704848485,
+          31.767081737,
+          31.747544204
+        ],
+        "principal_tflops": 169.10229439873564,
+        "clock_reference_tf": 299.8272,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2287.5,
+            "min": 2190,
+            "max": 2403
+          },
+          "2": {
+            "samples": 8,
+            "median": 2250.5,
+            "min": 2238,
+            "max": 2439
+          },
+          "73": {
+            "samples": 8,
+            "median": 329.0,
+            "min": 310,
+            "max": 339
+          }
+        }
+      },
+      "change_percent": -13.63028377432668
+    },
+    "m2-major-r1": {
+      "baseline": {
+        "per_copy_us": 36.70441596375,
+        "slot_us": [
+          36.713738427,
+          36.660512273,
+          36.704039671,
+          36.739373484
+        ],
+        "principal_tflops": 146.26875211152364,
+        "clock_reference_tf": 321.388544,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2452,
+            "min": 2450,
+            "max": 2480
+          },
+          "2": {
+            "samples": 5,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 5,
+            "median": 330,
+            "min": 328,
+            "max": 337
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 38.2253623715,
+        "slot_us": [
+          38.213775678,
+          38.122758621,
+          38.210962932,
+          38.353952255
+        ],
+        "principal_tflops": 140.44887443638189,
+        "clock_reference_tf": 345.440256,
+        "telemetry": {
+          "1": {
+            "samples": 4,
+            "median": 2635.5,
+            "min": 2634,
+            "max": 2648
+          },
+          "2": {
+            "samples": 4,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 4,
+            "median": 325.5,
+            "min": 323,
+            "max": 327
+          }
+        }
+      },
+      "change_percent": 4.143769537845565
+    },
+    "m2-major-r2": {
+      "baseline": {
+        "per_copy_us": 36.7584387535,
+        "slot_us": [
+          36.706887459,
+          36.784066259,
+          36.759020359,
+          36.783780937
+        ],
+        "principal_tflops": 146.0537852546529,
+        "clock_reference_tf": 322.174976,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2458,
+            "min": 2449,
+            "max": 2489
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 330,
+            "min": 325,
+            "max": 331
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 37.863825913,
+        "slot_us": [
+          37.626571429,
+          37.943720038,
+          37.953001133,
+          37.932011052
+        ],
+        "principal_tflops": 141.7899272074545,
+        "clock_reference_tf": 337.903616,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2578,
+            "min": 2566,
+            "max": 2638
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 327,
+            "min": 318,
+            "max": 331
+          }
+        }
+      },
+      "change_percent": 3.0071656930607427
+    },
+    "m2-major-r4": {
+      "baseline": {
+        "per_copy_us": 36.85643919125,
+        "slot_us": [
+          36.847022333,
+          36.877228732,
+          36.85453284,
+          36.84697286
+        ],
+        "principal_tflops": 145.66543154485126,
+        "clock_reference_tf": 321.912832,
+        "telemetry": {
+          "1": {
+            "samples": 4,
+            "median": 2456.0,
+            "min": 2445,
+            "max": 2464
+          },
+          "2": {
+            "samples": 4,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 4,
+            "median": 330.0,
+            "min": 328,
+            "max": 333
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 36.53276392425,
+        "slot_us": [
+          36.493105209,
+          36.650799554,
+          36.541296296,
+          36.445854638
+        ],
+        "principal_tflops": 146.9560072468625,
+        "clock_reference_tf": 325.38624,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2482.5,
+            "min": 2473,
+            "max": 2500
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 325.5,
+            "min": 308,
+            "max": 350
+          }
+        }
+      },
+      "change_percent": -0.8782054753592172
+    },
+    "m2-major-r8": {
+      "baseline": {
+        "per_copy_us": 36.874505889999995,
+        "slot_us": [
+          36.859788077,
+          36.90738465,
+          36.898995297,
+          36.831855536
+        ],
+        "principal_tflops": 145.59406263002813,
+        "clock_reference_tf": 321.388544,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2452,
+            "min": 2451,
+            "max": 2474
+          },
+          "2": {
+            "samples": 5,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 5,
+            "median": 328,
+            "min": 307,
+            "max": 335
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 36.03281478925,
+        "slot_us": [
+          36.097949081,
+          35.93857604,
+          36.096699726,
+          35.99803431
+        ],
+        "principal_tflops": 148.99499668290406,
+        "clock_reference_tf": 319.684608,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2439,
+            "min": 2357,
+            "max": 2493
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 327,
+            "min": 313,
+            "max": 356
+          }
+        }
+      },
+      "change_percent": -2.2825827233070917
+    },
+    "m2-interleave-r1": {
+      "baseline": {
+        "per_copy_us": 36.8919971385,
+        "slot_us": [
+          36.892748324,
+          36.882176235,
+          36.910828025,
+          36.88223597
+        ],
+        "principal_tflops": 145.52503351457995,
+        "clock_reference_tf": 322.306048,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2459,
+            "min": 2447,
+            "max": 2545
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 324,
+            "max": 333
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 40.18106144925,
+        "slot_us": [
+          40.010581445,
+          40.246936341,
+          40.269896194,
+          40.196831817
+        ],
+        "principal_tflops": 133.61292425738566,
+        "clock_reference_tf": 350.355456,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2673,
+            "min": 2577,
+            "max": 2702
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 324,
+            "min": 318,
+            "max": 329
+          }
+        }
+      },
+      "change_percent": 8.915386983258689
+    },
+    "m2-interleave-r2": {
+      "baseline": {
+        "per_copy_us": 36.90829597025,
+        "slot_us": [
+          36.809514449,
+          36.913264742,
+          36.940628765,
+          36.969775925
+        ],
+        "principal_tflops": 145.4607691541072,
+        "clock_reference_tf": 320.47104,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2445,
+            "min": 2433,
+            "max": 2506
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 328,
+            "min": 326,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 36.727550402,
+        "slot_us": [
+          37.807536018,
+          36.375700212,
+          36.364745229,
+          36.362220149
+        ],
+        "principal_tflops": 146.17661840326946,
+        "clock_reference_tf": 332.201984,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2534.5,
+            "min": 2531,
+            "max": 2569
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 327.5,
+            "min": 319,
+            "max": 330
+          }
+        }
+      },
+      "change_percent": -0.4897152889304146
+    },
+    "m2-interleave-r4": {
+      "baseline": {
+        "per_copy_us": 36.7966316755,
+        "slot_us": [
+          36.964939338,
+          36.893435635,
+          36.773565456,
+          36.554586273
+        ],
+        "principal_tflops": 145.90218929127153,
+        "clock_reference_tf": 320.077824,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2442.0,
+            "min": 2420,
+            "max": 2478
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 327.0,
+            "min": 317,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 32.507824156750004,
+        "slot_us": [
+          32.465743198,
+          32.505370569,
+          32.532376026,
+          32.527806834
+        ],
+        "principal_tflops": 165.1512907819525,
+        "clock_reference_tf": 313.786368,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2394.0,
+            "min": 2337,
+            "max": 2428
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 329.5,
+            "min": 310,
+            "max": 343
+          }
+        }
+      },
+      "change_percent": -11.65543508593907
+    },
+    "m2-interleave-r8": {
+      "baseline": {
+        "per_copy_us": 36.730151066,
+        "slot_us": [
+          36.409176869,
+          36.751602751,
+          36.999177462,
+          36.760647182
+        ],
+        "principal_tflops": 146.16626842489777,
+        "clock_reference_tf": 319.750144,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2439.5,
+            "min": 2432,
+            "max": 2460
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 327.5,
+            "min": 314,
+            "max": 331
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 30.31613784175,
+        "slot_us": [
+          30.487745098,
+          30.193781017,
+          30.217313665,
+          30.365711587
+        ],
+        "principal_tflops": 177.09080055067105,
+        "clock_reference_tf": 302.579712,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2308.5,
+            "min": 2276,
+            "max": 2343
+          },
+          "2": {
+            "samples": 6,
+            "median": 2505.0,
+            "min": 2454,
+            "max": 2505
+          },
+          "73": {
+            "samples": 6,
+            "median": 330.0,
+            "min": 325,
+            "max": 341
+          }
+        }
+      },
+      "change_percent": -17.46252884374129
+    }
+  },
+  "900-expand": {
+    "m1-major-r1": {
+      "baseline": {
+        "per_copy_us": 24.311078758,
+        "slot_us": [
+          24.629800751,
+          24.204057971,
+          24.181799119,
+          24.228657191
+        ],
+        "principal_tflops": 138.02115625559523,
+        "clock_reference_tf": 341.573632,
+        "telemetry": {
+          "1": {
+            "samples": 4,
+            "median": 2606.0,
+            "min": 2595,
+            "max": 2617
+          },
+          "2": {
+            "samples": 4,
+            "median": 1538.0,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 4,
+            "median": 325.5,
+            "min": 323,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 25.000183736,
+        "slot_us": [
+          25.101046144,
+          25.097090692,
+          24.88284795,
+          24.919750158
+        ],
+        "principal_tflops": 134.21674158211076,
+        "clock_reference_tf": 344.850432,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2631.0,
+            "min": 2603,
+            "max": 2662
+          },
+          "2": {
+            "samples": 6,
+            "median": 1538.0,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 6,
+            "median": 330.0,
+            "min": 325,
+            "max": 345
+          }
+        }
+      },
+      "change_percent": 2.834530646951383
+    },
+    "m1-major-r2": {
+      "baseline": {
+        "per_copy_us": 24.283698221,
+        "slot_us": [
+          24.22025641,
+          24.337203557,
+          24.235721597,
+          24.34161132
+        ],
+        "principal_tflops": 138.17677890175258,
+        "clock_reference_tf": 338.16576,
+        "telemetry": {
+          "1": {
+            "samples": 4,
+            "median": 2580.0,
+            "min": 2579,
+            "max": 2601
+          },
+          "2": {
+            "samples": 4,
+            "median": 1632.5,
+            "min": 1538,
+            "max": 1745
+          },
+          "73": {
+            "samples": 4,
+            "median": 329.0,
+            "min": 327,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 23.231278722749998,
+        "slot_us": [
+          23.479889043,
+          23.464142571,
+          23.014940061,
+          22.966143216
+        ],
+        "principal_tflops": 144.4364401996551,
+        "clock_reference_tf": 314.048512,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2396,
+            "min": 2382,
+            "max": 2523
+          },
+          "2": {
+            "samples": 5,
+            "median": 2238,
+            "min": 1889,
+            "max": 2238
+          },
+          "73": {
+            "samples": 5,
+            "median": 329,
+            "min": 316,
+            "max": 330
+          }
+        }
+      },
+      "change_percent": -4.333851823853974
+    },
+    "m1-major-r4": {
+      "baseline": {
+        "per_copy_us": 24.3162844955,
+        "slot_us": [
+          24.279711657,
+          24.337258797,
+          24.288442007,
+          24.359725521
+        ],
+        "principal_tflops": 137.99160807733443,
+        "clock_reference_tf": 338.16576,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2580.0,
+            "min": 2531,
+            "max": 2601
+          },
+          "2": {
+            "samples": 6,
+            "median": 1577.5,
+            "min": 1538,
+            "max": 2151
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.0,
+            "min": 319,
+            "max": 331
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 22.52027973875,
+        "slot_us": [
+          22.512378976,
+          22.494617225,
+          22.524438664,
+          22.54968409
+        ],
+        "principal_tflops": 148.9965150932999,
+        "clock_reference_tf": 305.332224,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2329.5,
+            "min": 2321,
+            "max": 2434
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2107,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.5,
+            "min": 325,
+            "max": 340
+          }
+        }
+      },
+      "change_percent": -7.38601638372166
+    },
+    "m1-major-r8": {
+      "baseline": {
+        "per_copy_us": 24.36197086,
+        "slot_us": [
+          24.325569491,
+          24.415748851,
+          24.345082091,
+          24.361483007
+        ],
+        "principal_tflops": 137.7328303724931,
+        "clock_reference_tf": 338.362368,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2581.5,
+            "min": 2560,
+            "max": 2617
+          },
+          "2": {
+            "samples": 6,
+            "median": 1538.0,
+            "min": 1538,
+            "max": 1984
+          },
+          "73": {
+            "samples": 6,
+            "median": 329.5,
+            "min": 326,
+            "max": 334
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 22.42465377225,
+        "slot_us": [
+          22.453509407,
+          22.425892426,
+          22.399051966,
+          22.42016129
+        ],
+        "principal_tflops": 149.63188435721958,
+        "clock_reference_tf": 302.77632,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2310,
+            "min": 2213,
+            "max": 2339
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 1956,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 328,
+            "min": 303,
+            "max": 338
+          }
+        }
+      },
+      "change_percent": -7.9522182293177535
+    },
+    "m1-interleave-r1": {
+      "baseline": {
+        "per_copy_us": 24.3567889295,
+        "slot_us": [
+          24.379513633,
+          24.345095958,
+          24.365420914,
+          24.337125213
+        ],
+        "principal_tflops": 137.7621331659206,
+        "clock_reference_tf": 340.000768,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2594,
+            "min": 2578,
+            "max": 2619
+          },
+          "2": {
+            "samples": 5,
+            "median": 1538,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 5,
+            "median": 330,
+            "min": 321,
+            "max": 339
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 24.1801564025,
+        "slot_us": [
+          24.192272933,
+          24.210534293,
+          24.13976177,
+          24.178056614
+        ],
+        "principal_tflops": 138.7684655196473,
+        "clock_reference_tf": 340.7872,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2600.0,
+            "min": 2592,
+            "max": 2606
+          },
+          "2": {
+            "samples": 6,
+            "median": 1538.0,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.0,
+            "min": 324,
+            "max": 330
+          }
+        }
+      },
+      "change_percent": -0.7251880677344502
+    },
+    "m1-interleave-r2": {
+      "baseline": {
+        "per_copy_us": 24.40087864075,
+        "slot_us": [
+          24.322198362,
+          24.452383066,
+          24.360699388,
+          24.468233747
+        ],
+        "principal_tflops": 137.51321210197472,
+        "clock_reference_tf": 337.5104,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2575.0,
+            "min": 2466,
+            "max": 2600
+          },
+          "2": {
+            "samples": 6,
+            "median": 1583.0,
+            "min": 1538,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.5,
+            "min": 324,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 22.53546348475,
+        "slot_us": [
+          22.475966674,
+          22.51502278,
+          22.561511729,
+          22.589352756
+        ],
+        "principal_tflops": 148.8961255343457,
+        "clock_reference_tf": 313.720832,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2393.5,
+            "min": 2388,
+            "max": 2461
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2079,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 329.0,
+            "min": 323,
+            "max": 330
+          }
+        }
+      },
+      "change_percent": -7.6448687912603175
+    },
+    "m1-interleave-r4": {
+      "baseline": {
+        "per_copy_us": 24.412736394,
+        "slot_us": [
+          24.382261946,
+          24.4512,
+          24.373842938,
+          24.443640692
+        ],
+        "principal_tflops": 137.446419190627,
+        "clock_reference_tf": 338.558976,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2583,
+            "min": 2550,
+            "max": 2603
+          },
+          "2": {
+            "samples": 5,
+            "median": 1538,
+            "min": 1538,
+            "max": 2040
+          },
+          "73": {
+            "samples": 5,
+            "median": 331,
+            "min": 323,
+            "max": 343
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 21.66466876725,
+        "slot_us": [
+          21.661069969,
+          21.679744312,
+          21.683064744,
+          21.634796044
+        ],
+        "principal_tflops": 154.88089091268958,
+        "clock_reference_tf": 305.594368,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2331.5,
+            "min": 2314,
+            "max": 2392
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2102,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 326.5,
+            "min": 267,
+            "max": 331
+          }
+        }
+      },
+      "change_percent": -11.256696432544944
+    },
+    "m1-interleave-r8": {
+      "baseline": {
+        "per_copy_us": 24.41546887475,
+        "slot_us": [
+          24.337337725,
+          24.456353483,
+          24.42784,
+          24.440344291
+        ],
+        "principal_tflops": 137.43103674204403,
+        "clock_reference_tf": 337.772544,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2577.0,
+            "min": 2384,
+            "max": 2599
+          },
+          "2": {
+            "samples": 8,
+            "median": 1546.0,
+            "min": 1538,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 326.0,
+            "min": 312,
+            "max": 329
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 20.265174299,
+        "slot_us": [
+          20.376558172,
+          20.25,
+          20.213270142,
+          20.220868882
+        ],
+        "principal_tflops": 165.5768240871028,
+        "clock_reference_tf": 296.288256,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2260.5,
+            "min": 2249,
+            "max": 2316
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2065,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 328.5,
+            "min": 307,
+            "max": 343
+          }
+        }
+      },
+      "change_percent": -16.998627374476317
+    },
+    "m2-major-r1": {
+      "baseline": {
+        "per_copy_us": 24.41752749375,
+        "slot_us": [
+          24.4224,
+          24.414402725,
+          24.419988493,
+          24.413318757
+        ],
+        "principal_tflops": 137.41945005934247,
+        "clock_reference_tf": 338.558976,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2583.0,
+            "min": 2577,
+            "max": 2661
+          },
+          "2": {
+            "samples": 6,
+            "median": 1538.0,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.0,
+            "min": 319,
+            "max": 329
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 22.093128621,
+        "slot_us": [
+          22.126246883,
+          22.075488173,
+          22.064150943,
+          22.106628485
+        ],
+        "principal_tflops": 151.87723104144598,
+        "clock_reference_tf": 351.92832,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2685,
+            "min": 2674,
+            "max": 2724
+          },
+          "2": {
+            "samples": 5,
+            "median": 1538,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 5,
+            "median": 328,
+            "min": 326,
+            "max": 334
+          }
+        }
+      },
+      "change_percent": -9.519386732931745
+    },
+    "m2-major-r2": {
+      "baseline": {
+        "per_copy_us": 24.46082441,
+        "slot_us": [
+          24.394196504,
+          24.514014873,
+          24.408374116,
+          24.526712147
+        ],
+        "principal_tflops": 137.17621057073765,
+        "clock_reference_tf": 340.328448,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2596.5,
+            "min": 2572,
+            "max": 2702
+          },
+          "2": {
+            "samples": 6,
+            "median": 1649.5,
+            "min": 1538,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.5,
+            "min": 326,
+            "max": 332
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 26.1010038405,
+        "slot_us": [
+          26.098512368,
+          26.101343694,
+          26.109483836,
+          26.094675464
+        ],
+        "principal_tflops": 128.55609770814556,
+        "clock_reference_tf": 358.219776,
+        "telemetry": {
+          "1": {
+            "samples": 4,
+            "median": 2733.0,
+            "min": 2730,
+            "max": 2751
+          },
+          "2": {
+            "samples": 4,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 4,
+            "median": 329.5,
+            "min": 329,
+            "max": 340
+          }
+        }
+      },
+      "change_percent": 6.70533177054109
+    },
+    "m2-major-r4": {
+      "baseline": {
+        "per_copy_us": 24.469448314250002,
+        "slot_us": [
+          24.410121343,
+          24.519145299,
+          24.4214596,
+          24.527067015
+        ],
+        "principal_tflops": 137.12786479317262,
+        "clock_reference_tf": 339.214336,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2588.0,
+            "min": 2574,
+            "max": 2610
+          },
+          "2": {
+            "samples": 6,
+            "median": 1568.5,
+            "min": 1538,
+            "max": 2215
+          },
+          "73": {
+            "samples": 6,
+            "median": 327.0,
+            "min": 325,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 26.27584700325,
+        "slot_us": [
+          26.292352372,
+          26.263170498,
+          26.263683432,
+          26.284181711
+        ],
+        "principal_tflops": 127.70066744508647,
+        "clock_reference_tf": 351.141888,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2679.0,
+            "min": 2675,
+            "max": 2688
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 329.0,
+            "min": 325,
+            "max": 334
+          }
+        }
+      },
+      "change_percent": 7.382261609666219
+    },
+    "m2-major-r8": {
+      "baseline": {
+        "per_copy_us": 25.454753131,
+        "slot_us": [
+          24.402870144,
+          25.820403744,
+          25.71941756,
+          25.876321076
+        ],
+        "principal_tflops": 131.8199073757106,
+        "clock_reference_tf": 341.245952,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2603.5,
+            "min": 2575,
+            "max": 2613
+          },
+          "2": {
+            "samples": 6,
+            "median": 1570.0,
+            "min": 1538,
+            "max": 2144
+          },
+          "73": {
+            "samples": 6,
+            "median": 326.5,
+            "min": 313,
+            "max": 333
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 26.26088085425,
+        "slot_us": [
+          25.441253444,
+          26.150206978,
+          26.784576023,
+          26.667486972
+        ],
+        "principal_tflops": 127.7734444104514,
+        "clock_reference_tf": 341.966848,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2609.0,
+            "min": 2421,
+            "max": 2648
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 326.5,
+            "min": 295,
+            "max": 341
+          }
+        }
+      },
+      "change_percent": 3.166904503458956
+    },
+    "m2-interleave-r1": {
+      "baseline": {
+        "per_copy_us": 25.6037142575,
+        "slot_us": [
+          25.875606969,
+          25.508778715,
+          25.492553098,
+          25.537918248
+        ],
+        "principal_tflops": 131.0529857603415,
+        "clock_reference_tf": 341.835776,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2608,
+            "min": 2600,
+            "max": 2656
+          },
+          "2": {
+            "samples": 7,
+            "median": 1538,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 7,
+            "median": 325,
+            "min": 316,
+            "max": 328
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 23.8159073775,
+        "slot_us": [
+          24.230305967,
+          23.916672917,
+          23.477943166,
+          23.63870746
+        ],
+        "principal_tflops": 140.89084017726924,
+        "clock_reference_tf": 358.744064,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2737,
+            "min": 2714,
+            "max": 2753
+          },
+          "2": {
+            "samples": 5,
+            "median": 1538,
+            "min": 1538,
+            "max": 1538
+          },
+          "73": {
+            "samples": 5,
+            "median": 325,
+            "min": 325,
+            "max": 344
+          }
+        }
+      },
+      "change_percent": -6.982607531156548
+    },
+    "m2-interleave-r2": {
+      "baseline": {
+        "per_copy_us": 25.56318950875,
+        "slot_us": [
+          25.473102957,
+          25.582519531,
+          25.597717789,
+          25.599417758
+        ],
+        "principal_tflops": 131.26074110789142,
+        "clock_reference_tf": 342.360064,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2612,
+            "min": 2606,
+            "max": 3131
+          },
+          "2": {
+            "samples": 7,
+            "median": 1538,
+            "min": 1538,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 324,
+            "min": 69,
+            "max": 335
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 26.36534843625,
+        "slot_us": [
+          26.342796498,
+          26.418562874,
+          26.345378609,
+          26.354655764
+        ],
+        "principal_tflops": 127.2671669070971,
+        "clock_reference_tf": 359.661568,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2744,
+            "min": 2730,
+            "max": 2771
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2234,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 326,
+            "min": 324,
+            "max": 334
+          }
+        }
+      },
+      "change_percent": 3.1379453930247214
+    },
+    "m2-interleave-r4": {
+      "baseline": {
+        "per_copy_us": 24.71109807725,
+        "slot_us": [
+          25.502910947,
+          24.465498652,
+          24.398325245,
+          24.477657465
+        ],
+        "principal_tflops": 135.7868917646016,
+        "clock_reference_tf": 335.740928,
+        "telemetry": {
+          "1": {
+            "samples": 4,
+            "median": 2561.5,
+            "min": 2543,
+            "max": 2606
+          },
+          "2": {
+            "samples": 4,
+            "median": 1774.0,
+            "min": 1538,
+            "max": 2061
+          },
+          "73": {
+            "samples": 4,
+            "median": 323.0,
+            "min": 323,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 22.6205078865,
+        "slot_us": [
+          23.058297822,
+          22.474131323,
+          22.472920546,
+          22.476681855
+        ],
+        "principal_tflops": 148.33633342081328,
+        "clock_reference_tf": 333.840384,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2547.0,
+            "min": 2539,
+            "max": 2575
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2410
+          },
+          "73": {
+            "samples": 8,
+            "median": 328.5,
+            "min": 321,
+            "max": 331
+          }
+        }
+      },
+      "change_percent": -8.460126637086507
+    },
+    "m2-interleave-r8": {
+      "baseline": {
+        "per_copy_us": 24.44647428025,
+        "slot_us": [
+          24.429870335,
+          24.465877991,
+          24.44424224,
+          24.445906555
+        ],
+        "principal_tflops": 137.2567332832457,
+        "clock_reference_tf": 337.379328,
+        "telemetry": {
+          "1": {
+            "samples": 5,
+            "median": 2574,
+            "min": 2556,
+            "max": 2594
+          },
+          "2": {
+            "samples": 5,
+            "median": 1604,
+            "min": 1538,
+            "max": 1985
+          },
+          "73": {
+            "samples": 5,
+            "median": 330,
+            "min": 327,
+            "max": 336
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 20.269188785,
+        "slot_us": [
+          20.153346543,
+          20.190530799,
+          20.393529012,
+          20.339348786
+        ],
+        "principal_tflops": 165.5440301825577,
+        "clock_reference_tf": 305.790976,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2333.0,
+            "min": 2311,
+            "max": 2410
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2009,
+            "max": 2300
+          },
+          "73": {
+            "samples": 8,
+            "median": 327.0,
+            "min": 315,
+            "max": 357
+          }
+        }
+      },
+      "change_percent": -17.087476285383108
+    }
+  },
+  "streams-1080-expand": {
+    "m1-major-r8": {
+      "baseline": {
+        "per_copy_us": 34.9050511595,
+        "slot_us": [
+          34.507075472,
+          35.069890511,
+          35.049780381,
+          34.993458274
+        ],
+        "principal_tflops": 153.80894574448476,
+        "clock_reference_tf": 306.446336,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2338,
+            "min": 1977,
+            "max": 2348
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 298,
+            "max": 344
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 35.0068979645,
+        "slot_us": [
+          34.912291818,
+          34.961925795,
+          35.068877551,
+          35.084496694
+        ],
+        "principal_tflops": 153.36146394474406,
+        "clock_reference_tf": 307.101696,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2343,
+            "min": 2020,
+            "max": 2406
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 245,
+            "max": 352
+          }
+        }
+      },
+      "change_percent": 0.2917824258002355
+    },
+    "m1-interleave-r8": {
+      "baseline": {
+        "per_copy_us": 31.613084894,
+        "slot_us": [
+          31.471037556,
+          31.648209549,
+          31.650898693,
+          31.682193778
+        ],
+        "principal_tflops": 169.8255370521892,
+        "clock_reference_tf": 299.761664,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2287,
+            "min": 2210,
+            "max": 2328
+          },
+          "2": {
+            "samples": 7,
+            "median": 2270,
+            "min": 2238,
+            "max": 2505
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 322,
+            "max": 341
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 34.78818896125,
+        "slot_us": [
+          34.797382671,
+          34.716605839,
+          34.833423132,
+          34.805344203
+        ],
+        "principal_tflops": 154.32562833265388,
+        "clock_reference_tf": 307.101696,
+        "telemetry": {
+          "1": {
+            "samples": 6,
+            "median": 2343.0,
+            "min": 2133,
+            "max": 2433
+          },
+          "2": {
+            "samples": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 6,
+            "median": 328.5,
+            "min": 303,
+            "max": 363
+          }
+        }
+      },
+      "change_percent": 10.04363882201391
+    },
+    "m2-major-r8": {
+      "baseline": {
+        "per_copy_us": 33.95263615475,
+        "slot_us": [
+          33.938732394,
+          34.013030194,
+          33.859851169,
+          33.998930862
+        ],
+        "principal_tflops": 158.123484006673,
+        "clock_reference_tf": 315.621376,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2408.0,
+            "min": 1874,
+            "max": 2415
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 328.5,
+            "min": 241,
+            "max": 349
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 34.00238704575,
+        "slot_us": [
+          33.993932905,
+          33.940045646,
+          34.044010226,
+          34.031559406
+        ],
+        "principal_tflops": 157.89212424340784,
+        "clock_reference_tf": 316.014592,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2411.0,
+            "min": 2249,
+            "max": 2464
+          },
+          "2": {
+            "samples": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "samples": 8,
+            "median": 328.0,
+            "min": 283,
+            "max": 350
+          }
+        }
+      },
+      "change_percent": 0.1465302746250341
+    },
+    "m2-interleave-r8": {
+      "baseline": {
+        "per_copy_us": 30.54920201425,
+        "slot_us": [
+          30.652079454,
+          30.518108974,
+          30.419930176,
+          30.606689453
+        ],
+        "principal_tflops": 175.7397498466804,
+        "clock_reference_tf": 302.972928,
+        "telemetry": {
+          "1": {
+            "samples": 8,
+            "median": 2311.5,
+            "min": 2161,
+            "max": 2333
+          },
+          "2": {
+            "samples": 8,
+            "median": 2505.0,
+            "min": 2330,
+            "max": 2505
+          },
+          "73": {
+            "samples": 8,
+            "median": 325.5,
+            "min": 279,
+            "max": 331
+          }
+        }
+      },
+      "candidate": {
+        "per_copy_us": 36.566569558,
+        "slot_us": [
+          36.689775368,
+          36.222187105,
+          36.601095618,
+          36.753220141
+        ],
+        "principal_tflops": 146.82014706040258,
+        "clock_reference_tf": 321.388544,
+        "telemetry": {
+          "1": {
+            "samples": 7,
+            "median": 2452,
+            "min": 2077,
+            "max": 2507
+          },
+          "2": {
+            "samples": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2422
+          },
+          "73": {
+            "samples": 7,
+            "median": 329,
+            "min": 269,
+            "max": 350
+          }
+        }
+      },
+      "change_percent": 19.697298610101612
+    }
+  }
+}

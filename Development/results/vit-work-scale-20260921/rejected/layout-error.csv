@@ -1,0 +1,3 @@
+bm,order,copies,slot,original,tokens,launches,groups,mean_us,per_copy_us,output_diff,checked_bytes,start_ms,end_ms
+1,major,1,0,1,640,4654,2560,34.496776966,34.496776966,0,2621440,210935906,210936062
+1,major,1,1,0,640,5623,2560,69.159701227,69.159701227,2111524,2621440,210936171,210936562

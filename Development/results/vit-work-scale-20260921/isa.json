@@ -1,0 +1,32 @@
+{
+  "vit_expand_blocked_fp8_frag_bytein": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_m1_major": {
+    "NumVgprs": 84,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_m1_interleave": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "LDSByteSize": 0
+  },
+  "probe_m2_major": {
+    "NumVgprs": 126,
+    "ScratchSize": 0,
+    "Occupancy": 10,
+    "LDSByteSize": 0
+  },
+  "probe_m2_interleave": {
+    "NumVgprs": 119,
+    "ScratchSize": 0,
+    "Occupancy": 12,
+    "LDSByteSize": 0
+  }
+}

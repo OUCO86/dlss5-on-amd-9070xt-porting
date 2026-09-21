@@ -1,0 +1,7 @@
+SCALE_DONE bm=1 order=major copies=8
+SCALE_DONE bm=1 order=interleave copies=8
+SCALE_DONE bm=2 order=major copies=8
+SCALE_DONE bm=2 order=interleave copies=8
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT work scale controls

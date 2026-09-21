@@ -1,0 +1,34 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\kernel.hip",
+        "sha":  "E441C5D0ECF216678231300D4A89121435FC6FB07CB3F6D11C16994B0C2D9AA7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\pure.exe",
+        "sha":  "F963F2AAF5BF46837468F247B6CCC41CFE2F32449B574906649996AE02A6ACA7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\gfx1200.hsaco",
+        "sha":  "9761E49A1ABD37BD98C6A9638E47EFE4DB8F5B09CA52E262EE578EFE8FB07B2F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\modules\\deep_fast-packed.hsaco",
+        "sha":  "0FCEFDD1AA603A6464DAB5C071FE016D9B43BAC550DD2629AADDA468F7BF5024"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\streams.hip",
+        "sha":  "8BE047792F18FACA05D25F523D7C6B7D992B073644D4D1C7CD03FF7B6EAD7AC9"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\streams.exe",
+        "sha":  "16505735628059ED6E171FE28E17D09C829D5C7659CD1DCA3D40E1D6746B5E8F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\streams-gfx1200.hsaco",
+        "sha":  "F601D3C1982DE96BD3C3E5D3B44156DC08E156BAB2FA4ABC2C0A12647FD0F772"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-work-scale\\modules-streams\\deep_fast-packed.hsaco",
+        "sha":  "8AC3824479CB75E3CC208C6515F5CE54A792A27F40B472B6A0E5C2807810228F"
+    }
+]
