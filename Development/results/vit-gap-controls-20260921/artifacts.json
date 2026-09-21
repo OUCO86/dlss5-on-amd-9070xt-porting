@@ -1,0 +1,30 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-gap-controls\\kernel.hip",
+        "sha":  "EF7B1B879100DC19C45CBA2B7236ADE905822F2370354D9E69DB806941487EB5"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-gap-controls\\pure.exe",
+        "sha":  "90B9EF96F33CB35DB79B238BFF4B1D67937FC32D8A979FC6A7DBA6CC9E1D24E0"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-gap-controls\\pure-filter.exe",
+        "sha":  "9A47384CFD3DB95CB9A011966FD792EA2B08D041D5B5648D6E3A29004535825F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-gap-controls\\prime.exe",
+        "sha":  "B41888127E831EB310DCFCCBE045D87971379C6B0ADDB9E0BE96DDDDE5FD9A30"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-gap-controls\\occupancy.exe",
+        "sha":  "9898B186279550CB5805E6837B49F0B01CE14373B239DD3EE762DFACF7EE6C9E"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-gap-controls\\gfx1200.hsaco",
+        "sha":  "1D597EF06E920AA170626F56F776B3FC466EF33FA762C5B33287DB6FF63F24C7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-gap-controls\\modules\\deep_fast-packed.hsaco",
+        "sha":  "49F4EC804BDF22402DD39C3F2C57993079CCD7ECFCDE77F72074D9DEF60B9A9D"
+    }
+]

@@ -1,0 +1,13 @@
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein u1
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein u2
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein u4
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein u8
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein u16
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein group4
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein group8
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein nmajor
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein token_fixed
+SCHEDULE_DONE vit_expand_blocked_fp8_frag_bytein m2
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT gap controls

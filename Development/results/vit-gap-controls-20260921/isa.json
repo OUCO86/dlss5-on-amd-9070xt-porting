@@ -1,0 +1,90 @@
+{
+  "vit_expand_blocked_fp8_frag_bytein": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 20,
+    "load64_static": 25
+  },
+  "probe_u1": {
+    "NumVgprs": 47,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 4,
+    "load64_static": 5
+  },
+  "probe_u2": {
+    "NumVgprs": 57,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 8,
+    "load64_static": 10
+  },
+  "probe_u4": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 16,
+    "load64_static": 20
+  },
+  "probe_u8": {
+    "NumVgprs": 94,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 32,
+    "load64_static": 40
+  },
+  "probe_u16": {
+    "NumVgprs": 97,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 12,
+    "wmma_static": 64,
+    "load64_static": 80
+  },
+  "probe_group4": {
+    "NumVgprs": 78,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 16,
+    "load64_static": 20
+  },
+  "probe_group8": {
+    "NumVgprs": 78,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 16,
+    "load64_static": 20
+  },
+  "probe_nmajor": {
+    "NumVgprs": 78,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 32,
+    "load64_static": 40
+  },
+  "probe_token_fixed": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 32,
+    "load64_static": 40
+  },
+  "probe_m2": {
+    "NumVgprs": 95,
+    "ScratchSize": 0,
+    "LDSByteSize": 0,
+    "Occupancy": 16,
+    "wmma_static": 16,
+    "load64_static": 12
+  }
+}
