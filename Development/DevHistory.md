@@ -3229,3 +3229,7 @@ mh-phase-trace：c256_attention_project 每 wave 约 50k 周期，两批注意�
 ## 2026-09-23 09:40：ffn_fused_c256 barrier 审查，BatchNorm=true 合并两对同步无收益
 
 8 个 barrier 中 4 个真依赖，QKV 归一化两 part 各一对可合并（函数体已有 BatchNorm 分支）。翻模板参数试：barrier 8→6，LDS 21.6→39KB、驻留 12→10，整网 ±0.02ms 交叠，逐位同，不采用。结论：该核同步等待属结构税。results/mhfast-batchnorm-20260923。
+
+## 2026-09-23 10:30：ffn_fused_c256 宽权重片段（打包器 + 四循环步长 32），逐位同，约 −0.03ms，未采用
+
+权重片段读 162→94（b128 68），两轮各三份 ABBA 剔除进程首槽冷启动后 1080 −0.03～−0.05、900 −0.01～−0.03ms。瓶颈不在权重读。采用需重编 addon（打包器在 host），待下次 addon 重编顺带。results/mhfast-wide-frag-20260923。
