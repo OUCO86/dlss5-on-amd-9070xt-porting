@@ -1,0 +1,9 @@
+NETWORK mode=0 slot=0 ms=17.855840 bitdiff=0 replaced=0
+NETWORK mode=1 slot=1 ms=17.888090 bitdiff=0 replaced=3200
+NETWORK mode=1 slot=2 ms=17.921090 bitdiff=0 replaced=3200
+NETWORK mode=0 slot=3 ms=17.948615 bitdiff=0 replaced=0
+NETWORK mode=0 slot=4 ms=17.959905 bitdiff=0 replaced=0
+NETWORK mode=1 slot=5 ms=17.977455 bitdiff=0 replaced=3200
+NETWORK mode=1 slot=6 ms=17.974555 bitdiff=0 replaced=3200
+NETWORK mode=0 slot=7 ms=18.009155 bitdiff=0 replaced=0
+PASS layout network controls

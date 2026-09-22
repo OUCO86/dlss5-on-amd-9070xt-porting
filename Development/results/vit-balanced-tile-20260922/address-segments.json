@@ -1,0 +1,29 @@
+{
+  "32": {
+    "A_row_per_fragment": 16,
+    "A_tile_per_fragment": 8,
+    "B_per_fragment": 8,
+    "M16N64_row_sum": 48,
+    "M32N32_row_sum": 48,
+    "M16N64_tile_sum": 40,
+    "M32N32_tile_sum": 32
+  },
+  "64": {
+    "A_row_per_fragment": 16,
+    "A_tile_per_fragment": 4,
+    "B_per_fragment": 4,
+    "M16N64_row_sum": 32,
+    "M32N32_row_sum": 40,
+    "M16N64_tile_sum": 20,
+    "M32N32_tile_sum": 16
+  },
+  "128": {
+    "A_row_per_fragment": 16,
+    "A_tile_per_fragment": 2,
+    "B_per_fragment": 2,
+    "M16N64_row_sum": 24,
+    "M32N32_row_sum": 36,
+    "M16N64_tile_sum": 10,
+    "M32N32_tile_sum": 8
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "vit_expand_blocked_fp8_frag_bytein": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB48_7:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 4,
+        "load64": 5,
+        "load32": 0
+      },
+      {
+        "label": ".LBB48_12:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 20,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_control": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB76_5:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 20,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m32n32_u4": {
+    "NumVgprs": 78,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB77_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 8,
+        "load64": 12,
+        "load32": 0
+      },
+      {
+        "label": ".LBB77_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 16,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m32n32_u1": {
+    "NumVgprs": 49,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB78_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 2,
+        "load64": 3,
+        "load32": 0
+      },
+      {
+        "label": ".LBB78_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 4,
+        "load64": 4,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m32n32_col": {
+    "NumVgprs": 69,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB79_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 8,
+        "load64": 12,
+        "load32": 0
+      },
+      {
+        "label": ".LBB79_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 16,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_tiled_balanced": {
+    "NumVgprs": 80,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB80_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 8,
+        "load64": 12,
+        "load32": 0
+      },
+      {
+        "label": ".LBB80_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 16,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_tiled_m16": {
+    "NumVgprs": 76,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB81_5:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 20,
+        "load32": 0
+      }
+    ]
+  }
+}

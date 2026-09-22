@@ -1,0 +1,558 @@
+{
+  "1080-expand": {
+    "control": {
+      "baseline": {
+        "mean_us": 35.94008955575,
+        "slots_us": [
+          35.554648687,
+          36.11501363,
+          36.037890625,
+          36.052805281
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 149.3794029553571,
+        "clock_reference_tf": 321.978368,
+        "reference_ratio": 0.4639423570075276,
+        "telemetry": {
+          "1": {
+            "n": 6,
+            "median": 2456.5,
+            "min": 2361,
+            "max": 2469
+          },
+          "2": {
+            "n": 6,
+            "median": 2238.0,
+            "min": 2167,
+            "max": 2238
+          },
+          "73": {
+            "n": 6,
+            "median": 329.5,
+            "min": 327,
+            "max": 337
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 35.93638177575,
+        "slots_us": [
+          36.014600107,
+          35.98019802,
+          35.867753439,
+          35.882975537
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 149.39481535736644,
+        "clock_reference_tf": 322.895872,
+        "reference_ratio": 0.4626718032411589,
+        "telemetry": {
+          "1": {
+            "n": 6,
+            "median": 2463.5,
+            "min": 2455,
+            "max": 2477
+          },
+          "2": {
+            "n": 6,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "n": 6,
+            "median": 329.0,
+            "min": 328,
+            "max": 330
+          }
+        }
+      },
+      "time_change_percent": -0.010316557487277667
+    },
+    "m32n32_u4": {
+      "baseline": {
+        "mean_us": 36.10742257325,
+        "slots_us": [
+          36.130138983,
+          36.063697413,
+          36.09037212,
+          36.145481777
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 148.68713237863125,
+        "clock_reference_tf": 322.043904,
+        "reference_ratio": 0.46169832911549613,
+        "telemetry": {
+          "1": {
+            "n": 7,
+            "median": 2457,
+            "min": 2450,
+            "max": 2579
+          },
+          "2": {
+            "n": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "n": 7,
+            "median": 329,
+            "min": 328,
+            "max": 331
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 48.6160301345,
+        "slots_us": [
+          48.611058792,
+          48.599398378,
+          48.621898822,
+          48.631764546
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 110.43084153821388,
+        "clock_reference_tf": 350.879744,
+        "reference_ratio": 0.31472561020283313,
+        "telemetry": {
+          "1": {
+            "n": 7,
+            "median": 2677,
+            "min": 2607,
+            "max": 2691
+          },
+          "2": {
+            "n": 7,
+            "median": 2238,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "n": 7,
+            "median": 329,
+            "min": 326,
+            "max": 330
+          }
+        }
+      },
+      "time_change_percent": 34.642759493215515
+    },
+    "m32n32_u1": {
+      "baseline": {
+        "mean_us": 36.3272913935,
+        "slots_us": [
+          36.167030909,
+          36.34528406,
+          36.2908,
+          36.506050605
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 147.78721214983338,
+        "clock_reference_tf": 322.568192,
+        "reference_ratio": 0.45815804476417,
+        "telemetry": {
+          "1": {
+            "n": 7,
+            "median": 2461,
+            "min": 2451,
+            "max": 2654
+          },
+          "2": {
+            "n": 7,
+            "median": 2238,
+            "min": 2091,
+            "max": 2238
+          },
+          "73": {
+            "n": 7,
+            "median": 331,
+            "min": 328,
+            "max": 343
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 78.57660212,
+        "slots_us": [
+          78.537125885,
+          78.387899592,
+          78.991587085,
+          78.389795918
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 68.32452632402018,
+        "clock_reference_tf": 400.883712,
+        "reference_ratio": 0.17043477766445195,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 3058.5,
+            "min": 2866,
+            "max": 3076
+          },
+          "2": {
+            "n": 8,
+            "median": 1741.0,
+            "min": 1741,
+            "max": 2120
+          },
+          "73": {
+            "n": 8,
+            "median": 297.0,
+            "min": 290,
+            "max": 302
+          }
+        }
+      },
+      "time_change_percent": 116.30184664431002
+    },
+    "m32n32_col": {
+      "baseline": {
+        "mean_us": 36.43309451725,
+        "slots_us": [
+          36.393204829,
+          36.443742255,
+          36.435860359,
+          36.459570626
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 147.35803233672817,
+        "clock_reference_tf": 322.830336,
+        "reference_ratio": 0.45645658385935634,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 2463.0,
+            "min": 2454,
+            "max": 2527
+          },
+          "2": {
+            "n": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "n": 8,
+            "median": 330.0,
+            "min": 315,
+            "max": 332
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 43.445835088500004,
+        "slots_us": [
+          43.437226809,
+          43.429117858,
+          43.443069307,
+          43.47392638
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 123.5724692381637,
+        "clock_reference_tf": 344.71936,
+        "reference_ratio": 0.35847266958886126,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 2630.0,
+            "min": 2626,
+            "max": 2645
+          },
+          "2": {
+            "n": 8,
+            "median": 2238.0,
+            "min": 2238,
+            "max": 2238
+          },
+          "73": {
+            "n": 8,
+            "median": 329.0,
+            "min": 326,
+            "max": 329
+          }
+        }
+      },
+      "time_change_percent": 19.24827046445281
+    }
+  },
+  "900-expand": {
+    "control": {
+      "baseline": {
+        "mean_us": 25.14074666375,
+        "slots_us": [
+          25.620679245,
+          24.914223035,
+          24.997824905,
+          25.03025947
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 133.46633037109254,
+        "clock_reference_tf": 340.13184,
+        "reference_ratio": 0.39239587323283975,
+        "telemetry": {
+          "1": {
+            "n": 7,
+            "median": 2595,
+            "min": 2573,
+            "max": 2606
+          },
+          "2": {
+            "n": 7,
+            "median": 1741,
+            "min": 1741,
+            "max": 1933
+          },
+          "73": {
+            "n": 7,
+            "median": 327,
+            "min": 323,
+            "max": 337
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 24.92250936675,
+        "slots_us": [
+          25.051638252,
+          24.875671179,
+          24.935961619,
+          24.826766417
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 134.63504619950572,
+        "clock_reference_tf": 340.13184,
+        "reference_ratio": 0.3958319403426204,
+        "telemetry": {
+          "1": {
+            "n": 7,
+            "median": 2595,
+            "min": 2590,
+            "max": 2602
+          },
+          "2": {
+            "n": 7,
+            "median": 1741,
+            "min": 1741,
+            "max": 1741
+          },
+          "73": {
+            "n": 7,
+            "median": 325,
+            "min": 323,
+            "max": 329
+          }
+        }
+      },
+      "time_change_percent": -0.8680621141402889
+    },
+    "m32n32_u4": {
+      "baseline": {
+        "mean_us": 25.016616536249998,
+        "slots_us": [
+          25.072541018,
+          24.981566495,
+          25.048727666,
+          24.963630966
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 134.12857790492328,
+        "clock_reference_tf": 341.180416,
+        "reference_ratio": 0.3931309407422825,
+        "telemetry": {
+          "1": {
+            "n": 7,
+            "median": 2603,
+            "min": 2601,
+            "max": 2622
+          },
+          "2": {
+            "n": 7,
+            "median": 1741,
+            "min": 1741,
+            "max": 1741
+          },
+          "73": {
+            "n": 7,
+            "median": 327,
+            "min": 324,
+            "max": 333
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 31.2119515305,
+        "slots_us": [
+          31.183162088,
+          31.106930693,
+          31.121416526,
+          31.436296815
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 107.50507531453441,
+        "clock_reference_tf": 359.333888,
+        "reference_ratio": 0.2991787830334956,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 2741.5,
+            "min": 2661,
+            "max": 2764
+          },
+          "2": {
+            "n": 8,
+            "median": 1741.0,
+            "min": 1741,
+            "max": 1741
+          },
+          "73": {
+            "n": 8,
+            "median": 326.0,
+            "min": 323,
+            "max": 331
+          }
+        }
+      },
+      "time_change_percent": 24.76487971613881
+    },
+    "m32n32_u1": {
+      "baseline": {
+        "mean_us": 25.073039075,
+        "slots_us": [
+          24.971799295,
+          25.238502076,
+          24.960008494,
+          25.121846435
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 133.82674473417418,
+        "clock_reference_tf": 341.11488,
+        "reference_ratio": 0.3923216270547159,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 2602.5,
+            "min": 2563,
+            "max": 2822
+          },
+          "2": {
+            "n": 8,
+            "median": 1741.0,
+            "min": 1475,
+            "max": 1741
+          },
+          "73": {
+            "n": 8,
+            "median": 326.5,
+            "min": 319,
+            "max": 353
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 52.4867978235,
+        "slots_us": [
+          51.403481238,
+          51.963758015,
+          54.112003323,
+          52.467948718
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 63.929280107418975,
+        "clock_reference_tf": 407.109632,
+        "reference_ratio": 0.15703209917523883,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 3106.0,
+            "min": 3022,
+            "max": 3131
+          },
+          "2": {
+            "n": 8,
+            "median": 1538.0,
+            "min": 1326,
+            "max": 1664
+          },
+          "73": {
+            "n": 8,
+            "median": 317.0,
+            "min": 299,
+            "max": 335
+          }
+        }
+      },
+      "time_change_percent": 109.33560413836668
+    },
+    "m32n32_col": {
+      "baseline": {
+        "mean_us": 25.078328772749998,
+        "slots_us": [
+          25.149015792,
+          25.046279213,
+          25.062092191,
+          25.055927895
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 133.79851705453393,
+        "clock_reference_tf": 340.7872,
+        "reference_ratio": 0.3926160285789312,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 2600.0,
+            "min": 2592,
+            "max": 2623
+          },
+          "2": {
+            "n": 8,
+            "median": 1741.0,
+            "min": 1741,
+            "max": 1741
+          },
+          "73": {
+            "n": 8,
+            "median": 326.5,
+            "min": 324,
+            "max": 330
+          }
+        }
+      },
+      "candidate": {
+        "mean_us": 30.2803014405,
+        "slots_us": [
+          30.291841812,
+          30.304513143,
+          30.204136037,
+          30.32071477
+        ],
+        "matrix_instruction_work_factor": 1,
+        "executed_matrix_tflops": 110.81274096935125,
+        "clock_reference_tf": 360.710144,
+        "reference_ratio": 0.30720716567746775,
+        "telemetry": {
+          "1": {
+            "n": 8,
+            "median": 2752.0,
+            "min": 2743,
+            "max": 2761
+          },
+          "2": {
+            "n": 8,
+            "median": 1741.0,
+            "min": 1741,
+            "max": 1741
+          },
+          "73": {
+            "n": 8,
+            "median": 327.0,
+            "min": 309,
+            "max": 331
+          }
+        }
+      },
+      "time_change_percent": 20.742900034879685
+    }
+  }
+}

@@ -1,0 +1,38 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\kernel.hip",
+        "sha":  "9FD8C452B48B4EFAA97DA66D5A79A7387449E5DAFF6E0EC98265E263A0FFD4D2"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\pure.exe",
+        "sha":  "F23ABE70EF6E94CE0112F884335B04E9232E735FC8E24FF86D646C3590B999C5"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\gfx1200.hsaco",
+        "sha":  "783AE4D03035ECDE60623B2882A06271474296C9E650CA1C55AD38227F1E8C2F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\modules\\deep_fast-packed.hsaco",
+        "sha":  "6CC4F786BDD17C3889BD5BBF2107183E033E00A06A12425E33A7FE1961684A09"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\network.exe",
+        "sha":  "D10B7E6593924DF738F256C83DB64B21F19BAD4EC7F10552AEF5F9D04186960F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\layout.hip",
+        "sha":  "7D286D51AB8A4F9658E0B086C35D4C98EAB438F7F1C1EF168E7EAB553483B6A9"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\layout.exe",
+        "sha":  "275CEEE4675E2D104A09C1B16797390E1C1AA16D32134AC1D8DA4EC2675968C5"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\layout-gfx1200.hsaco",
+        "sha":  "D8489E8324C25185DDEF3F8AB213C3319277B48AC1297C89385F30669C6B9B96"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-balanced-tile\\modules-layout\\deep_fast-packed.hsaco",
+        "sha":  "388601FCD305CEF1013D782ABECA3A099E4F50540DCF67862F44FFD049208171"
+    }
+]

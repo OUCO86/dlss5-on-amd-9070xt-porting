@@ -1,0 +1,8 @@
+LAYOUT_DONE shape_row
+LAYOUT_DONE shape_tiled
+LAYOUT_DONE layout_balanced
+LAYOUT_DONE pack
+LAYOUT_DONE pair
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT balanced layout
