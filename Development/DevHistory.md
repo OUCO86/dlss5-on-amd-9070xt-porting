@@ -3067,3 +3067,7 @@ RE9包替换为62a948a6…特殊宿主＋f5cf7697…runtime（实验ABI2），�
 在TheAutomatic原宿主的producer/HIP/consumer拆分设计上补边界适配：真实输入尺寸/格式在改network geometry与创建HIP前检查，超限明确返回原始SR；初始化异常同步后回滚新bridge+codec，未退休帧禁止覆盖，宿主INVALID_ARGUMENT不再触发session销毁。变更落prepare-host.py及生成补丁，可重新构建/归档。
 
 9070空闲检查后独立GPU测试10组12提交帧：fresh、超限→有效、有效→超限→有效、合法1080输入注入PSO失败→720恢复、旧帧录制后拒绝覆盖；1280×544/960×544全部完成producer→HIP→consumer、fence与输出读回，恢复RGB FP16 hash与fresh相同，无设备移除。候选runtime 1b51069c…、宿主0ef10229…已构建，详见RE9/presr/tests/resize-recovery及reviews/re9-user-bug-20260922。未操作游戏/部署/修改0.28包；未知网友codec PSO E_FAIL、磁盘缓存和诊断路径另留，不混为已解决根因。
+
+## 2026-09-22 14:05：将RE9尺寸恢复修复候选部署，等待用户实玩后重封包
+
+用户授权先部署RE9、实玩后重新打包。确认re9进程退出，安装74b8a67候选宿主0ef10229…与runtime1b51069c…到根目录/_storage_，四DLL逐项源hash、备份与安装读回验证通过。OptiScaler.ini两份、游戏config.ini、codec两shader的hash不变；未用测试注入shader。完整备份D:\DLSSNR-Lab\re9-presr\backups\resize-20260922-140553-788；install-resize-fix.ps1支持RestoreBackup，清单在RE9/presr/tests/resize-recovery/installed.json。随后请求Steam启动游戏，等待用户验证原生超限跳过与改回有效输入后恢复。已有0.28三包未覆盖；待反馈后重打RE9完整包，常规两包不动。

@@ -1,0 +1,41 @@
+{
+    "source_commit":  "74b8a67",
+    "backup":  "D:\\DLSSNR-Lab\\re9-presr\\backups\\resize-20260922-140553-788",
+    "files":  [
+                  {
+                      "path":  "dxgi.dll",
+                      "name":  "dxgi.dll",
+                      "existed":  true,
+                      "before":  "62A948A6A8ABB501EC1EF269357597D60ADBAC60DF8DAA1E6BBE820F579003E3",
+                      "after":  "0ef102295a759b51c0c7cba6b8eedb455e9759f5a2b7f9b96309e030c6cd0035"
+                  },
+                  {
+                      "path":  "LmxxfNrRuntime.dll",
+                      "name":  "LmxxfNrRuntime.dll",
+                      "existed":  true,
+                      "before":  "F5CF76979D1753CE3E4498F85A45046B984CA8B0E54C80F17A41C45481E7CB68",
+                      "after":  "1b51069c38095988f17403366ac09c1c2e047b28423c7385e669023cf42fbacf"
+                  },
+                  {
+                      "path":  "_storage_\\dxgi.dll",
+                      "name":  "dxgi.dll",
+                      "existed":  true,
+                      "before":  "62A948A6A8ABB501EC1EF269357597D60ADBAC60DF8DAA1E6BBE820F579003E3",
+                      "after":  "0ef102295a759b51c0c7cba6b8eedb455e9759f5a2b7f9b96309e030c6cd0035"
+                  },
+                  {
+                      "path":  "_storage_\\LmxxfNrRuntime.dll",
+                      "name":  "LmxxfNrRuntime.dll",
+                      "existed":  true,
+                      "before":  "F5CF76979D1753CE3E4498F85A45046B984CA8B0E54C80F17A41C45481E7CB68",
+                      "after":  "1b51069c38095988f17403366ac09c1c2e047b28423c7385e669023cf42fbacf"
+                  }
+              ],
+    "preserved":  {
+                      "_storage_\\OptiScaler.ini":  "2D42B2DC72C1ECC0A7EEF2EAB2E84FEB9AB107A4CF01F66F567A478DE0657681",
+                      "OptiScaler.ini":  "2D42B2DC72C1ECC0A7EEF2EAB2E84FEB9AB107A4CF01F66F567A478DE0657681",
+                      "config.ini":  "AD7602B2697983BA5C0B73281053F8D79EA84E3022CF4AFF7D72A454360849C7",
+                      "DLSS5-AMD\\native-game-tiled-assets\\native_codec_encode.hlsl":  "E8FB25AB692A6834DE220B2394728510379A280CA84D032831AFC4A128DC2162",
+                      "DLSS5-AMD\\native-game-tiled-assets\\native_codec_decode.hlsl":  "3762D2F18C1485E2548B5D7734F357BD8F5819E5EF7B2B8B196E2634B2C4B07D"
+                  }
+}
