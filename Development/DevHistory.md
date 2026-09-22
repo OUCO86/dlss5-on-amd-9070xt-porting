@@ -3225,3 +3225,7 @@ mh-phase-trace：c256_attention_project 每 wave 约 50k 周期，两批注意�
 ## 2026-09-23 09:00：split_projection_frag 转置尾声，逐位同但略差，不采用；请求规则修正
 
 每 lane 64 条标量写并成 3 条向量写、残差 32 标量读并成 8 条 b128，整网 ±0.02ms 偏差。原因：原标量写跨 lane 连续（一条指令 64B 一段），转置后一条向量写触及 32 行。**请求按"指令 × 触及缓存行数"计**，并宽只在 lane 间仍连续时有效（C32 staging 成立、此处不成立）。results/deep-transposed-epilogue-20260923。
+
+## 2026-09-23 09:40：ffn_fused_c256 barrier 审查，BatchNorm=true 合并两对同步无收益
+
+8 个 barrier 中 4 个真依赖，QKV 归一化两 part 各一对可合并（函数体已有 BatchNorm 分支）。翻模板参数试：barrier 8→6，LDS 21.6→39KB、驻留 12→10，整网 ±0.02ms 交叠，逐位同，不采用。结论：该核同步等待属结构税。results/mhfast-batchnorm-20260923。
