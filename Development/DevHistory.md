@@ -3213,3 +3213,7 @@ mh-phase-trace：c256_attention_project 每 wave 约 50k 周期，两批注意�
 04:00 regression-prod5（候选 prod5 = C32 三刀 + mh_fused 三函数体寄存器化，基线 prod2 装机版）：900/1080 两序列 12 帧 hash 全同；1000 帧计时 900 12.331/12.369 vs 12.589/12.663、1080 17.341/17.362 vs 17.708/17.795ms（约 −2.2%）；四组额外控制 hash 全同，退出 0。候选待装（用户指示攒着）。
 
 同法推到 C512 注意力核 mh_attention_fused_fp8_out（ex 8.4KB 删除、同步 3→1）：三份 ABBA 逐位同但 ±0.01ms 交叠，无收益——该核不受 LDS 驻留限制。不采用，results/mh-register-c512-20260923。
+
+## 2026-09-23 07:20：mh_fast ffn_fused_c256 打点
+
+15 次/帧核每 wave 33.3k 周期：输入+展开 ~31%、激活+hidden 12%、收缩 12.6%、投影+QKV+归一化+输出 43.5%，barrier 8 次占 19%；136 WMMA 约 7%。ByteIn 路径无独立 staging，t[1] 栏无效（README 注明）。162 条 8B 权重片段读、32 条散字节写是候选。results/mhfast-phase-trace-20260923。
