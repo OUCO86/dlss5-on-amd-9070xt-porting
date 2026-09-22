@@ -58,6 +58,9 @@
 #ifndef HIP_C32_LOCAL_QKV_SYNC
 #define HIP_C32_LOCAL_QKV_SYNC 1
 #endif
+#ifndef HIP_C32_BYTE_CHAIN
+#define HIP_C32_BYTE_CHAIN 1 /* 2026-09-23: raw chain carries FP8 bytes. mapped/chain producers (HalfOutput, raw_output=1) store fp8(F(float((_Float16)v))) -- exactly the byte the f16 consumer used to compute -- and RawMapped consumers load one byte per element with a vectorised 128-bit staging path, skipping F(). Bit-exact; whole network -0.08/-0.06ms. The raw buffer is then bytes, not f16: boundary_fast c32_finish_crop_half (SkipChainFinish, C32 skip blocks) still expects f16 and must not be combined with this flag. */
+#endif
 #ifndef HIP_C32_FOLDED_FFN
 #define HIP_C32_FOLDED_FFN 1 /* 2026-09-22: expand->contract without the LDS round trip (transposed WMMA operands); bit-exact, -0.10/-0.06ms whole network */
 #endif
@@ -129,6 +132,7 @@ DEV float F(float x){uint b=bits(x),a=b&0x7fffffffu,s=b&0x80000000u;if(a==0)retu
 #endif
 
 using i2=int __attribute__((ext_vector_type(2)));
+using i4=int __attribute__((ext_vector_type(4)));
 using f8=float __attribute__((ext_vector_type(8)));
 using h8=_Float16 __attribute__((ext_vector_type(8)));
 #define WAVE KERNEL __attribute__((amdgpu_flat_work_group_size(32,32)))
@@ -274,6 +278,18 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
   if constexpr(Mapped){if(l<16){uint token=first+l,ww=sourcew+2*sx;int x=int((window%(ww/8))*8+token%8)-int(sx),y=int((window/(ww/8))*8+token/8)-int(sy);
    if(x>=0&&y>=0&&x<int(sourcew)&&y<int(sourceh)){if constexpr(Merge){mine=int((uint(y)*sourcew+uint(x))*32);mine2=int(((uint(y)/2)*(sourcew/2)+uint(x)/2)*32);}else if constexpr(RawMapped){uint px=uint(x)+prevsx,py=uint(y)+prevsy,tile=(py/8)*(prevw/8)+px/8,token0=(py%8)*8+px%8;mine=int((tile*64+token0)*32);}else mine=int((uint(y)*sourcew+uint(x))*32);}}}
 #if HIP_C32_STAGE_PREFETCH
+#if HIP_C32_BYTE_CHAIN
+  if constexpr(RawMapped){
+   // Byte rows: lane l stages half of token l>>1 (16 bytes) with one 128-bit load; the source row comes from lanes 0..15
+   // via ds_bpermute. 16 load requests + 16 byte LDS stores per wave become 1 + 4 (2026-09-23, -0.08/-0.06ms, bit-exact).
+   int src=__builtin_amdgcn_ds_bpermute(int((l>>1)*4),mine);uint idx=src>=0?uint(src)+(l&1)*16:0u;
+   i4 q;__builtin_memcpy(&q,reinterpret_cast<const unsigned char*>(raw_input)+idx,16);
+   if(src<0)q=i4{0,0,0,0};
+   __builtin_memcpy(packed+(first+(l>>1))*36+(l&1)*16,&q,16);
+  }else{
+#else
+  {
+#endif
   // Pass 1: every token's load is issued with a branch-free index (out-of-window tokens read element l of the buffer and
   // are zeroed below), so the 16 loads overlap; pass 2 converts. Values identical to the single-pass form.
   float lv[16];uint hb[16];int srcs[16];
@@ -282,15 +298,24 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
    if constexpr(!Mapped){lv[j]=raw_input[(base+row)*32+l];srcs[j]=0;hb[j]=0;}
    else{int src=__builtin_amdgcn_readlane(mine,j);srcs[j]=src;uint idx=src>=0?uint(src):0u;hb[j]=0;
     if constexpr(Merge){int src2=__builtin_amdgcn_readlane(mine2,j);uint idx2=src2>=0?uint(src2):0u;hb[j]=reinterpret_cast<const unsigned char*>(skip)[idx+l];lv[j]=raw_input[idx2+l];}
+#if HIP_C32_BYTE_CHAIN
+    else if constexpr(RawMapped){hb[j]=reinterpret_cast<const unsigned char*>(raw_input)[idx+l];lv[j]=0.f;}
+#else
     else if constexpr(RawMapped)lv[j]=float(reinterpret_cast<const _Float16*>(raw_input)[idx+l]);
+#endif
     else lv[j]=raw_input[idx+l];}}
   #pragma unroll
   for(uint j=0;j<16;j++){uint row=first+j;float v;
    if constexpr(!Mapped)v=lv[j];
+#if HIP_C32_BYTE_CHAIN
+   else{float c;if constexpr(Merge){float high=__builtin_amdgcn_cvt_f32_fp8(int(hb[j]),0);c=Hrtz(Hrtz(lv[j]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)c=0.f;else c=lv[j];v=srcs[j]>=0?c:0.f;}
+   if constexpr(RawMapped)packed[row*36+l]=srcs[j]>=0?static_cast<unsigned char>(hb[j]):static_cast<unsigned char>(0);else packed[row*36+l]=static_cast<unsigned char>(fp8(v));
+#else
    else{float c;if constexpr(Merge){float high=__builtin_amdgcn_cvt_f32_fp8(int(hb[j]),0);c=Hrtz(Hrtz(lv[j]*scales[l])+high*scales[32+l]);}else if constexpr(RawMapped)c=F(lv[j]);else c=lv[j];v=srcs[j]>=0?c:0.f;}
    packed[row*36+l]=static_cast<unsigned char>(fp8(v));
+#endif
    if constexpr(NeedIn16)in16[row*34+l]=(_Float16)v;
-  }}
+  }  }}
 #else
   #pragma unroll
   for(uint j=0;j<16;j++){uint row=first+j;float v=0.f;
@@ -498,7 +523,11 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
    if constexpr(RgbHead||Finish)scratch.ex[(first+gr()*8+e)*34+col+rc()]=(_Float16)v; // raw_output is 1 here: v is the half the finish/head would have read back
    if constexpr(Finish){if(out)reinterpret_cast<_Float16*>(out)[i]=(_Float16)v;}
    else if constexpr(RgbHead){}
+#if HIP_C32_BYTE_CHAIN
+   else if constexpr(HalfOutput){if(raw_output)reinterpret_cast<unsigned char*>(out)[i]=static_cast<unsigned char>(fp8(F(float((_Float16)v))));else reinterpret_cast<_Float16*>(out)[i]=(_Float16)F(v);}else out[i]=raw_output?v:F(v);}
+#else
    else if constexpr(HalfOutput)reinterpret_cast<_Float16*>(out)[i]=(_Float16)(raw_output?v:F(v));else out[i]=raw_output?v:F(v);}
+#endif
  }
 #endif
 

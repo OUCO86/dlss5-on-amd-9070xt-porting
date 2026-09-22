@@ -3193,3 +3193,7 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 三热核共享体加 9 个 SHADER_CYCLES 打点 + barrier 内周期累加，lane 0 写 12 u64 到全局缓冲；基址经模块全局 `c32_trace`（hipModuleGetGlobal，host 封装补该函数）每次 launch 前写入，核签名不变。30 帧预热后 8 帧打点，逐位同。首轮 1080 越界（缓冲按 24321 组开、post 实为 34945 组）改 40000 组后过。900/1080 每 wave 周期几乎相同。全 C32 加权：staging 30.7%、FFN 26.1%、QKV 10.8%、注意力三段 11.8%、投影 7.9%、尾部 8.8%、barrier 等待 8.7%。post 每 wave 23.6k 周期，矩阵约 1.1k；对账有效并发约 3.3 wave（上限 6）。结论：输入 staging（gather+FP8+字节写 LDS）是 C32 最大单项，注意力 LDS 本就小（解释寄存器化无收益）。工具 HIP/experiments/c32-phase-trace，证据 results/c32-phase-trace-20260923（原始 trace 294MB 不入库，留 sha256）；生产/游戏未改。
 
 00:55 staging 拆分（900P 第二轮）：读到齐 3.5～4.0k 周期/wave 各核一致（队列），chain/finish 转换段 3.2～3.5k（F() 往返 + 逐 token 标量选择链），mapped 1.0k；汇编确认 16 读全在强制等待前发出。提出字节链方案（生产者按消费者顺序 f16→F→FP8 写字节，消费者读 u8 跳 F）。已补 results/c32-phase-trace-20260923。
+
+## 2026-09-23 01:35：字节链 + 向量化 staging（HIP_C32_BYTE_CHAIN），正式回归中
+
+由 phase-trace 的 staging 拆分出发。字节链：mapped/chain 生产者按消费者表达式 `fp8(F(float((_Float16)v)))` 写字节，RawMapped 消费者读 u8 跳 F——三轮九份 ABBA 只有 −0.02～0.03ms、多数交叠：读字节减半 + 去 F 不动排队。再把 16 条行读并成每 lane 一条 b128（行地址 ds_bpermute 广播）、16 条 ds_store_b8 并成一条 16B 写：r3 两份复现 1080 −0.076/−0.083、900 −0.058/−0.064ms，逐位同，槽间分开。**排队按请求数不按字节数**，与 ViT 侧 L0 请求结论一致。ISA：chain staging 段 global_load 16→1、ds_store 16→2、VALU 281→45，VGPR 不变。中途 r2 因 prepare 断言失败实为字节链重测（记录保留）。进生产源码 `HIP_C32_BYTE_CHAIN`（默认 1，注明与 SkipChainFinish 的 f16 读者互斥），prod3 模块 10 核与实验 pair2 机器码逐条同；regression-prod3（候选 prod3，基线 prod2）后台运行。部署清单 stellar-prod3-20260923 已放远端，未安装。工具 HIP/experiments/c32-byte-chain，证据 results/c32-byte-chain-20260923。
