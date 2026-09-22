@@ -1,0 +1,9 @@
+PAIR test=4 slot=0 mode=0 wall=17.841519 bitdiff=0 calls=1600
+PAIR test=4 slot=1 mode=4 wall=17.853706 bitdiff=0 calls=1600
+PAIR test=4 slot=2 mode=4 wall=17.894181 bitdiff=0 calls=1600
+PAIR test=4 slot=3 mode=0 wall=17.946469 bitdiff=0 calls=1600
+PAIR test=4 slot=4 mode=0 wall=17.955337 bitdiff=0 calls=1600
+PAIR test=4 slot=5 mode=4 wall=17.970544 bitdiff=0 calls=1600
+PAIR test=4 slot=6 mode=4 wall=17.979750 bitdiff=0 calls=1600
+PAIR test=4 slot=7 mode=0 wall=18.000225 bitdiff=0 calls=1600
+PASS C32 paired encoding

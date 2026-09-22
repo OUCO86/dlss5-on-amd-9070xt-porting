@@ -1,0 +1,158 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\kernel.hip",
+        "sha":  "A23AFE5735BCF1BFD7DE9381F291E407F92C86A86D9DB282A8DE834A8F369B40"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\retain.hip",
+        "sha":  "FFA54422C66D1ED02B37E4997099928D0EE518E9A516DBE2F297DA7039D0FF1B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\network.exe",
+        "sha":  "4944855CF79B1EE9C8F6662B6374DBEB9EAEF77E5925731538ED8ECB2FFD15CE"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\network-retain.exe",
+        "sha":  "DED67D06F57A698C0A6F0726857173A2BCA433FCC369CD495CFBECDCCFF085A0"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\primitive.exe",
+        "sha":  "8BABF70E6ACE63092417BBDC1AC6CD81F42F8D78A27604F23D6EFB85C0AE729E"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\fused.exe",
+        "sha":  "F864A5B3C2FDB58F9100F7F3D77C65023822787630674371B0501577DE580475"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\gfx1200.hsaco",
+        "sha":  "AB417E7048DB4949F92FB9E4CDE372EF6FA155DB300F962E8FD51F24EADBA1AA"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\retain-gfx1200.hsaco",
+        "sha":  "A4820B208C3CB77ADB2FF3CA0D9D79866EEDCB6D3C0881090FB19F9CFEEBECF7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_fused_ffn_attention-packed.hsaco",
+        "sha":  "6850289232357074F5FB8166E5903218C3A5A5423CF15329734015B4A083C20C"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules-retain\\c32_fused_ffn_attention-packed.hsaco",
+        "sha":  "14A354C71CA8DF547659CEA7C9ED4D1928788B00EA77DF750EEDFC6374E4A3CC"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_prefix_reference.hsaco",
+        "sha":  "B3835EDEB77C51FE199E5F1F45BDEEF2F5E2F2550DCA42D826FB6B63FF373D6D"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead-reference.hsaco",
+        "sha":  "1CFA639E9F37B7872C69D738C7332B58EAAF0539CAF720CC29A844E770FC8CBE"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\deep_reference.hsaco",
+        "sha":  "0D2E3E9658A8ABC53BE68B6FC108CE57594784D3ED56F237BEDD9766D86DB895"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\boundary_reference.hsaco",
+        "sha":  "1B1A514743924D43542ED9AC30E4CA50EC6E84E62D2BAFAB1960AAF061E0ADC8"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_wmma.hsaco",
+        "sha":  "4D239CA134400EE2B42C60F99DC24202F9A4FD38C21A471C01A98217DF04B294"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead-wmma.hsaco",
+        "sha":  "BFC99774435FCF89985A795EA6E1C20DE3335053097B40206839ADF687D0E226"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\deep_wmma.hsaco",
+        "sha":  "B562C8986300B0517818AE54A46108E725E1ECC6C6B6C88A3B7FA14C749A5B2F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\wave-pointwise.hsaco",
+        "sha":  "5E65693DA46044B697218194BB17EC8453952FA4A4A684C6ECC59DF1CECF12AA"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_tiled.hsaco",
+        "sha":  "6E7DB748FBD492CD566F208A1AA3B7E48A42A9C0D8B31022148469BB46D01E8F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead-tiled.hsaco",
+        "sha":  "3799AE40ECEC89796132BF6464A76FAF1ADFFFE65DF2F5E6406F47A86F67AA81"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_fast.hsaco",
+        "sha":  "3D3B7E40B917CB1E31E9D3FE46CB59840BFE45DE1C9E51BF9845B0DECF3A48D3"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_fast_attention.hsaco",
+        "sha":  "B3ABD5620764F5A5BA4D86FB439E0A57688E346AFDD5945F6F1D9067DA6D032C"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\boundary-fast.hsaco",
+        "sha":  "40FA66062ECA6BBE654E480944783C27B9BD93970696E1FFCA9BBC8773CA9700"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_fused_attention.hsaco",
+        "sha":  "5091D35E5AC53E4A8D16DE2F5FB1C8C057159C72D6605FAEB5A5CA7DAA65AACD"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\c32_fused_ffn_attention.hsaco",
+        "sha":  "0F3AFF3FB906BD493443B1C74440716969B780D39FF98C785412DD36112F042B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\prefix_fast.hsaco",
+        "sha":  "A195C115F8930A467D2113D076435BE5EE784106C9F15215832EEE54C5680F34"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead-fast.hsaco",
+        "sha":  "9FE4B5F7016A5369F4A7995AD9E2BDD56F21C393FA0FAA1561CDA5F6B7A7EB4C"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead-fast-padded-wave.hsaco",
+        "sha":  "1D0CAC2814C29AEB917B6EF867820D43689C8868137B91CF14C27F8057E509FD"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead_fused_attention.hsaco",
+        "sha":  "5038BAB3F34FDD576A99F7F5E5A919B321DD4A938FABDBCF07EB789EEFDF690A"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\deep_fast.hsaco",
+        "sha":  "775321241860F43CEF7BFBF1E3459712A953FDA41C98956F5C7B452FA14791FE"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\deep_fast-packed.hsaco",
+        "sha":  "4893E31A822CC71BD9A45DC407E10619488A0A6AA902CB7FC07445BBF25B38D7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead-fast-packed.hsaco",
+        "sha":  "39D5376CDB6C603130048E1F369DCC9CD7887C23FBA084D9132E6C35073A7795"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\c32-pair-encode\\modules\\multihead-fast-padded-wave-packed.hsaco",
+        "sha":  "A2650EEDB9F514314FFE059B202360A4ED1FA10FFAFEC93333FF640AA83CC835"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\900\\flags.txt",
+        "sha":  "F5D9DBBE06C1DF12EF9C6F3E05AFCBD3087BA0425B25C0C0F0A582DFAC6F84E7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\900\\input.f32",
+        "sha":  "5AD4A2E2237E99B66DCC460F8EFE1FC6FD67E5BD4D5124B14CF7C5E91684A5AB"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\900\\expected.f32",
+        "sha":  "8F0A989A9C407A8ABC695918BB3B43C1454F0A1AEF606FFCB3E4D4C829E4B13F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\1080\\flags.txt",
+        "sha":  "A9E3A589B54F11D706C500507070F0BF4E59CACEB6ED61E2DDC9F16C1695DF35"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\1080\\input.f32",
+        "sha":  "F66892CD504E44BC7C4F281F6FA49295E5323204CB036B635815AB8A66FA3448"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\1080\\expected.f32",
+        "sha":  "D4CE077A4515FCE22DAB0856F3F69E93F4121CFDB3F7C339D3712FAAF70B841A"
+    }
+]
