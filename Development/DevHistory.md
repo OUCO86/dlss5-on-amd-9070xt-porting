@@ -3209,3 +3209,7 @@ lane l 以 4 条 b128 读 4 个 token 的 4 个通道（ds_bpermute 广播行索
 ## 2026-09-23 03:30：mh_fused 注意力核打点 → 三函数体 ex/prob 寄存器化（HIP_MH_REGISTER_EX），prod5 回归中
 
 mh-phase-trace：c256_attention_project 每 wave 约 50k 周期，两批注意力约 42%、残差/对角 21%、投影 17%、barrier 12%；前奏仅 233 条指令却慢十倍——LDS 59.6KB/组致每 SIMD 4 wave（打点被 batch 循环覆盖，README 已注明换算）。mh-register-attention：C32 同款操作数对调，all_ex 删除、c64/c128 的 avbytes 别名改独立小数组、每批同步 6→2。仅 c256 三轮 −0.06/−0.05ms；三个函数体（r4）−0.184/−0.165/−0.159（1080）、−0.119/−0.127/−0.109（900），逐位同，全分开。ISA：LDS 21.5/43.0/59.6→9.0/17.7/25.9KB，驻留 12/12/8→16/16/12。进生产源码（28 处 #if），prod5 = prod4 + 本项，22 核与实验逐条同；regression-prod5（基线 prod2 装机版）后台。stellar-prod5-20260923 清单（4 文件：C32 与 mh_fused 各双架构）已放远端，prod3/prod4 清单作废。工具 HIP/experiments/{mh-phase-trace,mh-register-attention}，证据 results/{mh-phase-trace,mh-register-attention}-20260923。
+
+04:00 regression-prod5（候选 prod5 = C32 三刀 + mh_fused 三函数体寄存器化，基线 prod2 装机版）：900/1080 两序列 12 帧 hash 全同；1000 帧计时 900 12.331/12.369 vs 12.589/12.663、1080 17.341/17.362 vs 17.708/17.795ms（约 −2.2%）；四组额外控制 hash 全同，退出 0。候选待装（用户指示攒着）。
+
+同法推到 C512 注意力核 mh_attention_fused_fp8_out（ex 8.4KB 删除、同步 3→1）：三份 ABBA 逐位同但 ±0.01ms 交叠，无收益——该核不受 LDS 驻留限制。不采用，results/mh-register-c512-20260923。
