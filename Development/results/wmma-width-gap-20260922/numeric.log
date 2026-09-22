@@ -1,0 +1,4 @@
+NUMERIC model4 lanes=96 bad=0
+NUMERIC pair64 lanes=96 bad=0
+NUMERIC pair128 lanes=96 bad=0
+NUMERIC pair128_adjacent lanes=96 bad=0

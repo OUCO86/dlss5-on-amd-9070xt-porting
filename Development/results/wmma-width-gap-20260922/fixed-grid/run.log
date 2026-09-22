@@ -1,0 +1,34 @@
+device=AMD Radeon RX 9070 XT arch=gfx1201 MPs=32
+conditioned=1 fixed_A_bytes=655360 fixed_B_bytes=4194304 A=0000000300100000 B=0000000304000000
+FEED wmma_grid slot=0 pair128 Astep=0 Bstep=0 us=26.799 TF=125.208 check=PASS
+FEED wmma_grid slot=1 pair128 Astep=0 Bstep=0 us=34.024 TF=157.790 check=PASS
+FEED wmma_grid slot=2 pair128 Astep=0 Bstep=0 us=33.279 TF=161.326 check=PASS
+FEED wmma_grid slot=3 pair128 Astep=0 Bstep=0 us=26.405 TF=127.078 check=PASS
+FEED wmma_grid slot=4 pair128 Astep=0 Bstep=0 us=26.298 TF=127.595 check=PASS
+FEED wmma_grid slot=5 pair128 Astep=0 Bstep=0 us=31.661 TF=169.568 check=PASS
+FEED wmma_grid slot=6 pair128 Astep=0 Bstep=0 us=31.671 TF=169.514 check=PASS
+FEED wmma_grid slot=7 pair128 Astep=0 Bstep=0 us=26.316 TF=127.506 check=PASS
+FEED load_grid slot=0 pair128_loadonly_multi Astep=0 Bstep=0 us=10.594 TF=0.000 check=PASS
+FEED load_grid slot=1 pair128_loadonly_multi Astep=0 Bstep=0 us=36.448 TF=0.000 check=PASS
+FEED load_grid slot=2 pair128_loadonly_multi Astep=0 Bstep=0 us=36.301 TF=0.000 check=PASS
+FEED load_grid slot=3 pair128_loadonly_multi Astep=0 Bstep=0 us=10.599 TF=0.000 check=PASS
+FEED load_grid slot=4 pair128_loadonly_multi Astep=0 Bstep=0 us=10.581 TF=0.000 check=PASS
+FEED load_grid slot=5 pair128_loadonly_multi Astep=0 Bstep=0 us=36.365 TF=0.000 check=PASS
+FEED load_grid slot=6 pair128_loadonly_multi Astep=0 Bstep=0 us=36.415 TF=0.000 check=PASS
+FEED load_grid slot=7 pair128_loadonly_multi Astep=0 Bstep=0 us=10.601 TF=0.000 check=PASS
+FEED original_grid slot=0 model4 Astep=1023 Bstep=1023 us=32.754 TF=102.444 check=PASS
+FEED original_grid slot=1 model4 Astep=1023 Bstep=1023 us=34.158 TF=157.173 check=PASS
+FEED original_grid slot=2 model4 Astep=1023 Bstep=1023 us=34.739 TF=154.543 check=PASS
+FEED original_grid slot=3 model4 Astep=1023 Bstep=1023 us=32.923 TF=101.917 check=PASS
+FEED original_grid slot=4 model4 Astep=1023 Bstep=1023 us=32.767 TF=102.403 check=PASS
+FEED original_grid slot=5 model4 Astep=1023 Bstep=1023 us=35.053 TF=153.160 check=PASS
+FEED original_grid slot=6 model4 Astep=1023 Bstep=1023 us=34.870 TF=153.963 check=PASS
+FEED original_grid slot=7 model4 Astep=1023 Bstep=1023 us=32.822 TF=102.232 check=PASS
+FEED single_grid slot=0 pair128_loadonly Astep=0 Bstep=0 us=9.699 TF=0.000 check=PASS
+FEED single_grid slot=1 pair128_loadonly Astep=0 Bstep=0 us=38.545 TF=0.000 check=PASS
+FEED single_grid slot=2 pair128_loadonly Astep=0 Bstep=0 us=38.553 TF=0.000 check=PASS
+FEED single_grid slot=3 pair128_loadonly Astep=0 Bstep=0 us=9.704 TF=0.000 check=PASS
+FEED single_grid slot=4 pair128_loadonly Astep=0 Bstep=0 us=9.726 TF=0.000 check=PASS
+FEED single_grid slot=5 pair128_loadonly Astep=0 Bstep=0 us=38.603 TF=0.000 check=PASS
+FEED single_grid slot=6 pair128_loadonly Astep=0 Bstep=0 us=38.624 TF=0.000 check=PASS
+FEED single_grid slot=7 pair128_loadonly Astep=0 Bstep=0 us=9.725 TF=0.000 check=PASS

@@ -1,0 +1,4 @@
+CHECK kernel=pair128 bad=0
+TARGET pair128
+CHECK kernel=pair128 bad=0
+CHECK kernel=pair128 bad=0

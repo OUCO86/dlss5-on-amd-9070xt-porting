@@ -1,0 +1,6 @@
+name=model4 runtime_regs=78 blocks_per_MP=64 waves_bound=64
+name=pair64 runtime_regs=75 blocks_per_MP=64 waves_bound=64
+name=pair128 runtime_regs=75 blocks_per_MP=64 waves_bound=64
+name=pair128_loadonly runtime_regs=44 blocks_per_MP=64 waves_bound=64
+name=pair128_loadonly_multi runtime_regs=63 blocks_per_MP=64 waves_bound=64
+name=pair128_loadonly_rows runtime_regs=63 blocks_per_MP=64 waves_bound=64

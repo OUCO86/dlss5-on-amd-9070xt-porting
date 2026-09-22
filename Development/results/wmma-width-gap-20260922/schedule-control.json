@@ -1,0 +1,4 @@
+{
+  "normalized_assembly_equal": true,
+  "normalization": "Strip comments; normalize only function name and local block label prefix; instruction operands preserved"
+}

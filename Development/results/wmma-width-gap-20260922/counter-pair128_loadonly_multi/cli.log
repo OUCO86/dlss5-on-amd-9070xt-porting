@@ -1,0 +1,163 @@
+RadeonDeveloperPanelCLI - Profiling (RGP) Mode
+========================================
+[DevDriver] Failed to query AMD driver service name - STATUS_INVALID_PARAMETER (0xc000000d)
+[ERROR] [Driver Experiments Manager] (PID:0) Failed to query driver settings blob for Vulkan.
+Capture API initialized successfully
+Profiling (RGP) feature enabled (auto-capture enabled)
+Waiting for GPU application to connect...
+Process filter: width_counter
+Press Ctrl+C to exit.
+
+Auto-capture enabled, waiting for capture to complete...
+Connecting to process: D:\DLSSNR-Lab\hip-backend\wmma-width-gap\width_counter.exe (PID: 32888)
+[INFO] [RGP Trace Source] (PID:32888) Client connected [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Client reached init state [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Initialized new client [132 HIP]
+[Status] Ready for capture
+[INFO] [RGP Trace Source] (PID:32888) Client reached POSTDEVICEINIT state [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Successfully updated config [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Successfully queried SPM counters [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Successfully updated config [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Successfully set clocks to peak [132 HIP]
+
+  [>                                       ]   0%   [INFO] [RGP Trace Source] (PID:32888) Successfully requested trace [132 HIP]
+
+
+[Status] Capturing
+[Status] Dumping trace data
+
+  [>                                       ]   0%  0.0 / 5.3 MB
+  [>                                       ]   1%  0.1 / 5.3 MB
+  [>                                       ]   2%  0.1 / 5.3 MB
+  [#>                                      ]   3%  0.2 / 5.3 MB
+  [#>                                      ]   4%  0.2 / 5.3 MB
+  [##>                                     ]   5%  0.3 / 5.3 MB
+  [##>                                     ]   7%  0.4 / 5.3 MB
+  [###>                                    ]   8%  0.4 / 5.3 MB
+  [###>                                    ]   9%  0.5 / 5.3 MB
+  [####>                                   ]  10%  0.6 / 5.3 MB
+  [####>                                   ]  11%  0.6 / 5.3 MB
+  [#####>                                  ]  12%  0.7 / 5.3 MB
+  [#####>                                  ]  14%  0.8 / 5.3 MB
+  [######>                                 ]  15%  0.8 / 5.3 MB
+  [######>                                 ]  16%  0.9 / 5.3 MB
+  [#######>                                ]  17%  0.9 / 5.3 MB
+  [#######>                                ]  18%  1.0 / 5.3 MB
+  [########>                               ]  20%  1.1 / 5.3 MB
+  [########>                               ]  21%  1.1 / 5.3 MB
+  [########>                               ]  22%  1.2 / 5.3 MB
+  [#########>                              ]  23%  1.2 / 5.3 MB
+  [#########>                              ]  24%  1.3 / 5.3 MB
+  [##########>                             ]  25%  1.4 / 5.3 MB
+  [##########>                             ]  27%  1.4 / 5.3 MB
+  [###########>                            ]  28%  1.5 / 5.3 MB
+  [###########>                            ]  29%  1.6 / 5.3 MB
+  [############>                           ]  30%  1.6 / 5.3 MB
+  [############>                           ]  31%  1.7 / 5.3 MB
+  [#############>                          ]  32%  1.8 / 5.3 MB
+  [#############>                          ]  34%  1.8 / 5.3 MB
+  [##############>                         ]  35%  1.9 / 5.3 MB
+  [##############>                         ]  36%  1.9 / 5.3 MB
+  [###############>                        ]  37%  2.0 / 5.3 MB
+  [###############>                        ]  38%  2.1 / 5.3 MB
+  [################>                       ]  40%  2.1 / 5.3 MB
+  [################>                       ]  41%  2.2 / 5.3 MB
+  [################>                       ]  42%  2.2 / 5.3 MB
+  [#################>                      ]  43%  2.3 / 5.3 MB
+  [#################>                      ]  44%  2.4 / 5.3 MB
+  [##################>                     ]  45%  2.4 / 5.3 MB
+  [##################>                     ]  47%  2.5 / 5.3 MB
+  [###################>                    ]  48%  2.6 / 5.3 MB
+  [###################>                    ]  49%  2.6 / 5.3 MB
+  [####################>                   ]  50%  2.7 / 5.3 MB
+  [####################>                   ]  51%  2.8 / 5.3 MB
+  [#####################>                  ]  53%  2.8 / 5.3 MB
+  [#####################>                  ]  54%  2.9 / 5.3 MB
+  [######################>                 ]  55%  2.9 / 5.3 MB
+  [######################>                 ]  56%  3.0 / 5.3 MB
+  [#######################>                ]  57%  3.1 / 5.3 MB
+  [#######################>                ]  58%  3.1 / 5.3 MB
+  [########################>               ]  60%  3.2 / 5.3 MB
+  [########################>               ]  61%  3.2 / 5.3 MB
+  [########################>               ]  62%  3.3 / 5.3 MB
+  [#########################>              ]  63%  3.4 / 5.3 MB
+  [#########################>              ]  64%  3.4 / 5.3 MB
+  [##########################>             ]  65%  3.5 / 5.3 MB
+  [##########################>             ]  67%  3.6 / 5.3 MB
+  [###########################>            ]  68%  3.6 / 5.3 MB
+  [###########################>            ]  69%  3.7 / 5.3 MB
+  [############################>           ]  70%  3.8 / 5.3 MB
+  [############################>           ]  71%  3.8 / 5.3 MB
+  [#############################>          ]  73%  3.9 / 5.3 MB
+  [#############################>          ]  74%  3.9 / 5.3 MB
+  [##############################>         ]  75%  4.0 / 5.3 MB
+  [##############################>         ]  76%  4.1 / 5.3 MB
+  [###############################>        ]  77%  4.1 / 5.3 MB
+  [###############################>        ]  78%  4.2 / 5.3 MB
+  [################################>       ]  80%  4.2 / 5.3 MB
+  [################################>       ]  81%  4.3 / 5.3 MB
+  [################################>       ]  82%  4.4 / 5.3 MB
+  [#################################>      ]  83%  4.4 / 5.3 MB
+  [#################################>      ]  84%  4.5 / 5.3 MB
+  [##################################>     ]  85%  4.6 / 5.3 MB
+  [##################################>     ]  87%  4.6 / 5.3 MB
+  [###################################>    ]  88%  4.7 / 5.3 MB
+  [###################################>    ]  89%  4.8 / 5.3 MB
+  [####################################>   ]  90%  4.8 / 5.3 MB
+  [####################################>   ]  91%  4.9 / 5.3 MB
+  [#####################################>  ]  93%  4.9 / 5.3 MB
+  [#####################################>  ]  94%  5.0 / 5.3 MB
+  [######################################> ]  95%  5.1 / 5.3 MB
+  [######################################> ]  96%  5.1 / 5.3 MB
+  [#######################################>]  97%  5.2 / 5.3 MB
+  [#######################################>]  98%  5.2 / 5.3 MB
+  [########################################] 100%  5.3 / 5.3 MB   [INFO] [RGP Trace Source] (PID:32888) Successfully collected and dumped trace [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Successfully wrote additional chunks [132 HIP]
+
+
+[Status] Done
+[Status] Processing trace data
+
+  [>                                       ]   0%  Processing counter data...
+  [#>                                      ]   3%  Processing counter data...
+  [##>                                     ]   6%  Processing counter data...
+  [###>                                    ]   9%  Processing counter data...
+  [#####>                                  ]  12%  Processing counter data...
+  [######>                                 ]  16%  Processing counter data...
+  [#######>                                ]  19%  Processing counter data...
+  [#########>                              ]  22%  Processing counter data...
+  [##########>                             ]  25%  Processing counter data...
+  [###########>                            ]  29%  Processing counter data...
+  [############>                           ]  32%  Processing counter data...
+  [##############>                         ]  35%  Processing counter data...
+  [###############>                        ]  38%  Processing counter data...
+  [################>                       ]  41%  Processing counter data...
+  [##################>                     ]  45%  Processing counter data...
+  [###################>                    ]  48%  Processing counter data...
+  [####################>                   ]  51%  Processing counter data...
+  [#####################>                  ]  54%  Processing counter data...
+  [#######################>                ]  58%  Processing counter data...
+  [########################>               ]  61%  Processing counter data...
+  [#########################>              ]  64%  Processing counter data...
+  [###########################>            ]  67%  Processing counter data...
+  [############################>           ]  70%  Processing counter data...
+  [#############################>          ]  74%  Processing counter data...
+  [##############################>         ]  77%  Processing counter data...
+  [################################>       ]  80%  Processing counter data...
+  [#################################>      ]  83%  Processing counter data...
+  [##################################>     ]  87%  Processing counter data...
+  [####################################>   ]  90%  Processing counter data...
+  [#####################################>  ]  93%  Processing counter data...
+  [######################################> ]  96%  Processing counter data...
+  [########################################] 100%  Processing counter data...   [INFO] [RGP Trace Source] (PID:0) Successfully processed derived counters for 2
+
+
+Profiling (RGP) trace completed successfully! Size: 5863486 bytes
+[Status] Done
+Trace saved to: D:\DLSSNR-Lab\hip-backend\wmma-width-gap\counter-pair128_loadonly_multi\trace.rgp
+Size: 5863486 bytes
+[INFO] [RGP Trace Source] (PID:32888) Successfully restored clocks [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Client disconnected [132 HIP]
+[INFO] [RGP Trace Source] (PID:32888) Finished disconnecting client [132 HIP]
+[Status] Disconnected
+Done!

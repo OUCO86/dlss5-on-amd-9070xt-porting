@@ -1,0 +1,34 @@
+device=AMD Radeon RX 9070 XT arch=gfx1201 MPs=32
+conditioned=1
+FEED layout64 slot=0 model4 Astep=1023 Bstep=1023 us=32.565 TF=103.039 check=PASS
+FEED layout64 slot=1 pair64 Astep=0 Bstep=0 us=26.799 TF=125.209 check=PASS
+FEED layout64 slot=2 pair64 Astep=0 Bstep=0 us=26.805 TF=125.182 check=PASS
+FEED layout64 slot=3 model4 Astep=1023 Bstep=1023 us=32.977 TF=101.751 check=PASS
+FEED layout64 slot=4 model4 Astep=1023 Bstep=1023 us=32.922 TF=101.920 check=PASS
+FEED layout64 slot=5 pair64 Astep=0 Bstep=0 us=26.748 TF=125.446 check=PASS
+FEED layout64 slot=6 pair64 Astep=0 Bstep=0 us=26.938 TF=124.563 check=PASS
+FEED layout64 slot=7 model4 Astep=1023 Bstep=1023 us=33.057 TF=101.503 check=PASS
+FEED width slot=0 pair64 Astep=0 Bstep=0 us=26.955 TF=124.484 check=PASS
+FEED width slot=1 pair128 Astep=0 Bstep=0 us=26.460 TF=126.811 check=PASS
+FEED width slot=2 pair128 Astep=0 Bstep=0 us=26.451 TF=126.853 check=PASS
+FEED width slot=3 pair64 Astep=0 Bstep=0 us=26.912 TF=124.682 check=PASS
+FEED width slot=4 pair64 Astep=0 Bstep=0 us=26.964 TF=124.443 check=PASS
+FEED width slot=5 pair128 Astep=0 Bstep=0 us=26.491 TF=126.662 check=PASS
+FEED width slot=6 pair128 Astep=0 Bstep=0 us=26.480 TF=126.719 check=PASS
+FEED width slot=7 pair64 Astep=0 Bstep=0 us=26.887 TF=124.796 check=PASS
+FEED schedule slot=0 pair128 Astep=0 Bstep=0 us=26.496 TF=126.641 check=PASS
+FEED schedule slot=1 pair128_adjacent Astep=0 Bstep=0 us=26.525 TF=126.500 check=PASS
+FEED schedule slot=2 pair128_adjacent Astep=0 Bstep=0 us=26.329 TF=127.443 check=PASS
+FEED schedule slot=3 pair128 Astep=0 Bstep=0 us=26.414 TF=127.031 check=PASS
+FEED schedule slot=4 pair128 Astep=0 Bstep=0 us=26.476 TF=126.735 check=PASS
+FEED schedule slot=5 pair128_adjacent Astep=0 Bstep=0 us=26.398 TF=127.112 check=PASS
+FEED schedule slot=6 pair128_adjacent Astep=0 Bstep=0 us=26.458 TF=126.821 check=PASS
+FEED schedule slot=7 pair128 Astep=0 Bstep=0 us=26.459 TF=126.818 check=PASS
+FEED original_wide slot=0 model4 Astep=1023 Bstep=1023 us=33.103 TF=101.364 check=PASS
+FEED original_wide slot=1 pair128 Astep=0 Bstep=0 us=26.468 TF=126.774 check=PASS
+FEED original_wide slot=2 pair128 Astep=0 Bstep=0 us=26.310 TF=127.533 check=PASS
+FEED original_wide slot=3 model4 Astep=1023 Bstep=1023 us=32.993 TF=101.702 check=PASS
+FEED original_wide slot=4 model4 Astep=1023 Bstep=1023 us=32.929 TF=101.900 check=PASS
+FEED original_wide slot=5 pair128 Astep=0 Bstep=0 us=26.464 TF=126.795 check=PASS
+FEED original_wide slot=6 pair128 Astep=0 Bstep=0 us=26.449 TF=126.864 check=PASS
+FEED original_wide slot=7 model4 Astep=1023 Bstep=1023 us=33.143 TF=101.240 check=PASS

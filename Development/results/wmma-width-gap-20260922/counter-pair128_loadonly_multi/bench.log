@@ -1,0 +1,4 @@
+CHECK kernel=pair128_loadonly_multi bad=0
+TARGET pair128_loadonly_multi
+CHECK kernel=pair128_loadonly_multi bad=0
+CHECK kernel=pair128_loadonly_multi bad=0

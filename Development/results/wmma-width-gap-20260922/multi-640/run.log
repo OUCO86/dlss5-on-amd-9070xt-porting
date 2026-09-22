@@ -1,0 +1,10 @@
+device=AMD Radeon RX 9070 XT arch=gfx1201 MPs=32
+conditioned=1
+FEED load_ceiling_multi slot=0 pair128 Astep=0 Bstep=0 us=33.820 TF=158.742 check=PASS
+FEED load_ceiling_multi slot=1 pair128_loadonly_multi Astep=0 Bstep=0 us=36.553 TF=0.000 check=PASS
+FEED load_ceiling_multi slot=2 pair128_loadonly_multi Astep=0 Bstep=0 us=36.374 TF=0.000 check=PASS
+FEED load_ceiling_multi slot=3 pair128 Astep=0 Bstep=0 us=31.556 TF=170.134 check=PASS
+FEED load_ceiling_multi slot=4 pair128 Astep=0 Bstep=0 us=31.299 TF=171.527 check=PASS
+FEED load_ceiling_multi slot=5 pair128_loadonly_multi Astep=0 Bstep=0 us=36.384 TF=0.000 check=PASS
+FEED load_ceiling_multi slot=6 pair128_loadonly_multi Astep=0 Bstep=0 us=36.476 TF=0.000 check=PASS
+FEED load_ceiling_multi slot=7 pair128 Astep=0 Bstep=0 us=31.142 TF=172.394 check=PASS
