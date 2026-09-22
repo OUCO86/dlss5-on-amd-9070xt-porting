@@ -1,0 +1,7 @@
+ void SetSchedule(unsigned mode){schedule_mode=mode;schedule_replaced=0;}
+ unsigned ScheduleReplaced()const{return schedule_replaced;}
+ void PreparePrefix(){prefixes.resize(512);for(auto&e:prefixes){api.Check(api.hipEventCreate(&e.start),"start create");api.Check(api.hipEventCreate(&e.mid),"mid create");api.Check(api.hipEventCreate(&e.end),"end create");}}
+ void BeginPrefix(bool after){if(prefix_index>=prefixes.size())throw std::runtime_error("prefix capacity");current_prefix=&prefixes[prefix_index++];prefix_active=true;prefix_after=after;prefix_hit=false;context_pack=0;api.Check(api.hipEventRecord(current_prefix->start,stream),"prefix start");}
+ void EndPrefix(){if(!prefix_hit||context_pack!=8)throw std::runtime_error("prefix boundary missing");api.Check(api.hipEventRecord(current_prefix->end,stream),"prefix end");prefix_active=false;}
+ void ReadPrefix(float&prefix,float&whole,float&tail){auto&e=*current_prefix;api.Check(api.hipEventSynchronize(e.end),"prefix done");api.Check(api.hipEventSynchronize(e.mid),"mid done");api.Check(api.hipEventElapsedTime(&prefix,e.start,e.mid),"prefix elapsed");api.Check(api.hipEventElapsedTime(&whole,e.start,e.end),"whole elapsed");api.Check(api.hipEventElapsedTime(&tail,e.mid,e.end),"tail elapsed");}
+ void ReleasePrefix(){Synchronize();for(auto&e:prefixes){api.hipEventDestroy(e.start);api.hipEventDestroy(e.mid);api.hipEventDestroy(e.end);}prefixes.clear();}
