@@ -3179,3 +3179,7 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 23:30 用户确认《剑星》未运行，授权安装 prod2。install.ps1：2 个 C32 packed hsaco 源 hash 校验、备份 D:\DLSSNR-Lab\stellar-prod2-20260922\backups\20260922-233020、替换、读回一致（gfx1200 75d191fe→b85efd62，gfx1201 f178281c→4a414c5a）；dxgi.dll / OptiScaler.ini / native-game-flags.txt 不变。installed.json 入库。等待用户实玩。
 
 23:41 用户实玩反馈：折叠 FFN 候选"没毛病"，未见异常；未提供帧率读数，不宣称提速。候选保留。
+
+## 2026-09-22 23:45：合并 TheAutomatic PR #8
+
+只改 src/LmxxfNrRuntime.cpp：AbandonSessionResources（失败即故意泄漏路径）补上 device/queue 的 COM Release。两者是 Create 里 QueryInterface 取得的引用，释放正确；故意泄漏只针对 GPU 可能仍引用的桥/编解码资源。MinGW 编译通过，不触及现有代码、hsaco、包、游戏安装。合入 main。
