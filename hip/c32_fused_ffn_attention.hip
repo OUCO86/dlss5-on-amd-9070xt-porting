@@ -59,7 +59,7 @@
 #define HIP_C32_LOCAL_QKV_SYNC 1
 #endif
 #ifndef HIP_C32_BYTE_CHAIN
-#define HIP_C32_BYTE_CHAIN 1 /* 2026-09-23: raw chain carries FP8 bytes. mapped/chain producers (HalfOutput, raw_output=1) store fp8(F(float((_Float16)v))) -- exactly the byte the f16 consumer used to compute -- and RawMapped consumers load one byte per element with a vectorised 128-bit staging path, skipping F(). Bit-exact; whole network -0.08/-0.06ms. The raw buffer is then bytes, not f16: boundary_fast c32_finish_crop_half (SkipChainFinish, C32 skip blocks) still expects f16 and must not be combined with this flag. */
+#define HIP_C32_BYTE_CHAIN 1 /* 2026-09-23: raw chain carries FP8 bytes; also enables the vectorised 128-bit staging for the f32-row Mapped kernels (mapped/post). mapped/chain producers (HalfOutput, raw_output=1) store fp8(F(float((_Float16)v))) -- exactly the byte the f16 consumer used to compute -- and RawMapped consumers load one byte per element with a vectorised 128-bit staging path, skipping F(). Bit-exact; whole network -0.08/-0.06ms. The raw buffer is then bytes, not f16: boundary_fast c32_finish_crop_half (SkipChainFinish, C32 skip blocks) still expects f16 and must not be combined with this flag. */
 #endif
 #ifndef HIP_C32_FOLDED_FFN
 #define HIP_C32_FOLDED_FFN 1 /* 2026-09-22: expand->contract without the LDS round trip (transposed WMMA operands); bit-exact, -0.10/-0.06ms whole network */
@@ -133,6 +133,7 @@ DEV float F(float x){uint b=bits(x),a=b&0x7fffffffu,s=b&0x80000000u;if(a==0)retu
 
 using i2=int __attribute__((ext_vector_type(2)));
 using i4=int __attribute__((ext_vector_type(4)));
+using f4=float __attribute__((ext_vector_type(4)));
 using f8=float __attribute__((ext_vector_type(8)));
 using h8=_Float16 __attribute__((ext_vector_type(8)));
 #define WAVE KERNEL __attribute__((amdgpu_flat_work_group_size(32,32)))
@@ -286,6 +287,22 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
    i4 q;__builtin_memcpy(&q,reinterpret_cast<const unsigned char*>(raw_input)+idx,16);
    if(src<0)q=i4{0,0,0,0};
    __builtin_memcpy(packed+(first+(l>>1))*36+(l&1)*16,&q,16);
+  }else if constexpr(Mapped){
+   // f32 rows (128 B): lane l stages channels (l&7)*4..+3 of tokens (l>>3)+4k with four 128-bit loads (row indices via
+   // ds_bpermute), one dword LDS store per token and two dword in16 stores; Merge also takes its 4 skip bytes as one b32.
+   // 16 loads + 16 byte stores + 16 half stores per lane become 4 (+4) + 4 + 8. Per-element arithmetic unchanged.
+   // 2026-09-23: -0.16/-0.10ms whole network, three replications, bit-exact (results/c32-vec-stage-20260923).
+   const uint c0=(l&7)*4;float sc[4],sh[4];
+   if constexpr(Merge){_Pragma("unroll") for(uint e=0;e<4;e++){sc[e]=scales[c0+e];sh[e]=scales[32+c0+e];}}
+   _Pragma("unroll") for(uint k=0;k<4;k++){uint tok=k*4+(l>>3);int src=__builtin_amdgcn_ds_bpermute(int(tok*4),mine);uint idx=src>=0?uint(src):0u;
+    f4 q;uint hb4=0;
+    if constexpr(Merge){int src2=__builtin_amdgcn_ds_bpermute(int(tok*4),mine2);uint idx2=src2>=0?uint(src2):0u;__builtin_memcpy(&q,raw_input+idx2+c0,16);__builtin_memcpy(&hb4,reinterpret_cast<const unsigned char*>(skip)+idx+c0,4);}
+    else __builtin_memcpy(&q,raw_input+idx+c0,16);
+    float v[4];uint word=0;
+    _Pragma("unroll") for(uint e=0;e<4;e++){float c;if constexpr(Merge){float high=__builtin_amdgcn_cvt_f32_fp8(int((hb4>>(8*e))&255u),0);c=Hrtz(Hrtz(q[e]*sc[e])+high*sh[e]);}else c=q[e];v[e]=src>=0?c:0.f;word|=(fp8(v[e])&255u)<<(8*e);}
+    __builtin_memcpy(packed+(first+tok)*36+c0,&word,4);
+    if constexpr(NeedIn16){_Float16 h[4];_Pragma("unroll") for(uint e=0;e<4;e++)h[e]=(_Float16)v[e];__builtin_memcpy(in16+(first+tok)*34+c0,h,8);}
+   }
   }else{
 #else
   {
