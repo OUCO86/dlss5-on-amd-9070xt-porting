@@ -3024,3 +3024,5 @@ RE9包替换为62a948a6…特殊宿主＋f5cf7697…runtime（实验ABI2），�
 成品位于D:\給網友打包：Magpie-DLSS5-AMD-0.28.zip＝336,318,827字节、723个有效载荷；OptiScaler-DLSS5-AMD-0.28.zip＝366,516,000字节、541个；OptiScaler-REFramework-DLSS5-AMD-0.28.zip＝420,949,208字节、545个。全部从ZIP逐文件读回SHA验证，旁置.zip.sha256；完整hash与源码/构建记录在Development/releases/0.28。打包入口Development/tools/package-028.ps1，支持完成包Resume复核，未完成RE9失败stage移到lab留档后重建。
 
 中英文主README补齐src/hip/shaders/scripts/Development/HIP/RE9适配等结构、Git与9070框架底包/模型/构建目录分工，说明RE9只入库版本锁定＋补丁＋脚本。三包新增独立中文README.txt与README.en.txt，配置/模块/源码/无个人路径检查通过。更新0.28简短changelog，网盘链接留待用户上传；未上传网盘、未打tag、未改游戏安装。
+
+11:29用户上传0.28三包：Magpie https://pan.quark.cn/s/11547f398eb4 ，普通OptiScaler https://pan.quark.cn/s/f7f423b0ea3a ，OptiScaler-REFramework https://pan.quark.cn/s/c8468c5e3582 。中英文README链接已挂在0.28版本表对应名称上，保留特殊版说明；包文件未重打。
