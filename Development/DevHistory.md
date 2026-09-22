@@ -3177,3 +3177,5 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 采用 pair3 为 `HIP_C32_FOLDED_FFN`（默认 1，hip/c32_fused_ffn_attention.hip，首次打补丁把 #if 塞进 ABLATE 块内导致 unterminated conditional，重打包住整段）。生产构建 10 核与实验 pair3 机器码逐条同（分支标签归一化）。regression-prod2.ps1（候选 prod2-modules，基线 fence-modules）：900/1080 两序列 12 帧 RGB hash 全同，1000 帧计时 900 12.654/12.684 vs 12.690/12.792、1080 17.827/17.847 vs 17.889/17.979ms，四组额外控制 hash 全同，退出 0。部署清单 stellar-prod2-20260922（仅 gfx1200/1201 各一个 C32 packed hsaco）已放远端，**未安装**，等用户授权。
 
 23:30 用户确认《剑星》未运行，授权安装 prod2。install.ps1：2 个 C32 packed hsaco 源 hash 校验、备份 D:\DLSSNR-Lab\stellar-prod2-20260922\backups\20260922-233020、替换、读回一致（gfx1200 75d191fe→b85efd62，gfx1201 f178281c→4a414c5a）；dxgi.dll / OptiScaler.ini / native-game-flags.txt 不变。installed.json 入库。等待用户实玩。
+
+23:41 用户实玩反馈：折叠 FFN 候选"没毛病"，未见异常；未提供帧率读数，不宣称提速。候选保留。
