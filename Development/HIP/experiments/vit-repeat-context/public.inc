@@ -1,0 +1,2 @@
+ void SetAmplification(unsigned mode,unsigned repeats){if(mode>1||(repeats!=1&&repeats!=2&&repeats!=4))throw std::runtime_error("amplification arguments");amp_mode=mode;amp_repeats=repeats;amp_pairs=amp_extra_pairs=amp_expand_launches=amp_replaced=0;}
+ unsigned AmpPairs()const{return amp_pairs;}unsigned AmpExtras()const{return amp_extra_pairs;}unsigned AmpLaunches()const{return amp_expand_launches;}unsigned AmpReplaced()const{return amp_replaced;}

@@ -1,0 +1,22 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-repeat-context\\network.exe",
+        "sha":  "0F70750CE4DC5515BD070BB34B520D745471A81828426F3B92D123093B6F081A"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-repeat-context\\concentrated.exe",
+        "sha":  "207010CAB4FCDC5C4C0B36BF373D92C7AB95E2288B516000650145DA9E45ECD1"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-repeat-context\\clones-pilot.exe",
+        "sha":  "85BAE72BC1C18F9718E3BE59C6C27566444A2DF0F2FA68CC8BA87E53BFD42920"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-repeat-context\\clones.exe",
+        "sha":  "DC9B136AFAE4A8F48D7281A58A423E84B8FEA16F542D20B472AFDE0276F983DD"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\modules-u2\\deep_fast-packed.hsaco",
+        "sha":  "7A97B1007864671FAA9FD12686E785C604DC5FE8E7D43DF9BF822CB0D3B66A7B"
+    }
+]
