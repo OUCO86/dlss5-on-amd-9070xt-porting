@@ -189,3 +189,7 @@ RGP64dispatch：L0请求251822080→167936000（−33.31%），L2请求114033044
 ## 2026-09-23 10:40补充（Hikari）：逐位约束下的平台期
 
 上午五项：[ffn_fused_c256 打点](../mhfast-phase-trace-20260923/README.md)（矩阵 7%、尾段 43%、barrier 19%）；[ViT 注意力寄存器化+V 转置](../vit-register-attention-20260923/README.md) ≤0.03ms；[split_projection 转置尾声](../deep-transposed-epilogue-20260923/README.md) 略差——**请求按"指令 × 触及缓存行数"计**，跨 lane 连续的标量写不该并宽；[BatchNorm 合并两对 barrier](../mhfast-batchnorm-20260923/README.md) 中性（LDS 翻倍抵消）；[宽权重片段](../mhfast-wide-frag-20260923/README.md) −0.03ms，需重编 addon，待顺带。栅栏、LDS 中转、请求宽度、驻留、barrier 五类手法在全部热核上各试一遍，逐位不变的手法已穷尽；再进要么放弃逐位（改累加顺序/精度路径），要么等 addon 重编打包 host 侧小改。
+
+## 2026-09-23 08:00补充（Hikari）：launch 级驻留账与 in16 别名
+
+[launch 级账](../launch-occupancy-20260923/README.md)：每 wave 实时戳 + HW_ID。**纠正：128 个 SIMD，不是 256。** C32 驻留贴 LDS 上限（CU 模式 64KB：chain 4 组/CU = 8 wave/SIMD，mapped/post 3 组 = 6），爬坡+尾巴 1%，缺口全在核内；ffn_fused_c256 VGPR 封顶 12/SIMD、尾 8～12%；c256_attention 每 launch 2～2.5 轮组、尾巴 25～37%（约 0.15ms/帧，结构性）。[in16 别名](../c32-lds-alias-20260923/README.md)：三核 LDS 回到 15360、驻留 6→8，逐位同，−0.09/−0.06ms（三份复现），进生产源攒着。驻留 +33% 只换 4%：这三核在 6 wave 时延迟已盖住大半。

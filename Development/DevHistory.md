@@ -3237,3 +3237,11 @@ mh-phase-trace：c256_attention_project 每 wave 约 50k 周期，两批注意�
 ## 2026-09-23 07:50：栅栏 local 化形式化审核，通过
 
 fence-scope-all 留的"未做"：逐处过四个文件的带栅栏同步点（c32 18、mh_fused 35、deep_fast 2、mh_fast 3）。全局写只在核尾且其后无 barrier，同步点后的全局读全是 const 输入，工作组内无"写全局→栅栏→读全局"模式。已装进剑星的 fence 改法不靠全局 release/acquire。CU 逐核对照上一日已做（fence-cu-size），不重复。
+
+## 2026-09-23 07:55：launch 级驻留账（实时戳 + HW_ID），纠正 SIMD 数
+
+三个打点核每 wave 加 REALTIME 进/出戳和 HW_ID1。9070 XT 是 128 个 SIMD（32 WGP×4），之前"3.3/6"的分母错。C32 驻留贴 LDS 上限（chain 8、mapped/post 6 wave/SIMD，CU 模式 64KB），爬坡+尾巴 1%；ffn_fused_c256 12/SIMD（VGPR 封顶）尾 8～12%；c256_attention 寄存器版 12/SIMD，每 launch 只有 2～2.5 轮组，尾巴 25～37%（0.14～0.17ms/帧，结构性：投影要全部 8 头的 AV，组拆不开）。results/launch-occupancy-20260923。
+
+## 2026-09-23 08:00：C32 in16 别名到 Scratch，逐位同，−0.09/−0.06ms，进生产源
+
+mapped/post 三核 LDS 19712→15360，驻留 3→4 组/CU。in16 生命期止于残差初始化，Scratch 生于 QKV，中间两个 sync_window。三份复现槽不交叠。`HIP_C32_IN16_ALIAS` 默认 1，攒进下一批候选（未编 prod6、未回归、未装）。results/c32-lds-alias-20260923。

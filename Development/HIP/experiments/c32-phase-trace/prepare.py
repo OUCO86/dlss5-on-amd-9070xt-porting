@@ -51,7 +51,7 @@ v=stamp_before(v,' ATTN_SYNC();\n for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)p
 i=v.index('if constexpr(Finish'); j=v.rfind('\n',0,i)+1
 v=v[:j]+' ts.t[8]=cyc();\n'+v[j:]
 # 10 after the mapped index computation (start of the prefetch pass), 11 after pass-1 loads with an explicit wait
-v=stamp_before(v,'#if HIP_C32_STAGE_PREFETCH\n  // Pass 1:',10)
+v=stamp_before(v,'#if HIP_C32_STAGE_PREFETCH\n',10)  # 2026-09-23: byte-chain staging sits between the flag and Pass 1; stamp at the flag
 pass2='  #pragma unroll\n  for(uint j=0;j<16;j++){uint row=first+j;float v;\n'
 assert v.count(pass2)==1
 v=v.replace(pass2,' __asm__ volatile("s_wait_loadcnt 0x0" ::: "memory");ts.t[11]=cyc();\n'+pass2,1)

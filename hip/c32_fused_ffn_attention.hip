@@ -64,6 +64,12 @@
 #ifndef HIP_C32_FOLDED_FFN
 #define HIP_C32_FOLDED_FFN 1 /* 2026-09-22: expand->contract without the LDS round trip (transposed WMMA operands); bit-exact, -0.10/-0.06ms whole network */
 #endif
+#ifndef HIP_C32_IN16_ALIAS
+#define HIP_C32_IN16_ALIAS 1 /* 2026-09-23: the NeedIn16 kernels (half_mapped, post_merge_head/fused) keep the staged f16 rows in the
+ Scratch union instead of their own 4352-byte array. in16 is last read by the mode-0 residual init before the FFN; Scratch is first
+ written in the QKV normalisation, two sync_windows later, and scratch.hidden is compiled out (FOLDED_FFN). LDS 19712 -> 15360 per
+ group, CU-mode residency 3 -> 4 groups per CU (6 -> 8 waves/SIMD, HW_ID-verified). Bit-exact; -0.09/-0.06 ms (1080/900). */
+#endif
 #ifndef HIP_C32_REGISTER_FFN
 #define HIP_C32_REGISTER_FFN 1
 #endif
@@ -263,7 +269,11 @@ DEV void c32_fused_body(const float*raw_input,const float*fw,const float*w,float
  // row) with the index broadcast by readlane. Same values as mapped_c32_input, 64 index computations per window
  // instead of 2048. The f16 copy (exact: every mapped source is H()-rounded) feeds the mode-0 residual.
  constexpr bool NeedIn16=Mapped&&!RawMapped;
+#if HIP_C32_IN16_ALIAS && HIP_C32_FOLDED_FFN && HIP_C32_REGISTER_FFN
+ _Float16*in16=reinterpret_cast<_Float16*>(scratch.ex); // aliased: in16 dies at the residual init, scratch is born in QKV
+#else
  __attribute__((shared)) _Float16 in16[NeedIn16?64*34:1];
+#endif
  f8 pre_acc[2];pre_acc[0]=f8{};pre_acc[1]=f8{};
  if constexpr(Prefix){uint l=tid%32;float*values=scratch.raw+wave*256;_Float16*pre16=reinterpret_cast<_Float16*>(scratch.raw+1024)+wave*512; // scratch is free until the FFN hidden writes
   if(l<16){float f[16]{};fused_prefix_values(rgba,hist,base+first+l,sourcew,seed,temporal,f);for(uint k=0;k<16;k++)values[l*16+k]=f[k];}
