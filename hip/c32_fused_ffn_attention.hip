@@ -65,7 +65,22 @@
 #pragma clang fp reassociate(off)
 typedef unsigned uint;
 #define DEV __attribute__((device)) __attribute__((always_inline))
+#ifndef HIP_LDS_FENCE
+#define HIP_LDS_FENCE 1 /* 2026-09-22 fence scope: workgroup fences here only publish LDS; the default "workgroup" scope made gfx12 emit global_inv (vector L0 invalidate) and wait for all outstanding global loads at every barrier. Restricting the fence to the LDS address space removes both; bit-exact, see Development/results/fence-scope-all-20260922 */
+#endif
+#if HIP_LDS_FENCE
+#define WG_FENCE(k) __builtin_amdgcn_fence(k,"workgroup","local")
+#else
+#define WG_FENCE(k) __builtin_amdgcn_fence(k,"workgroup")
+#endif
+#ifndef HIP_C32_CU_MODE
+#define HIP_C32_CU_MODE 1 /* 2026-09-22: 128-thread C32 workgroups run faster with all four waves on one CU (-0.13/-0.17ms whole network on top of the fence change, bit-exact); larger MH/deep workgroups get slower in CU mode, so this is C32-only */
+#endif
+#if HIP_C32_CU_MODE
+#define KERNEL extern "C" __attribute__((global)) __attribute__((target("cumode")))
+#else
 #define KERNEL extern "C" __attribute__((global))
+#endif
 DEV uint bits(float x){union{float f;uint u;}v;v.f=x;return v.u;}
 DEV float value(uint x){union{float f;uint u;}v;v.u=x;return v.f;}
 DEV float absf(float x){return value(bits(x)&0x7fffffffu);}
@@ -151,12 +166,12 @@ DEV float norm_inverse(float x){float r=__builtin_amdgcn_rcpf(x);
 }
 DEV void put(i2&v,uint e,float x){v[e/4]=int(uint(v[e/4])|(fp8(x)<<(8*(e%4))));}
 
-DEV void sync_window(){__builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_s_barrier();__builtin_amdgcn_fence(2,"workgroup");}
+DEV void sync_window(){WG_FENCE(3);__builtin_amdgcn_s_barrier();WG_FENCE(2);}
 
 // Only for wave-private LDS rows: order memory without waiting for other waves.
 DEV void sync_owned_rows(){
 #if HIP_C32_LOCAL_QKV_SYNC
- __builtin_amdgcn_fence(3,"workgroup");__builtin_amdgcn_fence(2,"workgroup");
+ WG_FENCE(3);WG_FENCE(2);
 #else
  sync_window();
 #endif
