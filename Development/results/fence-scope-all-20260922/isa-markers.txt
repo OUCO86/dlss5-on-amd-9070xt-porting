@@ -1,0 +1,10 @@
+pair1-c32_fused_ffn_attention-packed               global_inv=0 s_barrier_signal=92 wgp_mode1=10 wgp_mode0=0 s_wait_loadcnt_dscnt=171
+pair1-deep_fast-packed                             global_inv=0 s_barrier_signal=7 wgp_mode1=76 wgp_mode0=0 s_wait_loadcnt_dscnt=49
+pair1-multihead-fast-padded-wave-packed            global_inv=0 s_barrier_signal=494 wgp_mode1=88 wgp_mode0=0 s_wait_loadcnt_dscnt=1849
+pair1-multihead_fused_attention                    global_inv=0 s_barrier_signal=124 wgp_mode1=22 wgp_mode0=0 s_wait_loadcnt_dscnt=161
+pair2-c32_fused_ffn_attention-packed               global_inv=0 s_barrier_signal=92 wgp_mode1=0 wgp_mode0=10 s_wait_loadcnt_dscnt=171
+pair2-deep_fast-packed                             global_inv=0 s_barrier_signal=7 wgp_mode1=0 wgp_mode0=76 s_wait_loadcnt_dscnt=49
+pair2-multihead-fast-padded-wave-packed            global_inv=0 s_barrier_signal=494 wgp_mode1=0 wgp_mode0=88 s_wait_loadcnt_dscnt=1852
+pair2-multihead_fused_attention                    global_inv=0 s_barrier_signal=124 wgp_mode1=0 wgp_mode0=22 s_wait_loadcnt_dscnt=161
+
+baseline (network-fixed-shapes selected/pair-encode exports): multihead_fused_attention global_inv=130 s_barrier_signal=124 ; multihead-fast-padded-wave-packed global_inv=5 s_barrier_signal=494 ; deep_fast-packed global_inv=18 s_barrier_signal=7 ; c32_fused_ffn_attention-packed global_inv=~160 across 10 kernels

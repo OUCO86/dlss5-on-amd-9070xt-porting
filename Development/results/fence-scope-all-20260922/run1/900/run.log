@@ -1,0 +1,17 @@
+PAIR test=1 slot=0 mode=0 wall=12.789562 bitdiff=0 calls=0 perframe=218
+PAIR test=1 slot=1 mode=1 wall=12.630163 bitdiff=0 calls=34880 perframe=218
+PAIR test=1 slot=2 mode=1 wall=12.628775 bitdiff=0 calls=34880 perframe=218
+PAIR test=1 slot=3 mode=0 wall=12.807925 bitdiff=0 calls=0 perframe=218
+PAIR test=1 slot=4 mode=0 wall=12.767262 bitdiff=0 calls=0 perframe=218
+PAIR test=1 slot=5 mode=1 wall=12.643987 bitdiff=0 calls=34880 perframe=218
+PAIR test=1 slot=6 mode=1 wall=12.652200 bitdiff=0 calls=34880 perframe=218
+PAIR test=1 slot=7 mode=0 wall=12.802694 bitdiff=0 calls=0 perframe=218
+PAIR test=2 slot=0 mode=0 wall=12.799913 bitdiff=0 calls=0 perframe=218
+PAIR test=2 slot=1 mode=2 wall=12.857781 bitdiff=0 calls=34880 perframe=218
+PAIR test=2 slot=2 mode=2 wall=12.873981 bitdiff=0 calls=34880 perframe=218
+PAIR test=2 slot=3 mode=0 wall=12.817494 bitdiff=0 calls=0 perframe=218
+PAIR test=2 slot=4 mode=0 wall=12.828112 bitdiff=0 calls=0 perframe=218
+PAIR test=2 slot=5 mode=2 wall=12.861662 bitdiff=0 calls=34880 perframe=218
+PAIR test=2 slot=6 mode=2 wall=12.863394 bitdiff=0 calls=34880 perframe=218
+PAIR test=2 slot=7 mode=0 wall=12.847850 bitdiff=0 calls=0 perframe=218
+PASS fence scope all
