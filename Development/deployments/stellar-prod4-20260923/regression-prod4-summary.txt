@@ -1,0 +1,13 @@
+regression-prod4 (candidate prod4-modules, base prod2-modules = installed). Summary rebuilt from the result directories after the
+local ssh client was killed (the remote script ran to completion; all 24 directories present, per-frame RGB hash checks are inside
+the script and stop it on mismatch). rgb.f16 sha prefix, wall mean (frames >= 200 for 1000-frame runs, >= 1 for 12-frame runs).
+base-900-0        12f  17.500 75AABA5EF9 | candidate-900-0   16.533 75AABA5EF9
+base-900-1        12f  15.607 5104F03956 | candidate-900-1   15.460 5104F03956
+time-900   base 12.604 / 12.684   candidate 12.476 / 12.493   (1000 frames)
+base-1080-0       12f  20.779 1DE20C2191 | candidate-1080-0  20.803 1DE20C2191
+base-1080-1       12f  20.798 3D1B0382BD | candidate-1080-1  20.340 3D1B0382BD
+time-1080  base 17.745 / 17.834   candidate 17.571 / 17.567   (1000 frames)
+extra-720-motion        9B53BE7A73 = 9B53BE7A73
+extra-900-history       5F2D6F1AD1 = 5F2D6F1AD1
+extra-900-float-in      5104F03956 = 5104F03956
+extra-900-float-feature 5104F03956 = 5104F03956

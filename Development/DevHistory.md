@@ -3203,3 +3203,5 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 ## 2026-09-23 02:20：f32 行向量化 staging（mapped/post），并入 HIP_C32_BYTE_CHAIN，prod4 回归中
 
 lane l 以 4 条 b128 读 4 个 token 的 4 个通道（ds_bpermute 广播行索引），Merge 另 4 条 b32 读 skip；打包 dword 写 packed、两 dword 写 in16。ISA：mapped 读 16→4、LDS 写 32→8；post 读 34→10、写 32→8；VGPR 不变。整网 ABBA 三份复现 1080 −0.161/−0.159/−0.136、900 −0.100/−0.104/−0.099ms，逐位同，槽间分开。并入生产源码（同 BYTE_CHAIN 开关），prod4 = prod3 + 本项，10 核与实验逐条同；regression-prod4（基线 prod2 = 当前装机）后台。stellar-prod4-20260923 清单已放远端，prod3 清单作废不装。工具 HIP/experiments/c32-vec-stage，证据 results/c32-vec-stage-20260923。
+
+02:45 regression-prod4（候选 prod4 = 字节链 + 两处向量化 staging，基线 prod2 装机版）：本地 ssh 客户端被壳子以"内存不足"误杀（本机可用 116GB），远端脚本跑完，从结果目录重建汇总：900/1080 两序列 12 帧 hash 全同，1000 帧计时 900 12.476/12.493 vs 12.604/12.684、1080 17.571/17.567 vs 17.745/17.834ms，四组额外控制 hash 全同。摘要 deployments/stellar-prod4-20260923/regression-prod4-summary.txt。候选待装。
