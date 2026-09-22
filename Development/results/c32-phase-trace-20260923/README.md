@@ -55,3 +55,20 @@ p90 与中位数接近，分布窄（见 analysis.txt）。
 - 原始 trace（每档 10 个 u64 文件共 294MB）未入库，sha256 在 trace-u64-sha256.txt，本地 /tmp/c32-phase-trace/ev，远端 D:\DLSSNR-Lab\hip-backend\c32-phase-trace\{900,1080}。
 
 工具 HIP/experiments/c32-phase-trace（prepare.py 生成打点核与 host，analyze.py 统计）。
+
+## 补：staging 内部拆分（900P，第二轮，同 kernel 加两个打点；900-r2/analysis.txt）
+
+在 mapped 索引算完、pass-1 全部 16 条读发出后强制 `s_wait_loadcnt 0` 各打一点：
+
+| 核 | 索引计算 | 读到齐（含队列等待） | 转换 + LDS 写 |
+|---|---:|---:|---:|
+| mapped | 714 | 3,790 | 1,058 |
+| chain | 1,820 | 3,560 | 3,170 |
+| chain_finish(_dcrop) | 1,000～1,150 | 3,530～3,760 | 3,350～3,490 |
+| post | 726 | 4,023 | 2,091 |
+
+- **读等待 3.5～4.0k 周期/wave，所有核一致**：16 条已合并的 128B 行读排队约 1.4µs（按 ~2.7GHz），和 memory unit busy 99% 一致。这是队列，不是单次延迟。
+- chain/finish 的转换段比 mapped 贵 2～3k：它们读 f16 后每值过一次 `F()`（E4M3 往返：cvt_f32_f16 → med3 → cvt_pk_fp8 → cvt_f32_fp8 → max → cndmask），外加逐 token 的标量 `s_cselect`/`s_wait_alu` 链（chain 转换段 28 条 s_wait_alu）。汇编确认 16 条读全部在强制等待之前发出，转换段无新读。
+- 注意：每 wave 的阶段周期是该 wave 的墙钟，包含同 SIMD 其他 wave 交错占用；数百条指令的段落读出几千周期，含约 6 倍驻留争用。份额可比，绝对周期不等于发射周期。
+
+**下一刀（字节链）**：chain 类 launch 以 raw=1 运行，生产者写 f16 原值、消费者再做 `F()`。改为生产者按消费者的顺序（f16 舍入 → F → FP8）直接写字节，消费者读 u8 跳过 F：逐位应同，读字节量减半、转换段大部分消失。涉及 mapped/chain 的输出与 chain/finish 的输入，需核对该 f16 缓冲无其他读者。

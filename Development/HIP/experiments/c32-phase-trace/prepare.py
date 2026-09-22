@@ -13,7 +13,7 @@ helpers='''
 typedef unsigned long long u64;
 __attribute__((device)) u64* c32_trace;
 DEV u64 cyc(){return __builtin_readcyclecounter();}
-struct TraceState{u64 t[10];u64 wait;u64 n;};
+struct TraceState{u64 t[12];u64 wait;u64 n;};
 DEV void sync_window_t(TraceState&ts){u64 a=cyc();WG_FENCE(3);__builtin_amdgcn_s_barrier();WG_FENCE(2);ts.wait+=cyc()-a;ts.n++;}
 DEV void sync_owned_rows_t(TraceState&ts){
 #if HIP_C32_LOCAL_QKV_SYNC
@@ -50,10 +50,15 @@ v=stamp_before(v,' ATTN_SYNC();\n for(uint ci=0;ci<2;ci++)for(uint e=0;e<8;e++)p
 # 8 projection done: before the finish/RGB tail "if constexpr(Finish)" or the output loop end -> anchor on '#if HIP_C32_HOIST_PW' end: use the first 'if constexpr(Finish' occurrence
 i=v.index('if constexpr(Finish'); j=v.rfind('\n',0,i)+1
 v=v[:j]+' ts.t[8]=cyc();\n'+v[j:]
+# 10 after the mapped index computation (start of the prefetch pass), 11 after pass-1 loads with an explicit wait
+v=stamp_before(v,'#if HIP_C32_STAGE_PREFETCH\n  // Pass 1:',10)
+pass2='  #pragma unroll\n  for(uint j=0;j<16;j++){uint row=first+j;float v;\n'
+assert v.count(pass2)==1
+v=v.replace(pass2,' __asm__ volatile("s_wait_loadcnt 0x0" ::: "memory");ts.t[11]=cyc();\n'+pass2,1)
 # 9 end + write: before the body's final closing brace
 k=v.rstrip().rfind('}')
 v=v[:k]+''' ts.t[9]=cyc();
- if(c32_trace&&(tid&31)==0){u64*o=c32_trace+((u64)__builtin_amdgcn_workgroup_id_x()*4+(tid>>5))*12;for(uint i=0;i<10;i++)o[i]=ts.t[i];o[10]=ts.wait;o[11]=ts.n;}
+ if(c32_trace&&(tid&31)==0){u64*o=c32_trace+((u64)__builtin_amdgcn_workgroup_id_x()*4+(tid>>5))*16;for(uint i=0;i<12;i++)o[i]=ts.t[i];o[12]=ts.wait;o[13]=ts.n;}
 '''+v[k:]
 code='#define HIP_ISA_HALF 1\n#define HIP_PREPACKED_WEIGHTS 1\n#define HIP_C32_DIAG_WEIGHTS 1\n'+s+helpers+'\n'+v+'\n'
 names=re.findall(r'^void (c32_\w+)\(',s[b:],re.M)
@@ -71,7 +76,7 @@ assert h.count('hipModuleGetGlobal')==2; p.write_text(h)
 p=out/'Development/HIP/hip_reference_network.h'; n=p.read_text()
 n=n.replace('class Network {','''class Network {
  unsigned pair_mode=0;bool tracing=false;void*trace_global=nullptr;std::vector<void*>trace_bufs;std::vector<unsigned>trace_groups;unsigned launch_in_frame=0,launches_per_frame=0;
- static const size_t TRACE_WAVES=40000*4,TRACE_U64=12;
+ static const size_t TRACE_WAVES=40000*4,TRACE_U64=16;
  void TraceLaunch(const std::string&module,unsigned groups){if(!tracing||module!="c32_fused_ffn")return;if(launch_in_frame>=trace_bufs.size()){void*d=nullptr;api.Check(api.hipMalloc(&d,TRACE_WAVES*TRACE_U64*8),"trace buf");api.Check(api.hipMemsetAsync(d,0,TRACE_WAVES*TRACE_U64*8,stream),"trace zero");trace_bufs.push_back(d);trace_groups.push_back(groups);}
   void*base=trace_bufs[launch_in_frame];api.Check(api.hipStreamSynchronize(stream),"trace sync");api.Check(api.hipMemcpy(trace_global,&base,sizeof base,1),"trace ptr");launch_in_frame++;}
 public:

@@ -9,7 +9,7 @@ d = Path(sys.argv[1]); mhz = float(sys.argv[2]) if len(sys.argv) > 2 else None
 NAMES = ['prefix_finish_main8', 'mapped', 'chain', 'chain', 'chain_finish_dcrop', 'mapped', 'chain', 'chain', 'chain_finish', 'post_merge_head']
 PHASES = ['staging', 'ffn', 'ffn_write+sync', 'qkv(3 parts+norm)', 'scores', 'softmax/prob', 'av', 'projection/output', 'tail']
 groups = {int(a): int(b) for a, b in (l.split() for l in (d / 'trace-groups.txt').read_text().split('\n') if l.strip())}
-REC = 12
+REC = 16
 grand = {}
 for i in sorted(groups):
     raw = (d / f'trace-{i}.u64').read_bytes()
@@ -18,7 +18,7 @@ for i in sorted(groups):
     recs = [vals[j*REC:(j+1)*REC] for j in range(n)]
     recs = [r for r in recs if r[0] and r[9] > r[0]]  # waves that ran and wrote
     if not recs: print(f'launch {i} ({NAMES[i]}): no records'); continue
-    per = [[r[k+1]-r[k] for k in range(9)] + [r[10], r[11], r[9]-r[0]] for r in recs]
+    per = [[r[k+1]-r[k] for k in range(9)] + [r[12], r[13], r[9]-r[0], (r[10]-r[0]) if r[10] else 0, (r[11]-r[10]) if r[11] else 0, (r[1]-r[11]) if r[11] else 0] for r in recs]
     cols = list(zip(*per))
     med = [statistics.median(c) for c in cols]; mean = [statistics.mean(c) for c in cols]
     total_mean = mean[11]
@@ -28,6 +28,7 @@ for i in sorted(groups):
         c = sorted(cols[k]); p90 = c[int(len(c)*0.9)]
         print(f'  {name:22} {mean[k]:>10,.0f} {med[k]:>10,.0f} {p90:>10,.0f} {mean[k]/total_mean*100:>5.1f}%')
     print(f'  {"barrier wait (in above)":22} {mean[9]:>10,.0f} {med[9]:>10,.0f} {"":>10} {mean[9]/total_mean*100:>5.1f}%  barriers/wave={mean[10]:.1f}')
+    if mean[13]: print(f'  staging split: index calc {mean[12]:,.0f} | loads (to s_wait_loadcnt 0) {mean[13]:,.0f} | convert+LDS stores {mean[14]:,.0f}')
     grand[i] = dict(name=NAMES[i], waves=len(recs), mean=mean, total=total_mean)
 # whole-C32 weighted share by wave-cycles
 tot = sum(g['total']*g['waves'] for g in grand.values())
