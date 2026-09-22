@@ -3197,3 +3197,5 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 ## 2026-09-23 01:35：字节链 + 向量化 staging（HIP_C32_BYTE_CHAIN），正式回归中
 
 由 phase-trace 的 staging 拆分出发。字节链：mapped/chain 生产者按消费者表达式 `fp8(F(float((_Float16)v)))` 写字节，RawMapped 消费者读 u8 跳 F——三轮九份 ABBA 只有 −0.02～0.03ms、多数交叠：读字节减半 + 去 F 不动排队。再把 16 条行读并成每 lane 一条 b128（行地址 ds_bpermute 广播）、16 条 ds_store_b8 并成一条 16B 写：r3 两份复现 1080 −0.076/−0.083、900 −0.058/−0.064ms，逐位同，槽间分开。**排队按请求数不按字节数**，与 ViT 侧 L0 请求结论一致。ISA：chain staging 段 global_load 16→1、ds_store 16→2、VALU 281→45，VGPR 不变。中途 r2 因 prepare 断言失败实为字节链重测（记录保留）。进生产源码 `HIP_C32_BYTE_CHAIN`（默认 1，注明与 SkipChainFinish 的 f16 读者互斥），prod3 模块 10 核与实验 pair2 机器码逐条同；regression-prod3（候选 prod3，基线 prod2）后台运行。部署清单 stellar-prod3-20260923 已放远端，未安装。工具 HIP/experiments/c32-byte-chain，证据 results/c32-byte-chain-20260923。
+
+02:00 regression-prod3（候选 prod3 字节链，基线 prod2）：900/1080 两序列 12 帧 RGB hash 全同；1000 帧计时 900 12.599/12.626 vs 12.601/12.711、1080 17.704/17.723 vs 17.742/17.815ms；四组额外控制（720 运动、900 历史帧、float 输入、float 特征）hash 全同，退出 0。候选待装，等用户授权。
