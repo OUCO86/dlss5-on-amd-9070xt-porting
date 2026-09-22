@@ -3137,3 +3137,9 @@ request-account.py按每指令128B区域数重建上一轮实核262144000次L0�
 固定每组1wave，用同码双射重排logical_wave编号，stride17/63/129均使约29.4→40.7μs；输出仍写原逻辑位置。order1/129热捕获同L0请求167936000，L2请求108789776→123859662；原group捕获L2量与独立wall并不同序，不混算捕获状态与计时。没有将容量上限当动态驻留或把请求增量当周期占比。
 
 224槽2253820计时launch/448次全lanechecksum同，36个非均匀CPU参考+完整canary案例同，五捕获15次/无捕获6次checksum同。全网格映射双射、ISA读/矩阵数、私有溢出为0、源/宿主/trace哈希与比例重建均核验。双架构编译，gfx1201执行；工具HIP/experiments/wmma-groups-gap，报告results/wmma-groups-gap-20260922，318及总汇总更新。生产/游戏/包未改。下一优先级回C32真实路径请求/交换账本，先读旧phase/edge/ISA证据，ViT时序与份额仍明确未解。
+
+## 2026-09-22 20:50：Hikari 接手，C32 发射周期预算与栅栏作用域对照
+
+按交接说明重做 C32 账：三基线核静态指令按管线分类，内层循环 7 次折成每 wave 周期，WMMA 周期由本机 405/204TF 反推（fp8 16、f16 32 周期/SIMD），LDS/VMEM 用 RDNA3 启发式。post 核 97284wave：矩阵 0.15ms、VALU 0.28、LDS 0.26、VMEM 0.18，串行和 0.87ms 接近实测约 1.0ms，说明管线重叠差、wave 在 s_wait 等；矩阵只占 post 约 15%。不把 0.15 当可回收 0.85。报告 reviews/c32-issue-budget-hikari-20260922.md。
+
+汇编里发现 `sync_window()` 的 workgroup 栅栏被编译成 `global_inv scope:SCOPE_SE`（prefix/chain/post 每 wave 18/15/16 次）并强制 `s_wait_loadcnt_dscnt 0`。新实验 c32-fence-scope：同融合体，_pair1 栅栏加 "local" 地址空间、_pair2 核加 target("cumode")、_pair3 两者，复用 pair-encode 的 network.exe（hash 同）。三变体 global_inv 全为 0，栅栏改等 s_wait_dscnt；描述符 workgroup_processor_mode 1→0 证实 CU 模式；pair1/pair2 函数体只差 wait 编码。整网 ABBA 两档 24 槽各，原始 FP32 逐位同、每槽 1600 次替换：1080 pair1 −0.163、pair2 −0.331、pair3 −0.346ms；900 −0.113/−0.248/−0.250ms，每测试 4 变体槽全低于 4 原版槽，变体核心频率反高 12～16MHz，显存同 2505。约合 C32 段 −2.5%（去 L0 失效）/ −5.4%（加 CU 模式）。未捕获 RGP，L0 命中变化待测。远端 network-fixed-shapes 汇编统计 multihead_fused_attention 130、deep_fast 30/18 处同类 global_inv，未测。工具 HIP/experiments/c32-fence-scope，证据 results/c32-fence-scope-20260922；生产/游戏/包未改，318 与总汇总同步。

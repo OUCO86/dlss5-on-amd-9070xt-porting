@@ -1,0 +1,25 @@
+PAIR test=1 slot=0 mode=0 wall=17.750300 bitdiff=0 calls=1600
+PAIR test=1 slot=1 mode=1 wall=17.620100 bitdiff=0 calls=1600
+PAIR test=1 slot=2 mode=1 wall=17.637375 bitdiff=0 calls=1600
+PAIR test=1 slot=3 mode=0 wall=17.827488 bitdiff=0 calls=1600
+PAIR test=1 slot=4 mode=0 wall=17.843975 bitdiff=0 calls=1600
+PAIR test=1 slot=5 mode=1 wall=17.705125 bitdiff=0 calls=1600
+PAIR test=1 slot=6 mode=1 wall=17.720913 bitdiff=0 calls=1600
+PAIR test=1 slot=7 mode=0 wall=17.913706 bitdiff=0 calls=1600
+PAIR test=2 slot=0 mode=0 wall=17.901350 bitdiff=0 calls=1600
+PAIR test=2 slot=1 mode=2 wall=17.571587 bitdiff=0 calls=1600
+PAIR test=2 slot=2 mode=2 wall=17.591819 bitdiff=0 calls=1600
+PAIR test=2 slot=3 mode=0 wall=17.929544 bitdiff=0 calls=1600
+PAIR test=2 slot=4 mode=0 wall=17.950425 bitdiff=0 calls=1600
+PAIR test=2 slot=5 mode=2 wall=17.635844 bitdiff=0 calls=1600
+PAIR test=2 slot=6 mode=2 wall=17.640331 bitdiff=0 calls=1600
+PAIR test=2 slot=7 mode=0 wall=17.982706 bitdiff=0 calls=1600
+PAIR test=3 slot=0 mode=0 wall=17.980825 bitdiff=0 calls=1600
+PAIR test=3 slot=1 mode=3 wall=17.640313 bitdiff=0 calls=1600
+PAIR test=3 slot=2 mode=3 wall=17.658856 bitdiff=0 calls=1600
+PAIR test=3 slot=3 mode=0 wall=18.005669 bitdiff=0 calls=1600
+PAIR test=3 slot=4 mode=0 wall=18.024387 bitdiff=0 calls=1600
+PAIR test=3 slot=5 mode=3 wall=17.673313 bitdiff=0 calls=1600
+PAIR test=3 slot=6 mode=3 wall=17.673206 bitdiff=0 calls=1600
+PAIR test=3 slot=7 mode=0 wall=18.019012 bitdiff=0 calls=1600
+PASS C32 paired encoding
