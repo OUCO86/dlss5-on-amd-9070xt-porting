@@ -1,0 +1,41 @@
+# RE9 网友启动故障：2026-09-22 离线日志调查
+
+## 结论
+
+“没有效果”的直接原因已经定位：runtime 在创建 codec 的 D3D12 compute pipeline state 时返回 `0x80004005`（E_FAIL），每帧 PrepareFrame 失败，因此没有可提交的 NR job。不是根据显示分辨率猜测输入超限。底层为什么拒绝 PSO，现有日志不足以确定；不能把它直接解释成 HIP 死锁、曝光错误或驱动版本问题。
+
+原始日志只留在工作区 `temp/bug20260922`，本报告不复制网友个人路径和完整日志。未操作游戏、未远程 GPU 测试、未部署、未打包；仅归档调查报告。
+
+## 已确认事实与证据
+
+- `OptiScaler.log:1`：`8f71f73_lmxxf_staged / 20260922_RE9_PreSR`，已加载本项目特殊宿主；`:16-24` 显示 nofg、RunBeforeSR=true、lmxxf backend、诊断 off、强度均为 1。
+- `OptiScaler.log:203-218`：存在 RX 9070 XT 和 Arc A770；记录到 D3D12 设备创建使用 9070 XT。没有证据支持“选错 Intel 卡”。
+- `re2_framework_log.txt:95-97`：启动时 runtime 从游戏根目录复制到 `_storage_`；`:2614-2615` 明确记录加载的是游戏根目录 runtime。没有 DLL 实体和 SHA256，因此不能证明正好等于发布包二进制；现有证据不支持先归咎 `_storage_` 旧 runtime。
+- `OptiScaler.log:600-604`：找到包内 HIP 目录，modules_ok=48、weights=1、session ready。LMXXF_WEIGHTS_DIR unset 警告本身不是缺权重结论。
+- `OptiScaler.log:605`：第一次实际失败为 `PrepareFrame rc=5 handle=false out=false err=codec pso HRESULT=2147500037 1280x544`。`:1024` 在 960×544 同错；`:1817` 最后仍在 1136×640 同错，累计 fail#24991。覆盖数分钟，并非卡住首次 enqueue 的旧症状。
+- `OptiScaler.log:511,563,991,1182`：依次出现 1720×720→3440×1440、1280×544→2560×1080、960×544→1920×1080、1136×640→1920×1080。有真正超宽输出，也有 16:9 输出；实际报错输入都在 1920×1080 上限内。
+- 日志没有 NR enqueue 成功、device removed、TDR 或异常堆栈。REFramework 日志末尾仍是用户切换菜单/保存配置，OptiScaler 继续报错。不能从这一组日志建立“21:9直接死机”的独立因果链；需要标明对应重现的单独日志。
+
+## 源码对照
+
+`src/native_game_codec.h:90` 在 shader 编译成功后调用 `NativeCreateComputePipelineState`，并生成唯一的 `codec pso HRESULT=...` 错误。`src/native_pso.h:11-12` 只是直接调用设备 CreateComputePipelineState。当前错误文本无法区分 encoder 还是 decoder。
+
+当前本地适配后的 runtime `LmxxfNrRuntime.cpp:605-640` 先执行 bridge Create/PrepareStagedKernels，再创建 encoder、RGB 输入/输出、decoder。因此可以说“没有进入本帧 producer/HIP enqueue/consumer”，不能说“HIP 从未运行过”。若网友 runtime 等于当前发布版本，HIP 预热已跨过。
+
+codec 在 PSO 前已经检查输入几何/格式、曝光纹理（若提供）的 1×1 R16F/R32F、所属设备并创建 root signature。故当前错误不是这些明确的检查拒绝；但日志未记录实际曝光格式、纹理指针和 shader 路径，不能补编这些值。
+
+Shader 源码/缓存错配与 D3D12 驱动或 hook 拒绝均仍可能。`src/native_shader_cache.h` 对磁盘缓存读回没有 DXBC 校验，并会在进程内缓存同一字节；坏缓存可持续导致 PSO 失败，不过目前没有网友缓存实体证明它坏了。缓存 key 含源码与宏，因此正常的源码升级不应自行命中旧版本。
+
+## 额外确认的诊断缺陷
+
+`Development/tools/package-028.ps1:54` 正确移除特殊包不使用的 native-game-flags.txt；但 `src/native_lab_paths.h` 的 NativeLabRoot 仍以该文件存在作为包目录识别条件，找不到就回落作者机器的 D 盘路径。codec step 日志用它（`native_game_codec.h:32`），会在网友机器无声丢失。网友 DLSS5-AMD 日志目录只剩 README 与此一致。此缺陷解释诊断缺失，不解释 PSO 本身失败。
+
+最小修复建议：NativeLabRoot 增加 native-game-tiled-assets 目录作为有效包目录标志，保留原 flags 识别；在 DLL 目录及 exe 目录两种布局验证，别创建无效旧 flags 充当开关。
+
+## 下一步（按信息增益排序）
+
+1. 收集根目录与 `_storage_` 的宿主/runtime SHA256、两个 codec HLSL SHA256、RX9070XT 驱动版本；确认本日志是哪个操作步骤，另取 21:9 卡死那次完整日志。保留 shader-cache 后，以 `DLSS5_SHADER_DISK_CACHE=0` 启动一次对照（新进程才有效）。不应先删全部模组或改 GPU。
+2. 小型诊断 runtime：PSO 错误附 encoder/decoder、shader绝对路径与字节码 hash/长度、输入/曝光描述、实际 adapter LUID、GetDeviceRemovedReason；若 debug layer 可用，记录该次创建的 info queue。初始化永久失败应按资源/设置代次停止每帧重建，避免当前数万次重试掩盖首因。
+3. 离线 codec harness 使用**网友实际文件**验证 1280×544、960×544、1136×640，RGB9E5、曝光开/关与 1×1 R16F/R32F；先只创建 encoder/decoder PSO，再跑 producer/HIP/consumer。在同型号卡先验证，再交网友测试；只在其驱动失败才进一步定位驱动兼容性。
+
+置信度：失败阶段与“不产生 NR 效果”因果高；底层 PSO 拒绝原因未定。当前无需大范围改渲染同步和超宽几何。
