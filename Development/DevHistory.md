@@ -3157,3 +3157,5 @@ request-account.py按每指令128B区域数重建上一轮实核262144000次L0�
 regression-fence.ps1（候选 fence-modules，基线当前生产 selected-modules）：900/1080 两残差序列 12 帧 RGB hash 全同；1000 帧计时 900 12.720/12.758 vs 12.952/13.072ms，1080 17.999/17.985 vs 18.397/18.459ms；额外控制组 720 运动、900 历史帧、float 输入、float 特征四组 12 帧 hash 全同，退出 0。日志 Development/deployments/stellar-fence-20260922/regression-fence.log。部署清单 payload.json（10 模块）与 install.ps1（沿用 08:05 流程：源 hash、备份、读回、宿主/INI/flags 不变、失败回滚）已放 D:\DLSSNR-Lab\stellar-fence-20260922，**未安装**，等用户授权。addon DLL、codec shader、发布包不动。
 
 21:39 用户确认《剑星》未运行，授权安装。install.ps1 执行：10 个模块源 hash 校验、备份 D:\DLSSNR-Lab\stellar-fence-20260922\backups\20260922-213932、替换、读回 hash 全部一致，dxgi.dll / OptiScaler.ini / native-game-flags.txt hash 前后不变（ADAPTIVE=1 等用户配置保留）。清单 installed.json 已入库。等待用户实玩；恢复命令 `install.ps1 -RestoreBackup <备份目录>`。
+
+22:20 用户实玩反馈：《剑星》900P、中画质、拉伸 2K，简单场景最高 58～59FPS，"应该比之前多了，纯主观"，未见异常。此前同类场景记录为 56～57（09-21 22:45）。两次读数都是用户目测峰值、非同镜头配对，不宣称固定增幅；记录为主观未回退、可能小幅提升。候选保留在游戏目录，不再替换。
