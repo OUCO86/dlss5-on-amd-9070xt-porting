@@ -179,3 +179,9 @@ RGP64dispatch：L0请求251822080→167936000（−33.31%），L2请求114033044
 ## 2026-09-23 00:40补充：C32 每 wave 动态阶段账（Hikari）
 
 [核内时间戳](../c32-phase-trace-20260923/README.md)：staging 30.7% > FFN 26.1% > 注意力三段 11.8% ≈ QKV 10.8% > 尾部 8.8% ≈ 投影 7.9%；barrier 等待 8.7%。post 每 wave 23.6k 周期，矩阵约 1.1k；有效并发约 3.3/6。下一刀应指向输入 staging（上游直接出 FP8、字节写改 dword）。
+
+## 2026-09-23 上午补充（Hikari）：C32 三刀、mh_fused 注意力寄存器化、若干反例
+
+- [C32 折叠 FFN](../c32-transposed-ffn-20260922/README.md) −0.10/−0.06、[字节链+向量化 staging](../c32-byte-chain-20260923/README.md)+[f32 行向量化](../c32-vec-stage-20260923/README.md) −0.16/−0.10（排队按请求数计）、[mh_fused C64～C256 注意力寄存器化](../mh-register-attention-20260923/README.md) −0.17/−0.12（LDS 减半、驻留翻倍）。候选 prod5 回归通过，相对装机版再 −2.2%，未装。
+- 反例：[C512 注意力寄存器化](../mh-register-c512-20260923/README.md)、[ViT 注意力寄存器化+V 转置](../vit-register-attention-20260923/README.md)、[CU 模式按大小](../fence-cu-size-20260922/README.md)、[C32 注意力寄存器化](../c32-register-attention-20260922/README.md)均逐位同但无收益——同一改法赚不赚取决于该核的驻留/请求瓶颈是否存在。
+- 动态账：[C32 十核](../c32-phase-trace-20260923/README.md)、[c256 注意力](../mh-phase-trace-20260923/README.md)、[ffn_fused_c256](../mhfast-phase-trace-20260923/README.md)：矩阵 5～15%，其余为取数排队、LDS 中转、barrier；模糊评估已写入 318。
