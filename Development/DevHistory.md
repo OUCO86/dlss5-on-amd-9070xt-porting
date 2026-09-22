@@ -3071,3 +3071,11 @@ RE9包替换为62a948a6…特殊宿主＋f5cf7697…runtime（实验ABI2），�
 ## 2026-09-22 14:05：将RE9尺寸恢复修复候选部署，等待用户实玩后重封包
 
 用户授权先部署RE9、实玩后重新打包。确认re9进程退出，安装74b8a67候选宿主0ef10229…与runtime1b51069c…到根目录/_storage_，四DLL逐项源hash、备份与安装读回验证通过。OptiScaler.ini两份、游戏config.ini、codec两shader的hash不变；未用测试注入shader。完整备份D:\DLSSNR-Lab\re9-presr\backups\resize-20260922-140553-788；install-resize-fix.ps1支持RestoreBackup，清单在RE9/presr/tests/resize-recovery/installed.json。随后请求Steam启动游戏，等待用户验证原生超限跳过与改回有效输入后恢复。已有0.28三包未覆盖；待反馈后重打RE9完整包，常规两包不动。
+
+## 2026-09-22 14:25：RE9完整包0.28.1完成，撤下本地RE9 0.28
+
+用户初步实玩确认可用，要求只打RE9 0.28.1并删除旧RE9 0.28。从已归档history的0.27完整ZIP按SHA核对/重新解压，加入刚实玩的宿主0ef10229…、runtime1b51069c…及已验证双架构48模块；采用仓库RE9默认配置，更新中英文包内说明、对应修改源码归档与TheAutomatic署名。源码归档重编runtime成功；最终中文stage路径的PrepareFrame/HIP/输出烟测通过，44 shader变体通过，ZIP545个有效载荷逐文件读回hash全部一致。
+
+成品D:\給網友打包\OptiScaler-REFramework-DLSS5-AMD-0.28.1.zip，420,947,935字节（约421MB），SHA256 850fcfc2fce38aee7115ecc9df8dd6548ea209dcdabcdfad532cdbdf02618e7d，旁置.zip.sha256。打包脚本package-0281-re9.ps1支持底包位于history；首轮因旧底包已归档而在解压前停止，补路径查找后完成，没有覆盖其他包。
+
+新包验证后按用户要求精确删除history中的RE9 0.28解压目录、ZIP和.sha256共3项；核对Magpie/普通OptiScaler 0.28两份ZIP哈希保持不变。中英文README移除旧RE9 0.28网盘入口、增加0.28.1更新行（待用户给新链接）。删除清单、新包与源码验证记录在Development/releases/0.28.1。未操作夸克网盘旧文件；未改游戏安装、未打tag。

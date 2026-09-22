@@ -1,0 +1,11 @@
+{
+  "source_commit": "74b8a67",
+  "source_archive_sha256": "75ea123dafb195e6e0621e1ac79376971a62734455255033f0201d13426bb488",
+  "source_archive_bytes": 43510800,
+  "source_archive_runtime_rebuild": "passed",
+  "staged_runtime_gpu_smoke": "passed",
+  "shader_variants": 44,
+  "payload_files": 545,
+  "host_sha256": "0ef102295a759b51c0c7cba6b8eedb455e9759f5a2b7f9b96309e030c6cd0035",
+  "runtime_sha256": "1b51069c38095988f17403366ac09c1c2e047b28423c7385e669023cf42fbacf"
+}

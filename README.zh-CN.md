@@ -6,9 +6,9 @@
 Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8（E4M3）的 HLSL 计算着色器，在 AMD RDNA 4
 显卡上跑起来，并通过 ReShade 插件钩住游戏的 FSR dispatch，对 1080p 画面做后处理。
 
-**REFramework 专用版（0.28）**：针对《生化9》特殊提交方式，采用配套的修改版OptiScaler宿主和`LmxxfNrRuntime.dll`，流水线为游戏渲染→HIP DLSS5→FSR→显示。已验证2K无边框输出，并补上同帧曝光归一化/还原。神经输入仍须≤1920×1080，网络按输入自动选择档位。F6由新宿主管理，旧后置addon停用；其他RE游戏（包括旧版已测的Xbox《鬼武者》）需重新验证，不能沿用0.27兼容结论。
+**REFramework 专用版（0.28.1）**：针对《生化9》特殊提交方式，采用配套的修改版OptiScaler宿主和`LmxxfNrRuntime.dll`，流水线为游戏渲染→HIP DLSS5→FSR→显示。已验证2K无边框输出，并补上同帧曝光归一化/还原。神经输入仍须≤1920×1080，网络按输入自动选择档位。0.28.1在初始化前拒绝超限输入并保留原始超分，修复初始化失败后换回有效尺寸无法恢复的问题。旧RE9 0.28已撤下。F6由新宿主管理，旧后置addon停用；其他RE游戏（包括旧版已测的Xbox《鬼武者》）需重新验证，不能沿用0.27兼容结论。
 
-**最新（2026-09-22，0.28）**：三个完整包更新共享HIP核的六项无损优化：RGB末端共用读取、C128/C256全零填充快路径、ViT展开/投影与解码器投影固定尺寸优化。《剑星》实玩无明显异常，画面和帧率基本不变；不承诺固定提升。常规两包沿用原宿主，RE9特殊包采用新前置宿主并修复曝光遗漏。未新增有损优化；完整模型及gfx1200/gfx1201模块随包，自适应复用在常规包默认关闭。
+**最新（2026-09-22，常规包0.28／RE9专用包0.28.1）**：三个完整包更新共享HIP核的六项无损优化：RGB末端共用读取、C128/C256全零填充快路径、ViT展开/投影与解码器投影固定尺寸优化。《剑星》实玩无明显异常，画面和帧率基本不变；不承诺固定提升。常规两包沿用原宿主，RE9特殊包采用新前置宿主并修复曝光遗漏。未新增有损优化；完整模型及gfx1200/gfx1201模块随包，自适应复用在常规包默认关闭。
 
 **默认配置**：新包自动带入仓库中的[普通游戏配置](scripts/hip-game-flags.txt)、[Magpie配置](scripts/hip-magpie-flags.txt)或[REFramework配置](scripts/hip-re9-flags.txt)，不继承本机试玩设置。来源与打包方法见[配置说明](scripts/CONFIGURATION.md)。
 
@@ -141,7 +141,8 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | 0.26 · [Magpie](https://pan.quark.cn/s/7ce2ca11db43) · [OptiScaler](https://pan.quark.cn/s/c880a70f0824)（HIP） | 09-19 | FFN直接读取FP8字节片段，省去入口共享缓冲暂存及两道同步；C256权重在初始化时预排成连续矩阵片段，减少分散读取和字节拼装。补齐漏打包的R11G11B10解码shader，修复《匹诺曹的谎言》降低效果品质后黑屏，用户复测恢复；增加shader编译/绑定校验。两款完整包已生成，包内文件及44种shader组合校验通过。 |
 | 0.26.1 · [OptiScaler-REFramework](https://pan.quark.cn/s/624c87a6aa11)（HIP，非常规版） | 09-20 | **专门针对RE9这类特殊接入场景的非常规版本，普通游戏请用通用版；目前仅《生化9》实测。** 后置HIP兼容：R10G10B10A2/FP16转换，FSR后处理、固定900P计算，保留1080P SDR输出保护；补齐状态/分辨率/Present帧率与F7信息开关。集成REFramework、OptiScaler、ReShade、完整模型及gfx1200/gfx1201内核，沿用0.26优化。用户实玩通过。 |
 | 0.27 · [Magpie](https://pan.quark.cn/s/ec3a3282aa76) · [OptiScaler](https://pan.quark.cn/s/004278159ed8) · [OptiScaler-REFramework](https://pan.quark.cn/s/010683548f68)（HIP） | 09-20 | 精确流式ViT注意力减少中间存储与重复读取，保持原计算/舍入；可选R3自适应复用增加变化检测、静止输入延长缓存和融合提交，默认关闭。三包直接使用仓库默认配置，带完整模型和双架构内核，不含INT4/剪枝。REFramework保留固定900P、最高1080P SDR后置契约。DLL重新编译，三包各44个shader变体及ZIP逐文件校验通过。 |
-| 0.28 · [Magpie](https://pan.quark.cn/s/11547f398eb4) · [OptiScaler](https://pan.quark.cn/s/f7f423b0ea3a) · [OptiScaler-REFramework](https://pan.quark.cn/s/c8468c5e3582)（HIP） | 09-22 | 六项无损核优化：RGB共用读取、C128/C256零填充跳过、ViT展开/投影及解码投影固定尺寸优化。常规《剑星》实玩效果/帧率基本不变。RE9改用特殊前置宿主、同帧曝光归一化与初始化准备，支持已测2K无边框；普通版宿主不变。三包为完整包，RE9附修改后宿主对应源码及TheAutomatic署名。 |
+| 0.28 · [Magpie](https://pan.quark.cn/s/11547f398eb4) · [OptiScaler](https://pan.quark.cn/s/f7f423b0ea3a)（HIP） | 09-22 | 六项无损核优化：RGB共用读取、C128/C256零填充跳过、ViT展开/投影及解码投影固定尺寸优化。常规《剑星》实玩效果/帧率基本不变。普通版宿主不变，完整模型和双架构核随包；RE9 0.28下载已撤下，改用下方0.28.1。 |
+| 0.28.1 · OptiScaler-REFramework（HIP，网盘链接待上传） | 09-22 | RE9专用完整包：真实输入超限时在HIP初始化前拒绝并保留原始超分；初始化失败安全回滚，改回有效尺寸可恢复，保护未退休帧。10组/12提交帧回归和用户初步实玩通过，宿主/runtime需配套更新；源码与TheAutomatic署名随包。 |
 
 ## 权重
 

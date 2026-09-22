@@ -1,0 +1,24 @@
+{
+    "replacement":  "D:\\給網友打包\\OptiScaler-REFramework-DLSS5-AMD-0.28.1.zip",
+    "removed":  [
+                    {
+                        "path":  "D:\\給網友打包\\history\\OptiScaler-REFramework-DLSS5-AMD-0.28.zip",
+                        "directory":  false,
+                        "sha256":  "DCFE77CED13E2AA4570FCC0D474837D493EE77EF831682B6C43585768DF7C9C3"
+                    },
+                    {
+                        "path":  "D:\\給網友打包\\history\\OptiScaler-REFramework-DLSS5-AMD-0.28.zip.sha256",
+                        "directory":  false,
+                        "sha256":  "ABE4FEFFB95B61D204BBC6382A71C0AFD974CAF2CD68D792C56D97151A6D4B9A"
+                    },
+                    {
+                        "path":  "D:\\給網友打包\\history\\OptiScaler-REFramework-DLSS5-AMD-0.28",
+                        "directory":  true,
+                        "sha256":  null
+                    }
+                ],
+    "preserved":  {
+                      "D:\\給網友打包\\history\\Magpie-DLSS5-AMD-0.28.zip":  "321E8857B2ACFD40E010265E1470E53FA8068380B8B7744A908D9B4E68BC904E",
+                      "D:\\給網友打包\\history\\OptiScaler-DLSS5-AMD-0.28.zip":  "252F26D06E31FC2C6FEE449457A237BE39B483845C10C496D74077E79ABFA4A8"
+                  }
+}
