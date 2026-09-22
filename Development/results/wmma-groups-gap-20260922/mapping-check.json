@@ -1,0 +1,58 @@
+[
+  {
+    "waves_per_group": 1,
+    "mapping": "i",
+    "groups": 2560,
+    "total_waves": 2560,
+    "bijection": true
+  },
+  {
+    "waves_per_group": 1,
+    "mapping": "m",
+    "groups": 2560,
+    "total_waves": 2560,
+    "bijection": true
+  },
+  {
+    "waves_per_group": 2,
+    "mapping": "i",
+    "groups": 1280,
+    "total_waves": 2560,
+    "bijection": true
+  },
+  {
+    "waves_per_group": 2,
+    "mapping": "m",
+    "groups": 1280,
+    "total_waves": 2560,
+    "bijection": true
+  },
+  {
+    "waves_per_group": 4,
+    "mapping": "i",
+    "groups": 640,
+    "total_waves": 2560,
+    "bijection": true
+  },
+  {
+    "waves_per_group": 4,
+    "mapping": "m",
+    "groups": 640,
+    "total_waves": 2560,
+    "bijection": true
+  },
+  {
+    "waves_per_group": 8,
+    "mapping": "i",
+    "groups": 320,
+    "total_waves": 2560,
+    "bijection": true
+  },
+  {
+    "waves_per_group": 8,
+    "mapping": "m",
+    "groups": 320,
+    "total_waves": 2560,
+    "bijection": true
+  }
+]

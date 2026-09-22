@@ -1,0 +1,26 @@
+[
+  {
+    "stride": 1,
+    "bijection": true,
+    "groups": 2560,
+    "threads": 32
+  },
+  {
+    "stride": 17,
+    "bijection": true,
+    "groups": 2560,
+    "threads": 32
+  },
+  {
+    "stride": 63,
+    "bijection": true,
+    "groups": 2560,
+    "threads": 32
+  },
+  {
+    "stride": 129,
+    "bijection": true,
+    "groups": 2560,
+    "threads": 32
+  }
+]

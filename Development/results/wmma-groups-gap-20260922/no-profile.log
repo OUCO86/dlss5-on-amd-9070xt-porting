@@ -1,0 +1,4 @@
+CHECK kernel=mat_i1 bad=0
+TARGET mat_i1
+CHECK kernel=mat_i1 bad=0
+CHECK kernel=mat_i1 bad=0

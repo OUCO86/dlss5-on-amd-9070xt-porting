@@ -1,0 +1,14 @@
+NUMERIC mat_i1 active_lanes=32 checked_words=81920 bad=0
+NUMERIC mat_i2 active_lanes=64 checked_words=81920 bad=0
+NUMERIC mat_m2 active_lanes=64 checked_words=81920 bad=0
+NUMERIC mat_i4 active_lanes=128 checked_words=81920 bad=0
+NUMERIC mat_m4 active_lanes=128 checked_words=81920 bad=0
+NUMERIC mat_i8 active_lanes=256 checked_words=81920 bad=0
+NUMERIC mat_m8 active_lanes=256 checked_words=81920 bad=0
+NUMERIC load_i1 active_lanes=32 checked_words=81920 bad=0
+NUMERIC load_i2 active_lanes=64 checked_words=81920 bad=0
+NUMERIC load_m2 active_lanes=64 checked_words=81920 bad=0
+NUMERIC load_i4 active_lanes=128 checked_words=81920 bad=0
+NUMERIC load_m4 active_lanes=128 checked_words=81920 bad=0
+NUMERIC load_i8 active_lanes=256 checked_words=81920 bad=0
+NUMERIC load_m8 active_lanes=256 checked_words=81920 bad=0

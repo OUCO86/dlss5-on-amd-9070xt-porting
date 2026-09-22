@@ -1,0 +1,117 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\kernel.hip",
+        "bytes":  11444,
+        "sha":  "D3231D989B8B373297B1598364B869C66B895CBEBBF8002C18DB95A71B5645CA"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\uniform.hip",
+        "bytes":  17005,
+        "sha":  "9D2EE0F6B4EBBEF50CFD15FBE7E84393BD7B897F07B09C5D935568776F52D47D"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\order.hip",
+        "bytes":  14336,
+        "sha":  "7A609879C96C3BD9FAD84B69CA0CB574D6426F2A25ACA187ADA7D295877B6967"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\bench.exe",
+        "bytes":  2394614,
+        "sha":  "CC3314E7EF6A04D3FD22848E3BA721B2891E4849BA4952D87379688E1B6FAA80"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\bench-uniform.exe",
+        "bytes":  2393590,
+        "sha":  "784D91ECE71DF8DCEEC71290DFB804D4E0412668F690E35E35DA84715DF419CD"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\bench-order.exe",
+        "bytes":  2394614,
+        "sha":  "28306483C905120FEE39F7FAEE1106F74864597A593931731FE62E7151ECE600"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\numeric.exe",
+        "bytes":  2385177,
+        "sha":  "D26ABEB0864E65507A13F7B6A90443F232C11A4B9F42F43EBB96053D15045ABE"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\numeric-uniform.exe",
+        "bytes":  2385197,
+        "sha":  "7717EAD13ED6B7224BFD2650BF81017548CB0BAE6033ECC8719CD8730DC015EF"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\numeric-order.exe",
+        "bytes":  2384139,
+        "sha":  "5B858558567B6C87E00C4633F4CC41C1B07D4A2BA83469B72CD52C4D42EDE7A1"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\resources.exe",
+        "bytes":  2381695,
+        "sha":  "F8933E74790798B310D48EAABA15A979D9E81A49369A4890BE6A7C738D29319A"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\groups_counter.exe",
+        "bytes":  2389253,
+        "sha":  "74153DD2ADA0168315C2C4702D8B11A44125627BD4602D2924B5FBB4155547BB"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\order_counter.exe",
+        "bytes":  2388287,
+        "sha":  "5E4E76AAF3642246025EFFE263485977E34120425B2FDEEBC32E44217FD62A61"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\gfx1200.hsaco",
+        "bytes":  69648,
+        "sha":  "77231CE1C8F84836F8416A4F7B7434A3FE1E8B91BA877F131BFC1DBCE48F45A3"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\gfx1201.hsaco",
+        "bytes":  69648,
+        "sha":  "4C54630EC03E2B57A59E1D18ABFB841D12DAD7C26358895077766FF0273B6649"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\uniform-gfx1200.hsaco",
+        "bytes":  102656,
+        "sha":  "B250EFB66B62F827D1B4046D6033FAF3EABE58F13CF4B2F39D97166F97A8B04F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\uniform-gfx1201.hsaco",
+        "bytes":  102656,
+        "sha":  "6E9CCA56B0DF6550122B74B800213912AE14231FFD9B9ADED06D7A69FCC6BF54"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\order-gfx1200.hsaco",
+        "bytes":  74400,
+        "sha":  "E550DB70668DF2BB7FF5FEBF943C693BF4E8BC7264C57A24625F09E750DF0756"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\order-gfx1201.hsaco",
+        "bytes":  74400,
+        "sha":  "46E9276FC83F8E735B5B7D59405BB1A4BD2B65A28886574C792713E4767D72C4"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\counter-mat_i1\\trace.rgp",
+        "bytes":  6785776,
+        "sha":  "977D5102E13A31DF73F2291591F8586930DA74AD1419132EFE767784210DDF08"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\counter-mat_i2\\trace.rgp",
+        "bytes":  9542642,
+        "sha":  "8E779054EF6F2BAEE1E602056766923390229DC8C0F3D9B47A8C7847086909CC"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\counter-mat_m2\\trace.rgp",
+        "bytes":  6752838,
+        "sha":  "1E94D764804801CF84CF9E5F6CC949D4BF24715B8824BB4E68A331DF0DA58BF0"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\counter-order-1\\trace.rgp",
+        "bytes":  6870875,
+        "sha":  "A3E527681B9D31306981BA58C3705C3C10DA4BA06E5FAD0810E7B80AC95B40B4"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-groups-gap\\counter-order-129\\trace.rgp",
+        "bytes":  7850623,
+        "sha":  "6C8AB1C06614F8616CBA83290EFFD6BCC0EA222BD74E7B811082CF4890264F46"
+    }
+]

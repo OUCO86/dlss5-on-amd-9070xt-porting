@@ -1,0 +1,14 @@
+name=mat_i1 threads=32 regs=75 groups_per_MP=64 waves_bound=64
+name=mat_i2 threads=64 regs=76 groups_per_MP=32 waves_bound=64
+name=mat_m2 threads=64 regs=76 groups_per_MP=32 waves_bound=64
+name=mat_i4 threads=128 regs=76 groups_per_MP=16 waves_bound=64
+name=mat_m4 threads=128 regs=76 groups_per_MP=16 waves_bound=64
+name=mat_i8 threads=256 regs=76 groups_per_MP=8 waves_bound=64
+name=mat_m8 threads=256 regs=76 groups_per_MP=8 waves_bound=64
+name=load_i1 threads=32 regs=63 groups_per_MP=64 waves_bound=64
+name=load_i2 threads=64 regs=64 groups_per_MP=32 waves_bound=64
+name=load_m2 threads=64 regs=64 groups_per_MP=32 waves_bound=64
+name=load_i4 threads=128 regs=64 groups_per_MP=16 waves_bound=64
+name=load_m4 threads=128 regs=64 groups_per_MP=16 waves_bound=64
+name=load_i8 threads=256 regs=64 groups_per_MP=8 waves_bound=64
+name=load_m8 threads=256 regs=64 groups_per_MP=8 waves_bound=64

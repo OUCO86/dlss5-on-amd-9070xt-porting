@@ -1,0 +1,4 @@
+CHECK kernel=order_mat bad=0
+TARGET order_mat stride=1
+CHECK kernel=order_mat bad=0
+CHECK kernel=order_mat bad=0
