@@ -1,0 +1,12 @@
+c32_fast_ffn_attention_fused_half_prefix_finish_main8          instr=3244 wmma=60 ds=421 ds_store_b16=64 ds_store_b8=128 ds_load_u16=50 s_wait=315 barrier=10 valu=1885 vgpr=152 occupancy=8
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair1    instr=3082 wmma=60 ds=344 ds_store_b16=32 ds_store_b8=96 ds_load_u16=48 s_wait=308 barrier=10 valu=1832 vgpr=187 occupancy=8
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair2    instr=3091 wmma=60 ds=344 ds_store_b16=32 ds_store_b8=96 ds_load_u16=48 s_wait=319 barrier=6 valu=1839 vgpr=187 occupancy=8
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair3    instr=3093 wmma=60 ds=344 ds_store_b16=32 ds_store_b8=96 ds_load_u16=48 s_wait=319 barrier=7 valu=1839 vgpr=187 occupancy=8
+c32_fast_ffn_attention_fused_half_chain                        instr=3392 wmma=56 ds=347 ds_store_b16=32 ds_store_b8=128 ds_load_u16=2 s_wait=422 barrier=8 valu=1859 vgpr=151 occupancy=8
+c32_fast_ffn_attention_fused_half_chain_pair1                  instr=3190 wmma=56 ds=270 ds_store_b16=0 ds_store_b8=96 ds_load_u16=0 s_wait=392 barrier=8 valu=1778 vgpr=198 occupancy=7
+c32_fast_ffn_attention_fused_half_chain_pair2                  instr=3185 wmma=56 ds=270 ds_store_b16=0 ds_store_b8=96 ds_load_u16=0 s_wait=402 barrier=4 valu=1776 vgpr=198 occupancy=7
+c32_fast_ffn_attention_fused_half_chain_pair3                  instr=3187 wmma=56 ds=270 ds_store_b16=0 ds_store_b8=96 ds_load_u16=0 s_wait=402 barrier=5 valu=1776 vgpr=198 occupancy=7
+c32_post_merge_head_half                                       instr=2995 wmma=44 ds=401 ds_store_b16=64 ds_store_b8=128 ds_load_u16=18 s_wait=259 barrier=8 valu=1864 vgpr=158 occupancy=6
+c32_post_merge_head_half_pair1                                 instr=2802 wmma=44 ds=324 ds_store_b16=32 ds_store_b8=96 ds_load_u16=16 s_wait=239 barrier=8 valu=1797 vgpr=227 occupancy=6
+c32_post_merge_head_half_pair2                                 instr=2778 wmma=44 ds=324 ds_store_b16=32 ds_store_b8=96 ds_load_u16=16 s_wait=241 barrier=4 valu=1784 vgpr=226 occupancy=6
+c32_post_merge_head_half_pair3                                 instr=2780 wmma=44 ds=324 ds_store_b16=32 ds_store_b8=96 ds_load_u16=16 s_wait=241 barrier=5 valu=1784 vgpr=226 occupancy=6

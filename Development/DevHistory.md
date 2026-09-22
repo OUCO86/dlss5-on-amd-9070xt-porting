@@ -3183,3 +3183,7 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 ## 2026-09-22 23:45：合并 TheAutomatic PR #8
 
 只改 src/LmxxfNrRuntime.cpp：AbandonSessionResources（失败即故意泄漏路径）补上 device/queue 的 COM Release。两者是 Create 里 QueryInterface 取得的引用，释放正确；故意泄漏只针对 GPU 可能仍引用的桥/编解码资源。MinGW 编译通过，不触及现有代码、hsaco、包、游戏安装。合入 main。
+
+## 2026-09-23 00:05：C32 注意力 ex/prob 寄存器化，逐位同但寄存器压力抵消收益，不采用
+
+分数 WMMA 与行和"乘 1 矩阵"WMMA 均对调操作数，ex/prob 全留寄存器，K/V 仍在 LDS；三变体（同步全留 / 删两处+两处降 wave 内栅栏 / 投影前保留全组同步）两档 24 槽逐位同。ISA：post LDS 指令 401→324、barrier 8→4，但 VGPR 158→226、chain 驻留 8→7。整网 1080 +0.060/−0.040/−0.042ms，900 +0.041/−0.039/−0.019，多数交叠。结论：WMMA 操作数角色对称性再次验证（可写入 318），工程上 LDS 兼作溢出区、寄存器压力吃掉节省；不采用，后续可试限驻留或按 key tile 流水。工具 HIP/experiments/c32-register-attention，证据 results/c32-register-attention-20260922；生产/游戏未改。
