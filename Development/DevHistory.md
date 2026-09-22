@@ -3165,3 +3165,7 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 审阅：8 文件 +1348/−1。对现有代码只有三处附加改动——hip_d3d12_bridge.h 把 Phase 枚举公开并加 `CurrentPhase()`、`NotifyOutputSubmittedIfRecorded()`、`CancelUnsubmitted()` 三个方法（原有状态机与 Require 契约不变）；hip_reference_network.h 加 `<algorithm>`；.gitignore 加 bin/。新增 include/LmxxfNrApi.h（版本化 C ABI，单导出 LmxxfNrGetApi）、src/LmxxfNrRuntime.cpp（会话/作业状态机、模块目录 SHA256SUMS 校验、失败即毒化并故意泄漏而不释放 GPU 仍在用的资源、30s fence drain）、src/LmxxfProductionOptions.h（首版生产 Options 实例，不读 env）、scripts/build-runtime.{sh,cmd}。运行时读 DLSS5_STRENGTH / DLSS5_DEBUG_TINT，并在未设 DLSS5_NETWORK_HEIGHT 时 _putenv 为 auto——只影响宿主进程自身；无网络、无进程创建、无文件写。
 
 验证：以 main（e9f7c1b）为基干净自动合并无冲突；PR 分支上 MinGW 编译 LmxxfNrRuntime.dll 通过（7s），`build-addon.sh --hip` 生产 addon 编译通过（sha a8ba31cd…，仅证明头文件改动不破坏现有构建，未部署）。未在 9070 上跑运行时 DLL 的实机验证；hsaco、发布包、游戏安装不受影响。按用户要求合入 main。
+
+## 2026-09-22 23:20：CU 模式按工作组大小逐核对照，无收益，此线关闭
+
+基线 fence-modules（当前生产）。mh_fused/deep_fast/mh_fast 的 128 线程核加 target("cumode")（3/4/20 核）、128+256 线程核（9/7/42 核）、deep_fast 整模块 CU 三套，C32 沿用生产；只切单 wave 核的方案因 always_inline 辅助函数与 WAVE 宏属性混编报错放弃。仅 gfx1201 编译。整网 ABBA 每测试 8 槽，逐位同：1080 +0.008/+0.051/−0.017ms，900 +0.027/+0.050/+0.008ms，除 900 pair2 略差外槽间均交叠，频率同。结论：CU 模式收益是 C32 结构特有（4 wave LDS 密集交换 + 权重常驻 L0），不是工作组大小规律；生产不改。工具 HIP/experiments/fence-cu-size，证据 results/fence-cu-size-20260922。
