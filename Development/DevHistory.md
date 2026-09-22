@@ -3079,3 +3079,5 @@ RE9包替换为62a948a6…特殊宿主＋f5cf7697…runtime（实验ABI2），�
 成品D:\給網友打包\OptiScaler-REFramework-DLSS5-AMD-0.28.1.zip，420,947,935字节（约421MB），SHA256 850fcfc2fce38aee7115ecc9df8dd6548ea209dcdabcdfad532cdbdf02618e7d，旁置.zip.sha256。打包脚本package-0281-re9.ps1支持底包位于history；首轮因旧底包已归档而在解压前停止，补路径查找后完成，没有覆盖其他包。
 
 新包验证后按用户要求精确删除history中的RE9 0.28解压目录、ZIP和.sha256共3项；核对Magpie/普通OptiScaler 0.28两份ZIP哈希保持不变。中英文README移除旧RE9 0.28网盘入口、增加0.28.1更新行（待用户给新链接）。删除清单、新包与源码验证记录在Development/releases/0.28.1。未操作夸克网盘旧文件；未改游戏安装、未打tag。
+
+14:38用户上传RE9专用0.28.1完整包：https://pan.quark.cn/s/1375693a0d21 。中英文README链接已挂在0.28.1对应版本行，旧RE9 0.28入口保持移除；包文件未重打。
