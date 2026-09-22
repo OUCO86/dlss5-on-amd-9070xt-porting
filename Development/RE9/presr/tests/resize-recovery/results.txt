@@ -1,0 +1,23 @@
+GPU benchmark guard: idle
+CASE prime=0 valid=1280x544 (record only; no producer/consumer submission)
+PrepareFrame 1280x544 rc=0 error=
+RecordInputs 1280x544 rc=0 error=
+Destroy rc=0
+device_removed=00000000 result=0
+CASE prime=0 valid=960x544 (record only; no producer/consumer submission)
+PrepareFrame 960x544 rc=0 error=
+RecordInputs 960x544 rc=0 error=
+Destroy rc=0
+device_removed=00000000 result=0
+CASE prime=1 valid=1280x544 (record only; no producer/consumer submission)
+PrepareFrame 2560x1080 rc=5 error=codec unverified input format/geometry
+PrepareFrame 1280x544 rc=0 error=
+RecordInputs 1280x544 rc=5 error=bridge input capacity
+Destroy rc=0
+device_removed=00000000 result=5
+CASE prime=1 valid=960x544 (record only; no producer/consumer submission)
+PrepareFrame 2560x1080 rc=5 error=codec unverified input format/geometry
+PrepareFrame 960x544 rc=0 error=
+RecordInputs 960x544 rc=5 error=bridge input capacity
+Destroy rc=0
+device_removed=00000000 result=5

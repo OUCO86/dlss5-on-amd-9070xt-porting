@@ -43,3 +43,29 @@ Shader 源码/缓存错配与 D3D12 驱动或 hook 拒绝均仍可能。`src/nat
 ## 用户后续反馈（12:57）
 
 网友重新下载并覆盖后恢复正常，用户决定停止排查。没有旧文件/新文件哈希对照，因此不反推究竟是DLL、shader还是缓存；PSO失败点保留为历史证据，诊断路径缺陷仍是独立发现。
+
+## 追加：真实超限输入后无法恢复（离线 GPU 已复现）
+
+用户补充“启动显示2560×1080，改回也不恢复”。**显示2560×1080本身仍不是输入超限**：网友本日志 `:563` 明确对应输入1280×544。首错仍是 codec PSO，不是下面新复现的 geometry/capacity 错误。
+
+但代码确实还有一个独立恢复缺陷，现已用真实0.28发布runtime在9070上复现：fresh→1280×544、fresh→960×544的 PrepareFrame/RecordInputs 都成功；同一session先送入**实际2560×1080纹理**，得到 `codec unverified input format/geometry`，随后两种有效输入的 PrepareFrame成功，但 RecordInputs均报 `bridge input capacity`。原始结果与harness见 `Development/RE9/presr/tests/resize-recovery/`。
+
+机制（适配后的上游 LmxxfNrRuntime.cpp）：
+
+1. `:562-580` 在检查真实颜色纹理前选网络档位并创建/预热bridge。2560×1080选1080档。
+2. `:589-593` 的geoChanged受 `session->encode` 限制。
+3. `:634` encoder Create才经 `native_game_codec.h:58` 拒绝超限纹理；`:654-663`异常只删除局部codec对象，保留session bridge/hipPrepared，encode仍为空。
+4. 下帧较小输入更新全局geometry到720，但空encode令geoChanged为false；已有1080 bridge被复用，新720 codec建立成功。
+5. `:738` RecordInputCopy经 `Development/HIP/hip_d3d12_bridge.h:29` 发现720输入缓冲小于1080 bridge容量，报 `bridge input capacity`。
+
+**修复应分两层**：在任何全局geometry变化/HIP分配前，读取并验证真实纹理尺寸、格式、维度以及FrameInfo尺寸一致性，超限无副作用返回；另外把bridge+codec初始化视作事务，codec失败时在确认尚无提交/等待安全后清理整条新链（包括hipPrepared），或单独保存bridge自身geometry并独立于encode判断是否重建。只加前置超限检查还不能处理合法输入上的PSO初始化异常后换档。
+
+GPU测试前已检查游戏/Magpie退出；仅新增lab测试EXE，使用发布包原始runtime/model/shader，测试进程禁用磁盘shader缓存。无游戏启动/停止、无发布包修改、无全局环境或硬件设置变更。此测试仅到命令录制阶段，不提交producer/consumer；HIP预热会执行。四次GetDeviceRemovedReason均为S_OK。这确认恢复缺陷，不证明网友首错由它触发。
+
+## 追加：“失败后再也起不来”的进程边界
+
+完成上述失败序列后，**不替换任何DLL/资产**再启动两个独立新进程测试1280×544、960×544，PrepareFrame和RecordInputs全部恢复成功，设备正常；见 `tests/resize-recovery/fresh-after-failure.txt`。同样禁用磁盘shader缓存。因此已证明的geometry恢复bug是session/进程内状态问题，不能解释完全退出游戏后的持续失败。用户尚未明确“再也”是否包含确认进程退出后的重启，不应替他补这个前提。
+
+局部源码审计未见runtime将geometry/hipPrepared/失败标志写入磁盘或注册表；网络geometry是进程内static，runtime设置环境变量也是进程局部。没有发现“超限一次永久写坏分辨率状态”的runtime路径。宿主/游戏本身的设置持久化不在这条证明范围内。
+
+另有可跨进程持续的**潜在**缓存缺陷：`src/native_shader_cache.h:69-72` 接受任何长度大于0且可读完的文件，无DXBC结构/hash验证即返回编译成功并加入内存缓存；`:84` 直接截断写目标文件，无临时文件原子替换或写入完成校验。崩溃/中断/多进程读写留下非零截断文件时，下次可能持续PSO失败；PSO失败路径也不会清除此缓存或自动重编。缓存key含源码、entry和宏，故换分辨率但仍同FIT/EXPOSURE变体时仍可命中同一坏文件。此为代码层面的恢复风险，**没有网友缓存文件，尚未证明是本次原因**。收其shader-cache后做禁缓存新进程对照比直接要求重装驱动更有辨别力。
