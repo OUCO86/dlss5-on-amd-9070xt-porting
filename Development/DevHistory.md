@@ -3221,3 +3221,7 @@ mh-phase-trace：c256_attention_project 每 wave 约 50k 周期，两批注意�
 ## 2026-09-23 08:20：ViT 融合注意力寄存器化 + V 转置，逐位同但 ≤0.03ms，不采用
 
 25 个/wave 的 LDS 往返与 barrier 去除（r1）±0.02ms 交叠；再把 V 由 QKV 投影核转置写、AV 读一条 8B（400→50 条读）（r2，首轮漏改 HOIST_SCALE=0 分支致输出不符，修后逐位同）−0.03/−0.02ms 多数交叠。核太小，不采用。results/vit-register-attention-20260923。
+
+## 2026-09-23 09:00：split_projection_frag 转置尾声，逐位同但略差，不采用；请求规则修正
+
+每 lane 64 条标量写并成 3 条向量写、残差 32 标量读并成 8 条 b128，整网 ±0.02ms 偏差。原因：原标量写跨 lane 连续（一条指令 64B 一段），转置后一条向量写触及 32 行。**请求按"指令 × 触及缓存行数"计**，并宽只在 lane 间仍连续时有效（C32 staging 成立、此处不成立）。results/deep-transposed-epilogue-20260923。
