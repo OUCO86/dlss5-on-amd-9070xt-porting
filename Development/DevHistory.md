@@ -3006,3 +3006,9 @@ RE9入口实测1506×848 RGB9E5→2560×1440。split-original首次被aliasing�
 受控32倍输入、1/32曝光：proxy与neural逐位相同、最终RGB严格32倍、alpha同。旧codec24次完整比较diff0、12视图检查通过。修复后游戏抓帧proxy近白0.08535%、neural0.04319%，恢复Detail/Colour=1；前后不同菜单帧，不当像素对齐画质A/B。数据/工具/完整调查在RE9/presr及results/exposure，原始GPU读回留D:\DLSSNR-Lab\re9-presr\colour-capture-*。
 
 中途两次启动停在首次HIP enqueue，追踪后第三次可运行；权重延迟Upload包含stream同步，增加显式PrepareStagedKernels，在录制/外部producer wait前预热权重和核。预热前后6个完整读回缓冲逐字节相同。移除高频追踪后连续两次正常启动，前5帧HIP/提交均成功，无skip；不声称由此完全证明此前挂起根因。最终runtime F5CF76979D1753CE3E4498F85A45046B984CA8B0E54C80F17A41C45481E7CB68，host62A948A6…（ABI2），两份配置完整强度，备份exposure-20260922-075132。游戏留主菜单供实玩，未打包。曝光纹理换指针目前保守drain重建，需关注切场景性能；持续实玩稳定性/画质仍待用户反馈。TheAutomatic曝光与前置宿主设计贡献沿用并署名。
+
+## 2026-09-22 08:05：《剑星》更新最新常规addon及已采用HIP优化，保持原配置对照
+
+用户要求安装最新常规版本比较之前帧率。确认SB-Win64-Shipping退出，基于18f4b1a以scripts/build-addon.sh --hip重新编译，DLL SHA9819ddd9ce7e5f065b83d006d5df33e26814dde3137f54dc74146e5c6abe8110。替换addon、配套codec两shader，以及gfx1200/gfx1201各4个已验证模块：post/head RGB共用读取的C32 packed，C128/C256精确空白tile的MH packed，固定尺寸ViT/decoder的deep packed/unpacked。11文件逐个核对源hash、备份hash、安装读回hash；模块沿用之前逐值/运动/整网回归产物，不混入未采用实验。
+
+OptiScaler宿主dxgi.dll、OptiScaler.ini、native-game-flags.txt前后hash完全不变，保留用户ADAPTIVE=1、Graph=0、NETWORK_HEIGHT=auto和原前置接入；没有换RE9宿主，也没有启用新的可选曝光接口。普通codec此前24次旧路径逐位回归通过，本轮addon编译成功；游戏未启动，帧率由用户同场景复测。完整备份D:\DLSSNR-Lab\stellar-latest-20260922\backups\20260922-080507，安装/恢复脚本和前后清单在Development/deployments/stellar-20260922。首轮脚本因PowerShell JSON数组嵌套在源hash校验阶段停止，未修改游戏，修正后完成部署。

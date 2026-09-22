@@ -1,0 +1,88 @@
+{
+    "source_commit":  "18f4b1a",
+    "backup":  "D:\\DLSSNR-Lab\\stellar-latest-20260922\\backups\\20260922-080507",
+    "items":  [
+                  {
+                      "target":  "dlss5-amd.addon64",
+                      "source":  "D:/DLSSNR-Lab/stellar-latest-20260922/dlss5-amd.addon64",
+                      "existed":  true,
+                      "before":  "7A315550A49EB74AD75DD99658BE55719D1DC6E356DD1F00A639474C09EF6216",
+                      "after":  "9819ddd9ce7e5f065b83d006d5df33e26814dde3137f54dc74146e5c6abe8110"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/native_codec_encode.hlsl",
+                      "source":  "D:/DLSSNR-Lab/stellar-latest-20260922/native_codec_encode.hlsl",
+                      "existed":  true,
+                      "before":  "E97477AD12055D2338325D24ECD69019EFC7B7BA03805B58B5C25276CA630615",
+                      "after":  "e8fb25ab692a6834de220b2394728510379a280ca84d032831afc4a128dc2162"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/native_codec_decode.hlsl",
+                      "source":  "D:/DLSSNR-Lab/stellar-latest-20260922/native_codec_decode.hlsl",
+                      "existed":  true,
+                      "before":  "977C2D52F098703B0BA742C6CF277F0496BB7EE7368067D506E6364E1E8C0DFF",
+                      "after":  "3762d2f18c1485e2548b5d7734f357bd8f5819e5ef7b2b8b196e2634b2c4b07d"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+                      "source":  "D:/DLSSNR-Lab/hip-backend/post-head-shared-input/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+                      "existed":  true,
+                      "before":  "69690EC531C6FDEBD5D625810071EDAB0175667DF9CF611F77DD095FFBDCF26C",
+                      "after":  "bcb8ec765b7499cce34a4ad8c4af08b723924b64f595f48c8d11da8cbd768ded"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+                      "source":  "D:/DLSSNR-Lab/hip-backend/post-head-shared-input/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+                      "existed":  true,
+                      "before":  "31E295CC7D90CE7F77ACCC7BB517562C8ECBBFF44269A2587298135EB378F7A1",
+                      "after":  "c381fce5bb69927d8a33ebdd1ed2b083e4621bf504095ca3202e081034dfd67d"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead-fast-padded-wave-packed.hsaco",
+                      "source":  "D:/DLSSNR-Lab/hip-backend/mh-empty-c256-gfx1200.hsaco",
+                      "existed":  true,
+                      "before":  "5A91FB9A547ED1A973CAD48612D7700F14C45F69177541C4156E33E7B0771682",
+                      "after":  "161cef35c40bfaf099a64ebe0082d5a74ffef1a06dd8173b2d1da431d78b7571"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead-fast-padded-wave-packed.hsaco",
+                      "source":  "D:/DLSSNR-Lab/hip-backend/network-fixed-shapes/selected-modules/multihead-fast-padded-wave-packed.hsaco",
+                      "existed":  true,
+                      "before":  "FD24B2FFC9AF63FDA50359BE6C0C7FF91058DBC807500FB64B078942E4E435E3",
+                      "after":  "a2650eedb9f514314ffe059b202360a4ed1fa10ffafec93333ff640aa83cc835"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/deep_fast-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-gfx1200\\deep_fast-packed.hsaco",
+                      "existed":  true,
+                      "before":  "7EEE02C1A53594387E187BDB74B1113B5FCBD7B756119E7517FC69C6EA928374",
+                      "after":  "1436b01d0791a77ac6fafb058033c29ee42447d4e1aaf7447afb1e1242cc8f3e"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/deep_fast.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-gfx1200\\deep_fast.hsaco",
+                      "existed":  true,
+                      "before":  "C25C0398D2B8148697B0CA60240BE2D323660EE5A76CA2565D09D59006F903E9",
+                      "after":  "dc4342b5c8108dbcc442f295053ccf234e3031e311f1f55d2b49ee1f42f193c5"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/deep_fast-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-modules\\deep_fast-packed.hsaco",
+                      "existed":  true,
+                      "before":  "9FDD8A0207A3097D5DF7C6BF9AE9298A905E9039C5944030D072C9F9A96EB231",
+                      "after":  "4893e31a822cc71bd9a45dc407e10619488a0a6aa902cb7fc07445bbf25b38d7"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/deep_fast.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-modules\\deep_fast.hsaco",
+                      "existed":  true,
+                      "before":  "D8BBCEF950EE8D40AAAFE1A59F60E27D2B2EEF2048B0D30014DA7179DD00E4FB",
+                      "after":  "775321241860f43cef7bfbf1e3459712a953fda41c98956f5c7b452fa14791fe"
+                  }
+              ],
+    "unchanged":  {
+                      "OptiScaler.ini":  "80CDA873E59CC9DCBF127D51E1D737EA916D384F1AD17F9F884DC595586C82E0",
+                      "dxgi.dll":  "FBFB6676B829DAD7E020FB830586A16AA0EC6ADD78016DB48EF12E2AE1803231",
+                      "DLSS5-AMD/native-game-flags.txt":  "91B59212FC2C08D2413680689DA6A96F6D7930852C3E18AB4D2428A5D2E87D3B"
+                  }
+}

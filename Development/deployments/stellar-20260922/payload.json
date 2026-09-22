@@ -1,0 +1,57 @@
+[
+  {
+    "source": "D:/DLSSNR-Lab/stellar-latest-20260922/dlss5-amd.addon64",
+    "target": "dlss5-amd.addon64",
+    "sha256": "9819ddd9ce7e5f065b83d006d5df33e26814dde3137f54dc74146e5c6abe8110"
+  },
+  {
+    "source": "D:/DLSSNR-Lab/stellar-latest-20260922/native_codec_encode.hlsl",
+    "target": "DLSS5-AMD/native-game-tiled-assets/native_codec_encode.hlsl",
+    "sha256": "e8fb25ab692a6834de220b2394728510379a280ca84d032831afc4a128dc2162"
+  },
+  {
+    "source": "D:/DLSSNR-Lab/stellar-latest-20260922/native_codec_decode.hlsl",
+    "target": "DLSS5-AMD/native-game-tiled-assets/native_codec_decode.hlsl",
+    "sha256": "3762d2f18c1485e2548b5d7734f357bd8f5819e5ef7b2b8b196e2634b2c4b07d"
+  },
+  {
+    "source": "D:/DLSSNR-Lab/hip-backend/post-head-shared-input/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+    "sha256": "bcb8ec765b7499cce34a4ad8c4af08b723924b64f595f48c8d11da8cbd768ded"
+  },
+  {
+    "source": "D:/DLSSNR-Lab/hip-backend/post-head-shared-input/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+    "sha256": "c381fce5bb69927d8a33ebdd1ed2b083e4621bf504095ca3202e081034dfd67d"
+  },
+  {
+    "source": "D:/DLSSNR-Lab/hip-backend/mh-empty-c256-gfx1200.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead-fast-padded-wave-packed.hsaco",
+    "sha256": "161cef35c40bfaf099a64ebe0082d5a74ffef1a06dd8173b2d1da431d78b7571"
+  },
+  {
+    "source": "D:/DLSSNR-Lab/hip-backend/network-fixed-shapes/selected-modules/multihead-fast-padded-wave-packed.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead-fast-padded-wave-packed.hsaco",
+    "sha256": "a2650eedb9f514314ffe059b202360a4ed1fa10ffafec93333ff640aa83cc835"
+  },
+  {
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-gfx1200\\deep_fast-packed.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/deep_fast-packed.hsaco",
+    "sha256": "1436b01d0791a77ac6fafb058033c29ee42447d4e1aaf7447afb1e1242cc8f3e"
+  },
+  {
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-gfx1200\\deep_fast.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/deep_fast.hsaco",
+    "sha256": "dc4342b5c8108dbcc442f295053ccf234e3031e311f1f55d2b49ee1f42f193c5"
+  },
+  {
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-modules\\deep_fast-packed.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/deep_fast-packed.hsaco",
+    "sha256": "4893e31a822cc71bd9a45dc407e10619488a0a6aa902cb7fc07445bbf25b38d7"
+  },
+  {
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-modules\\deep_fast.hsaco",
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/deep_fast.hsaco",
+    "sha256": "775321241860f43cef7bfbf1e3459712a953fda41c98956f5c7b452fa14791fe"
+  }
+]
