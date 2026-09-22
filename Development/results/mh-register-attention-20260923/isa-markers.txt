@@ -1,0 +1,14 @@
+== production (prod4)
+c64_attention_project_fb_bout_diag       instr=1695 wmma=34 ds=161 barrier=6 vgpr=89 occupancy=12 lds=21504 scratch=0
+c128_attention_project_fb_bout_diag      instr=1629 wmma=42 ds=165 barrier=6 vgpr=103 occupancy=12 lds=43008 scratch=0
+c256_attention_project_fb_bout_diag      instr=1929 wmma=58 ds=173 barrier=6 vgpr=131 occupancy=8 lds=59648 scratch=0
+c64_attention_project_fb_diag            instr=1693 wmma=34 ds=161 barrier=6 vgpr=89 occupancy=12 lds=21504 scratch=0
+c128_attention_project_fb_diag           instr=1648 wmma=42 ds=165 barrier=6 vgpr=103 occupancy=12 lds=43008 scratch=0
+c256_attention_project_fb_diag           instr=1931 wmma=58 ds=173 barrier=6 vgpr=133 occupancy=8 lds=59648 scratch=0
+== register (r4, all three bodies)
+c64_attention_project_fb_bout_diag       instr=1446 wmma=34 ds=85 barrier=2 vgpr=92 occupancy=16 lds=8960 scratch=0
+c128_attention_project_fb_bout_diag      instr=1496 wmma=42 ds=89 barrier=2 vgpr=92 occupancy=16 lds=17664 scratch=0
+c256_attention_project_fb_bout_diag      instr=1819 wmma=58 ds=97 barrier=2 vgpr=118 occupancy=12 lds=25856 scratch=0
+c64_attention_project_fb_diag            instr=1457 wmma=34 ds=85 barrier=2 vgpr=92 occupancy=16 lds=8960 scratch=0
+c128_attention_project_fb_diag           instr=1490 wmma=42 ds=89 barrier=2 vgpr=92 occupancy=16 lds=17664 scratch=0
+c256_attention_project_fb_diag           instr=1819 wmma=58 ds=97 barrier=2 vgpr=120 occupancy=12 lds=25856 scratch=0

@@ -1,0 +1,166 @@
+
+launch 0 groups=104 waves=1664 mean_total=49,708 median=45,272
+  V staging (packed)       20,502   19,154  41.2%
+  scores->ex                3,214    2,748   6.5%
+  row sums + pv             2,248    1,703   4.5%
+  prob write                1,127    1,008   2.3%
+  AV                        1,666    1,574   3.4%
+  avbytes write             1,527    1,298   3.1%
+  residual/diag            10,765   10,800  21.7%
+  projection+output         8,660    8,774  17.4%
+  barrier wait (in above)    5,788    5,084  11.6%  barriers/wave=12.0
+
+launch 1 groups=104 waves=1664 mean_total=50,224 median=45,862
+  V staging (packed)       21,272   18,594  42.4%
+  scores->ex                3,205    2,752   6.4%
+  row sums + pv             2,365    1,705   4.7%
+  prob write                1,164    1,004   2.3%
+  AV                        1,628    1,548   3.2%
+  avbytes write             1,503    1,294   3.0%
+  residual/diag            10,611   10,566  21.1%
+  projection+output         8,476    8,435  16.9%
+  barrier wait (in above)    6,113    5,268  12.2%  barriers/wave=12.0
+
+launch 2 groups=104 waves=1664 mean_total=50,598 median=46,261
+  V staging (packed)       21,283   18,864  42.1%
+  scores->ex                3,244    2,752   6.4%
+  row sums + pv             2,269    1,720   4.5%
+  prob write                1,143    1,008   2.3%
+  AV                        1,665    1,577   3.3%
+  avbytes write             1,521    1,294   3.0%
+  residual/diag            10,814   10,900  21.4%
+  projection+output         8,657    8,753  17.1%
+  barrier wait (in above)    5,889    5,132  11.6%  barriers/wave=12.0
+
+launch 3 groups=104 waves=1664 mean_total=50,525 median=46,261
+  V staging (packed)       21,429   18,955  42.4%
+  scores->ex                3,211    2,750   6.4%
+  row sums + pv             2,392    1,705   4.7%
+  prob write                1,182    1,007   2.3%
+  AV                        1,635    1,564   3.2%
+  avbytes write             1,502    1,288   3.0%
+  residual/diag            10,660   10,590  21.1%
+  projection+output         8,515    8,488  16.9%
+  barrier wait (in above)    6,075    5,213  12.0%  barriers/wave=12.0
+
+launch 4 groups=104 waves=1664 mean_total=50,572 median=46,280
+  V staging (packed)       21,514   18,896  42.5%
+  scores->ex                3,157    2,738   6.2%
+  row sums + pv             2,252    1,701   4.5%
+  prob write                1,140    1,008   2.3%
+  AV                        1,660    1,575   3.3%
+  avbytes write             1,548    1,305   3.1%
+  residual/diag            10,651   10,630  21.1%
+  projection+output         8,649    8,777  17.1%
+  barrier wait (in above)    5,826    5,082  11.5%  barriers/wave=12.0
+
+launch 5 groups=104 waves=1664 mean_total=50,285 median=45,956
+  V staging (packed)       21,146   18,726  42.1%
+  scores->ex                3,240    2,744   6.4%
+  row sums + pv             2,409    1,704   4.8%
+  prob write                1,180    1,008   2.3%
+  AV                        1,639    1,560   3.3%
+  avbytes write             1,506    1,294   3.0%
+  residual/diag            10,666   10,680  21.2%
+  projection+output         8,498    8,494  16.9%
+  barrier wait (in above)    6,152    5,268  12.2%  barriers/wave=12.0
+
+launch 6 groups=104 waves=1664 mean_total=50,210 median=45,816
+  V staging (packed)       21,081   18,846  42.0%
+  scores->ex                3,216    2,748   6.4%
+  row sums + pv             2,255    1,705   4.5%
+  prob write                1,144    1,008   2.3%
+  AV                        1,663    1,582   3.3%
+  avbytes write             1,544    1,298   3.1%
+  residual/diag            10,685   10,738  21.3%
+  projection+output         8,623    8,737  17.2%
+  barrier wait (in above)    5,806    5,098  11.6%  barriers/wave=12.0
+
+launch 7 groups=104 waves=1664 mean_total=51,814 median=47,242
+  V staging (packed)       21,414   19,268  41.3%
+  scores->ex                3,232    2,764   6.2%
+  row sums + pv             2,330    1,707   4.5%
+  prob write                1,166    1,008   2.3%
+  AV                        1,669    1,569   3.2%
+  avbytes write             1,561    1,305   3.0%
+  residual/diag            11,261   11,296  21.7%
+  projection+output         9,181    9,309  17.7%
+  barrier wait (in above)    6,003    5,178  11.6%  barriers/wave=12.0
+
+launch 8 groups=104 waves=1664 mean_total=50,243 median=45,768
+  V staging (packed)       21,172   18,930  42.1%
+  scores->ex                3,235    2,764   6.4%
+  row sums + pv             2,352    1,700   4.7%
+  prob write                1,188    1,008   2.4%
+  AV                        1,622    1,551   3.2%
+  avbytes write             1,493    1,288   3.0%
+  residual/diag            10,699   10,544  21.3%
+  projection+output         8,483    8,447  16.9%
+  barrier wait (in above)    6,115    5,186  12.2%  barriers/wave=12.0
+
+launch 9 groups=104 waves=1664 mean_total=50,673 median=46,430
+  V staging (packed)       21,489   18,964  42.4%
+  scores->ex                3,204    2,746   6.3%
+  row sums + pv             2,274    1,714   4.5%
+  prob write                1,140    1,007   2.2%
+  AV                        1,676    1,580   3.3%
+  avbytes write             1,549    1,300   3.1%
+  residual/diag            10,702   10,655  21.1%
+  projection+output         8,639    8,750  17.0%
+  barrier wait (in above)    5,996    5,180  11.8%  barriers/wave=12.0
+
+launch 10 groups=104 waves=1664 mean_total=50,228 median=45,806
+  V staging (packed)       21,102   18,910  42.0%
+  scores->ex                3,223    2,747   6.4%
+  row sums + pv             2,376    1,704   4.7%
+  prob write                1,182    1,007   2.4%
+  AV                        1,636    1,555   3.3%
+  avbytes write             1,504    1,294   3.0%
+  residual/diag            10,689   10,632  21.3%
+  projection+output         8,516    8,489  17.0%
+  barrier wait (in above)    6,076    5,184  12.1%  barriers/wave=12.0
+
+launch 11 groups=104 waves=1664 mean_total=50,154 median=45,772
+  V staging (packed)       21,007   18,772  41.9%
+  scores->ex                3,185    2,738   6.4%
+  row sums + pv             2,263    1,704   4.5%
+  prob write                1,141    1,008   2.3%
+  AV                        1,674    1,580   3.3%
+  avbytes write             1,529    1,294   3.0%
+  residual/diag            10,735   10,734  21.4%
+  projection+output         8,620    8,712  17.2%
+  barrier wait (in above)    5,818    5,106  11.6%  barriers/wave=12.0
+
+launch 12 groups=104 waves=1664 mean_total=50,132 median=45,732
+  V staging (packed)       21,101   18,870  42.1%
+  scores->ex                3,224    2,760   6.4%
+  row sums + pv             2,399    1,701   4.8%
+  prob write                1,148    1,008   2.3%
+  AV                        1,630    1,552   3.3%
+  avbytes write             1,503    1,294   3.0%
+  residual/diag            10,665   10,630  21.3%
+  projection+output         8,463    8,447  16.9%
+  barrier wait (in above)    6,070    5,184  12.1%  barriers/wave=12.0
+
+launch 13 groups=104 waves=1664 mean_total=50,126 median=45,920
+  V staging (packed)       21,099   18,598  42.1%
+  scores->ex                3,195    2,738   6.4%
+  row sums + pv             2,257    1,708   4.5%
+  prob write                1,131    1,008   2.3%
+  AV                        1,656    1,580   3.3%
+  avbytes write             1,536    1,294   3.1%
+  residual/diag            10,649   10,701  21.2%
+  projection+output         8,603    8,733  17.2%
+  barrier wait (in above)    5,847    5,125  11.7%  barriers/wave=12.0
+
+== c256_attention_project, all 14 launches, share of wave-cycles ==
+  V staging (packed)      42.0%
+  scores->ex               6.4%
+  row sums + pv            4.6%
+  prob write               2.3%
+  AV                       3.3%
+  avbytes write            3.0%
+  residual/diag           21.3%
+  projection+output       17.1%
+  barrier wait (in above)  11.8%
+total waves/frame 23296 sum wave-cycles 1,173,941,145

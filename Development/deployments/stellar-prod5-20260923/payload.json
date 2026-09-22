@@ -1,0 +1,22 @@
+[
+  {
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod5-gfx1200\\c32_fused_ffn_attention-packed.hsaco",
+    "sha256": "0a25b40be1e8c9d17c6d870cf1450c13047d6f2d2841297b3c2989e87dfe9a10"
+  },
+  {
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod5-modules\\c32_fused_ffn_attention-packed.hsaco",
+    "sha256": "22fb47389a44b352f8288882e187cb5c6dfa501ba1cb2b63940a7e196786b3a4"
+  },
+  {
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead_fused_attention.hsaco",
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod5-gfx1200\\multihead_fused_attention.hsaco",
+    "sha256": "c31405d07158c9074a629d2b9538b6cd3fd9c4f0ca7730ff04a745bc1a662d8b"
+  },
+  {
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead_fused_attention.hsaco",
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod5-modules\\multihead_fused_attention.hsaco",
+    "sha256": "b01b506a6df5db190667eb8520d79dd8161be6489afe60c8016eefc850e14f3c"
+  }
+]
