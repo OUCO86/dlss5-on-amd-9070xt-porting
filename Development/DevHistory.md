@@ -3187,3 +3187,7 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 ## 2026-09-23 00:05：C32 注意力 ex/prob 寄存器化，逐位同但寄存器压力抵消收益，不采用
 
 分数 WMMA 与行和"乘 1 矩阵"WMMA 均对调操作数，ex/prob 全留寄存器，K/V 仍在 LDS；三变体（同步全留 / 删两处+两处降 wave 内栅栏 / 投影前保留全组同步）两档 24 槽逐位同。ISA：post LDS 指令 401→324、barrier 8→4，但 VGPR 158→226、chain 驻留 8→7。整网 1080 +0.060/−0.040/−0.042ms，900 +0.041/−0.039/−0.019，多数交叠。结论：WMMA 操作数角色对称性再次验证（可写入 318），工程上 LDS 兼作溢出区、寄存器压力吃掉节省；不采用，后续可试限驻留或按 key tile 流水。工具 HIP/experiments/c32-register-attention，证据 results/c32-register-attention-20260922；生产/游戏未改。
+
+## 2026-09-23 00:40：C32 核内时间戳，首份每 wave 阶段周期账
+
+三热核共享体加 9 个 SHADER_CYCLES 打点 + barrier 内周期累加，lane 0 写 12 u64 到全局缓冲；基址经模块全局 `c32_trace`（hipModuleGetGlobal，host 封装补该函数）每次 launch 前写入，核签名不变。30 帧预热后 8 帧打点，逐位同。首轮 1080 越界（缓冲按 24321 组开、post 实为 34945 组）改 40000 组后过。900/1080 每 wave 周期几乎相同。全 C32 加权：staging 30.7%、FFN 26.1%、QKV 10.8%、注意力三段 11.8%、投影 7.9%、尾部 8.8%、barrier 等待 8.7%。post 每 wave 23.6k 周期，矩阵约 1.1k；对账有效并发约 3.3 wave（上限 6）。结论：输入 staging（gather+FP8+字节写 LDS）是 C32 最大单项，注意力 LDS 本就小（解释寄存器化无收益）。工具 HIP/experiments/c32-phase-trace，证据 results/c32-phase-trace-20260923（原始 trace 294MB 不入库，留 sha256）；生产/游戏未改。

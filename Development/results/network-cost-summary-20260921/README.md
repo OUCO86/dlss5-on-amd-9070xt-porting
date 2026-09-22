@@ -175,3 +175,7 @@ RGP64dispatch：L0请求251822080→167936000（−33.31%），L2请求114033044
 ## 2026-09-23 00:05补充：折叠 FFN 已采用；注意力寄存器化不采用（Hikari）
 
 [折叠 FFN](../c32-transposed-ffn-20260922/README.md)：对调 WMMA 操作数得精确转置，hidden 留寄存器，逐位同，整网 −0.10/−0.06ms，已进生产并装剑星（无异常）。[注意力寄存器化](../c32-register-attention-20260922/README.md)：同手法，逐位同，LDS −77 条、barrier −4，但 VGPR +68 抵消，净 ≤0.04ms 不采用。
+
+## 2026-09-23 00:40补充：C32 每 wave 动态阶段账（Hikari）
+
+[核内时间戳](../c32-phase-trace-20260923/README.md)：staging 30.7% > FFN 26.1% > 注意力三段 11.8% ≈ QKV 10.8% > 尾部 8.8% ≈ 投影 7.9%；barrier 等待 8.7%。post 每 wave 23.6k 周期，矩阵约 1.1k；有效并发约 3.3/6。下一刀应指向输入 staging（上游直接出 FP8、字节写改 dword）。
