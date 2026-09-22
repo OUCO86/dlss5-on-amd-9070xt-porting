@@ -1,0 +1,8 @@
+LAYOUT_DONE wide_row_u2
+LAYOUT_DONE wide_tile_u2
+LAYOUT_DONE tall_row_u2
+LAYOUT_DONE tall_tile_u2
+LAYOUT_DONE pair_u2
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT density controls

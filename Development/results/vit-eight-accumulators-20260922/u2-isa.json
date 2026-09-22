@@ -1,0 +1,149 @@
+{
+  "vit_expand_blocked_fp8_frag_bytein": {
+    "NumVgprs": 77,
+    "ScratchSize": 0,
+    "Occupancy": 16,
+    "blocks": [
+      {
+        "label": ".LBB48_7:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 4,
+        "load64": 5,
+        "load32": 0
+      },
+      {
+        "label": ".LBB48_12:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 20,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m16n128_row": {
+    "NumVgprs": 136,
+    "ScratchSize": 0,
+    "Occupancy": 10,
+    "blocks": [
+      {
+        "label": ".LBB76_5:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 32,
+        "load64": 36,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m16n128_row_u2": {
+    "NumVgprs": 118,
+    "ScratchSize": 0,
+    "Occupancy": 12,
+    "blocks": [
+      {
+        "label": ".LBB80_5:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 18,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m32n64_row": {
+    "NumVgprs": 119,
+    "ScratchSize": 0,
+    "Occupancy": 12,
+    "blocks": [
+      {
+        "label": ".LBB78_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 20,
+        "load32": 0
+      },
+      {
+        "label": ".LBB78_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 32,
+        "load64": 24,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m32n64_row_u2": {
+    "NumVgprs": 103,
+    "ScratchSize": 0,
+    "Occupancy": 12,
+    "blocks": [
+      {
+        "label": ".LBB82_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 8,
+        "load64": 10,
+        "load32": 0
+      },
+      {
+        "label": ".LBB82_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 12,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m16n128_tile": {
+    "NumVgprs": 136,
+    "ScratchSize": 0,
+    "Occupancy": 10,
+    "blocks": [
+      {
+        "label": ".LBB77_5:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 32,
+        "load64": 36,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m16n128_tile_u2": {
+    "NumVgprs": 117,
+    "ScratchSize": 0,
+    "Occupancy": 12,
+    "blocks": [
+      {
+        "label": ".LBB81_5:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 18,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m32n64_tile": {
+    "NumVgprs": 122,
+    "ScratchSize": 0,
+    "Occupancy": 10,
+    "blocks": [
+      {
+        "label": ".LBB79_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 20,
+        "load32": 0
+      },
+      {
+        "label": ".LBB79_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 32,
+        "load64": 24,
+        "load32": 0
+      }
+    ]
+  },
+  "probe_m32n64_tile_u2": {
+    "NumVgprs": 104,
+    "ScratchSize": 0,
+    "Occupancy": 12,
+    "blocks": [
+      {
+        "label": ".LBB83_6:                               ; =>This Inner Loop Header: Depth=1",
+        "wmma": 8,
+        "load64": 10,
+        "load32": 0
+      },
+      {
+        "label": ".LBB83_10:                              ; =>This Inner Loop Header: Depth=1",
+        "wmma": 16,
+        "load64": 12,
+        "load32": 0
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\kernel.hip",
+    "sha": "654FC7FCDD021F6383562476ED87D62B013FD5F6690E9624C2EA4101C003E391"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\pure.exe",
+    "sha": "75F99E570FB40A74263BF86F930D2C7B98CF4F2B9F47931F666F2079EA3B45DF"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\gfx1200.hsaco",
+    "sha": "E86C2047F99DC49D7A1DB1BA52E872C7AA36C5D0833F1DD2DAE3E580AD0EE507"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\modules\\deep_fast-packed.hsaco",
+    "sha": "8E8D1F0725AF03D5E0D35D9F935023D8FEE3A628CA7B1DC2DB0C8C916D768546"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\u2.hip",
+    "sha": "86528F040930A5DF7FF6971F889BE6DF8694270EABDF94B1874FFDDD74212389"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\u2.exe",
+    "sha": "808DC64EBABA768F4633DD668096A618535B59413BD13B2AC9A0E1FADE0A3085"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\u2-gfx1200.hsaco",
+    "sha": "E10CF67B7A06C389B0D759EA57E672B2D59B670D7FF9B6E262A3A350A7955F5A"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\modules-u2\\deep_fast-packed.hsaco",
+    "sha": "7A97B1007864671FAA9FD12686E785C604DC5FE8E7D43DF9BF822CB0D3B66A7B"
+  },
+  {
+    "path": "D:\\DLSSNR-Lab\\hip-backend\\vit-eight-accumulators\\network.exe",
+    "sha": "853C436EB0389A7E43A6CC327CB3B658A2CF0380D4009EC5B4EB402CC37DA763"
+  }
+]

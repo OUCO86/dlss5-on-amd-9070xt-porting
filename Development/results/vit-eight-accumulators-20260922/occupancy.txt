@@ -1,0 +1,6 @@
+warp=32 MPs=32 maxThreadsPerMP=2048 sharedPerMP=65536
+kernel=vit_expand_blocked_fp8_frag_bytein threads=32 blocks_per_MP=64 waves_bound=64
+kernel=probe_m16n128_row threads=32 blocks_per_MP=44 waves_bound=44
+kernel=probe_m32n64_row threads=32 blocks_per_MP=44 waves_bound=44
+kernel=probe_m16n128_tile threads=32 blocks_per_MP=44 waves_bound=44
+kernel=probe_m32n64_tile threads=32 blocks_per_MP=48 waves_bound=48

@@ -1,0 +1,11 @@
+LAYOUT_DONE wide_row
+LAYOUT_DONE tall_row
+LAYOUT_DONE shape_row
+LAYOUT_DONE shape_tiled
+LAYOUT_DONE layout_wide
+LAYOUT_DONE layout_tall
+LAYOUT_DONE pair_wide
+LAYOUT_DONE pair_tall
+RAW frame=0 bitdiff=0
+RAW frame=1 bitdiff=0
+PASS ViT density controls
