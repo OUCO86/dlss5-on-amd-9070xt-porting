@@ -185,3 +185,7 @@ RGP64dispatch：L0请求251822080→167936000（−33.31%），L2请求114033044
 - [C32 折叠 FFN](../c32-transposed-ffn-20260922/README.md) −0.10/−0.06、[字节链+向量化 staging](../c32-byte-chain-20260923/README.md)+[f32 行向量化](../c32-vec-stage-20260923/README.md) −0.16/−0.10（排队按请求数计）、[mh_fused C64～C256 注意力寄存器化](../mh-register-attention-20260923/README.md) −0.17/−0.12（LDS 减半、驻留翻倍）。候选 prod5 回归通过，相对装机版再 −2.2%，未装。
 - 反例：[C512 注意力寄存器化](../mh-register-c512-20260923/README.md)、[ViT 注意力寄存器化+V 转置](../vit-register-attention-20260923/README.md)、[CU 模式按大小](../fence-cu-size-20260922/README.md)、[C32 注意力寄存器化](../c32-register-attention-20260922/README.md)均逐位同但无收益——同一改法赚不赚取决于该核的驻留/请求瓶颈是否存在。
 - 动态账：[C32 十核](../c32-phase-trace-20260923/README.md)、[c256 注意力](../mh-phase-trace-20260923/README.md)、[ffn_fused_c256](../mhfast-phase-trace-20260923/README.md)：矩阵 5～15%，其余为取数排队、LDS 中转、barrier；模糊评估已写入 318。
+
+## 2026-09-23 10:40补充（Hikari）：逐位约束下的平台期
+
+上午五项：[ffn_fused_c256 打点](../mhfast-phase-trace-20260923/README.md)（矩阵 7%、尾段 43%、barrier 19%）；[ViT 注意力寄存器化+V 转置](../vit-register-attention-20260923/README.md) ≤0.03ms；[split_projection 转置尾声](../deep-transposed-epilogue-20260923/README.md) 略差——**请求按"指令 × 触及缓存行数"计**，跨 lane 连续的标量写不该并宽；[BatchNorm 合并两对 barrier](../mhfast-batchnorm-20260923/README.md) 中性（LDS 翻倍抵消）；[宽权重片段](../mhfast-wide-frag-20260923/README.md) −0.03ms，需重编 addon，待顺带。栅栏、LDS 中转、请求宽度、驻留、barrier 五类手法在全部热核上各试一遍，逐位不变的手法已穷尽；再进要么放弃逐位（改累加顺序/精度路径），要么等 addon 重编打包 host 侧小改。
