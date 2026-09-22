@@ -3169,3 +3169,9 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 ## 2026-09-22 23:20：CU 模式按工作组大小逐核对照，无收益，此线关闭
 
 基线 fence-modules（当前生产）。mh_fused/deep_fast/mh_fast 的 128 线程核加 target("cumode")（3/4/20 核）、128+256 线程核（9/7/42 核）、deep_fast 整模块 CU 三套，C32 沿用生产；只切单 wave 核的方案因 always_inline 辅助函数与 WAVE 宏属性混编报错放弃。仅 gfx1201 编译。整网 ABBA 每测试 8 槽，逐位同：1080 +0.008/+0.051/−0.017ms，900 +0.027/+0.050/+0.008ms，除 900 pair2 略差外槽间均交叠，频率同。结论：CU 模式收益是 C32 结构特有（4 wave LDS 密集交换 + 权重常驻 L0），不是工作组大小规律；生产不改。工具 HIP/experiments/fence-cu-size，证据 results/fence-cu-size-20260922。
+
+## 2026-09-22 23:25：C32 折叠 FFN（转置 WMMA 操作数，hidden 不进 LDS）进生产源码，正式回归通过，候选待装
+
+机制：gfx12 WMMA 的 A/B 操作数寄存器格式相同，展开的两个操作数对调即得 D^T——每 lane 持一行 8 个连续 hidden 列，正是收缩所需 A 片段；激活后寄存器内打包 FP8 直接喂收缩，scratch.hidden 与其间同步取消，残差初始化挪到展开循环前保持原累加顺序。三轮实验（HIP/experiments/c32-transposed-ffn，results/c32-transposed-ffn-20260922）：第 1 轮 hfrag[8] 数组被编译器全展开反而慢（+0.05～0.2ms，r1 计时目录被覆盖仅存记录）；第 2/3 轮折叠卷起循环两轮复现 1080 −0.104/−0.104、900 −0.053/−0.063ms（pair1），去中间同步的 pair3 −0.093/−0.110、−0.045/−0.059，仅全展开对照 −0.06/−0.03 且不稳；全部逐位同，频率同。
+
+采用 pair3 为 `HIP_C32_FOLDED_FFN`（默认 1，hip/c32_fused_ffn_attention.hip，首次打补丁把 #if 塞进 ABLATE 块内导致 unterminated conditional，重打包住整段）。生产构建 10 核与实验 pair3 机器码逐条同（分支标签归一化）。regression-prod2.ps1（候选 prod2-modules，基线 fence-modules）：900/1080 两序列 12 帧 RGB hash 全同，1000 帧计时 900 12.654/12.684 vs 12.690/12.792、1080 17.827/17.847 vs 17.889/17.979ms，四组额外控制 hash 全同，退出 0。部署清单 stellar-prod2-20260922（仅 gfx1200/1201 各一个 C32 packed hsaco）已放远端，**未安装**，等用户授权。
