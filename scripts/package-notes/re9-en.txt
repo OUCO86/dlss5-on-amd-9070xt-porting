@@ -1,0 +1,19 @@
+OptiScaler-REFramework-DLSS5-AMD @VERSION@ — special RE9 pre-SR full package
+
+For Resident Evil Requiem's special command submission; not the generic OptiScaler edition. The host derives from TheAutomatic's release/1.9.0 and uses our HIP runtime. Credit to TheAutomatic for the pre-SR host design and contribution.
+
+Pipeline: low-resolution game rendering → HIP DLSS5 → FSR → display. Unlike0.27's post-FSR/1080p-output route, this supports tested2560x1440 borderless output. Neural INPUT must still be≤1920x1080; network resolution auto-selects720/900/1080. Same-frame game exposure is applied before inference and undone afterwards to prevent the washed-out input caused by omitted exposure. Detail/Colour strength default to1. Includes six common lossless kernel improvements and preparation of lazy HIP kernels/weights before staged submission.
+
+Exit the game and extract all files next to re9.exe after backing up existing mods. Remove older dlss5-amd.addon64, re9-present.addon64 and observer add-ons from both root and _storage_. If _storage_ already contains dxgi.dll/LmxxfNrRuntime.dll/OptiScaler.ini, update those copies too. The host and runtime are a matched pair. REFramework's dinput8.dll is included; resolve conflicts with other dinput8 mods first.
+
+Select DLSS in game. Start with2K/Balanced and frame generation off; test frame generation separately after confirming stable rendering. No personal game config or saves are included.
+
+F6 toggles NR. Insert opens OptiScaler/REFramework (their default keys can overlap). Use the neural menu to adjust Detail strength/Colour strength, keeping both in0..1. Reducing Colour strength also suppresses coloured texture/material changes, not just saturation.
+
+Settings are in OptiScaler.ini [DlssNr]: NrBackend=lmxxf, Enabled=true, RunBeforeSR=true, LmxxfDiagnostic=off. Information overlays use OptiScaler controls. Old addon F7 and DLSS5_SHOW_FPS/NOTICE do not control this runtime. Old native-game-flags.txt is not read; no standard-addon F8 reuse control. Default skipped blocks42,43,46 remain; adaptive reuse is off.
+
+RX9070XT numerical/exposure tests, menu rendering and repeated startup have passed. Full gameplay, scene changes and frame generation still need further feedback. Previous0.27 Xbox Onimusha validation does NOT validate this new host. Other RE games/gfx1200 hardware/HDR display output remain unverified.
+
+Files: dxgi.dll=special host; LmxxfNrRuntime.dll=HIP runtime; dinput8.dll=REFramework; DLSS5-AMD/native-game-tiled-assets=models, shaders and dual-architecture kernels. sources/ contains matching modified host/runtime source and build instructions; it need not be extracted to play. All payload files are verified by SHA256SUMS.txt; licenses and upstream credit are included.
+https://github.com/lmxxf/dlss5-on-amd-9070xt-porting
+https://github.com/TheAutomatic/dlss-5-amd-project/tree/release/1.9.0

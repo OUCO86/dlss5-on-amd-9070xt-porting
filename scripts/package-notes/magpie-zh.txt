@@ -1,0 +1,23 @@
+Magpie-DLSS5-AMD @VERSION@ — 完整便携包
+
+更新
+共享HIP核新增六项无损优化：RGB末端共用特征读取、C128/C256全零填充快路径、ViT展开/投影及解码器投影固定尺寸优化。没有新增画质损失开关。普通游戏版《剑星》实玩未见异常，帧率基本不变，不承诺固定提速。Magpie宿主与原流水线沿用0.27底包。
+
+使用
+1. 完整解压到独立目录，运行Magpie.exe。不要只复制addon，也不要覆盖正在运行的版本。
+2. 游戏设为窗口，输入宽≤1920、高≤1080。900P是可选的性能折中。
+3. 选择包内DLSS5效果组：FSR3_SR（DLSS5入口，保持输入尺寸1倍）→ FSR4放大 → XeSS帧生成。
+4. Alt+Shift+A启动/停止缩放；F6开关神经处理。
+5. AMD光流只在第一项使用；FSR4/XeSS后续项选None，避免额外光流导致发糊。
+
+配置
+DLSS5-AMD/native-game-flags.txt来自仓库hip-magpie-flags.txt。NETWORK_HEIGHT=auto按输入选择720/900/1080。已有跳层默认值保留，自适应复用默认关闭；F8仅在显式开启复用热键后生效。
+显示由DLSS5_SHOW_FPS、DLSS5_NOTICE控制；两项均设0可关闭对应显示。配置键保留完整DLSS5_前缀。
+
+内容与环境
+本包包含模型、配套DLL/shader和gfx1200/gfx1201各24个HIP模块，不是补丁。需要AMD驱动提供amdhip64_7.dll；HIP路线不依赖SM6.10预览组件。9070 XT已实测，9060系列仍需要对应硬件反馈。
+
+目录
+Magpie.exe及相关DLL：缩放框架；dlss5-amd.addon64：本项目接入模块；DLSS5-AMD/native-game-tiled-assets：模型、shader和HIP核；DLSS5-AMD/native-game-flags.txt：配置。
+项目：https://github.com/lmxxf/dlss5-on-amd-9070xt-porting
+完整目录说明见仓库README。SHA256SUMS.txt可核对全包文件；各组件保留自己的许可证。

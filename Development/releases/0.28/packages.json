@@ -1,0 +1,23 @@
+[
+    {
+        "name":  "Magpie-DLSS5-AMD-0.28",
+        "bytes":  336318827,
+        "sha256":  "321e8857b2acfd40e010265e1470e53fa8068380b8b7744a908d9b4e68bc904e",
+        "files":  723,
+        "verified":  true
+    },
+    {
+        "name":  "OptiScaler-DLSS5-AMD-0.28",
+        "bytes":  366516000,
+        "sha256":  "252f26d06e31fc2c6fee449457a237be39b483845c10c496d74077e79abfa4a8",
+        "files":  541,
+        "verified":  true
+    },
+    {
+        "name":  "OptiScaler-REFramework-DLSS5-AMD-0.28",
+        "bytes":  420949208,
+        "sha256":  "dcfe77ced13e2aa4570fcc0d474837d493ee77ef831682b6c43585768df7c9c3",
+        "files":  545,
+        "verified":  true
+    }
+]

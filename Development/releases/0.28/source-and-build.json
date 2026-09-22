@@ -1,0 +1,11 @@
+{
+  "source_archive": "sources/re9-presr-source.tar.gz",
+  "bytes": 43510268,
+  "sha256": "5d35d310a0cc93476bea77e98a20b67b9513f78476f4ff6f855220cfd68c2c06",
+  "upstream_commit": "8f71f73bfc836a37936e7cee6701750ad4e8bfec",
+  "host_sha256": "62a948a6a8abb501ec1ef269357597d60adbac60df8daa1e6bbe820f579003e3",
+  "runtime_sha256": "f5cf76979d1753ce3e4498f85a45046b984ca8b0e54c80f17a41c45481e7cb68",
+  "regular_addon_sha256": "9819ddd9ce7e5f065b83d006d5df33e26814dde3137f54dc74146e5c6abe8110",
+  "source_archive_runtime_rebuild": "passed; resulting runtime GPU smoke passed",
+  "staged_re9_unicode_path_smoke": "passed"
+}

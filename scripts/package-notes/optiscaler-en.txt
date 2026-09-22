@@ -1,0 +1,12 @@
+OptiScaler-DLSS5-AMD @VERSION@ — standard full game package
+
+Six adopted lossless kernel improvements: shared RGB head feature reads, exact-zero C128/C256 padding shortcuts, fixed-shape ViT expansion/projection and decoder projection. No new quality-loss switch. Stellar Blade testing found no visible regression or FPS change. The regular OptiScaler framework retains the0.27 baseline; this is not the RE9 host.
+
+Exit the game, back up existing mod files, and extract ALL files beside the actual game executable (often Binaries/Win64). Select DLSS input in the game; OptiScaler routes it to FSR. Supported integration is low-resolution rendering → DLSS5 → FSR → display. Neural input must be≤1920 wide and≤1080 high; display output may be larger. F6 toggles NR; Insert opens OptiScaler; Home opens ReShade.
+
+DLSS5-AMD/native-game-flags.txt uses the repository standard template and NETWORK_HEIGHT=auto. Existing block skips remain; lossy adaptive reuse is disabled. Optional reuse requires DLSS5_VIT_ADAPTIVE=1, DLSS5_VIT_REUSE_HOTKEY=1, DLSS5_HIP_GRAPH=0 and DLSS5_HIP_VIT_BYTE_STREAM=0, then restart; F8 switches reuse/full computation. DLSS5_SHOW_FPS and DLSS5_NOTICE control the corresponding information.
+
+Use this route for existing supported games such as Stellar Blade and Lies of P. RE9 uses the separate REFramework package; do not mix the two hosts/runtimes. Avoid simultaneously processing the same game through Magpie.
+
+Full model and gfx1200/gfx1201 modules included. Requires AMD driver HIP7 (amdhip64_7.dll); RX9070XT tested, gfx1200 hardware feedback still needed. Verify files with SHA256SUMS.txt. Framework and third-party licenses remain included.
+https://github.com/lmxxf/dlss5-on-amd-9070xt-porting

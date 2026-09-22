@@ -6,13 +6,13 @@
 Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8（E4M3）的 HLSL 计算着色器，在 AMD RDNA 4
 显卡上跑起来，并通过 ReShade 插件钩住游戏的 FSR dispatch，对 1080p 画面做后处理。
 
-**REFramework 专用版（0.27）**：**针对《生化9》、Xbox版《鬼武者：剑之道》这类特殊接入场景，普通游戏优先用通用 OptiScaler 版。** 两款游戏已用0.26.1实玩，0.27更新共用HIP核心。流程为FSR超分之后的HIP后处理，固定900P计算，输出最高1080P SDR；F6开关处理、F7隐藏/恢复信息。允许上游超分，不代表其他RE引擎游戏均已验证。
+**REFramework 专用版（0.28）**：针对《生化9》特殊提交方式，采用配套的修改版OptiScaler宿主和`LmxxfNrRuntime.dll`，流水线为游戏渲染→HIP DLSS5→FSR→显示。已验证2K无边框输出，并补上同帧曝光归一化/还原。神经输入仍须≤1920×1080，网络按输入自动选择档位。F6由新宿主管理，旧后置addon停用；其他RE游戏（包括旧版已测的Xbox《鬼武者》）需重新验证，不能沿用0.27兼容结论。
 
-**最新（2026-09-20，0.27）**：Magpie、OptiScaler、OptiScaler-REFramework三个完整包均已生成并逐文件校验，包含完整模型和gfx1200/gfx1201双架构内核。新增精确流式ViT注意力、可选R3自适应复用，以及静止输入延长缓存、合并缓存提交。**自适应复用是有损功能，默认关闭；未包含INT4或稀疏剪枝实验。** 9060/XT仍待实机反馈。
+**最新（2026-09-22，0.28）**：三个完整包更新共享HIP核的六项无损优化：RGB末端共用读取、C128/C256全零填充快路径、ViT展开/投影与解码器投影固定尺寸优化。《剑星》实玩无明显异常，画面和帧率基本不变；不承诺固定提升。常规两包沿用原宿主，RE9特殊包采用新前置宿主并修复曝光遗漏。未新增有损优化；完整模型及gfx1200/gfx1201模块随包，自适应复用在常规包默认关闭。
 
 **默认配置**：新包自动带入仓库中的[普通游戏配置](scripts/hip-game-flags.txt)、[Magpie配置](scripts/hip-magpie-flags.txt)或[REFramework配置](scripts/hip-re9-flags.txt)，不继承本机试玩设置。来源与打包方法见[配置说明](scripts/CONFIGURATION.md)。
 
-**开启自适应复用**：在游戏目录的`DLSS5-AMD/native-game-flags.txt`中将`DLSS5_VIT_ADAPTIVE=0`改为`1`，并设置`DLSS5_VIT_REUSE_HOTKEY=1`、`DLSS5_HIP_GRAPH=0`、`DLSS5_HIP_VIT_BYTE_STREAM=0`，重启游戏。F8切换复用/完整计算；F8不取消原有跳层配置。精确流式注意力直接生效，无需开关。机制和限制见[ViT复用说明](Development/HIP/VIT-REUSE.md)。
+**常规addon开启自适应复用（不适用于0.28 RE9 runtime）**：在游戏目录的`DLSS5-AMD/native-game-flags.txt`中将`DLSS5_VIT_ADAPTIVE=0`改为`1`，并设置`DLSS5_VIT_REUSE_HOTKEY=1`、`DLSS5_HIP_GRAPH=0`、`DLSS5_HIP_VIT_BYTE_STREAM=0`，重启游戏。F8切换复用/完整计算；F8不取消原有跳层配置。精确流式注意力直接生效，无需开关。机制和限制见[ViT复用说明](Development/HIP/VIT-REUSE.md)。
 
 **现状（2026-09-17，`0.20`，HIP 后端）**：推理后端从 DirectX 12 Shader Model 6.10 wave matrix 换成 AMD HIP——网络的 24 个内核以 gfx1201 二进制（`.hsaco`）随包提供，由 AMD 驱动自带的 HIP 7 运行时（`amdhip64_7.dll`）执行。输出与 0.15 的 DX12 链逐位相同（40 帧输出哈希一致）；独立测试台 1600×900 每帧 16.8 → ≈15.5 ms，《剑星》游戏内 900p 47 → 52 fps。不再需要 Agility SDK 1.721 预览运行时、Shader Model 6.10 和 Windows 开发人员模式。下面的 DX12 链作为历史记录保留。
 
@@ -30,12 +30,22 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 | 目录 | 内容 |
 |---|---|
-| `src/` | 宿主代码：ReShade 插件（`native_submission_order_probe.cpp` + `native_game_*.h`）和离线测试台（`d3d12_native_network70_test.cpp`）；网络每一段一个头文件（`native_c64.h`、`native_preblock_runtime.h`、`native_vit_*.h`、`native_post70.h` 等）。 |
-| `shaders/` | 快速链的 HLSL 计算核（DX12 版）。wave-matrix 核是 `native_wave_*.hlsl`，`NATIVE_*` 宏选择快速路径。 |
-| `hip/` | 0.20 HIP 后端的内核：21 份 `.hip` 源码、`rtc_compile.cpp`（源码 → gfx1201 `.hsaco`，走驱动自带的 COMGR，不用 SDK）、`build-modules.ps1`（随包 24 个模块的配方）、`SHA256SUMS`。 |
-| `scripts/` | `build-addon.sh`（mingw-w64 交叉编译插件）、`build-bench.sh`、`bench.ps1`（用预览版 dxc 编译快速链全部着色器并跑测试台）、`deploy_fast.ps1` / `update-manifest.ps1`（装进游戏资产目录）、`hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt`（HIP发布默认配置）。 |
-| `tools/` | `compare_fast_output.py`（对精确链算 PSNR）、`flicker_stats.py`（游戏内 dump 的帧间分析）。 |
-| `Development/` | 过程中产生的一切：逆向笔记、逐块参考实现与校验脚本、快速链长出来之前的 76 层嵌套实验 runner、计划和状态日志。`DevHistory.md` 是统一整理后的开发史（唯一持续更新的一份），各时期的原始文档在 `history/`。编译用不到。 |
+| `src/` | 常规 ReShade addon、图像编解码与游戏接入；Magpie和普通OptiScaler共用这套addon源码。 |
+| `hip/` | 共用HIP网络计算核、gfx1200/gfx1201编译配方；三包共用同一网络源码。 |
+| `shaders/` | 图像编码/解码、拷贝等配套HLSL，以及历史DX12网络实现；HIP版也需要部分shader。 |
+| `scripts/` | 常规addon编译、发布配置和包内说明；`hip-game-flags.txt`、`hip-magpie-flags.txt`为常规包默认配置，`re9-presr.ini`为新RE9宿主覆盖配置。 |
+| `Development/HIP/` | HIP宿主、D3D12互操作、离线验证；`experiments/`是未必采用的实验。这里部分代码参与编译。 |
+| `Development/RE9/presr/` | RE9专用OptiScaler/runtime适配：锁定的上游版本、补丁、准备/构建/安装脚本及测试。完整上游源码不在本Git里。 |
+| `Development/tools/` | 完整包组装脚本，按已校验框架底包加入DLL、shader、模型与双架构内核。 |
+| `Development/results/`、`Development/deployments/` | 回归/性能证据及部署清单。 |
+| `Development/DevHistory.md` | 已完成工作的开发日志；方案、实验限制和待办在对应专题文档。 |
+| `tools/` | 输出对照、图像统计等辅助工具。 |
+
+**源码与完整包分开管理。** Git管理我们自己的addon/runtime/HIP代码，以及RE9宿主的适配补丁；不包含完整Magpie或普通OptiScaler框架源码，也不包含可重打全部整包所需的模型权重和框架底包。RE9宿主基于[TheAutomatic的release/1.9.0](https://github.com/TheAutomatic/dlss-5-amd-project/tree/release/1.9.0)，`upstream.json`锁定版本，`prepare-host.py`应用适配；其GPL许可与本项目MIT代码分别保留。
+
+维护机分工：Linux工作区保存本仓库；9070的Windows端保存框架底包、模型和构建产物。当前完整发布目录是`D:\給網友打包`；RE9完整宿主源码/产物在`D:\DLSSNR-Lab\re9-presr\source`和`bin`，HIP实验产物在`D:\DLSSNR-Lab\hip-backend`。这些是维护机路径，不是用户安装时要创建的目录。新包从已校验ZIP构建，不从正在玩的游戏目录打包。
+
+三种接入关系：**Magpie/普通OptiScaler → dlss5-amd.addon64 → 共用HIP核**；**RE9专用OptiScaler → LmxxfNrRuntime.dll → 同一套HIP核**。RE9宿主和runtime必须成对使用。
 
 ## 原理概要
 
@@ -131,6 +141,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | 0.26 · [Magpie](https://pan.quark.cn/s/7ce2ca11db43) · [OptiScaler](https://pan.quark.cn/s/c880a70f0824)（HIP） | 09-19 | FFN直接读取FP8字节片段，省去入口共享缓冲暂存及两道同步；C256权重在初始化时预排成连续矩阵片段，减少分散读取和字节拼装。补齐漏打包的R11G11B10解码shader，修复《匹诺曹的谎言》降低效果品质后黑屏，用户复测恢复；增加shader编译/绑定校验。两款完整包已生成，包内文件及44种shader组合校验通过。 |
 | 0.26.1 · [OptiScaler-REFramework](https://pan.quark.cn/s/624c87a6aa11)（HIP，非常规版） | 09-20 | **专门针对RE9这类特殊接入场景的非常规版本，普通游戏请用通用版；目前仅《生化9》实测。** 后置HIP兼容：R10G10B10A2/FP16转换，FSR后处理、固定900P计算，保留1080P SDR输出保护；补齐状态/分辨率/Present帧率与F7信息开关。集成REFramework、OptiScaler、ReShade、完整模型及gfx1200/gfx1201内核，沿用0.26优化。用户实玩通过。 |
 | 0.27 · [Magpie](https://pan.quark.cn/s/ec3a3282aa76) · [OptiScaler](https://pan.quark.cn/s/004278159ed8) · [OptiScaler-REFramework](https://pan.quark.cn/s/010683548f68)（HIP） | 09-20 | 精确流式ViT注意力减少中间存储与重复读取，保持原计算/舍入；可选R3自适应复用增加变化检测、静止输入延长缓存和融合提交，默认关闭。三包直接使用仓库默认配置，带完整模型和双架构内核，不含INT4/剪枝。REFramework保留固定900P、最高1080P SDR后置契约。DLL重新编译，三包各44个shader变体及ZIP逐文件校验通过。 |
+| 0.28 · Magpie / OptiScaler / OptiScaler-REFramework（HIP，网盘链接待上传） | 09-22 | 六项无损核优化：RGB共用读取、C128/C256零填充跳过、ViT展开/投影及解码投影固定尺寸优化。常规《剑星》实玩效果/帧率基本不变。RE9改用特殊前置宿主、同帧曝光归一化与初始化准备，支持已测2K无边框；普通版宿主不变。三包为完整包，RE9附修改后宿主对应源码及TheAutomatic署名。 |
 
 ## 权重
 

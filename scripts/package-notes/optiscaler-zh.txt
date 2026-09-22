@@ -1,0 +1,24 @@
+OptiScaler-DLSS5-AMD @VERSION@ — 常规游戏完整包
+
+更新
+共享HIP核新增六项无损优化：RGB末端共用特征读取、C128/C256全零填充快路径、ViT展开/投影及解码器投影固定尺寸优化。没有新增画质损失开关。《剑星》实玩未见异常，效果和帧率基本不变。OptiScaler宿主沿用0.27，不是RE9特殊宿主。
+
+安装与使用
+1. 完全退出游戏。备份游戏里已有的dxgi.dll、ReShade和本项目配置；将本包全部文件解压到游戏实际运行的EXE旁（部分游戏在Binaries/Win64），不是只复制DLL。
+2. 游戏选择DLSS输入，由OptiScaler转接到FSR后端；支持的游戏中流程为低分辨率渲染→DLSS5→FSR→最终输出。
+3. 神经输入宽≤1920、高≤1080；最终显示可高于1080P，取决于超分档位。例如2K平衡档输入约900P。
+4. F6开关神经处理，Insert打开OptiScaler，Home打开ReShade。快捷键可能与游戏已有设置冲突。
+5. 同机不要同时运行Magpie版神经处理，以免重复处理或全局热键同时生效。
+
+配置
+DLSS5-AMD/native-game-flags.txt来自仓库hip-game-flags.txt；NETWORK_HEIGHT=auto。原有跳层默认值保留，自适应复用默认关闭。要试复用，设置DLSS5_VIT_ADAPTIVE=1、DLSS5_VIT_REUSE_HOTKEY=1、DLSS5_HIP_GRAPH=0、DLSS5_HIP_VIT_BYTE_STREAM=0；重启后F8切换复用/完整计算。复用是有损功能。
+DLSS5_SHOW_FPS与DLSS5_NOTICE分别控制显示；均设0可关闭对应信息。配置保留完整键名。
+
+范围
+适用于原常规接入路线，如《剑星》《匹诺曹的谎言》。RE9请使用单独的OptiScaler-REFramework包，不要混装两种宿主/runtime。
+需要AMD驱动提供amdhip64_7.dll；9070 XT实测，gfx1200/gfx1201双架构均随包，9060系列仍待实机反馈。
+
+目录
+框架DLL与OptiScaler.ini：OptiScaler；ReShade64.dll和dlss5-amd.addon64：接入层；DLSS5-AMD/native-game-tiled-assets：完整模型、shader、HIP核；native-game-flags.txt：本项目配置。
+项目：https://github.com/lmxxf/dlss5-on-amd-9070xt-porting
+全包SHA256SUMS.txt已逐项核对，不是增量补丁；许可证随各组件保留。

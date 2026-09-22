@@ -1,0 +1,12 @@
+Magpie-DLSS5-AMD @VERSION@ — full portable package
+
+Six adopted lossless kernel improvements: shared RGB head feature reads, exact-zero C128/C256 padding shortcuts, and fixed-shape ViT expansion/projection plus decoder projection. No new quality-loss switch. Stellar Blade testing found no visible regression or FPS change; no fixed speedup is promised. Magpie framework/pipeline retain the verified 0.27 baseline.
+
+Extract everything into a separate directory and run Magpie.exe. Use a window no wider than1920 and no taller than1080. The bundled chain is FSR3_SR (DLSS5 entry, 1x input size) → FSR4 upscale → XeSS frame generation. Alt+Shift+A starts/stops scaling; F6 toggles neural rendering. Use AMDOF only at the first stage; None for the later FSR4/XeSS stages.
+
+DLSS5-AMD/native-game-flags.txt is the tracked Magpie configuration. NETWORK_HEIGHT=auto chooses720/900/1080. Existing default block skips remain; adaptive reuse is off. F8 requires explicitly enabling the reuse hotkey. Set both DLSS5_SHOW_FPS=0 and DLSS5_NOTICE=0 to disable the corresponding information.
+
+Includes full model, matched add-on/shaders, and24 modules per gfx1200/gfx1201 architecture. Requires an AMD driver providing amdhip64_7.dll. RX9070XT tested; gfx1200 hardware feedback is still needed. This is not a patch.
+
+Magpie.exe/framework DLLs are the host; dlss5-amd.addon64 is our integration; DLSS5-AMD/native-game-tiled-assets holds models/shaders/HIP modules. See SHA256SUMS.txt and component licenses.
+https://github.com/lmxxf/dlss5-on-amd-9070xt-porting

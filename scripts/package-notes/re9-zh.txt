@@ -1,0 +1,31 @@
+OptiScaler-REFramework-DLSS5-AMD @VERSION@ — RE9特殊前置完整包
+
+这是专门针对《生化危机9 / Resident Evil Requiem》特殊命令提交方式的版本，不是通用OptiScaler版。宿主基于TheAutomatic的release/1.9.0，并接入本项目HIP runtime。感谢TheAutomatic的前置设计和PR贡献。
+
+本版变化
+旧0.27为FSR之后的后处理、固定900P、最高1080P SDR输出。本版改为：游戏低分辨率渲染→HIP DLSS5→FSR超分→最终显示，已验证2K无边框输出。神经输入仍要求宽≤1920、高≤1080，网络按输入自动选择720/900/1080。
+接通同帧游戏曝光：编码时归一化，解码后还原场景亮度，修复原先曝光遗漏导致的大面积泛白/褪色；Detail/Colour strength均默认1。加入录制前HIP权重/核准备。共享核包含常规版六项无损优化。
+
+安装
+1. 完全退出游戏。备份已有MOD文件，将本包完整解压到re9.exe旁。
+2. 升级旧版必须移走根目录和_storage_里的旧dlss5-amd.addon64、re9-present.addon64及旧观察器addon，防止重复处理。
+3. 如果_storage_中已有dxgi.dll或LmxxfNrRuntime.dll，用本包同名文件同步替换；有该目录的OptiScaler.ini也应同步。dxgi.dll和LmxxfNrRuntime.dll必须配套，不要与普通版混装。
+4. 本包保留REFramework dinput8.dll。已经有其他dinput8模组时先处理冲突。
+5. 游戏选择DLSS超分，建议先2K输出、平衡档、关闭帧生成测试。确认画面稳定后再按需测试帧生成。本包不附个人游戏设置或存档。
+
+控制与配置
+F6开关神经处理；Insert打开OptiScaler/REFramework菜单（两者默认键可能重叠）。Detail strength、Colour strength可在神经渲染菜单调节；保持0～1。调低颜色强度也会削弱彩色纹理/材质效果，不只是改变饱和度。
+配置在OptiScaler.ini的[DlssNr]，默认NrBackend=lmxxf、Enabled=true、RunBeforeSR=true、LmxxfDiagnostic=off。显示由OptiScaler菜单管理；旧addon的F7和DLSS5_SHOW_FPS/NOTICE不控制此版。
+此runtime不读取旧native-game-flags.txt，不提供普通addon的F8复用开关；默认保留42,43,46跳层、关闭跨帧自适应复用。不要用旧0.27配置说明调整新runtime。
+
+验证范围
+9070 XT数值回归、曝光倍率对照、主菜单连续运行和重启验证通过；完整游戏画质、切场景和帧生成仍需进一步实玩反馈。旧0.27曾在Xbox《鬼武者》验证，但不能据此认为本版新前置宿主也已验证该游戏。其他RE游戏/9060硬件未实测；HDR显示输出未完成验证。
+
+目录与源码
+- dxgi.dll：特殊OptiScaler宿主；LmxxfNrRuntime.dll：HIP runtime；dinput8.dll：REFramework。
+- DLSS5-AMD/native-game-tiled-assets：完整模型、shader及gfx1200/gfx1201双架构核。
+- sources/：本版修改后宿主/runtime对应源码归档和构建说明；无需解压源码才能玩。
+- SHA256SUMS.txt：全包校验；THIRD-PARTY与LICENSE文件：组件许可和来源。
+项目：https://github.com/lmxxf/dlss5-on-amd-9070xt-porting
+上游：https://github.com/TheAutomatic/dlss-5-amd-project/tree/release/1.9.0
+这是完整包，不是补丁包。

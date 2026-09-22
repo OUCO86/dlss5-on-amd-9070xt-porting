@@ -3014,3 +3014,13 @@ RE9入口实测1506×848 RGB9E5→2560×1440。split-original首次被aliasing�
 OptiScaler宿主dxgi.dll、OptiScaler.ini、native-game-flags.txt前后hash完全不变，保留用户ADAPTIVE=1、Graph=0、NETWORK_HEIGHT=auto和原前置接入；没有换RE9宿主，也没有启用新的可选曝光接口。普通codec此前24次旧路径逐位回归通过，本轮addon编译成功；游戏未启动，帧率由用户同场景复测。完整备份D:\DLSSNR-Lab\stellar-latest-20260922\backups\20260922-080507，安装/恢复脚本和前后清单在Development/deployments/stellar-20260922。首轮脚本因PowerShell JSON数组嵌套在源hash校验阶段停止，未修改游戏，修正后完成部署。
 
 09:17用户实玩最新《剑星》候选反馈：没有发现异常，画面效果与此前基本一致，帧率也没有明显变化。记录为本次主观实玩未观察到回退、亦未观察到可见性能提升；未提供具体FPS或配对帧时间，不将微基准的小幅收益外推成游戏提速。沿用08:05部署及配置，不再次替换文件。
+
+## 2026-09-22 09:46：0.28三个完整包与目录说明完成
+
+用户要求照旧三包，并在README解释目前目录结构；按0.28生成。从各自已校验0.27完整ZIP重新解压、逐文件核对底包，不读取正在玩的游戏安装。Magpie/普通OptiScaler采用已编译并在《剑星》实玩的9819ddd9…常规addon、当前codec shader及双架构8个已采用优化模块，其余模块沿用验证底包，总数各48。发布flags从仓库模板复制，保留原跳层、复用默认0；不继承《剑星》个人ADAPTIVE=1。
+
+RE9包替换为62a948a6…特殊宿主＋f5cf7697…runtime（实验ABI2），包含曝光归一化、首次HIP准备与同套更新模块，移除旧post-present addon/ReShade装载和无效旧flags。配置来自新增scripts/re9-presr.ini，完整细节/颜色强度1；旧F7/F8/SHOW_FPS说明已删除。特殊包只声明RE9当前验证范围，不把旧Xbox鬼武者验证泛化到新宿主。附TheAutomatic署名、GPL宿主许可及43,510,268字节对应源码归档；从归档重编runtime并跑GPU烟测通过。实际中文打包路径烟测首次因旧测试器char→wchar窄转换失败，改wmain后在最终路径通过；产品DLL没有因此修改。三包各44 shader变体编译通过，RE9最终stage的初始化/HIP/输出完成通过。
+
+成品位于D:\給網友打包：Magpie-DLSS5-AMD-0.28.zip＝336,318,827字节、723个有效载荷；OptiScaler-DLSS5-AMD-0.28.zip＝366,516,000字节、541个；OptiScaler-REFramework-DLSS5-AMD-0.28.zip＝420,949,208字节、545个。全部从ZIP逐文件读回SHA验证，旁置.zip.sha256；完整hash与源码/构建记录在Development/releases/0.28。打包入口Development/tools/package-028.ps1，支持完成包Resume复核，未完成RE9失败stage移到lab留档后重建。
+
+中英文主README补齐src/hip/shaders/scripts/Development/HIP/RE9适配等结构、Git与9070框架底包/模型/构建目录分工，说明RE9只入库版本锁定＋补丁＋脚本。三包新增独立中文README.txt与README.en.txt，配置/模块/源码/无个人路径检查通过。更新0.28简短changelog，网盘链接留待用户上传；未上传网盘、未打tag、未改游戏安装。

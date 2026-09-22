@@ -8,13 +8,13 @@ block by block, re-written as HLSL compute shaders using Shader Model 6.10 wave-
 FP8 (E4M3) operands, and wired into a game through a ReShade add-on that hooks the FSR dispatch and post-processes the
 1080p frame.
 
-**REFramework variant (0.27)**: special-purpose post-FSR integration for games such as RE9 and the Xbox edition of Onimusha: Way of the Sword (both user-tested with 0.26.1). Fixed 900p network, up to 1080p SDR output. F6 toggles processing; F7 toggles information. Other games remain unverified.
+**REFramework variant (0.28)**: special RE9 integration using a matched modified OptiScaler host and `LmxxfNrRuntime.dll`: rendering → HIP DLSS5 → FSR → display. Tested2560×1440 borderless output; same-frame exposure normalization/restoration fixes the omitted exposure. Neural input remains≤1920×1080 with automatic network tier selection. F6 is handled by the new host; the old post-present addon is disabled. Other RE games, including Xbox Onimusha previously tested with the old route, require new validation.
 
-**Latest (2026-09-20, 0.27)**: Magpie, OptiScaler and OptiScaler-REFramework full packages include exact streaming ViT attention and optional R3 adaptive reuse. Reuse is disabled by default; enable it in the packaged configuration when desired. No INT4 or sparse pruning experiments are included. Both gfx1200/gfx1201 module sets are included.
+**Latest (2026-09-22, 0.28)**: six shared lossless kernel improvements—RGB head read sharing, exact-zero C128/C256 padding shortcuts, and fixed-shape ViT expansion/projection plus decoder projection. Stellar Blade gameplay showed no visible regression or FPS change; no fixed speedup is promised. Regular packages retain their existing hosts; RE9 uses the new pre-SR host and exposure fix. No new lossy optimization. Full models and gfx1200/gfx1201 kernels are included; optional adaptive reuse remains off by default in regular packages.
 
 **Release configuration**: package defaults are tracked in [scripts/CONFIGURATION.md](scripts/CONFIGURATION.md); fresh packages copy the matching repository template instead of inheriting local gameplay settings.
 
-**HIP update (0.27)**: exact streaming ViT attention is enabled in source builds. Optional R3 adaptive reuse is disabled by default; enabling it trades some accuracy for speed. See [configuration and matched DLL/module requirements](Development/HIP/VIT-REUSE.md). INT4 and sparse pruning experiments are not included.
+**Regular add-on features retained from0.27**: exact streaming ViT attention is enabled in source builds. Optional R3 adaptive reuse is disabled by default; enabling it trades some accuracy for speed. See [configuration and matched DLL/module requirements](Development/HIP/VIT-REUSE.md). INT4 and sparse pruning experiments are not included. The0.28 RE9 runtime does not use this addon configuration/hotkey path.
 
 **Status (2026-09-17, `0.20`, HIP backend)**: the inference backend moved from DirectX 12 Shader Model 6.10 wave matrix to AMD HIP — the 24 network kernels ship as gfx1201 binaries (`.hsaco`) and run through the HIP 7 runtime that comes with the AMD driver (`amdhip64_7.dll`). Output is bit-identical to the 0.15 DX12 chain (same 40-frame output hash); isolated 1600×900 inference 16.8 → ≈15.5 ms, Stellar Blade in-game 900p 47 → 52 fps. No Agility SDK 1.721 preview runtime, no Shader Model 6.10 and no Windows Developer Mode are needed any more. The DX12 chain below stays as documented history.
 
@@ -32,12 +32,22 @@ The portable preset runs **FSR3 (DLSS5 through this add-on) → FSR4 filling the
 
 | Directory | Content |
 |---|---|
-| `src/` | Host code: the ReShade add-on (`native_submission_order_probe.cpp` + `native_game_*.h`) and the offline bench (`d3d12_native_network70_test.cpp`); one header per network stage (`native_c64.h`, `native_preblock_runtime.h`, `native_vit_*.h`, `native_post70.h`, …). |
-| `shaders/` | The HLSL compute kernels of the fast chain (DX12 editions). Wave-matrix kernels are `native_wave_*.hlsl`; the `NATIVE_*` defines select the fast paths. |
-| `hip/` | The HIP kernels of the 0.20 backend: 21 `.hip` sources, `rtc_compile.cpp` (source → gfx1201 `.hsaco` through the driver's COMGR, no SDK), `build-modules.ps1` (the recipe for the 24 shipped modules), `SHA256SUMS`. |
-| `scripts/` | `build-addon.sh` (mingw-w64 cross build of the add-on), `build-bench.sh`, `bench.ps1` (compiles every shader of the fast chain with the preview `dxc` and runs the bench), `deploy_fast.ps1` / `update-manifest.ps1` (install into the game's asset folder), `game-flags.txt` (the runtime flag set the game currently runs with). |
-| `tools/` | `compare_fast_output.py` (PSNR against the exact chain), `flicker_stats.py` (frame-to-frame analysis of the in-game dumps). |
-| `Development/` | Everything produced on the way: reverse-engineering notes, per-block reference implementations and validation scripts, the 76 nested experiment runners the fast chain grew out of, plans and state logs. `DevHistory.md` is the single consolidated development history; the original per-period documents are under `history/`. Not needed to build. |
+| `src/` | Standard ReShade add-on, image codecs and game integration; shared by Magpie and regular OptiScaler packages. |
+| `hip/` | Shared HIP neural kernels and gfx1200/gfx1201 build recipes for all three packages. |
+| `shaders/` | Image encoding/decoding and support shaders, plus the historical DX12 network. HIP builds still use some HLSL shaders. |
+| `scripts/` | Add-on builds, package instructions and tracked defaults: `hip-game-flags.txt`, `hip-magpie-flags.txt`, and the new RE9 host overlay `re9-presr.ini`. |
+| `Development/HIP/` | HIP host and D3D12 interop code, validation and experiments. Some files here are build dependencies; experiments are not automatically production changes. |
+| `Development/RE9/presr/` | RE9-specific host/runtime adaptation: pinned upstream revision, patches, preparation/build/install scripts and evidence. The complete upstream host tree is not vendored here. |
+| `Development/tools/` | Full-package assembly using verified framework baselines, model assets and matched modules. |
+| `Development/results/`, `Development/deployments/` | Regression/performance evidence and deployment inventories. |
+| `Development/DevHistory.md` | Completed development work; plans and limitations live in the respective topic documents. |
+| `tools/` | Output comparisons and image statistics. |
+
+**Source and complete distributions are managed separately.** Git contains our add-on/runtime/HIP sources and RE9 host patches. It does not contain the complete Magpie or regular OptiScaler framework source, or all model/framework assets needed to reproduce the full ZIPs. The RE9 host derives from [TheAutomatic's release/1.9.0](https://github.com/TheAutomatic/dlss-5-amd-project/tree/release/1.9.0); `upstream.json` pins its revision and `prepare-host.py` applies adaptations. Its GPL license is retained separately from this project's MIT code.
+
+On the maintainer's machines, Linux holds this repository; Windows on the RX9070 system holds framework baselines, models and built artifacts. Complete releases are under `D:\給網友打包`; the RE9 host source/output are under `D:\DLSSNR-Lab\re9-presr\source` and `bin`, and HIP experiment artifacts under `D:\DLSSNR-Lab\hip-backend`. These are maintainer paths, not required user installation directories. New releases start from verified ZIPs, not a live game installation.
+
+Integration: **Magpie / regular OptiScaler → dlss5-amd.addon64 → shared HIP kernels**; **RE9-specific OptiScaler → LmxxfNrRuntime.dll → the same HIP kernels**. The RE9 host and runtime must be used as a matched pair.
 
 ## How it works, briefly
 
@@ -146,6 +156,7 @@ chain's own output did not change by a single bit.
 | 0.26 · [Magpie](https://pan.quark.cn/s/7ce2ca11db43) · [OptiScaler](https://pan.quark.cn/s/c880a70f0824) (HIP) | 09-19 | FFN reads FP8 byte fragments directly, removing input staging and two barriers; C256 weights are prepacked into contiguous matrix fragments at initialization to reduce scattered loads and byte assembly. Include the missing R11G11B10 decoder shader to fix black output at lower Effects Quality in Lies of P, confirmed by user testing; add shader compilation/binding checks. Both full packages built; archive contents and 44 shader variants verified. |
 | 0.26.1 · [OptiScaler-REFramework](https://pan.quark.cn/s/624c87a6aa11) (HIP, special-purpose build) | 09-20 | **For unusual integration cases such as RE9; not the standard release. Use the general package for ordinary games. Only Resident Evil Requiem has been tested.** Post-FSR HIP compatibility with R10G10B10A2/FP16 conversion, a fixed 900p network and a 1080p SDR output limit. Status, resolution and Present FPS overlay with F7 visibility control. Includes REFramework, OptiScaler, ReShade, complete model assets and gfx1200/gfx1201 kernels; retains 0.26 optimizations. User gameplay validation passed. |
 | 0.27 · [Magpie](https://pan.quark.cn/s/ec3a3282aa76) · [OptiScaler](https://pan.quark.cn/s/004278159ed8) · [OptiScaler-REFramework](https://pan.quark.cn/s/010683548f68) (HIP) | 09-20 | Exact streaming ViT attention reduces intermediate storage and repeated reads. Optional R3 adaptive reuse adds change checks, identical-input cache extension and fused anchor updates; disabled by default. Defaults are copied from tracked per-variant templates. Full model/runtime payloads and gfx1200/gfx1201 modules; no INT4 or pruning. REFramework retains fixed 900p / max1080p SDR post-processing. |
+| 0.28 · Magpie / OptiScaler / OptiScaler-REFramework (HIP; download links pending upload) | 09-22 | Six lossless kernel improvements: RGB read sharing, C128/C256 zero-padding shortcuts, fixed-shape ViT expansion/projection and decoder projection. Stellar Blade gameplay/FPS essentially unchanged. RE9 gains a matched pre-SR host, same-frame exposure and initialization preparation, with tested2K borderless output. Regular hosts unchanged. Full packages; RE9 includes corresponding modified host source and TheAutomatic credit. |
 
 ## Weights
 

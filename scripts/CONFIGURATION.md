@@ -6,7 +6,8 @@
 |---|---|
 | 普通OptiScaler游戏版 | hip-game-flags.txt |
 | Magpie版 | hip-magpie-flags.txt |
-| RE9特殊REFramework版 | hip-re9-flags.txt |
+| REFramework旧后置版（≤0.27） | hip-re9-flags.txt |
+| RE9特殊前置版（0.28起） | re9-presr.ini覆盖OptiScaler.ini；网络选项在LmxxfProductionOptions.h编译 |
 
 改默认值就改相应模板，再打包。普通游戏与RE9模板以2026-09-20已测试配置校对，移除机器专属gain路径；自适应默认0、FPS默认1。Magpie保留独立色彩/历史设置并补齐当前HIP优化参数。游戏内用户修改不反向改变模板。
 
@@ -17,3 +18,6 @@ Release生成新包使用模板；Repack/FinalizeOnly仅重封已有stage，保�
 Development/native-game-flags.txt是早期测试配置，scripts/game-flags.txt与magpie-flags.txt属旧DX12路线；不作为当前HIP正式发布默认值。
 
 0.27三包统一入口：Development/tools/package-027.ps1，同样通过ConfigDirectory读取本目录模板。普通包从已校验的历史ZIP重新解压，不使用可能被运行过的解压目录；REFramework以已校验0.26.1完整包为底座。
+
+
+0.28三包入口为Development/tools/package-028.ps1。从逐文件校验的0.27完整ZIP构建；Magpie/普通OptiScaler使用各自flags模板，RE9使用re9-presr.ini覆盖基准OptiScaler.ini，并删除无效的旧native-game-flags.txt/post-present addon。RE9网络默认跳层42,43,46、复用关闭，旧F8/SHOW_FPS/NOTICE不适用；细节/颜色强度在OptiScaler菜单调，范围0～1。包内中文/英文说明来自scripts/package-notes/。打包不读取游戏个人配置。
