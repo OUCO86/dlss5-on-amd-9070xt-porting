@@ -3159,3 +3159,9 @@ regression-fence.ps1（候选 fence-modules，基线当前生产 selected-module
 21:39 用户确认《剑星》未运行，授权安装。install.ps1 执行：10 个模块源 hash 校验、备份 D:\DLSSNR-Lab\stellar-fence-20260922\backups\20260922-213932、替换、读回 hash 全部一致，dxgi.dll / OptiScaler.ini / native-game-flags.txt hash 前后不变（ADAPTIVE=1 等用户配置保留）。清单 installed.json 已入库。等待用户实玩；恢复命令 `install.ps1 -RestoreBackup <备份目录>`。
 
 22:20 用户实玩反馈：《剑星》900P、中画质、拉伸 2K，简单场景最高 58～59FPS，"应该比之前多了，纯主观"，未见异常。此前同类场景记录为 56～57（09-21 22:45）。两次读数都是用户目测峰值、非同镜头配对，不宣称固定增幅；记录为主观未回退、可能小幅提升。候选保留在游戏目录，不再替换。
+
+## 2026-09-22 22:30：合并 TheAutomatic PR #7（独立 C-ABI 运行时 + D3D12Bridge 未提交恢复）
+
+审阅：8 文件 +1348/−1。对现有代码只有三处附加改动——hip_d3d12_bridge.h 把 Phase 枚举公开并加 `CurrentPhase()`、`NotifyOutputSubmittedIfRecorded()`、`CancelUnsubmitted()` 三个方法（原有状态机与 Require 契约不变）；hip_reference_network.h 加 `<algorithm>`；.gitignore 加 bin/。新增 include/LmxxfNrApi.h（版本化 C ABI，单导出 LmxxfNrGetApi）、src/LmxxfNrRuntime.cpp（会话/作业状态机、模块目录 SHA256SUMS 校验、失败即毒化并故意泄漏而不释放 GPU 仍在用的资源、30s fence drain）、src/LmxxfProductionOptions.h（首版生产 Options 实例，不读 env）、scripts/build-runtime.{sh,cmd}。运行时读 DLSS5_STRENGTH / DLSS5_DEBUG_TINT，并在未设 DLSS5_NETWORK_HEIGHT 时 _putenv 为 auto——只影响宿主进程自身；无网络、无进程创建、无文件写。
+
+验证：以 main（e9f7c1b）为基干净自动合并无冲突；PR 分支上 MinGW 编译 LmxxfNrRuntime.dll 通过（7s），`build-addon.sh --hip` 生产 addon 编译通过（sha a8ba31cd…，仅证明头文件改动不破坏现有构建，未部署）。未在 9070 上跑运行时 DLL 的实机验证；hsaco、发布包、游戏安装不受影响。按用户要求合入 main。
