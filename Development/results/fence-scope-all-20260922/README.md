@@ -53,7 +53,7 @@ mh_fast 有 494 处 barrier 但只有 5 处 global_inv：它的同步大多是�
 
 - 未捕获 RGP；L0 命中率变化仍是推断。
 - CU 模式只按模块粗切，没有按核逐个试。mh_fused 的 22 核里 128 线程的那部分可能也受益，需要逐核对照。
-- 没有检查这些栅栏中是否有个别真的在保护全局内存（改 local 后会变成竞态）。两轮共 40 槽 × 160 帧逐位相同，加上源码里栅栏都紧挨 LDS 读写，但没有形式化审核。生产采用前应逐处过一遍。
+- ~~没有检查这些栅栏中是否有个别真的在保护全局内存（改 local 后会变成竞态）。~~ **2026-09-23 逐处审核完毕，无一处保护全局内存**：带栅栏的同步点共 c32 18 处（`sync_window`/`sync_owned_rows`）、mh_fused 35 处、deep_fast 2 处、mh_fast 3 处，其余 barrier 本来就是裸 `s_barrier`。四个文件里全局写只有核尾的 `out`/`main`/`down`/`rgb`，每个核体内这些写之后没有任何 barrier；同步点之后的全局读全是 `const` 输入（上一 launch 写的），同一工作组内不存在"wave A 写全局 → 栅栏 → wave B 读"的模式。栅栏改 `local` 后丢掉的只是对全局的 release/acquire，而这里没人靠它。
 - 生产源码、游戏 DLL、发布包未改。生产改法：四个源文件里栅栏加 `"local"`，C32 的 KERNEL 宏加 `target("cumode")`，重编 selected-modules 后整网回归。
 
 ## 证据

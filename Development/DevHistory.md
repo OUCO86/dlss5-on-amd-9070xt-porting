@@ -3233,3 +3233,7 @@ mh-phase-trace：c256_attention_project 每 wave 约 50k 周期，两批注意�
 ## 2026-09-23 10:30：ffn_fused_c256 宽权重片段（打包器 + 四循环步长 32），逐位同，约 −0.03ms，未采用
 
 权重片段读 162→94（b128 68），两轮各三份 ABBA 剔除进程首槽冷启动后 1080 −0.03～−0.05、900 −0.01～−0.03ms。瓶颈不在权重读。采用需重编 addon（打包器在 host），待下次 addon 重编顺带。results/mhfast-wide-frag-20260923。
+
+## 2026-09-23 07:50：栅栏 local 化形式化审核，通过
+
+fence-scope-all 留的"未做"：逐处过四个文件的带栅栏同步点（c32 18、mh_fused 35、deep_fast 2、mh_fast 3）。全局写只在核尾且其后无 barrier，同步点后的全局读全是 const 输入，工作组内无"写全局→栅栏→读全局"模式。已装进剑星的 fence 改法不靠全局 release/acquire。CU 逐核对照上一日已做（fence-cu-size），不重复。
