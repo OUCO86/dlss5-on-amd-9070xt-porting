@@ -1,0 +1,81 @@
+{
+    "source_commit":  "fence-20260922",
+    "backup":  "D:\\DLSSNR-Lab\\stellar-fence-20260922\\backups\\20260922-213932",
+    "items":  [
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-gfx1200\\c32_fused_ffn_attention-packed.hsaco",
+                      "existed":  true,
+                      "before":  "BCB8EC765B7499CCE34A4AD8C4AF08B723924B64F595F48C8D11DA8CBD768DED",
+                      "after":  "75d191fe86b201adb49978d6a29a7b19ec4dcad9705e650e6031e31e2ff62e93"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead_fused_attention.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-gfx1200\\multihead_fused_attention.hsaco",
+                      "existed":  true,
+                      "before":  "BE7CC179FBCD1DD3B83F71A0F81D17DD410C15CF3997E2F2FA6382D36410F485",
+                      "after":  "7dd81908254e3156721d6d3587ae12940b0e57da608c802359568103591b7fd4"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/deep_fast.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-gfx1200\\deep_fast.hsaco",
+                      "existed":  true,
+                      "before":  "DC4342B5C8108DBCC442F295053CCF234E3031E311F1F55D2B49EE1F42F193C5",
+                      "after":  "a4fa5da1ae40cb1c51f713b29afdc0ac0e12d3de59e5aca9edda079cf0137b4b"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/deep_fast-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-gfx1200\\deep_fast-packed.hsaco",
+                      "existed":  true,
+                      "before":  "1436B01D0791A77AC6FAFB058033C29EE42447D4E1AAF7447AFB1E1242CC8F3E",
+                      "after":  "54ad89addf636e9239bc3d0468da0242ea4ce10c7071251d7b5739726a44d159"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead-fast-padded-wave-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-gfx1200\\multihead-fast-padded-wave-packed.hsaco",
+                      "existed":  true,
+                      "before":  "161CEF35C40BFAF099A64EBE0082D5A74FFEF1A06DD8173B2D1DA431D78B7571",
+                      "after":  "9a97585eb0c9534bc7d43b0788cfbf632f2901537e1ea626439ff68318254d0b"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-modules\\c32_fused_ffn_attention-packed.hsaco",
+                      "existed":  true,
+                      "before":  "C381FCE5BB69927D8A33EBDD1ED2B083E4621BF504095CA3202E081034DFD67D",
+                      "after":  "f178281cf0dc8ffecb7a30cd36cd8cb398d265fdb8f478415c75ebee9ab28f5a"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead_fused_attention.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-modules\\multihead_fused_attention.hsaco",
+                      "existed":  true,
+                      "before":  "5038BAB3F34FDD576A99F7F5E5A919B321DD4A938FABDBCF07EB789EEFDF690A",
+                      "after":  "159403399bf7541af9ced84a613fab2d4a1fefe1ba3949557925d7a311d05155"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/deep_fast.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-modules\\deep_fast.hsaco",
+                      "existed":  true,
+                      "before":  "775321241860F43CEF7BFBF1E3459712A953FDA41C98956F5C7B452FA14791FE",
+                      "after":  "a6b763ea9e4db5c7f85f8b838a6b6caa928db2a152c7935650d7326bf4a05c1b"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/deep_fast-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-modules\\deep_fast-packed.hsaco",
+                      "existed":  true,
+                      "before":  "4893E31A822CC71BD9A45DC407E10619488A0A6AA902CB7FC07445BBF25B38D7",
+                      "after":  "ab42263e1c27170bb7e449c39908e981568a6aeb2bf1d34668e692acfe480900"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead-fast-padded-wave-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\fence-modules\\multihead-fast-padded-wave-packed.hsaco",
+                      "existed":  true,
+                      "before":  "A2650EEDB9F514314FFE059B202360A4ED1FA10FFAFEC93333FF640AA83CC835",
+                      "after":  "52dc4be619b67f200e38f497b25366d1ed3f479d72528ae39a43f24bee9b4cf3"
+                  }
+              ],
+    "unchanged":  {
+                      "OptiScaler.ini":  "80CDA873E59CC9DCBF127D51E1D737EA916D384F1AD17F9F884DC595586C82E0",
+                      "dxgi.dll":  "FBFB6676B829DAD7E020FB830586A16AA0EC6ADD78016DB48EF12E2AE1803231",
+                      "DLSS5-AMD/native-game-flags.txt":  "91B59212FC2C08D2413680689DA6A96F6D7930852C3E18AB4D2428A5D2E87D3B"
+                  }
+}
