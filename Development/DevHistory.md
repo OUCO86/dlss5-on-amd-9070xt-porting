@@ -3012,3 +3012,5 @@ RE9入口实测1506×848 RGB9E5→2560×1440。split-original首次被aliasing�
 用户要求安装最新常规版本比较之前帧率。确认SB-Win64-Shipping退出，基于18f4b1a以scripts/build-addon.sh --hip重新编译，DLL SHA9819ddd9ce7e5f065b83d006d5df33e26814dde3137f54dc74146e5c6abe8110。替换addon、配套codec两shader，以及gfx1200/gfx1201各4个已验证模块：post/head RGB共用读取的C32 packed，C128/C256精确空白tile的MH packed，固定尺寸ViT/decoder的deep packed/unpacked。11文件逐个核对源hash、备份hash、安装读回hash；模块沿用之前逐值/运动/整网回归产物，不混入未采用实验。
 
 OptiScaler宿主dxgi.dll、OptiScaler.ini、native-game-flags.txt前后hash完全不变，保留用户ADAPTIVE=1、Graph=0、NETWORK_HEIGHT=auto和原前置接入；没有换RE9宿主，也没有启用新的可选曝光接口。普通codec此前24次旧路径逐位回归通过，本轮addon编译成功；游戏未启动，帧率由用户同场景复测。完整备份D:\DLSSNR-Lab\stellar-latest-20260922\backups\20260922-080507，安装/恢复脚本和前后清单在Development/deployments/stellar-20260922。首轮脚本因PowerShell JSON数组嵌套在源hash校验阶段停止，未修改游戏，修正后完成部署。
+
+09:17用户实玩最新《剑星》候选反馈：没有发现异常，画面效果与此前基本一致，帧率也没有明显变化。记录为本次主观实玩未观察到回退、亦未观察到可见性能提升；未提供具体FPS或配对帧时间，不将微基准的小幅收益外推成游戏提速。沿用08:05部署及配置，不再次替换文件。
