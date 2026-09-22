@@ -3061,3 +3061,9 @@ RE9包替换为62a948a6…特殊宿主＋f5cf7697…runtime（实验ABI2），�
 用户追加启动2560×1080、改回不恢复及“只要失败就再也起不来”。延续委托子代理，用SHA匹配0.28 runtime在9070独立验证：fresh有效1280×544/960×544录制成功；同session先送实际2560×1080超限纹理，再改有效尺寸，PrepareFrame成功但RecordInputs报bridge input capacity。原因是先创建1080 bridge、codec晚检查失败仅清局部对象；encode为空导致后续换档不重建bridge。另开新进程、不换DLL/资产，两尺寸恢复成功，说明已证实的缺陷限于进程/session状态；测试禁用磁盘shader缓存，未改游戏/包。源码/harness/6次结果归档RE9/presr/tests/resize-recovery，报告已补。
 
 网友原日志2560×1080输出对应1280×544输入，首错仍codec PSO E_FAIL，不能把上述独立缺陷当其已证根因。未发现runtime持久化几何/失败标志；shader缓存无完整性校验、非原子写入且PSO失败不重编是可持续故障风险，尚无网友缓存实体或对照证实。用户“再也起不来”是否包含确认进程退出后的重启仍不明确。本轮只确认与归档，不重打已发布包。
+
+## 2026-09-22：修复RE9输入越界检查顺序与失败后恢复
+
+在TheAutomatic原宿主的producer/HIP/consumer拆分设计上补边界适配：真实输入尺寸/格式在改network geometry与创建HIP前检查，超限明确返回原始SR；初始化异常同步后回滚新bridge+codec，未退休帧禁止覆盖，宿主INVALID_ARGUMENT不再触发session销毁。变更落prepare-host.py及生成补丁，可重新构建/归档。
+
+9070空闲检查后独立GPU测试10组12提交帧：fresh、超限→有效、有效→超限→有效、合法1080输入注入PSO失败→720恢复、旧帧录制后拒绝覆盖；1280×544/960×544全部完成producer→HIP→consumer、fence与输出读回，恢复RGB FP16 hash与fresh相同，无设备移除。候选runtime 1b51069c…、宿主0ef10229…已构建，详见RE9/presr/tests/resize-recovery及reviews/re9-user-bug-20260922。未操作游戏/部署/修改0.28包；未知网友codec PSO E_FAIL、磁盘缓存和诊断路径另留，不混为已解决根因。

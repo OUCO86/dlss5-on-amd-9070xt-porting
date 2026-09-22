@@ -1,0 +1,44 @@
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <LmxxfNrApi.h>
+static void require(bool b,const char*m){if(!b){printf("FAIL %s\n",m);exit(2);}}
+static void ck(HRESULT h){if(FAILED(h)){printf("D3D failure %08lx\n",(unsigned long)h);exit(2);}}
+static D3D12_RESOURCE_BARRIER barrier(ID3D12Resource*r,D3D12_RESOURCE_STATES a,D3D12_RESOURCE_STATES b){D3D12_RESOURCE_BARRIER v{};v.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;v.Transition={r,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,a,b};return v;}
+int wmain(int argc,wchar_t**argv){
+ if(argc!=6)return 2;setvbuf(stdout,nullptr,_IONBF,0);
+ int mode=wcstol(argv[3],nullptr,10);UINT w=wcstol(argv[4],nullptr,10),h=wcstol(argv[5],nullptr,10);
+ HMODULE dll=LoadLibraryW(argv[1]);require(dll,"load");auto get=(int32_t(*)(uint32_t,LmxxfNrApi*))GetProcAddress(dll,"LmxxfNrGetApi");LmxxfNrApi api{};api.struct_size=sizeof api;require(get&&!get(2,&api),"ABI2");
+ IDXGIFactory4*f{};ck(CreateDXGIFactory1(IID_PPV_ARGS(&f)));ID3D12Device*d{};for(UINT i=0;;++i){IDXGIAdapter1*a{};if(f->EnumAdapters1(i,&a)==DXGI_ERROR_NOT_FOUND)break;DXGI_ADAPTER_DESC1 ad{};a->GetDesc1(&ad);if(ad.VendorId==0x1002)D3D12CreateDevice(a,D3D_FEATURE_LEVEL_12_0,IID_PPV_ARGS(&d));a->Release();if(d)break;}f->Release();require(d,"AMD device");
+ ID3D12CommandQueue*q{};D3D12_COMMAND_QUEUE_DESC qd{};ck(d->CreateCommandQueue(&qd,IID_PPV_ARGS(&q)));ID3D12Fence*fence{};ck(d->CreateFence(0,D3D12_FENCE_FLAG_NONE,IID_PPV_ARGS(&fence)));HANDLE event=CreateEventW(nullptr,FALSE,FALSE,nullptr);UINT64 tick=0;
+ auto wait=[&](){ck(q->Signal(fence,++tick));ck(fence->SetEventOnCompletion(tick,event));require(WaitForSingleObject(event,30000)==WAIT_OBJECT_0,"GPU timeout");ck(d->GetDeviceRemovedReason());};
+ void*ctx{};LmxxfNrCreateInfo ci{};ci.struct_size=sizeof ci;ci.device=d;ci.queue=q;ci.assets_directory=argv[2];require(!api.Create(&ci,&ctx)&&!api.PrepareSession(ctx),"session");
+ auto attempt=[&](UINT x,UINT y,bool submit,int expected,const char*contains){
+  D3D12_HEAP_PROPERTIES hp{};hp.Type=D3D12_HEAP_TYPE_DEFAULT;D3D12_RESOURCE_DESC td{};td.Dimension=D3D12_RESOURCE_DIMENSION_TEXTURE2D;td.Width=x;td.Height=y;td.MipLevels=td.DepthOrArraySize=1;td.SampleDesc.Count=1;td.Format=DXGI_FORMAT_R9G9B9E5_SHAREDEXP;ID3D12Resource*r{};ck(d->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&td,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,nullptr,IID_PPV_ARGS(&r)));
+  LmxxfNrFrameInfo fi{};fi.struct_size=sizeof fi;fi.color=r;fi.color_width=x;fi.color_height=y;fi.color_state=D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;fi.pre_exposure=fi.exposure_scale=fi.model_scale=1;LmxxfNrJob j{};j.struct_size=sizeof j;auto rc=api.PrepareFrame(ctx,&fi,&j);char err[1024]{};api.GetLastError(err,sizeof err);printf("PrepareFrame %ux%u rc=%d error=%s\n",x,y,rc,err);require(rc==expected,"expected PrepareFrame result");if(contains)require(strstr(err,contains),"expected diagnostic");if(rc){require(!j.handle&&!j.private_output,"failed frame unpublished");r->Release();return uint64_t(0);}
+  require(submit,"successful frame must submit");ID3D12CommandAllocator*pa{},*ca{};ID3D12GraphicsCommandList*p{},*c{};ck(d->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&pa)));ck(d->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&ca)));ck(d->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,pa,nullptr,IID_PPV_ARGS(&p)));ck(d->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,ca,nullptr,IID_PPV_ARGS(&c)));
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT fp{};UINT64 size{};d->GetCopyableFootprints(&td,0,1,0,&fp,nullptr,nullptr,&size);D3D12_RESOURCE_DESC bd{};bd.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;bd.Width=size;bd.Height=bd.MipLevels=bd.DepthOrArraySize=1;bd.SampleDesc.Count=1;bd.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;hp.Type=D3D12_HEAP_TYPE_UPLOAD;ID3D12Resource*upload{};ck(d->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&bd,D3D12_RESOURCE_STATE_GENERIC_READ,nullptr,IID_PPV_ARGS(&upload)));void*mem{};D3D12_RANGE empty{};ck(upload->Map(0,&empty,&mem));memset(mem,0,size);for(UINT yy=0;yy<y;yy++)for(UINT xx=0;xx<x;xx++)((uint32_t*)((char*)mem+yy*fp.Footprint.RowPitch))[xx]=(16u<<27)|(128u<<18)|(96u<<9)|64u;upload->Unmap(0,nullptr);
+  auto b=barrier(r,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_COPY_DEST);p->ResourceBarrier(1,&b);D3D12_TEXTURE_COPY_LOCATION src{},dst{};src.pResource=upload;src.Type=D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;src.PlacedFootprint=fp;dst.pResource=r;dst.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;p->CopyTextureRegion(&dst,0,0,0,&src,nullptr);b=barrier(r,D3D12_RESOURCE_STATE_COPY_DEST,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);p->ResourceBarrier(1,&b);
+  rc=api.RecordInputs(ctx,j.handle,p);api.GetLastError(err,sizeof err);printf("RecordInputs rc=%d error=%s\n",rc,err);require(!rc,"record input");require(!api.RecordOutputs(ctx,j.handle,c),"record output");
+  if(mode==4){
+   auto large=td;large.Width=2560;large.Height=1080;hp.Type=D3D12_HEAP_TYPE_DEFAULT;ID3D12Resource*oversize{};ck(d->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&large,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,nullptr,IID_PPV_ARGS(&oversize)));auto rejected=fi;rejected.color=oversize;rejected.color_width=2560;rejected.color_height=1080;LmxxfNrJob other{};other.struct_size=sizeof other;require(api.PrepareFrame(ctx,&rejected,&other)==LMXXF_NR_INVALID_ARGUMENT&&!other.handle,"reject oversize with live recorded frame");require(api.PrepareFrame(ctx,&fi,&other)==LMXXF_NR_INVALID_ARGUMENT&&!other.handle,"reject overwrite of live recorded frame");oversize->Release();printf("LIVE FRAME protected after oversized and concurrent valid requests\n");
+  }
+  auto*out=(ID3D12Resource*)j.private_output;auto od=out->GetDesc();require(od.Format==DXGI_FORMAT_R16G16B16A16_FLOAT&&od.Width==x&&od.Height==y,"output geometry/format");D3D12_PLACED_SUBRESOURCE_FOOTPRINT ofp{};d->GetCopyableFootprints(&od,0,1,0,&ofp,nullptr,nullptr,&size);bd.Width=size;hp.Type=D3D12_HEAP_TYPE_READBACK;ID3D12Resource*readback{};ck(d->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&bd,D3D12_RESOURCE_STATE_COPY_DEST,nullptr,IID_PPV_ARGS(&readback)));b=barrier(out,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_COPY_SOURCE);c->ResourceBarrier(1,&b);src={};dst={};src.pResource=out;src.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;dst.pResource=readback;dst.Type=D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;dst.PlacedFootprint=ofp;c->CopyTextureRegion(&dst,0,0,0,&src,nullptr);b=barrier(out,D3D12_RESOURCE_STATE_COPY_SOURCE,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);c->ResourceBarrier(1,&b);ck(p->Close());ck(c->Close());ID3D12CommandList*pl[]={p};q->ExecuteCommandLists(1,pl);require(!api.EnqueueHip(ctx,j.handle),"enqueue HIP");ID3D12CommandList*cl[]={c};q->ExecuteCommandLists(1,cl);require(!api.Retire(ctx,j.handle),"retire");wait();
+  ck(readback->Map(0,nullptr,&mem));uint64_t hash=1469598103934665603ull;size_t nonzero=0;for(UINT yy=0;yy<y;yy++){auto*row=(uint16_t*)((char*)mem+yy*ofp.Footprint.RowPitch);for(UINT xx=0;xx<x;xx++)for(UINT ch=0;ch<3;ch++){uint16_t v=row[xx*4+ch];require((v&0x7c00)!=0x7c00,"finite output");nonzero+=(v&0x7fff)!=0;hash^=v;hash*=1099511628211ull;}}readback->Unmap(0,nullptr);require(nonzero,"nonzero output");printf("COMPLETE %ux%u rgb_half_hash=%016llx nonzero=%llu\n",x,y,(unsigned long long)hash,(unsigned long long)nonzero);readback->Release();upload->Release();p->Release();c->Release();pa->Release();ca->Release();r->Release();return hash;
+ };
+ printf("CASE mode=%d valid=%ux%u\n",mode,w,h);uint64_t before=0;
+ if(mode==2)before=attempt(w,h,true,0,nullptr);
+ if(mode==1||mode==2)attempt(2560,1080,false,LMXXF_NR_INVALID_ARGUMENT,"render input 2560x1080");
+ if(mode==3){std::wstring path=argv[1];path.resize(path.find_last_of(L"/\\"));path+=L"\\shaders\\native_codec_encode.hlsl";std::ifstream in(path.c_str(),std::ios::binary);std::string original((std::istreambuf_iterator<char>(in)),{});in.close();auto bad=original;auto at=bad.find("register(t0)");require(at!=std::string::npos,"fault injection target");bad.replace(at,12,"register(t8)");{std::ofstream f(path.c_str(),std::ios::binary);f<<bad;}
+  // Isolated test shader only: compile valid bytecode with a root-signature mismatch.
+  attempt(1920,1080,false,LMXXF_NR_FAILED,"codec pso");{std::ofstream f(path.c_str(),std::ios::binary);f<<original;}
+ }
+ auto after=attempt(w,h,true,0,nullptr);if(mode==2)require(before==after,"same-session output identical across rejected resize");require(!api.Destroy(ctx),"destroy");wait();printf("PASS device_removed=%08lx\n",(unsigned long)d->GetDeviceRemovedReason());CloseHandle(event);fence->Release();q->Release();d->Release();FreeLibrary(dll);return 0;
+}

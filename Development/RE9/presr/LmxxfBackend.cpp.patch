@@ -22,6 +22,13 @@
 +    fi.pre_exposure=frame.preExposure;fi.exposure_scale=frame.exposureScale;
  
      LmxxfNrJob job {};
+@@ -299,5 +306,5 @@
+         // Menu/resize: runtime drains/rebuilds codec on rebind/geometry; if still failing,
+         // drop host session so the next Record EnsureSession starts clean.
+-        const bool rebindish = frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry")));
++        const bool rebindish = frameRc != LMXXF_NR_INVALID_ARGUMENT && (frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry"))));
+         if (rebindish && (prepareFrameFailLogs <= 2 || (prepareFrameFailLogs % 4) == 0))
+         {
 @@ -624,9 +631,11 @@
  void LmxxfBackend::TraceBoundary(const std::string &) {}
  

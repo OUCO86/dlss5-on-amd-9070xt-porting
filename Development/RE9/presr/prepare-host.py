@@ -41,6 +41,55 @@ s=s.replace('session->encode->Record(list, {j->colorState}, 1.f);', 'session->en
 s=s.replace('{D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,\n                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, j->colorState},', 'session->CodecStates({D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,\n                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, j->colorState}),')
 s=s.replace('NativeCodecDebugView(j->debug_view)}', 'NativeCodecDebugView(j->debug_view),j->pre_exposure,j->exposure_scale}')
 s=s.replace('session->bridge->Create(session->queue, opt, {});', 'session->bridge->Create(session->queue, opt, {});\n            session->bridge->PrepareStagedKernels();')
+# Reject unsupported render inputs before changing network globals or allocating HIP.
+# TheAutomatic supplies the host submission design; this transaction is our runtime adaptation.
+start=s.index('        if (!session->hipPrepared)\n', s.index('int32_t PrepareFrame('))
+end=s.index('        auto *color =', start)
+s=s[:start]+s[end:]
+start=s.index('        auto *color =', s.index('int32_t PrepareFrame('))
+end=s.index('        const bool geoChanged', start)
+validation=s[start:end]
+s=s[:start]+s[end:]
+validation += r'''        if (!NativeInputGeometry::Supported(cdesc.Width, ch))
+        {
+            char message[192] {};
+            std::snprintf(message, sizeof message,
+                          "PrepareFrame: render input %llux%u exceeds supported limit 1920x1080; original SR",
+                          static_cast<unsigned long long>(cdesc.Width), ch);
+            return Fail(LMXXF_NR_INVALID_ARGUMENT, message);
+        }
+        if (cw != info->color_width || ch != info->color_height)
+            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: render input metadata/texture size mismatch; original SR");
+        if (cdesc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D || cdesc.DepthOrArraySize != 1 ||
+            cdesc.MipLevels != 1 || cdesc.SampleDesc.Count != 1 ||
+            (cdesc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) ||
+            !(NativeIsGameColor(cfmt) || cfmt == DXGI_FORMAT_R9G9B9E5_SHAREDEXP))
+            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: unsupported render input texture; original SR");
+        if (session->initializationBlocked)
+            return Fail(LMXXF_NR_FAILED, "PrepareFrame: failed initialization could not drain safely; original SR");
+        if (session->job.state != LMXXF_NR_JOB_NONE && session->job.state != LMXXF_NR_JOB_RETIRED)
+            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: previous frame not retired; original SR");
+
+'''
+s=s.replace('        // Match upstream auto tier:', validation+'        // Match upstream auto tier:',1)
+s=s.replace('    bool hipPrepared = false;', '    bool hipPrepared = false;\n    bool initializationBlocked = false;')
+# Bring lazy bridge creation into the same transaction as the codec chain.
+start=s.index('            if (!session->bridge)', s.index('int32_t PrepareFrame('))
+end=s.index('            NativeGameCodec *enc',start)
+bridge=s[start:end]
+s=s[:start]+s[end:]
+s=s.replace('                enc = new NativeGameCodec();', bridge+'                enc = new NativeGameCodec();',1)
+s=s.replace('                delete enc;\n                throw;', r'''                delete enc;
+                // No frame commands have been exposed/submitted by this transaction.
+                // Prewarm can have HIP work: synchronize before releasing shared buffers.
+                if (!session->bridge || session->bridge->WaitForSubmittedWork())
+                {
+                    session->TeardownCodecChain();
+                    session->job = {};
+                }
+                else
+                    session->initializationBlocked = true; // retain resources until safe destruction
+                throw;''',1)
 write(name,s)
 name='dlssnr/backend/lmxxf_runtime/LmxxfProductionOptions.h';s=original(name).replace('    return o;','    o.mh_feature_byte=o.mh_proj_diag_fb=o.mh_byte_stream=o.decoder_byte=o.mh_ffn_frag256=true;\n    return o;');write(name,s)
 name='dlssnr/backend/LmxxfBackend.cpp';s=original(name)
@@ -49,6 +98,8 @@ s=s.replace('    const auto nextToDll = directory / L"lmxxf-modules";','    for(
 s=s.replace('    LmxxfCut::ClearPendingEnqueue();\n    pendingJob = nullptr;','    if(pendingJob){SetStatus("lmxxf: prior job not yet submitted; original SR");return nullptr;}\n    LmxxfCut::ClearPendingEnqueue();\n    pendingJob = nullptr;',1)
 s=s.replace('void LmxxfBackend::Submitted(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *)\n{','void LmxxfBackend::Submitted(ID3D12CommandQueue *submittedQueue, UINT, ID3D12CommandList *const *)\n{\n    if(DlssNr::Submission::InsideLogicalExecute() || submittedQueue != queue || LmxxfCut::Pending().job)return;')
 s=s.replace('        api->table.Retire(session, pendingJob);','        const auto rc=api->table.Retire(session, pendingJob);\n        if(rc != LMXXF_NR_OK){SetStatus("lmxxf: consumer retirement failed");return;}')
+# Invalid input is a non-mutating NR bypass, not a request to discard a live session.
+s=s.replace('const bool rebindish = frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry")));', 'const bool rebindish = frameRc != LMXXF_NR_INVALID_ARGUMENT && (frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry"))));')
 write(name,s)
 name='dlssnr/amd/AmdBridge.cpp';s=original(name).replace('    return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);','    if(DlssNr::Backend::RequestedKind()==DlssNr::Backend::Kind::Lmxxf)\n        return std::filesystem::exists(Directory() / L"LmxxfNrRuntime.dll", ec);\n    return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);');write(name,s)
 # Aliasing barriers are forwarded verbatim into the current segment. A completed

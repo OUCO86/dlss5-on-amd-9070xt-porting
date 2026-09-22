@@ -1,0 +1,20 @@
+D:\DLSSNR-Lab\re9-presr\source\OptiScaler-DLSSNR-PreSR-Multipass-main\OptiScaler\dlssnr\backend\LmxxfStagingProbe.h(1,1): warning C4819: 檔案含有無法在目前字碼頁 (936) 中表示的字元。請�?Unicode 格式儲存檔案以防止資料遺�?[D:\DLSSNR-Lab\re9-presr\source\OptiScaler-DLSSNR-PreSR-Multipass-main\OptiScaler\OptiScaler.vcxproj]
+  (編譯來源檔案 '/dlssnr/backend/LmxxfBackend.cpp')
+  
+LINK : warning C4744: 'static struct std::atomic<class std::shared_ptr<class LowLatencyTech> > InputCommon::currently_active_tech' �?'d:\dlssnr-lab\re9-presr\source\optiscaler-dlssnr-presr-multipass-main\optiscaler\nvapi\fakenvapi\low_latency_d3d.cpp' �?'d:\dlssnr-lab\re9-presr\source\optiscaler-dlssnr-presr-multipass-main\optiscaler\hooks\amdxc64_hooks.cpp' 中有不同的類�? '__declspec(align(16)) struct (16 bytes)' �?'struct (16 bytes)' [D:\DLSSNR-Lab\re9-presr\source\OptiScaler-DLSSNR-PreSR-Multipass-main\OptiScaler\OptiScaler.vcxproj]
+     正在建立程式�?D:\DLSSNR-Lab\re9-presr/resize-candidate/bin/OptiScaler.lib 和物�?D:\DLSSNR-Lab\re9-presr/resize-candidate/bin/OptiScaler.exp
+LINK : warning LNK4098: 預設的程式庫 'LIBCMT' 與其他使用的程式庫衝突，請使�?/NODEFAULTLIB:library [D:\DLSSNR-Lab\re9-presr\source\OptiScaler-DLSSNR-PreSR-Multipass-main\OptiScaler\OptiScaler.vcxproj]
+  正在產生程式�?
+  44 of 40288 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    233 functions had inline decision re-evaluated but remain unchanged
+  已完成程式碼產生
+  OptiScaler.vcxproj -> D:\DLSSNR-Lab\re9-presr\resize-candidate\bin\OptiScaler.dll
+
+
+Algorithm : SHA256
+Hash      : 0EF102295A759B51C0C7CBA6B8EEDB455E9759F5A2B7F9B96309E030C6CD0035
+Path      : D:\DLSSNR-Lab\re9-presr\resize-candidate\bin\OptiScaler.dll
+
+
+

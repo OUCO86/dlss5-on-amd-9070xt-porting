@@ -69,3 +69,18 @@ GPU测试前已检查游戏/Magpie退出；仅新增lab测试EXE，使用发布�
 局部源码审计未见runtime将geometry/hipPrepared/失败标志写入磁盘或注册表；网络geometry是进程内static，runtime设置环境变量也是进程局部。没有发现“超限一次永久写坏分辨率状态”的runtime路径。宿主/游戏本身的设置持久化不在这条证明范围内。
 
 另有可跨进程持续的**潜在**缓存缺陷：`src/native_shader_cache.h:69-72` 接受任何长度大于0且可读完的文件，无DXBC结构/hash验证即返回编译成功并加入内存缓存；`:84` 直接截断写目标文件，无临时文件原子替换或写入完成校验。崩溃/中断/多进程读写留下非零截断文件时，下次可能持续PSO失败；PSO失败路径也不会清除此缓存或自动重编。缓存key含源码、entry和宏，故换分辨率但仍同FIT/EXPOSURE变体时仍可命中同一坏文件。此为代码层面的恢复风险，**没有网友缓存文件，尚未证明是本次原因**。收其shader-cache后做禁缓存新进程对照比直接要求重装驱动更有辨别力。
+
+## 修复完成：前置拒绝与初始化事务回滚
+
+修复已落实 `Development/RE9/presr/prepare-host.py` 与生成的 `LmxxfNrRuntime.cpp.patch`、`LmxxfBackend.cpp.patch`，没有只改临时checkout。
+
+- 先读取真实颜色纹理描述，核对上限1920×1080、API尺寸一致性、纹理维度/格式，再允许改变网络geometry或分配/预热HIP。超限返回INVALID_ARGUMENT、空job/output，错误明确打印实际render input与上限。
+- 新bridge创建/预热与codec初始化进入同一事务；异常时等待bridge已提交工作安全完成，再清理整个新链与hipPrepared。无法安全等待时保留资源、封锁该session重试，避免释放GPU仍可能引用的内存。
+- 尚未Retire的旧帧禁止新有效帧覆盖。正常重建仍走原有GPU drain。超限请求不销毁旧链，返回有效尺寸可继续用原session。
+- 宿主不再把INVALID_ARGUMENT当作“geometry/rebind”故障而强制Destroy session；Record失败返回nullptr。原上游 `AmdBridge.cpp:449-454` 只有非空replacement才替换NGX Color，因此继续使用游戏原始输入进行SR。这里保留TheAutomatic原宿主设计贡献；本次是其架构上的边界与恢复适配，不重写提交设计。
+
+候选runtime SHA256 `1b51069c38095988f17403366ac09c1c2e047b28423c7385e669023cf42fbacf`，宿主 `0ef102295a759b51c0c7cba6b8eedb455e9759f5a2b7f9b96309e030c6cd0035`，构建均完成。产物仅在lab resize-candidate目录，未部署/发布/替换0.28包。
+
+独立GPU回归共10组、12个真实提交帧：fresh、超限→有效、有效→超限→有效、合法1080输入注入PSO失败→720档恢复，以及旧帧已录制未提交时拒绝新请求后完成旧帧。两种有效尺寸1280×544/960×544全部通过producer→HIP→consumer→Retire→fence完成；读回RGB半浮点全有限且非零，每种尺寸的所有恢复输出hash与fresh完全相同，无设备移除。PSO注入用独立lab shader的寄存器绑定冲突，返回E_INVALIDARG，**不是重现网友原始E_FAIL**。实际游戏中的FSR继续运行属于已核实宿主分支行为，本轮没有启动游戏作场景验证。
+
+本轮未修改诊断路径与shader磁盘缓存，也没有宣称解决未知PSO E_FAIL或证明网友“原生超限死机”的全部链路。证据与完整测试见 `tests/resize-recovery/submit-results.txt`、`live-frame-results.txt`、`host-build.txt`。

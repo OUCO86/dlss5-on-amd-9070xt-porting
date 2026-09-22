@@ -1,0 +1,61 @@
+GPU benchmark guard: idle
+
+
+Algorithm : SHA256
+Hash      : 1B51069C38095988F17403366AC09C1C2E047B28423C7385E669023CF42FBACF
+Path      : D:\DLSSNR-Lab\re9-presr\resize-candidate\LmxxfNrRuntime.dll
+
+
+
+CASE mode=0 valid=1280x544
+PrepareFrame 1280x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 1280x544 rgb_half_hash=da298784373eb633 nonzero=2088960
+PASS device_removed=00000000
+CASE mode=0 valid=960x544
+PrepareFrame 960x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 960x544 rgb_half_hash=7b1ad9f8f2cfd4d4 nonzero=1566720
+PASS device_removed=00000000
+CASE mode=1 valid=1280x544
+PrepareFrame 2560x1080 rc=2 error=PrepareFrame: render input 2560x1080 exceeds supported limit 1920x1080; original SR
+PrepareFrame 1280x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 1280x544 rgb_half_hash=da298784373eb633 nonzero=2088960
+PASS device_removed=00000000
+CASE mode=1 valid=960x544
+PrepareFrame 2560x1080 rc=2 error=PrepareFrame: render input 2560x1080 exceeds supported limit 1920x1080; original SR
+PrepareFrame 960x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 960x544 rgb_half_hash=7b1ad9f8f2cfd4d4 nonzero=1566720
+PASS device_removed=00000000
+CASE mode=2 valid=1280x544
+PrepareFrame 1280x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 1280x544 rgb_half_hash=da298784373eb633 nonzero=2088960
+PrepareFrame 2560x1080 rc=2 error=PrepareFrame: render input 2560x1080 exceeds supported limit 1920x1080; original SR
+PrepareFrame 1280x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 1280x544 rgb_half_hash=da298784373eb633 nonzero=2088960
+PASS device_removed=00000000
+CASE mode=2 valid=960x544
+PrepareFrame 960x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 960x544 rgb_half_hash=7b1ad9f8f2cfd4d4 nonzero=1566720
+PrepareFrame 2560x1080 rc=2 error=PrepareFrame: render input 2560x1080 exceeds supported limit 1920x1080; original SR
+PrepareFrame 960x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 960x544 rgb_half_hash=7b1ad9f8f2cfd4d4 nonzero=1566720
+PASS device_removed=00000000
+CASE mode=3 valid=1280x544
+PrepareFrame 1920x1080 rc=5 error=codec pso HRESULT=2147942487
+PrepareFrame 1280x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 1280x544 rgb_half_hash=da298784373eb633 nonzero=2088960
+PASS device_removed=00000000
+CASE mode=3 valid=960x544
+PrepareFrame 1920x1080 rc=5 error=codec pso HRESULT=2147942487
+PrepareFrame 960x544 rc=0 error=
+RecordInputs rc=0 error=
+COMPLETE 960x544 rgb_half_hash=7b1ad9f8f2cfd4d4 nonzero=1566720
+PASS device_removed=00000000
