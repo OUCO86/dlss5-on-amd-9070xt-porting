@@ -6,6 +6,7 @@
 #include <cstring>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <limits>

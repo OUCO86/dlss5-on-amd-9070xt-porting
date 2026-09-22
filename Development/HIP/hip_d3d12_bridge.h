@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cstring>
 #include <cstdio>
+#include <filesystem>
 #include "hip_reference_network.h"
 #include "../../src/native_device_identity.h"
 #include <d3d12.h>
@@ -13,7 +14,10 @@ class D3D12Bridge {
  struct Shared {ID3D12Resource*resource{};HANDLE handle{};Handle imported{};void*mapped{};};
  Network*network{};ID3D12Device*device{};ID3D12CommandQueue*queue{};ID3D12Fence*fence{};
  HANDLE fence_handle{},event{};Handle semaphore{};Shared input,history,output;UINT64 value{};size_t pixels{};bool readable{},pending{},failed{};
+public:
  enum class Phase { Ready, InputRecorded, OutputRecordedPendingHip, HipQueued, OutputRecorded };
+ Phase CurrentPhase()const{return phase;}
+private:
  Phase phase=Phase::Ready;bool recorded_temporal{};
  /* DLSS5_HIP_SPAN_PROBE=1 (diagnostic): hipEvents recorded after the input wait and before the output signal give the
     GPU span of one network enqueue; the previous frame's span and its CPU enqueue time are printed at the next Run. */
@@ -129,6 +133,8 @@ public:
  // Acknowledges submission, not GPU completion. Queue order protects the next frame;
  // the destructor fences submitted work. Omitting this acknowledgement prevents reuse/free.
  void NotifyOutputSubmitted(ID3D12CommandQueue*consumer){Require(Phase::OutputRecorded);QueueContract(consumer);phase=Phase::Ready;}
+ void NotifyOutputSubmittedIfRecorded(ID3D12CommandQueue*consumer){if(phase==Phase::OutputRecorded&&consumer)NotifyOutputSubmitted(consumer);}
+ void CancelUnsubmitted(){if(phase==Phase::InputRecorded||phase==Phase::OutputRecordedPendingHip){phase=Phase::Ready;readable=false;}}
  template<class Submission>void Run(Submission&submit,ID3D12Resource*rgba,ID3D12Resource*temporal,U seed){
   Require(Phase::Ready);QueueContract(submit.Queue());
   try{
