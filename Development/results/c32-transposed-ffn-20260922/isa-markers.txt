@@ -1,0 +1,26 @@
+== round1 (hfrag[8] array, unrolled)
+c32_fast_ffn_attention_fused_half_prefix_finish_main8          instr=3311 wmma=74 ds=437 ds_store_b8=136 s_wait=331 barrier=11 valu=1891 vgpr=153
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair1    instr=3827 wmma=88 ds=421 ds_store_b8=128 s_wait=324 barrier=11 valu=2389 vgpr=188
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair2    instr=4122 wmma=88 ds=421 ds_store_b8=128 s_wait=335 barrier=10 valu=2510 vgpr=152
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair3    instr=4120 wmma=88 ds=421 ds_store_b8=128 s_wait=335 barrier=9 valu=2510 vgpr=152
+c32_fast_ffn_attention_fused_half_chain                        instr=3590 wmma=70 ds=387 ds_store_b8=136 s_wait=456 barrier=9 valu=1937 vgpr=177
+c32_fast_ffn_attention_fused_half_chain_pair1                  instr=4128 wmma=84 ds=371 ds_store_b8=128 s_wait=434 barrier=9 valu=2451 vgpr=182
+c32_fast_ffn_attention_fused_half_chain_pair2                  instr=4423 wmma=84 ds=371 ds_store_b8=128 s_wait=473 barrier=8 valu=2574 vgpr=143
+c32_fast_ffn_attention_fused_half_chain_pair3                  instr=4421 wmma=84 ds=371 ds_store_b8=128 s_wait=473 barrier=7 valu=2574 vgpr=143
+c32_post_merge_head_half                                       instr=2999 wmma=58 ds=417 ds_store_b8=136 s_wait=268 barrier=9 valu=1830 vgpr=158
+c32_post_merge_head_half_pair1                                 instr=3779 wmma=72 ds=401 ds_store_b8=128 s_wait=271 barrier=9 valu=2480 vgpr=121
+c32_post_merge_head_half_pair2                                 instr=3794 wmma=72 ds=401 ds_store_b8=128 s_wait=288 barrier=8 valu=2468 vgpr=121
+c32_post_merge_head_half_pair3                                 instr=3846 wmma=72 ds=401 ds_store_b8=128 s_wait=283 barrier=7 valu=2478 vgpr=121
+== round2/3 (folded rolled loop; pair2 = unroll-only control)
+c32_fast_ffn_attention_fused_half_prefix_finish_main8          instr=3311 wmma=74 ds=437 ds_store_b8=136 s_wait=331 barrier=11 valu=1891 vgpr=153
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair1    instr=3246 wmma=60 ds=421 ds_store_b8=128 s_wait=315 barrier=11 valu=1885 vgpr=152
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair2    instr=3881 wmma=88 ds=493 ds_store_b8=192 s_wait=349 barrier=11 valu=2325 vgpr=188
+c32_fast_ffn_attention_fused_half_prefix_finish_main8_pair3    instr=3244 wmma=60 ds=421 ds_store_b8=128 s_wait=315 barrier=10 valu=1885 vgpr=152
+c32_fast_ffn_attention_fused_half_chain                        instr=3590 wmma=70 ds=387 ds_store_b8=136 s_wait=456 barrier=9 valu=1937 vgpr=177
+c32_fast_ffn_attention_fused_half_chain_pair1                  instr=3394 wmma=56 ds=347 ds_store_b8=128 s_wait=422 barrier=9 valu=1859 vgpr=151
+c32_fast_ffn_attention_fused_half_chain_pair2                  instr=4067 wmma=84 ds=419 ds_store_b8=192 s_wait=457 barrier=9 valu=2301 vgpr=180
+c32_fast_ffn_attention_fused_half_chain_pair3                  instr=3392 wmma=56 ds=347 ds_store_b8=128 s_wait=422 barrier=8 valu=1859 vgpr=151
+c32_post_merge_head_half                                       instr=2999 wmma=58 ds=417 ds_store_b8=136 s_wait=268 barrier=9 valu=1830 vgpr=158
+c32_post_merge_head_half_pair1                                 instr=2997 wmma=44 ds=401 ds_store_b8=128 s_wait=259 barrier=9 valu=1864 vgpr=158
+c32_post_merge_head_half_pair2                                 instr=3731 wmma=72 ds=473 ds_store_b8=192 s_wait=255 barrier=9 valu=2389 vgpr=148
+c32_post_merge_head_half_pair3                                 instr=2995 wmma=44 ds=401 ds_store_b8=128 s_wait=259 barrier=8 valu=1864 vgpr=158
