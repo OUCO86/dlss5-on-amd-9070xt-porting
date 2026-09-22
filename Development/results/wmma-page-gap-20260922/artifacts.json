@@ -1,0 +1,47 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\kernel.hip",
+        "bytes":  5650,
+        "sha":  "B623ED17B2AFCAF5BD82FDC1B69FE9DC64CDB0D7AED28DC2CB0DC010E99B39FE"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\bench.exe",
+        "bytes":  2394614,
+        "sha":  "689097779EC08644363A0B06B54D238F2E509DB4D7A7EDF9FD559A7A29DD5C78"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\page_counter.exe",
+        "bytes":  2389294,
+        "sha":  "BF3D692E462ED33AC2FC17206E26E9A151692737E8388CC7E1ABB75CE4C55123"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\resources.exe",
+        "bytes":  2378609,
+        "sha":  "4BF0EC63FE1D73A98423B1594339E759901BB4F46246BC0E64D1F5825B59472B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\gfx1200.hsaco",
+        "bytes":  33608,
+        "sha":  "9DF00FF7AC027C496008735B7413436D333DADEEC0774EA2BE9CD5282D77AAEA"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\gfx1201.hsaco",
+        "bytes":  33608,
+        "sha":  "7DD61EFCECA57F797D21CC2B1B252B325E7600DF0C2121F125B978EE6746D0AB"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\counter-64-0\\trace.rgp",
+        "bytes":  9786220,
+        "sha":  "6D4934B161B3B494693F7C66A4ACD1A38720A8D8379BDFFE0C212CF3AF6186C2"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\counter-64-1024\\trace.rgp",
+        "bytes":  9847544,
+        "sha":  "B41945A7246B71BEA042557C75D1685A6D1B47FA92464C9FC892F60980D562EB"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-page-gap\\counter-64-2048\\trace.rgp",
+        "bytes":  7325320,
+        "sha":  "A733D0E0493D468E194AAEF38DE102B7ECAF88D74BD930AD053FA3ADF04FE323"
+    }
+]

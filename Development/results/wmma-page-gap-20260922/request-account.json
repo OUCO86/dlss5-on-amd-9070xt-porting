@@ -1,0 +1,34 @@
+[
+  {
+    "source": "real-vit-1080.json",
+    "trace_sha256": "298812d6601e99b0b356942f8783ef48aa384548b5e0d64d837f4ca13fdceb02",
+    "capture_dispatches": 64,
+    "waves_per_dispatch": 2560,
+    "A_128B_regions_per_wave": 1024,
+    "B_128B_regions_per_wave": 512,
+    "tail_128B_regions_per_wave": 64,
+    "predicted_requests": 262144000,
+    "reported_L0_requests": 262144000.0,
+    "logical_read_MiB_per_dispatch": 200.0,
+    "request_coverage_read_MiB_per_dispatch": 480.0,
+    "request_coverage_total_MiB_per_dispatch": 500.0,
+    "L2_request_coverage_MiB_per_dispatch": 210.8784008026123,
+    "reported_Fetch_size_MiB_per_dispatch": 0.15346527099609375
+  },
+  {
+    "source": "counter-1024-16384.json",
+    "trace_sha256": "4a9d8b7941d2536921eb3ead0e5163940862bd2cceb778be8d27f2747f463977",
+    "capture_dispatches": 64,
+    "waves_per_dispatch": 2560,
+    "A_128B_regions_per_wave": 1024,
+    "B_128B_regions_per_wave": 512,
+    "tail_128B_regions_per_wave": 1,
+    "predicted_requests": 251822080,
+    "reported_L0_requests": 251822080.0,
+    "logical_read_MiB_per_dispatch": 200.0,
+    "request_coverage_read_MiB_per_dispatch": 480.0,
+    "request_coverage_total_MiB_per_dispatch": 480.3125,
+    "L2_request_coverage_MiB_per_dispatch": 217.62310218811035,
+    "reported_Fetch_size_MiB_per_dispatch": 0.1541748046875
+  }
+]

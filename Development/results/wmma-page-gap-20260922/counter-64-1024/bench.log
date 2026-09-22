@@ -1,0 +1,4 @@
+CHECK span=64 mix=1024 bad=0
+TARGET xor4 span=64 mix=1024
+CHECK span=64 mix=1024 bad=0
+CHECK span=64 mix=1024 bad=0

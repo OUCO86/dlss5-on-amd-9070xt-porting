@@ -1,0 +1,114 @@
+[
+  {
+    "span": 64,
+    "mix": 0,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 64,
+    "mix": 256,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 64,
+    "mix": 512,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 64,
+    "mix": 768,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 64,
+    "mix": 1024,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": false
+  },
+  {
+    "span": 64,
+    "mix": 2048,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": false
+  },
+  {
+    "span": 64,
+    "mix": 3072,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": false
+  },
+  {
+    "span": 64,
+    "mix": 3840,
+    "logical_unique_bytes": 262144,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": false
+  },
+  {
+    "span": 1024,
+    "mix": 0,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 1024,
+    "mix": 256,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 1024,
+    "mix": 512,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 1024,
+    "mix": 768,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 1024,
+    "mix": 1024,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 1024,
+    "mix": 2048,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 1024,
+    "mix": 3072,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  },
+  {
+    "span": 1024,
+    "mix": 3840,
+    "logical_unique_bytes": 4194304,
+    "high_4k_changes": 0,
+    "exact_address_set_equal": true
+  }
+]
