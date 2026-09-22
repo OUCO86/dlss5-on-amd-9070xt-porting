@@ -1,0 +1,7 @@
+name=resident1 runtime_regs=13 blocks_per_MP=64 waves_bound=64
+name=resident2 runtime_regs=23 blocks_per_MP=64 waves_bound=64
+name=resident4 runtime_regs=43 blocks_per_MP=64 waves_bound=64
+name=resident8 runtime_regs=83 blocks_per_MP=56 waves_bound=56
+name=resident16 runtime_regs=163 blocks_per_MP=36 waves_bound=36
+name=model4 runtime_regs=78 blocks_per_MP=64 waves_bound=64
+name=masked4 runtime_regs=79 blocks_per_MP=64 waves_bound=64

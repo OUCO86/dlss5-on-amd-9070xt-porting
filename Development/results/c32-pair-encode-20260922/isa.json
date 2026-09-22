@@ -10,6 +10,11 @@
       "amdhsa_next_free_vgpr": "169",
       "amdhsa_next_free_sgpr": "27"
     },
+    "compiler": {
+      "NumVgprs": "153",
+      "NumVGPRsForWavesPerEU": "169",
+      "Occupancy": "8"
+    },
     "opcodes": {
       "s_load_b64": 1,
       "s_wait_kmcnt": 4,
@@ -152,6 +157,11 @@
       "amdhsa_next_free_vgpr": "169",
       "amdhsa_next_free_sgpr": "27"
     },
+    "compiler": {
+      "NumVgprs": "155",
+      "NumVGPRsForWavesPerEU": "169",
+      "Occupancy": "8"
+    },
     "opcodes": {
       "s_load_b64": 1,
       "s_wait_kmcnt": 4,
@@ -292,6 +302,11 @@
       "amdhsa_private_segment_fixed_size": "0",
       "amdhsa_next_free_vgpr": "169",
       "amdhsa_next_free_sgpr": "27"
+    },
+    "compiler": {
+      "NumVgprs": "155",
+      "NumVGPRsForWavesPerEU": "169",
+      "Occupancy": "8"
     },
     "opcodes": {
       "s_load_b64": 1,
@@ -435,6 +450,11 @@
       "amdhsa_next_free_vgpr": "169",
       "amdhsa_next_free_sgpr": "27"
     },
+    "compiler": {
+      "NumVgprs": "155",
+      "NumVGPRsForWavesPerEU": "169",
+      "Occupancy": "8"
+    },
     "opcodes": {
       "s_load_b64": 1,
       "s_wait_kmcnt": 4,
@@ -576,6 +596,11 @@
       "amdhsa_next_free_vgpr": "177",
       "amdhsa_next_free_sgpr": "40"
     },
+    "compiler": {
+      "NumVgprs": "177",
+      "NumVGPRsForWavesPerEU": "177",
+      "Occupancy": "8"
+    },
     "opcodes": {
       "s_load_b256": 2,
       "s_wait_kmcnt": 4,
@@ -713,6 +738,11 @@
       "amdhsa_private_segment_fixed_size": "0",
       "amdhsa_next_free_vgpr": "177",
       "amdhsa_next_free_sgpr": "40"
+    },
+    "compiler": {
+      "NumVgprs": "177",
+      "NumVGPRsForWavesPerEU": "177",
+      "Occupancy": "8"
     },
     "opcodes": {
       "s_load_b256": 2,
@@ -852,6 +882,11 @@
       "amdhsa_next_free_vgpr": "177",
       "amdhsa_next_free_sgpr": "40"
     },
+    "compiler": {
+      "NumVgprs": "177",
+      "NumVGPRsForWavesPerEU": "177",
+      "Occupancy": "8"
+    },
     "opcodes": {
       "s_load_b256": 2,
       "s_wait_kmcnt": 4,
@@ -989,6 +1024,11 @@
       "amdhsa_private_segment_fixed_size": "0",
       "amdhsa_next_free_vgpr": "177",
       "amdhsa_next_free_sgpr": "40"
+    },
+    "compiler": {
+      "NumVgprs": "177",
+      "NumVGPRsForWavesPerEU": "177",
+      "Occupancy": "8"
     },
     "opcodes": {
       "s_load_b256": 2,
@@ -1128,6 +1168,11 @@
       "amdhsa_next_free_vgpr": "217",
       "amdhsa_next_free_sgpr": "84"
     },
+    "compiler": {
+      "NumVgprs": "158",
+      "NumVGPRsForWavesPerEU": "217",
+      "Occupancy": "6"
+    },
     "opcodes": {
       "s_load_b128": 1,
       "s_wait_kmcnt": 7,
@@ -1250,6 +1295,11 @@
       "amdhsa_next_free_vgpr": "217",
       "amdhsa_next_free_sgpr": "84"
     },
+    "compiler": {
+      "NumVgprs": "160",
+      "NumVGPRsForWavesPerEU": "217",
+      "Occupancy": "6"
+    },
     "opcodes": {
       "s_load_b128": 1,
       "s_wait_kmcnt": 7,
@@ -1370,6 +1420,11 @@
       "amdhsa_private_segment_fixed_size": "0",
       "amdhsa_next_free_vgpr": "217",
       "amdhsa_next_free_sgpr": "84"
+    },
+    "compiler": {
+      "NumVgprs": "160",
+      "NumVGPRsForWavesPerEU": "217",
+      "Occupancy": "6"
     },
     "opcodes": {
       "s_load_b128": 1,
@@ -1492,6 +1547,11 @@
       "amdhsa_next_free_vgpr": "217",
       "amdhsa_next_free_sgpr": "84"
     },
+    "compiler": {
+      "NumVgprs": "160",
+      "NumVGPRsForWavesPerEU": "217",
+      "Occupancy": "6"
+    },
     "opcodes": {
       "s_load_b128": 1,
       "s_wait_kmcnt": 7,
@@ -1612,6 +1672,11 @@
       "amdhsa_private_segment_fixed_size": "0",
       "amdhsa_next_free_vgpr": "169",
       "amdhsa_next_free_sgpr": "27"
+    },
+    "compiler": {
+      "NumVgprs": "153",
+      "NumVGPRsForWavesPerEU": "169",
+      "Occupancy": "8"
     },
     "opcodes": {
       "s_load_b64": 1,
@@ -1755,6 +1820,11 @@
       "amdhsa_next_free_vgpr": "169",
       "amdhsa_next_free_sgpr": "27"
     },
+    "compiler": {
+      "NumVgprs": "153",
+      "NumVGPRsForWavesPerEU": "169",
+      "Occupancy": "8"
+    },
     "opcodes": {
       "s_load_b64": 1,
       "s_wait_kmcnt": 4,
@@ -1897,6 +1967,11 @@
       "amdhsa_next_free_vgpr": "177",
       "amdhsa_next_free_sgpr": "40"
     },
+    "compiler": {
+      "NumVgprs": "177",
+      "NumVGPRsForWavesPerEU": "177",
+      "Occupancy": "8"
+    },
     "opcodes": {
       "s_load_b256": 2,
       "s_wait_kmcnt": 4,
@@ -2034,6 +2109,11 @@
       "amdhsa_private_segment_fixed_size": "0",
       "amdhsa_next_free_vgpr": "177",
       "amdhsa_next_free_sgpr": "40"
+    },
+    "compiler": {
+      "NumVgprs": "177",
+      "NumVGPRsForWavesPerEU": "177",
+      "Occupancy": "8"
     },
     "opcodes": {
       "s_load_b256": 2,
@@ -2173,6 +2253,11 @@
       "amdhsa_next_free_vgpr": "217",
       "amdhsa_next_free_sgpr": "84"
     },
+    "compiler": {
+      "NumVgprs": "158",
+      "NumVGPRsForWavesPerEU": "217",
+      "Occupancy": "6"
+    },
     "opcodes": {
       "s_load_b128": 1,
       "s_wait_kmcnt": 7,
@@ -2294,6 +2379,11 @@
       "amdhsa_private_segment_fixed_size": "0",
       "amdhsa_next_free_vgpr": "217",
       "amdhsa_next_free_sgpr": "84"
+    },
+    "compiler": {
+      "NumVgprs": "158",
+      "NumVGPRsForWavesPerEU": "217",
+      "Occupancy": "6"
     },
     "opcodes": {
       "s_load_b128": 1,

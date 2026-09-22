@@ -1,0 +1,42 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\kernel.hip",
+        "sha":  "9EA1C24FBCBB90546B7126C4ADD6AE929BE9411DAD3B4D2C6E7D859E66E0D4B6"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\bench.exe",
+        "sha":  "D10F1A937114E9F1B7908587A782BFF4369CD08630C6B3268E9F3DEF3B00F74C"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\bench-masked.exe",
+        "sha":  "940106AC9F0D33A40EF09E3F46AAF5F869061FB465013EE611A9F7AB9C8FB682"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\bench-conditioned.exe",
+        "sha":  "089D320D031A46F6463E9D0B22BC383998CE1DA1FF231B9F7E7FBA556CA716B6"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\bench-sweep.exe",
+        "sha":  "984A8170F677E97B3A7F783A92F2BCE76EB9DD7BBCED65EF23EC5D4CAC87A786"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\resources.exe",
+        "sha":  "2A25A35E1601D65BA01D8CC47AA8B5CCD5223AFB8E3F50A2B1FBCA748AEDD8F2"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\gfx1200.hsaco",
+        "sha":  "8039367C6BF24D0CC20AFC6878DE9614AD4959241D7A0231BA8D5F03BB759A1A"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\gfx1201.hsaco",
+        "sha":  "F0C4CFCDDA5B47413944F9BFBAE6375FA21DB648DCB0A1F5AAF75AA2697F7A61"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\masked-gfx1200.hsaco",
+        "sha":  "A1430112F215DE1E46C64DD81CCF7C52098631B4960221D30EE7FFBE48EF0323"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-feed-gap\\masked-gfx1201.hsaco",
+        "sha":  "B563EF6E672C9733CBF42C5794FDB7EBA6E2CF5ECAEF6F9C08E02D08DCA62BAC"
+    }
+]

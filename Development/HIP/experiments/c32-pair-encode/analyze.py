@@ -43,5 +43,7 @@ for path in sys.argv[2:]:
    ops=collections.Counter(re.findall(r'^\s+((?:s_|v_|ds_|global_|flat_|scratch_|buffer_)\w+)\b',s[a:b],re.M))
    meta=re.search(r'\.amdhsa_kernel '+name+r'\n(.*?)\.end_amdhsa_kernel',s,re.S)[1]
    res=dict(re.findall(r'\.(amdhsa_(?:group_segment_fixed_size|private_segment_fixed_size|next_free_vgpr|next_free_sgpr))\s+(\d+)',meta))
-   isa.append(dict(source=Path(path).name,name=name,mode=mode,static_instructions=sum(ops.values()),resources=res,opcodes=dict(ops)))
+   e=s.find('\n\t.globl',a+1);part=s[a:e if e>=0 else len(s)]
+   compiler=dict(re.findall(r'; (NumVgprs|NumVGPRsForWavesPerEU|Occupancy): (\d+)',part))
+   isa.append(dict(source=Path(path).name,name=name,mode=mode,static_instructions=sum(ops.values()),resources=res,compiler=compiler,opcodes=dict(ops)))
 if isa:(out/'isa.json').write_text(json.dumps(isa,indent=2)+'\n')
