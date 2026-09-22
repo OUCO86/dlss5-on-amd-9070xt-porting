@@ -1,0 +1,4 @@
+CHECK span=1024 pitch=16384 bad=0
+TARGET pitched4 span=1024 pitch=16384
+CHECK span=1024 pitch=16384 bad=0
+CHECK span=1024 pitch=16384 bad=0

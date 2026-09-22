@@ -1,0 +1,2 @@
+name=masked4 runtime_regs=79 blocks_per_MP=64 waves_bound=64
+name=pitched4 runtime_regs=77 blocks_per_MP=64 waves_bound=64

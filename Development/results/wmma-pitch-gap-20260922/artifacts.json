@@ -1,0 +1,82 @@
+[
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\kernel.hip",
+        "bytes":  4335,
+        "sha":  "A62C92E4409C328E18197BD5DEC8A076447F570A380FFB5E9A37D4FAC913457D"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\bench.exe",
+        "bytes":  2394102,
+        "sha":  "9FBEA9AF0F930A43819FEA763A4679EEC90B8A333A33080C574A4B82C070019B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\pitch_counter.exe",
+        "bytes":  2389294,
+        "sha":  "52FAFD171FF3268B2C8FBFD7C5AF3D736AF22499EB804C051F77AF3789594A70"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\resources.exe",
+        "bytes":  2378609,
+        "sha":  "BCDBE15DB58ABBF8098169DE2566832D096170D23AD57F7F6B3C03FF4FF33608"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\real_vit_counter.exe",
+        "bytes":  2976565,
+        "sha":  "4F735C1108F07368D273345F25C85F0D5F4D75B1DC426DA9DA89796668A0BC3B"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\gfx1200.hsaco",
+        "bytes":  30776,
+        "sha":  "D71BFB81A7CF6E505632F691FA56D5072B3AD5087335CFD8C054A7D68916B6A6"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\gfx1201.hsaco",
+        "bytes":  30776,
+        "sha":  "0C47637C0DA3F8EAE608F9365460FBC89863CCCDFFDAF1862DFACDAA16F0C302"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\counter-64-16384\\trace.rgp",
+        "bytes":  9806656,
+        "sha":  "744D4D015E06BD72F230ADA5F3794C6077CF6B7607B9AE5D7B55AD82DA6EDAE4"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\counter-64-16640\\trace.rgp",
+        "bytes":  9760702,
+        "sha":  "E5931301E5C778662FE489A609DB255616118F1BA7B244A56B664C36DEFA052F"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\counter-1024-16384\\trace.rgp",
+        "bytes":  10332416,
+        "sha":  "4A9D8B7941D2536921EB3EAD0E5163940862BD2CCEB778BE8D27F2747F463977"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\counter-1024-16640\\trace.rgp",
+        "bytes":  10308302,
+        "sha":  "0626E4BC998341D5A54F5EACD58B3E1A9F38AA98169853119D6154A8DC3C3F85"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\wmma-pitch-gap\\real-vit-1080\\trace.rgp",
+        "bytes":  9876055,
+        "sha":  "298812D6601E99B0B356942F8783EF48AA384548B5E0D64D837F4CA13FDCEB02"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\selected-modules\\deep_fast-packed.hsaco",
+        "bytes":  576424,
+        "sha":  "4893E31A822CC71BD9A45DC407E10619488A0A6AA902CB7FC07445BBF25B38D7"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\1080\\flags.txt",
+        "bytes":  3404,
+        "sha":  "A9E3A589B54F11D706C500507070F0BF4E59CACEB6ED61E2DDC9F16C1695DF35"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\1080\\input.f32",
+        "bytes":  35389440,
+        "sha":  "F66892CD504E44BC7C4F281F6FA49295E5323204CB036B635815AB8A66FA3448"
+    },
+    {
+        "path":  "D:\\DLSSNR-Lab\\hip-backend\\network-timeline\\1080\\expected.f32",
+        "bytes":  26542080,
+        "sha":  "D4CE077A4515FCE22DAB0856F3F69E93F4121CFDB3F7C339D3712FAAF70B841A"
+    }
+]
