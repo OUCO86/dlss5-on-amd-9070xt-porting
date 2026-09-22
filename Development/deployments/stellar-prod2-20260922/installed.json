@@ -1,0 +1,25 @@
+{
+    "source_commit":  "prod2-20260922",
+    "backup":  "D:\\DLSSNR-Lab\\stellar-prod2-20260922\\backups\\20260922-233020",
+    "items":  [
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod2-gfx1200\\c32_fused_ffn_attention-packed.hsaco",
+                      "existed":  true,
+                      "before":  "75D191FE86B201ADB49978D6A29A7B19EC4DCAD9705E650E6031E31E2FF62E93",
+                      "after":  "b85efd62344a687948e762b3dbab5ceb1d12083c076c096d94453f5eacb1d3f5"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod2-modules\\c32_fused_ffn_attention-packed.hsaco",
+                      "existed":  true,
+                      "before":  "F178281CF0DC8FFECB7A30CD36CD8CB398D265FDB8F478415C75EBEE9AB28F5A",
+                      "after":  "4a414c5af9a37e1438a93c821b4ee36b540cbdfbcf1c010bcd6385bdfeb6c5f0"
+                  }
+              ],
+    "unchanged":  {
+                      "OptiScaler.ini":  "80CDA873E59CC9DCBF127D51E1D737EA916D384F1AD17F9F884DC595586C82E0",
+                      "dxgi.dll":  "FBFB6676B829DAD7E020FB830586A16AA0EC6ADD78016DB48EF12E2AE1803231",
+                      "DLSS5-AMD/native-game-flags.txt":  "91B59212FC2C08D2413680689DA6A96F6D7930852C3E18AB4D2428A5D2E87D3B"
+                  }
+}
