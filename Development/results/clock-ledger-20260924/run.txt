@@ -1,0 +1,16 @@
+GPU benchmark guard: idle
+900 base done
+900 c32x8 done
+900 c64-256x8 done
+900 attnx8 done
+900 c512x8 done
+900 vitx8 done
+900 base2 done
+1080 base done
+1080 c32x8 done
+1080 c64-256x8 done
+1080 attnx8 done
+1080 c512x8 done
+1080 vitx8 done
+1080 base2 done
+exit=0

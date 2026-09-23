@@ -267,3 +267,11 @@
 ## 2026-09-24 00:30：C32 转置尾部（out 并宽）null
 
 WorkingPlan 的"C32 产出端并宽"试完：FFN 收缩 + prefix + 投影全部转置，ffn8/scratch.ex/out/pre16 的窄写并宽。逐位同，但 1080/900 六组配对全部慢 0.03ms（0.2～0.3%）。原因：残差初始化和缩放访问改成 lane=行后 LDS 读变差，投影缩放 2→16 读，chain/finish VGPR +15。开关 `HIP_C32_TRANSPOSED_TAIL` 留 0，进"不要重做"。详见 `results/c32-transposed-tail-20260924`。
+
+## 2026-09-24 01:00：探索 1 关闭——RDNA4 没有直达 LDS 的读取
+
+318 账本里 staging 31% 想用 `global_load_lds`（显存直落共享内存）省掉寄存器往返和 LDS 写指令。comgr 报 `__builtin_amdgcn_global_load_lds` 需要 target feature `vmem-to-lds-load-insts`，gfx1201 没有；汇编器也不认 `global_load_lds_b128`。RDNA4 上这条指令不存在（CDNA/gfx9 有），硬件没铺路。探索 1 关，改看频率账本（探索 3，`Development/HIP/experiments/clock-ledger`）。
+
+## 2026-09-24 01:05：频率账本——功耗墙，FFN 最费电，ViT 最省电
+
+探索 3 做完（`results/clock-ledger-20260924`）：核族 dup×8 占满一帧逐族量时钟功耗。板功耗每个配置都钉在 325～328 W，时钟随负载变：C64～C256 FFN 占满时 2.51～2.55 GHz（比基线低 8～9%），C32 低 1～1.5%，C512/C256 注意力持平，ViT 反而高 1～2%（2.78～2.85）。整网 2.75 是加权结果，峰值测试 3.1 是纯寄存器矩阵省电。318"ViT 单测 2.5 GHz"是孤立微基准的读数，要改口。新杠杆：让 FFN 核族省电能抬全帧时钟，上界 1～2%；用户侧功耗上限 +10% 值得实测。dup 开关在 flags 文件里不在环境变量（第一遍白跑，当基线重复性用了）。
