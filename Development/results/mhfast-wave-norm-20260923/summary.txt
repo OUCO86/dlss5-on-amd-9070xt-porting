@@ -1,0 +1,6 @@
+1080 test1: base 17.068 variant 16.609 delta -0.460 ms (-2.69%) no_overlap=True bitdiff=23413712 core median 2734MHz
+1080 test2: base 17.157 variant 16.691 delta -0.467 ms (-2.72%) no_overlap=True bitdiff=23413712 core median 2734MHz
+1080 test3: base 17.210 variant 16.759 delta -0.451 ms (-2.62%) no_overlap=True bitdiff=23413712 core median 2734MHz
+900 test1: base 12.179 variant 11.828 delta -0.351 ms (-2.88%) no_overlap=True bitdiff=15445624 core median 2759MHz
+900 test2: base 12.196 variant 11.849 delta -0.347 ms (-2.85%) no_overlap=True bitdiff=15445624 core median 2759MHz
+900 test3: base 12.236 variant 11.875 delta -0.361 ms (-2.95%) no_overlap=True bitdiff=15445624 core median 2759MHz

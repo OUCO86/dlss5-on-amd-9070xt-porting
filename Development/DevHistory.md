@@ -3269,3 +3269,11 @@ waves_per_eu(16,16) 让两个 c256 frag 核降到 96 VGPR、各溢出 8～9 个�
 ## 2026-09-23 10:10：注意力投影输出转置，逐位同，+0.05～0.16ms，不采用
 
 原版输出循环是运行时滚动循环（静态 2 条全局写），转置后展开成 8 条写 + 地址算术，指令 +20%，c256 VGPR 118→138 掉一档驻留。转置并宽只对"展开的多条窄写"有效。results/mh-transposed-project-20260923。
+
+## 2026-09-23 10:10：1b wave 内 QKV 归一化（非逐位），转置之上再 −0.18/−0.14ms（1.1%）
+
+part 0/1 每 wave 一个 head 32 列，平方和 lane 内 16 项 + 一次 bpermute，无 LDS 无 barrier。求和重结合（两个 16 项部分和）。`HIP_FFN_WAVE_NORM` 进源默认 0；prod6 候选不含。6b 模块另编用于 RGB 差异研究。results/mhfast-wave-norm-20260923。注意力投影输出转置反例：滚动循环别转置。
+
+## 2026-09-23 10:15：prod6 候选编译（prod5 + in16 别名 + ffn_fused 尾段转置，逐位），回归运行中
+
+c32 gfx1200 F256217E… / gfx1201 6F66096E…；mh_fast gfx1200 410A2DFF… / gfx1201 F9BC18D9…。6b（wave norm）gfx1201 4D1FFA75…，仅研究。deployments/stellar-prod6-20260923。

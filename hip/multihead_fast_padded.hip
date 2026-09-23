@@ -22,6 +22,12 @@
 typedef unsigned uint;
 #define DEV __attribute__((device)) __attribute__((always_inline))
 #define KERNEL extern "C" __attribute__((global))
+#ifndef HIP_FFN_WAVE_NORM
+#define HIP_FFN_WAVE_NORM 0 /* 2026-09-23 (NOT bit-exact, default off): parts 0/1 of the QKV are computed one head (32 columns) per
+ wave so the normalisation's sum of squares is 16 in-lane terms + one ds_bpermute add, with rsqrt/scale/norm bytes in registers -- no
+ storage.raw round trip, no two barriers, no 128-thread serial loop. Re-associates the 32-term sum (two 16-term partial sums) before
+ rsqrt; everything else unchanged. -0.18/-0.14 ms on top of HIP_FFN_TRANSPOSED_TAIL. Enable only after image-quality judgment. */
+#endif
 #ifndef HIP_FFN_TRANSPOSED_TAIL
 #define HIP_FFN_TRANSPOSED_TAIL 1 /* 2026-09-23: projection and QKV WMMAs take swapped operands so each lane holds one token row and
  8 consecutive columns (A/B fragment register layouts are identical). Residual input, out/qfeature bytes, storage.raw rows and norm
@@ -726,6 +732,17 @@ DEV void mh_ffn_qkv_body(const float*in,const float*w,unsigned char*out,uint tok
    __builtin_amdgcn_s_barrier();
    for(uint part=0;part<3;part++)for(uint e=0;e<8;e++){uint row=group*8+e;float inv=part<2?inverse[part*16*(C/32)+(wave/2)*16+row]:1.f;norm[((first+row)*3+part)*C+wave*16+rc]=static_cast<unsigned char>(q8_fused_round(q[part][e]*inv));}
   }else
+#if HIP_FFN_WAVE_NORM
+  {const uint heads=C/32;uint hp=wave/heads,head=wave%heads;f8 q[2]{};
+   for(uint j=0;j<2;j++)for(uint k=0;k<C;k+=16){i2 a,b;__builtin_memcpy(&a,qfeature+rc*(C+4)+k+group*8,8);uint col=head*32+j*16+rc,off=((hp*C+col)*C+k+group*8)/4;if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(aw),hp*C+col,C,k,group);else b={int(aq[off]),int(aq[off+1])};q[j]=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(b,a,q[j]);}
+   float ss=0.f;for(uint j=0;j<2;j++)for(uint e=0;e<8;e++)ss+=q[j][e]*q[j][e];
+   ss+=__builtin_bit_cast(float,__builtin_amdgcn_ds_bpermute(int((l^16)*4),__builtin_bit_cast(int,ss)));
+   float inv=__builtin_amdgcn_rsqf(maxf(ss,6.198883056640625e-5f))*(hp==0?aw[4*C*C+(C/32)*4096+head]:1.f);
+   for(uint j=0;j<2;j++)for(uint e=0;e<8;e++)norm[((first+rc)*3+hp)*C+head*32+j*16+group*8+e]=static_cast<unsigned char>(q8_fused_round(q[j][e]*inv));}
+  {f8 q{};
+   for(uint k=0;k<C;k+=16){i2 a,b;__builtin_memcpy(&a,qfeature+rc*(C+4)+k+group*8,8);uint off=((2*C+wave*16+rc)*C+k+group*8)/4;if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(aw),2*C+wave*16+rc,C,k,group);else b={int(aq[off]),int(aq[off+1])};q=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(b,a,q);}
+   for(uint e=0;e<8;e++)norm[((first+rc)*3+2)*C+wave*16+group*8+e]=static_cast<unsigned char>(q8_fused_round(q[e]*1.f));}
+#else
   for(uint part=0;part<3;part++){f8 q{};
 #if HIP_FFN_TRANSPOSED_TAIL
    for(uint k=0;k<C;k+=16){i2 a,b;__builtin_memcpy(&a,qfeature+rc*(C+4)+k+group*8,8);uint off=((part*C+wave*16+rc)*C+k+group*8)/4;if constexpr(Frag)b=frag_b(reinterpret_cast<const unsigned char*>(aw),part*C+wave*16+rc,C,k,group);else b={int(aq[off]),int(aq[off+1])};q=__builtin_amdgcn_wmma_f32_16x16x16_fp8_fp8_w32_gfx12(b,a,q);}
@@ -747,6 +764,7 @@ DEV void mh_ffn_qkv_body(const float*in,const float*w,unsigned char*out,uint tok
    for(uint e=0;e<8;e++){uint row=group*8+e;float inv=part<2?inverse[(wave/2)*16+row]:1.f;norm[((first+row)*3+part)*C+wave*16+rc]=static_cast<unsigned char>(q8_fused_round(q[e]*inv));}
 #endif
   }
+#endif
  }else{
  for(uint e=0;e<8;e++)out[(first+group*8+e)*C+wave*16+rc]=static_cast<unsigned char>(q8_fused_round(Hrtz(accum[e])));
  }
