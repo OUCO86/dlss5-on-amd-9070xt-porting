@@ -3249,3 +3249,7 @@ mapped/post 三核 LDS 19712→15360，驻留 3→4 组/CU。in16 生命期止�
 ## 2026-09-23 08:05：ffn_fused_c256 VGPR 封 96，逐位同，+0.06/+0.07ms，不采用
 
 waves_per_eu(16,16) 让两个 c256 frag 核降到 96 VGPR、各溢出 8～9 个寄存器，驻留 12→16 wave/SIMD 反而更慢，三份复现槽不交叠。驻留只在它是瓶颈时值钱。c256_attention 尾巴确认为结构税（host 链上无可并发兄弟 launch）。results/mhfast-vgpr-cap-20260923。
+
+## 2026-09-23 09:50：ffn_fused 尾段消融（非逐位上界）
+
+归一化交换（LDS 往返 + 2 barrier + 串行平方和）上界 −0.31/−0.21ms（1.8%），norm 输出转换与 24 条字节写上界 −0.40/−0.14ms，串行求和本身 −0.12/−0.10。放弃逐位的第一刀改为 ffn_fused QKV 归一化：一个 wave 持一个 head 的 32 列、平方和 wave 内重结合。results/mhfast-tail-ablate-20260923。
