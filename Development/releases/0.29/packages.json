@@ -1,0 +1,80 @@
+{
+ "version": "0.29",
+ "date": "2026-09-23",
+ "source_commit": "cda8171",
+ "baselines": {
+  "Magpie": "0.28",
+  "OptiScaler": "0.28",
+  "OptiScaler-REFramework": "0.28.1"
+ },
+ "regular_addon_sha256": "c1bc7374be4f2c594797af0e07be93c4e933999782cd86dc3e8597e61d97c6c4",
+ "re9_host_sha256": "0ef102295a759b51c0c7cba6b8eedb455e9759f5a2b7f9b96309e030c6cd0035",
+ "re9_runtime_sha256": "6e9974d7c43aae2607fbd298d095517cd7976423457238ab20f3d2e4029b179d",
+ "modules": [
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-gfx1200\\c32_fused_ffn_attention-packed.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c32_fused_ffn_attention-packed.hsaco",
+   "sha256": "f256217efbbf69c9b5f82bf6301c7faa67b380df4ab637e7826d256bbe3f42ee"
+  },
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-gfx1200\\multihead_fused_attention.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead_fused_attention.hsaco",
+   "sha256": "c31405d07158c9074a629d2b9538b6cd3fd9c4f0ca7730ff04a745bc1a662d8b"
+  },
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-gfx1200\\deep_fast-packed.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/deep_fast-packed.hsaco",
+   "sha256": "54ad89addf636e9239bc3d0468da0242ea4ce10c7071251d7b5739726a44d159"
+  },
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-gfx1200\\multihead-fast-padded-wave-packed.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead-fast-padded-wave-packed.hsaco",
+   "sha256": "410a2dff30d48c2108b595883135e736d0901e57e989915227d1cf9cbe225763"
+  },
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-modules\\c32_fused_ffn_attention-packed.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c32_fused_ffn_attention-packed.hsaco",
+   "sha256": "6f66096ee326ef47c51288cdb033ac97bec7c5bc63b86151f9aace931fd01f00"
+  },
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-modules\\multihead_fused_attention.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead_fused_attention.hsaco",
+   "sha256": "b01b506a6df5db190667eb8520d79dd8161be6489afe60c8016eefc850e14f3c"
+  },
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-modules\\deep_fast-packed.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/deep_fast-packed.hsaco",
+   "sha256": "ab42263e1c27170bb7e449c39908e981568a6aeb2bf1d34668e692acfe480900"
+  },
+  {
+   "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod6-modules\\multihead-fast-padded-wave-packed.hsaco",
+   "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead-fast-padded-wave-packed.hsaco",
+   "sha256": "f9bc18d9fc090847216758f8ff497f24e23f8d23de556e999cf3acf70071dc85"
+  }
+ ],
+ "packages": [
+  {
+   "name": "Magpie-DLSS5-AMD-0.29",
+   "bytes": 336211082,
+   "sha256": "fb005c3e11ca98d31316e3a4f059921407c59595083fdcc614a22abc7fee14ef",
+   "files": 723,
+   "verified": true
+  },
+  {
+   "name": "OptiScaler-DLSS5-AMD-0.29",
+   "bytes": 366408307,
+   "sha256": "55142927a2a8401cd0b27deaf40e12b7ba1e048044b6371076dd223b908ab943",
+   "files": 541,
+   "verified": true
+  },
+  {
+   "name": "OptiScaler-REFramework-DLSS5-AMD-0.29",
+   "bytes": 420881710,
+   "sha256": "668133f91c92a8d9da1db8f5307a5316ecf2d300ead99d406013ce249e8b3c88",
+   "files": 546,
+   "verified": true
+  }
+ ],
+ "re9_gpu_smoke": "passed in staged package",
+ "fit_shaders": "44 variants compiled"
+}

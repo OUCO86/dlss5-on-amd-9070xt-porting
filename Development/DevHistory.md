@@ -3301,3 +3301,7 @@ prod6（逐位）：hash/额外控制组全同，1000 帧计时 900 −0.54ms（
 ## 2026-09-23 14:30：RE9 超 1080p 输入实测通过
 
 runtime 6e9974d7…（flags 文件从 assets 目录逐级向上找，优先环境变量）。用户 RE9 Native AA（2560×1440）DLSS5 效果恢复。剑星与 RE9 两条线 DLSS5_FIT_LARGE 均验证。待入 0.29 包：addon c1bc7374…、RE9 runtime 6e9974d7…、四份 flags 模板 + hip-re9-flags 加 `DLSS5_FIT_LARGE=1`、README 一行、回 issue #6。
+
+## 2026-09-23 14:43：0.29 三包完成
+
+Development/tools/package-029.ps1（底包 0.28 / 0.28.1，逐文件核对；模块 8 个与剑星装机副本 hash 相同；RE9 runtime 冒烟通过；44 个 fit shader 变体编译通过；zip 读回校验）。成品 D:\給網友打包：Magpie-DLSS5-AMD-0.29.zip 336,211,082 字节 sha256 fb005c3e…；OptiScaler-DLSS5-AMD-0.29.zip 366,408,307 字节 55142927…；OptiScaler-REFramework-DLSS5-AMD-0.29.zip 420,881,710 字节 668133f9…。README 中英文 0.29 行已加（链接待用户上传后补）、编译方法一节已加。清单 Development/releases/0.29/packages.json。
