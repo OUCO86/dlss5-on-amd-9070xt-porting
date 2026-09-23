@@ -8,7 +8,7 @@ inline bool NativeFrameRequestValid(uint32_t current_pid,uint32_t request_pid,ui
 }
 inline NativeFrameInputCheck CheckNativeFrameInput(const std::vector<unsigned char>&bytes,unsigned width=1920,unsigned height=1080,unsigned bpp=0){
  /* 8-bit UNORM frames (Magpie, 4 bytes per pixel): no NaN possible; black = every RGB byte zero */
- if(!width||!height||width>1920||height>1080)return NativeFrameInputCheck::wrong_size;
+ if(!width||!height)return NativeFrameInputCheck::wrong_size; /* size is checked against the byte count below; large fitted inputs (DLSS5_FIT_LARGE) are legal */
  if((!bpp||bpp==4)&&bytes.size()==uint64_t(width)*height*4){for(size_t i=0;i<bytes.size();i++)if(i%4!=3&&bytes[i])return NativeFrameInputCheck::valid;return NativeFrameInputCheck::black;}
  if((bpp&&bpp!=8)||bytes.size()!=uint64_t(width)*height*8)return NativeFrameInputCheck::wrong_size;
  bool rgb=false;
