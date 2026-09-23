@@ -3257,3 +3257,7 @@ waves_per_eu(16,16) 让两个 c256 frag 核降到 96 VGPR、各溢出 8～9 个�
 ## 2026-09-23 09:50：注意力残差特征读提前，逐位同，+0.07～0.12ms，不采用
 
 寄存器版 12 wave/SIMD 已盖住残差读延迟，提前读反而和入口 staging 抢队列。旧（LDS 版）阶段账的份额不能直接沿用。results/mh-hoist-residual-20260923。
+
+## 2026-09-23 10:00：ffn_fused 尾段转置，逐位同，−0.28/−0.21ms，进生产源
+
+投影/QKV WMMA 操作数对调得转置结果，lane 持一行 8 列，残差读/out/qfeature/storage.raw/inverse/norm 七处索引跟着转，串行平方和顺序不变。编译器把字节写并成 b64：c256 核全局写 38→10、指令 −212；c64 核 VGPR 97→96。三份复现槽不交叠。**规则修正：读写成本 ≈ 指令数 + 触及行数，两项都算**（C512 那次是行数涨 32 倍压过指令项）。`HIP_FFN_TRANSPOSED_TAIL` 默认 1，生产配方 ISA 与实验逐条相同；攒进 prod6。results/mhfast-transposed-qkv-20260923。
