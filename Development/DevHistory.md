@@ -1,0 +1,241 @@
+# DLSS5（DLSSNR）→ AMD RX 9070 XT 移植：开发史
+
+> 本文件是本项目开发、部署、运维与后续工作的**唯一记录入口**。
+> **2026-09-23 压缩**：原文 593KB（约 30 万 token）已整本移到 `Development/history/DevHistory-full-20260923.md`（git `a300c20` 之前的完整版）。本文只留结论、关键数字、现行约定和"别再做"的清单；要查某一刀的细节、SHA、日志路径，去原文 grep 日期或关键词，别整本读。
+> 更早的逐刀原始记录在 `Development/history/` 其余文件（见文末索引）；每轮实验的数据在 `Development/results/<名字>-<日期>/`、`Development/HIP/experiments/<名字>/`。
+
+续写规则：新事件追加到「时间线」末尾（时间正序），「当前状态」「待办」两节原地改。再长到读不动时，把旧事件压进里程碑表，原文照样挪进 history/。
+
+---
+
+## 1. 目标与硬约束
+
+把 NVIDIA 泄露样本 `nvngx_dlssnr.dll`（DLSS 5 神经渲染，内部名 DLSSNR）里的 71 块网络恢复出来，在 RX 9070 XT 上按原版数值执行，并在真实游戏里以可玩帧率替换 FSR 输出。
+
+- 验收三级：离线复现 → AMD 跑通 → 游戏可用。后来 Zero 收紧为"9070 XT 走完 71 块出最终 RGB"，再到 1080p ≥10fps，再到 30fps。
+- **exact 链**（tag 0.01，186ms）逐值等于原版，冻结当裁判；**fast / HIP 链**：结构改动必须逐位不变，算术改动看 PSNR，画面由 Zero 在游戏里按 F6 拍板。
+- 帧率只信游戏内读数或同批 ABBA；绝对帧时跨批次留 ±0.3ms。
+
+| 机器 | 用途 |
+|---|---|
+| `desktop-2026`（`ssh amd9070`），Win11 Insider 26H2，RX 9070 XT（RDNA4，gfx1201，16GB，128 SIMD / 32 WGP） | 靶机 |
+| `NucBox_EVO-T1`（`ssh rtx5090`），RTX 5090 OCuLink | 标准答案机（原版 DLSSNR） |
+| DGX Spark `spark-3a10`（GB10，sm_121） | 能直接加载 sm_120 CUBIN 当 oracle |
+
+驱动：DX12 路线需要**预览驱动 32.0.31007.2048**（SM 6.10 / LinAlg，私有 Agility 721、开发人员模式）。HIP 路线（0.20 起）只需驱动自带 `amdhip64_7.dll`，不要预览接口；正式驱动有用户反馈可用。
+
+---
+
+## 2. 逆向结论（硬事实，不会再变）
+
+**样本**：`nvngx_dlssnr.dll` 310.8.0.0，SHA-256 `e16bcf15…1fc8e`。资源 `WEIGHTS_HT` 147,695,410 字节，153 条记录（`name_length→name→body_span→body`），live 层对象 152 个（block70 的 blend_scale 与 layer 同属一个 Layer）。矩阵主体是 packed E4M3，偏置/skip/scale 是 FP16/f32；运行时 arena 按 512 字节对齐，共 147,719,680 字节，运行时不改写权重。DLL 内含 15 个 sm_120 CUBIN。
+
+**网络**（构图函数 `0x180039780`，config `hnet-vigilant-squid` / variant `crazy-cuckoo`）：
+```
+0        PreBlock 1H / C32          1–3 Swin C32   4 ds 32→64
+5–7      Swin 2H / C64              8 ds 64→128
+9–13     Swin 4H / C128             14 ds 128→256
+15–21    Swin 8H / C256             22 ds 256→512
+23–30    split-Swin 16H / C512（30 带 ProjPool + FinalHead 512→1024）
+31–38    ViT 1D / C1024（Expand→Contract→QKV→Attention→Projection）
+39       DecInputUpsample 1024→512  40–47 split-Swin C512
+48/56/62/66 upsample + Swin（C256/C128/C64/C32），49–55 / 57–61 / 63–65 / 67–69 同族
+70       PostBlock C32 + RGB 头（blend_scale=0.73974609375）
+```
+跳接：`39←38+30`、`48←47+22`、`56←55+14`、`62←61+8`、`66←65+4`、`70←69+0`。
+
+**1080p 几何**：处理区 1920×1152（底部 72 行镜像，`2*extent-coord-2`），ViT 20×32 = 640 token（有效 18×30）；post shift 3。decoder 移位 40–55 = 0/3/1/2 循环，56–61 = 1/2/0/3…，62–69 = 0/3/1/2（`native_runtime_shifts.h` 唯一）。900 档是我们自定的几何：1600×900 有效、**1600×960 处理**（09-17 定，原 1024 行版保留为 `900w`），ViT 25×16，第 16 行是零 token。
+
+**NGX 输入**：Color / Output（1080p RGBA16F）/ Depth / MVec；history（slot8）= 上一帧网络输出，motion 在 slot10；`input_scale=1/32`，`rgb_mode=1`。
+
+**算术**：
+- FFN 激活 `x=clamp(x,-4,4); y=x*(0.89453125+x*(0.447265625-0.055908203125*|x|))`（half 多项式，不是 GELU）。
+- 残差 skip-first：`H(input*skip)` 作为初始累加器，之后每 K32 做一次 half 舍入；FP8 是 E4M3 SATFINITE、RNE，次正规尾数允许进位到 8。
+- 注意力：每 head 32 维，Q/K 归一化用半精度平方和，归约顺序固定；softmax 的 exp 是 half 仿射加移位的位映射（C32、ViT 系数不同）；分母求和树是固定的 key 顺序，不是平衡树。
+- C64 三矩阵 FFN：64→256（分组扩展）→64（分组收缩，**每 32 输出通道只连 128 hidden，其余全零**）→64（混合）；C512 split FFN 是 512 混合→8 组 64→256→64。
+- 输入混合按 WMMA 规则：两操作数指数和的最大值对齐，按 `2^(E-27)` 朝零截断后精确求和。随机场是 Box–Muller，用 MUFU 近似。
+- 时序采样：UV 定点 21 位，五点十字核，MUFU.RCP 归一化。
+- post70：输出合同是 `Color + 神经残差`；RGB 头两个 K16 的 27 位对齐整数规则。
+- 原版 FP16 输出 surface 是**朝零截断**；AMD 预览驱动的 `f32tof16` 也是朝零截断。
+
+---
+
+## 3. 当前状态（2026-09-23 16:00）
+
+**《剑星》装机版 = prod6**（HIP，OptiScaler 前置链，900P auto）：Zero 实测 900P 简单场景接近 60fps，无异常。备份 `D:\DLSSNR-Lab\stellar-prod6-20260923\backups\20260923-112851`（回退 `install.ps1 -RestoreBackup <该目录>`）。addon 后来换成 FIT_LARGE 版 `c1bc7374…`。用户个人 flags 里 `ADAPTIVE=1`（ViT 复用开）。
+
+**发布**：0.29 三包已在 `D:\給網友打包`（Magpie `fb005c3e…`、OptiScaler `55142927…`、OptiScaler-REFramework `668133f9…`），清单 `Development/releases/0.29/packages.json`；**网盘链接待 Zero 上传后补进 README**。0.28 三包及 RE9 0.28.1 链接已在 README。
+
+**黄金 hash**（HIP 900 档正确性回归）：900w 三道 `FEEA9EF3…`（40 帧）/ `22C171FC…`（每 8 帧 reset）/ `75B62D2F…`（seed123 history）；960 三道（900 漏派发修复后）`047c36e1…` / `b4f66e9d…` / `0e4afd83…`。HLSL 参考 `C7C2F49D…`。脚本 `validate-modules.ps1`、`validate-modules-960.ps1`。
+
+**性能**：离线 900 档约 12.1ms、1080 档约 17.3ms（prod6，完整 NativeGameFrame 回放）；HLSL 900 约 16.8ms。网友 900P 最低画质 73fps。
+
+**未装的研究候选**：6b（ffn_fused wave 内 QKV 归一化，非逐位，−5.4/−5.6%，PSNR 58dB）等 Zero 看画质；ffn_fused_c256 宽权重片段（约 −0.03ms，host 打包器改动，等下次 addon 重编时顺带）。
+
+---
+
+## 4. 时间线（里程碑）
+
+| 日期 | 事件 | 关键数字 |
+|---|---|---|
+| 08-31 | 权重解析、71 块构图恢复、5090 跑通原版、AMD 上传 arena | 153 条记录 |
+| 09-01 | block0 出图、SASS 解出算术；row-major 假设被反证（矩阵按 tensor-core tile 排列） | |
+| 09-02～03 | 在 5090 游戏 backend 里抓 live 中间层，用"下一层当裁判"逐段前移 | block70 RGB corr 0.945 |
+| 09-04 | 动态游戏链 484s→10.6s；DirectML；1080p 单 DLL 进游戏 | 11.98fps |
+| 09-05 | 像素审计翻案（此前根本没提交），8×8 网格 → 停追 FPS，改做 native 正确性 | |
+| 09-06 | 原生逐值链 RGB512→0–70→RGB 全 exact；实机几何 640 token | 786,432 值 diff 0 |
+| 09-07 | valid1080 整网 exact、时序 exact、进游戏出正确画面；闇夜战 4.0s→1.47s | 2fps |
+| 09-08 | 闇→0.47s；光→0.186s（**tag 0.01 exact 终点**）；fast 链到 62.7ms（0.03） | 5→15fps |
+| 09-09 | 33ms，GPU 饱和；显存之争（6.8→3.75GB）；闪烁靠输出平滑；0.04～0.06 | 29fps |
+| 09-10 | fast38 34.0ms；0.07 包；浪人崛起 XeSS 出图；发现机器降频态（重启后 24.4ms） | 35fps |
+| 09-11 | Magpie 路线打通；黑块根因 = 硬件 E4M3 Cast 不饱和 → NaN；全仓 43 处加饱和（0.10）；接管时间 22s→3.4s（0.11） | |
+| 09-12 | 屏幕提示层（0.12）、FPS 显示 + XeSS FG（0.13）、0.14；C512 FFWD 换 FP8 无收益，"项目收尾" | Magpie 28→55 显示帧 |
+| 09-13 | 小窗口 FIT_INPUT（0.15）；720 / 900 分支 | |
+| 09-14 | **HIP 分支**：comgr 无 SDK 编译、D3D12↔HIP 桥接、512/900 逐位对上 oracle | |
+| 09-15 | HIP 生产快路径 51→25ms；异步重绑竞态修复；读回节奏污染 HLSL 基准被识别 | 游戏 17→30fps |
+| 09-16 | MH 分组收缩零结构、各家族 attention+投影融合、ViT 融合；"dup / 跳块"帧内成本法；权重预打包四连 | HIP 18.07 |
+| 09-17 凌晨 | 读 `.s` 当 profiler：F() 去分支 + 16 load 连发（−0.68）、prefix 内联翻盘等 → **HIP 反超 HLSL** | 16.9→15.5ms，游戏 47→52fps |
+| 09-17 | **0.20**（HIP，免预览驱动）；生产内核搬进 `hip/`；auto 选档（0.21）；900→960 行（0.22） | 900P 52～54 / 1080P 37～38 |
+| 09-18 | 多 GPU 主机修复（0.23）；黑神话的钩子三道坎（未验通，已复原） | |
+| 09-19 | OptiScaler 前置链（0.24）；主城掉帧修复；C32 寄存器复用 / 有界倒数；**900 解码尾部漏派发修复**；gfx1200 + gfx1201 双构建（0.25）；C256 frag；LOP 黑屏 = 打包漏 R11 shader（0.26） | |
+| 09-20 | RE9 后置专用版（0.26.1）；从 AttExp 选入精确流式 attention / R3 自适应复用（默认关）；0.27 | 900P 56～57 |
+| 09-21 | **算力缺口研究立项**（主线，见 §6）；C128/C256 零填充快路径、固定尺寸 ViT/decoder（−1.2/−1.7%） | |
+| 09-22 | TheAutomatic PR5 设计独立实现分阶段桥接 → RE9 真正超分前接入 + 曝光修复（0.28、0.28.1）；合并 PR #7/#8；栅栏 local 化 + C32 CU 模式 | 58～59fps |
+| 09-22 夜～09-23 | prod3～prod6：折叠 FFN、字节链、向量化 staging、mh 寄存器化、in16 别名、尾段转置 | 相对 prod2 −4.3/−4.5% |
+| 09-23 | prod6 装机；DLSS5_FIT_LARGE（issue #6，>1080 输入降到 1080 层）剑星 + RE9 验通；**0.29 三包** | ~60fps；网友最低画质 73 |
+
+---
+
+## 5. 性能演进要点
+
+### DX12 fast 链（09-08～09-12，186→约 24ms）
+收益全部来自数据搬运：寄存器分块复用、FP8 格点上的中间量改用 f16 存、权重常驻 DEFAULT 堆、删 LDS 转存和 barrier、合批。**这台卡的核成本几乎全在逐元素标量尾巴**（软件 H/F、散写），不在带宽也不在矩阵乘。逐刀表见原文 §3「fast 链每刀收益表」。
+
+### HIP 链（09-14～09-23，离线 900 档 51→12.1ms，全部逐位一致）
+有效的几类刀，按类别记：
+- **核融合**：各家族 FFN+QKV、attention+投影（C64/C128/C256）、prefix 进 block0、post RGB 头 / finish / 下采样进 C32 尾部。
+- **权重预打包**：half / E4M3 / fragment 布局，一次 memcpy 取 B 片段；C512 QKV、ViT QKV / proj / contract、pool、decoder。
+- **ISA 病灶**：F()/q8 的分支饱和改 fmin/fmax + cndmask；串行 load→wait 改连发；scale 读从循环里提出来。
+- **结构零**：MH 收缩只遍历本组 128 K；C128/C256 全零 padding tile 直接写零。
+- **固定尺寸**：编译期常量解锁展开与读取调度（ViT expand 一处 −26～36%）。
+- **同步 / 驻留**：栅栏限定 LDS 地址空间（去掉 `global_inv`）、C32 用 CU 模式、in16 别名到 Scratch。
+- **WMMA 操作数对调**（A/B 寄存器格式相同，对调得到 D^T）：折叠 FFN 让 hidden 不进 LDS、mh 的 ex/prob 留寄存器、ffn_fused 尾段转置。
+- **请求合并**：C32 staging 把 16 条行读并成 b128（字节链 + 向量化）。
+
+---
+
+## 6. 算力缺口研究（318 期主线，09-21 起）
+
+**问题**：9070 XT 独立程序实测 FP8 405T / FP16 204T / FP32 49.9T（与标称一致，时钟约 3.1GHz）；网络主矩阵有效吞吐只有约 55T。**判据是解释缺口，不是零碎提速**；负结果能排除原因也算数。总汇总 `results/network-cost-summary-20260921/README.md`，公众号稿 318.md。
+
+已建立的认识：
+1. **整网份额**（900/1080，稀疏事件 + 区段 ABBA）：C32 约 35%，C64 / C128 / C256 / C512 / ViT 各约 11～13%。局部机制证据**不能相加成整网解释百分比**。
+2. **ViT 同 FLOPs 不同耗时**：expand/contract 的差异主要来自编译调度组织（固定尺寸解锁展开）；禁止 contract 展开慢 175%。
+3. **计算密度探针**：保持读取量不变、只加寄存器内 WMMA，吞吐 150→299T，说明 150T 不是硬件上限，是供数和指令组织在限制。
+4. **供数**：B 的工作集吞吐不单调；B tile 间距 +256B 后 span64 48→22μs；页内翻 bit10 同样有效 → 对地址低位敏感。真实 ViT 核在 RGP 里 memory stalled 68%（只代表那个热核状态）。
+5. **规则**：读写成本 ≈ 指令数 + 触及的缓存行数，两项都算；lane 间仍连续时并宽才有效。排队按请求数算，不按字节数。
+6. **分组 / 编号映射**：wave 总数固定时，组大小 1→2 或重排 logical_wave 编号都会慢 45%；HIP 驻留上限相同，原因未定。
+7. **C32 周期账**（核内时间戳）：staging 31%、FFN 26%、QKV 11%、注意力 12%、投影 8%、尾部 9%、barrier 9%；矩阵只占 post 核约 15%。驻留贴着 LDS 上限。
+8. **驻留**只在它是瓶颈时才值钱：VGPR 封到 96 反而慢；c256_attention 每个 launch 的尾巴 25～37% 是结构税。
+
+仍未解：ViT 剩余约 50% 参考算力的具体限制因素；C32 余下部分的归因。
+
+---
+
+## 7. 已否定 / 不要重做（除非瓶颈变了，按"旧 null 要重测"原则说明理由再测）
+
+- **占用率捷径**：C32 no-unroll（+0.64→+1.0 更慢）、waves_per_eu 提示（编译器不理）、LDS_SLIM、ffn_fused VGPR 封 96。
+- **LDS 凑片**：C32 LDS_VECTOR（测了四次都是 null）、C32 / MH 的 V 转置、概率 DWORD 布局、AV 共读。
+- **字节 / half 流**：MH 完整字节流当时慢（09-19 修漏派发后重测才通过，已进 0.25）；ViT byte/half stream、N2/N4 / M2 / M4、ViT FFN 融合（并行度不够）。
+- **小通道 FFN 换布局**：C64/C128 tiled 或 frag（+0.3～0.4 更慢）。
+- **C512**：mix 并进 FFN、FP8 展开（有逐位反例，只能收缩用 FP8）、attention+投影融合。
+- **各种 hipGraph**：当前 GPU 时间把 CPU 提交全盖住了，收益为零。
+- **其他**：DX12 overlap（与游戏并发是双输）；VMM 稀疏映射（驱动只认"保留区 == 一个完整物理块"，封死）；buffer_load 32 位地址（正确，常量必须是 `0x31004000`，但无收益）；噪声缓存；多遍 NR（5090 上也不值）；C32 注意力寄存器化（压力抵消收益）；注意力投影输出转置（滚动循环别转置）。
+
+---
+
+## 8. 工程教训（合并版）
+
+**测量**
+- 只信同批交错 ABBA，别跨批比较绝对值；GPU 会卡在降频态好几天，量之前先跑基线。
+- 逐核 HIP event 在这套驱动上不可靠，会出现负值，全插反而把帧时拉长 80%；短段事件也不能当依据。要么用 wall 加重复放大，要么用 dup / 跳块法（注意 HLSL 跳块带拷贝，会压低 HLSL 那边的家族成本）。
+- 读回节奏会改变 GPU 频率：HLSL 全读回 26ms，只读首尾 16.7ms。性能测试一律只读首尾，正确性另做全帧检查。
+- 单核隔离会把工作集留在缓存里，不能直接相加当整帧。
+- `DLSS5_GAME_PROBE` 每帧 Flush，会破坏异步提交时序（地面变透明），不要和 ASYNC_SUBMIT 同开。
+- 测帧率别开 Splashtop；先确认游戏有没有锁帧（剑星曾锁 30）。
+- 派生测试脚本后先 grep runner 名；对照组没变化先怀疑脚本（09-16 两个假 null 就是这么来的）。
+- RGP 捕获会改时钟和输出；RGP 里的 HLSL ELF 按占位哈希缓存，要先用 `dxilhash.py` 签名。
+
+**数值**
+- HLSL `round()` 是 RNE；`f32tof16` / D3D 驱动输出 surface 是朝零截断。
+- FMA 收缩和上下文相关，凡要逐位的尾链两边都显式 `precise`。
+- 单点候选能修一个反例，全幅上反而可能更差，别拿单点匹配去推广舍入规则。
+- 单层高相关不等于多层稳定，必须做完整累计门。
+- 硬件 E4M3 Cast 不饱和，所有无界值转换前都要 clamp ±448。
+
+**GPU / D3D12 / HIP**
+- 2 的幂行步长会让内存通道撞车；单 command list 塞整网会 DEVICE_HUNG，必须分块提交加 fence。
+- D3D12 单轴 group 上限 65535；视图格式变量别复用（会建出 UNKNOWN 视图，device removed）；宿主贴图只能拷贝，不能建 UAV。
+- ReShade immediate list 在 `_has_commands=false` 时直接 return，原生录的命令可能根本没提交。
+- 派发网格按 token 和通道分别分块（900 档漏掉 4 个通道 tile 就是没这么做）。
+- COMGR 确定性：同一文本两次编译字节一致，源码一变只改 `__hip_cuid_*`。校验标准 = 三道 hash + 去掉 cuid 后的 `.s` 对比。
+
+**方法**
+- 核内延迟问题先读 `.s`（数分支、数 load→wait、看重复 load），别凭结构直觉盲改。
+- 跟 HLSL 并排逐段对"做同一件事但做法不同"的段。
+- 旧 null 要重测：一刀的收益取决于当时的瓶颈。
+- 静态指令数少不等于快；少 barrier 不等于快；少字节不等于快。
+
+**运维**
+- 游戏或 Magpie 开着时绝不换 DLL / HSACO，也不跑测试台。
+- Windows Update 和 AMD Install Manager 会偷换驱动（已设 `ExcludeWUDriversInQualityUpdate=1`，计划任务已禁用）。
+- 打包不能继承旧资产目录，要从仓库模板和当前源同步；配置唯一来源是 `scripts/*flags*.txt`（见 `scripts/CONFIGURATION.md`）。
+- 远端 PowerShell 一律用 `-File`，别在 `-Command` 里 type 自己的输出文件（曾涨到 4.8GB）。
+- commit 不加 Co-Authored-By；每做完一刀给 Zero 一句进度；时间只信 hook 时间戳。
+
+---
+
+## 9. 运维 / 构建 / 部署入口
+
+- **目录**：生产宿主 `src/`、生产内核 `hip/`（`build-modules.ps1` 24 行配方，默认双架构，`SHA256SUMS`）、DX12 shader `shaders/`、打包与配置 `scripts/`；实验在 `Development/HIP/experiments/`，结果在 `Development/results/`，RE9 前置宿主在 `Development/RE9/presr/`（只入库版本锁定 + 补丁 + 脚本）。
+- **AMD 机**：实验根 `D:\DLSSNR-Lab`（`hip-backend\` 放模块目录和 benchmark）；《剑星》在 `C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64`；成品在 `D:\給網友打包`。5090 的《剑星》在 `D:\SteamLibrary\…\Win64`。
+- **构建**：`scripts/build-addon.sh --hip`（DX12 用 `--tiled`）；`hip/build-modules.ps1`。
+- **部署**：每轮一个 `Development/deployments/<名字>/` 或 `D:\DLSSNR-Lab\stellar-<名字>\install.ps1`，流程是源 hash 校验 → 备份 → 替换 → 读回，并确认宿主 / INI / flags 前后不变，失败回滚。
+- **打包**：`Development/tools/package-0xx.ps1`，底包逐文件核对、44 个 shader 变体编译、ZIP 读回校验，flags 从仓库模板复制。
+- **远程 UI**：交互计划任务 `dlss5game` / `dlss5magpie` / `dlss5toggle` / `dlss5shot` / `dlss5rgp` / `dlss5toolbar` / `dlss5profiler`；Magpie 热键 **Alt+Shift+A**。
+- **HIP 选项**：默认组合在 `src/native_hip_network.h` 的 HIP_FAST；诊断开关（dup / skip / memory / span probe）全部默认关。
+
+---
+
+## 10. 游戏适配要点
+
+- **《剑星》**：FFX `ffxDispatch` 钩子（ReShade addon）；现走 OptiScaler 0.9.4 前置链，必须 `Dx12Upscaler=fsr31`（写 `ffx` 会静默落到 FSR2.1）；`GameUserSettings.ini` 里 AA=OFF 时 FSR 根本不创建。
+- **Magpie**：输入是 8 位 sRGB 成品图，需要 `CODEC_SRGB=1`；光流在暗部会出垃圾向量，是已知限制（止血用 `MOTION_MAX_PX=64`）；包内带 XeSS FG ZeroMV。
+- **浪人崛起**：XeSS 路径，运动向量符号为 −1。
+- **匹诺曹的谎言**：R11G11B10 输出，需要 R11 写回 shader（0.26 修）。
+- **RE9**：同一列表后面还有游戏自己的 draw（51～53 次），普通前置被安全检查拒绝。走 TheAutomatic PR5 设计的分阶段桥接 + GPL 命令列表代理，在超分前接入；曝光纹理必须传入（否则褪色）；尺寸越界要先检查、失败要回滚（0.28.1）。Xbox 版《鬼武者》用 0.26.1 后置包可用。
+- **黑神话**：FSR3 静态链进 exe，未验通，已复原。
+- **FIT_INPUT / FIT_LARGE**：≤1080 的小窗口 letterbox；>1080 的输入降采样到 1080 层，按亮度比调制原图。
+
+---
+
+## 11. 待办
+
+- README 补三点：默认跳过 42/43/46 三块（40.66dB，清空 `DLSS5_SKIP_BLOCKS` 即全跑，约 +1ms）；ViT 自适应复用默认关、开了有损；精确流式注意力常开且逐位。
+- 0.29 网盘链接等 Zero 上传后补进 README，回复 issue #6。
+- 6b（wave 内归一化）画质等 Zero 看。
+- 算力缺口主线：ViT 剩余缺口的限制因素、C32 余下部分的归因。
+- 9060 / XT（gfx1200）至今只做了编译验证，没有实机测过。
+
+---
+
+## 附：history/ 文件索引
+
+| 文件 | 内容 |
+|---|---|
+| `DevHistory-full-20260923.md` | **本文压缩前的完整版**（08-31～09-23 每一刀的数字、SHA、日志路径） |
+| `porting-worklog.md` | 08-31～09-08 逐块移植流水（6276 行；第 2976 行之后倒序） |
+| `reverse-engineering-notes.md` | 逆向结论原始记录 |
+| `CURRENT-STATE.md` | 09-07～09-10 fast 链逐刀状态（最新在上） |
+| `amd-port-plan.md` / `fast-path-plan.md` / `next-steps-plan*.md` / `PLAN.md` | 各阶段计划 |
+| `README.md`、`native-runtime-contract.md`、`local-patch-tool.md`、`optiscaler-intro.md` | 早期索引 / 已过时的方案 |
