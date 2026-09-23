@@ -1,8 +1,10 @@
 Magpie-DLSS5-AMD @VERSION@ — full portable package
 
-Six adopted lossless kernel improvements: shared RGB head feature reads, exact-zero C128/C256 padding shortcuts, and fixed-shape ViT expansion/projection plus decoder projection. No new quality-loss switch. Stellar Blade testing found no visible regression or FPS change; no fixed speedup is promised. Magpie framework/pipeline retain the verified 0.27 baseline.
+1. Inputs above 1080p are no longer rejected (DLSS5_FIT_LARGE=1, on by default): a render resolution beyond 1920x1080 is fitted (downsampled) onto the 1080 tier for the network, and the original-resolution frame is then composed the way the original codec does it (the full-resolution picture is the base, the network output steers luminance/colour); it is not a plain upscale. Stellar Blade at 2560x1440 Native AA measured 44 fps. Ultrawide takes the same path (letterboxed network surface) but has not been tested on hardware; feedback welcome.
+2. Six bit-exact kernel improvements since 0.28: LDS-scoped workgroup fences, folded C32 FFN, C32 byte chain with vectorised input staging, register-resident multi-head attention, C32 in16 aliasing (LDS residency), transposed FFN tail. About -7% whole-network time; Stellar Blade 900p simple scenes reach ~60 fps. Output is bit-identical to 0.28.
+Magpie framework/pipeline retain the verified 0.27 baseline.
 
-Extract everything into a separate directory and run Magpie.exe. Use a window no wider than1920 and no taller than1080. The bundled chain is FSR3_SR (DLSS5 entry, 1x input size) → FSR4 upscale → XeSS frame generation. Alt+Shift+A starts/stops scaling; F6 toggles neural rendering. Use AMDOF only at the first stage; None for the later FSR4/XeSS stages.
+Extract everything into a separate directory and run Magpie.exe. Windows up to 1920x1080 use the smallest fitting tier; larger windows are fitted onto the 1080 tier and restored (DLSS5_FIT_LARGE=1). The bundled chain is FSR3_SR (DLSS5 entry, 1x input size) → FSR4 upscale → XeSS frame generation. Alt+Shift+A starts/stops scaling; F6 toggles neural rendering. Use AMDOF only at the first stage; None for the later FSR4/XeSS stages.
 
 DLSS5-AMD/native-game-flags.txt is the tracked Magpie configuration. NETWORK_HEIGHT=auto chooses720/900/1080. Existing default block skips remain; adaptive reuse is off. F8 requires explicitly enabling the reuse hotkey. Set both DLSS5_SHOW_FPS=0 and DLSS5_NOTICE=0 to disable the corresponding information.
 

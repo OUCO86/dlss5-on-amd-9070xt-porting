@@ -1,5 +1,8 @@
 OptiScaler-REFramework-DLSS5-AMD @VERSION@ — special RE9 pre-SR full package
 
+0.29 update
+Render inputs beyond 1920x1080 no longer fall back to the original SR: they are fitted onto the 1080 tier for the network and composed back to the source resolution the way the original codec does before FSR (DLSS5_FIT_LARGE=1 in DLSS5-AMD\native-game-flags.txt, on by default). RE9 Native AA tested. Six bit-exact shared kernel improvements since 0.28 (about -7%). Host dxgi.dll is identical to 0.28.1; the runtime is updated -- replace both the root and _storage_ copies together.
+
 0.28.1 fix
 Reject actual neural inputs exceeding1920x1080 before HIP initialization or geometry changes, retaining the original SR path. Roll back partially initialized resources so valid sizes can recover within the same session; protect recorded, unretired frames. Ten regression cases/twelve submitted and read-back frames passed, followed by an initial user resolution-switching test.
 The limit applies to render INPUT, not display OUTPUT: native2560x1080 exceeds it; that display resolution with a supported lower-resolution SR input can work. This does not establish the cause of every PSO/driver error. Update the host and runtime together.
