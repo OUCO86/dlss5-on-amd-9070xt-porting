@@ -3293,3 +3293,7 @@ prod6（逐位）：hash/额外控制组全同，1000 帧计时 900 −0.54ms（
 ## 2026-09-23 14:05：issue #6（超 1080p / 超宽屏输入）：DLSS5_FIT_LARGE
 
 网友要求超过 1080p 的输入降采样到 1080 跑网络再由 FSR 放大。0.15 的小窗口 fit 路径（codec encode 双线性采到网络面、decode 双线性还原源尺寸、再交 FSR）数学上对大输入同样成立，只是 `NativeInputGeometry::Supported` 的 ≤1920×1080 门挡着。改动：`Supported/Make` 加 `large` 参数；`NativeFitLargeInput()` 读 `DLSS5_FIT_LARGE`；codec / pre_upscale / readback / addon 主文件的 `supported_input` 五处传入；`CheckNativeFrameInput` 去掉 1920×1080 硬限制（字节数校验保留）；四个 flags 模板加 `DLSS5_FIT_LARGE=1`。网络层级自动选（超 1080 → 1080 层，21:9 fit 后上下黑边）。MinGW `build-addon.sh --hip` 编译通过（sha256 ee814763…）。测试包 `D:\DLSSNR-Lab\stellar-fitlarge-20260923\install.ps1`（备份 DLL+flags，`-Restore` 回退）。未装、未测：需要用户在 2560×1440 桌面把 OptiScaler 的超采样档设成 Native/DLAA 或 Ultra Quality（渲染分辨率 >1080）验证。
+
+## 2026-09-23 14:10：DLSS5_FIT_LARGE 修正与剑星实测；RE9 runtime 同步
+
+修正：pre-upscale 在 phase 0 判 supported 并由此启动初始化，环境变量那时还没灌入 → 改为直接读 flags 文件设 `NativeFitLargeInputOverride()`（addon c1bc7374…）。剑星 2K Native AA（渲染 2560×1440）出图，44 fps；合成走原版 codec：网络 1080 层输出与 proxy 双线性采到 2K，按亮度比调制 2K 原图（原图是底），不是双线性放大。用户认可。RE9：prepare-host.py 的尺寸校验加 `NativeFitLargeInput()`，PrepareFrame 首次调用从 `assetsDir\..\native-game-flags.txt` 读 `DLSS5_FIT_LARGE`；上游 host 无 caps 尺寸门（仅 ABI 测试断言 1920×1080，caps 未改）。runtime de99a735… 装入 RE9 根目录与 _storage_（deployments/re9-fitlarge-20260923），等用户实测。模板 hip-re9-flags.txt 加 `DLSS5_FIT_LARGE=1`。

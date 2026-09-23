@@ -50,11 +50,23 @@ start=s.index('        auto *color =', s.index('int32_t PrepareFrame('))
 end=s.index('        const bool geoChanged', start)
 validation=s[start:end]
 s=s[:start]+s[end:]
-validation += r'''        if (!NativeInputGeometry::Supported(cdesc.Width, ch))
+validation += r'''        {
+            // DLSS5_FIT_LARGE=1 in DLSS5-AMD\native-game-flags.txt (issue #6): inputs beyond 1920x1080 are fitted (downsampled)
+            // onto the network surface by the codec and restored to the source extent, like small inputs since 0.15.
+            static const bool fitLarge = [&] {
+                unsigned v = 0;
+                const std::wstring flags = JoinPath(JoinPath(session->assetsDir, L".."), L"native-game-flags.txt");
+                if (FILE *f = _wfopen(flags.c_str(), L"rb")) { char line[256]; while (fgets(line, sizeof line, f)) sscanf(line, "DLSS5_FIT_LARGE=%u", &v); fclose(f); }
+                return v == 1;
+            }();
+            if (fitLarge)
+                NativeFitLargeInputOverride() = true;
+        }
+        if (!NativeInputGeometry::Supported(cdesc.Width, ch, NativeFitLargeInput()))
         {
             char message[192] {};
             std::snprintf(message, sizeof message,
-                          "PrepareFrame: render input %llux%u exceeds supported limit 1920x1080; original SR",
+                          "PrepareFrame: render input %llux%u exceeds supported limit 1920x1080 (DLSS5_FIT_LARGE=0); original SR",
                           static_cast<unsigned long long>(cdesc.Width), ch);
             return Fail(LMXXF_NR_INVALID_ARGUMENT, message);
         }
