@@ -85,7 +85,7 @@
 -        }
          auto *color = static_cast<ID3D12Resource *>(info->color);
          if (!color)
-@@ -575,7 +561,45 @@
+@@ -575,7 +561,52 @@
          const UINT cw = static_cast<UINT>(cdesc.Width);
          const UINT ch = cdesc.Height;
 +        {
@@ -93,8 +93,15 @@
 +            // onto the network surface by the codec and restored to the source extent, like small inputs since 0.15.
 +            static const bool fitLarge = [&] {
 +                unsigned v = 0;
-+                const std::wstring flags = JoinPath(JoinPath(session->assetsDir, L".."), L"native-game-flags.txt");
-+                if (FILE *f = _wfopen(flags.c_str(), L"rb")) { char line[256]; while (fgets(line, sizeof line, f)) sscanf(line, "DLSS5_FIT_LARGE=%u", &v); fclose(f); }
++                if (const char *e = std::getenv("DLSS5_FIT_LARGE")) return e[0] == '1' && !e[1];
++                // assets may be ...\DLSS5-AMD\native-game-tiled-assets or its HIP subfolder: walk up to the flags file
++                std::wstring dir = session->assetsDir;
++                for (int up = 0; up < 4 && !dir.empty(); up++)
++                {
++                    const std::wstring flags = JoinPath(dir, L"native-game-flags.txt");
++                    if (FILE *f = _wfopen(flags.c_str(), L"rb")) { char line[256]; while (fgets(line, sizeof line, f)) sscanf(line, "DLSS5_FIT_LARGE=%u", &v); fclose(f); break; }
++                    const size_t cut = dir.find_last_of(L"\\/"); if (cut == std::wstring::npos) break; dir.resize(cut);
++                }
 +                return v == 1;
 +            }();
 +            if (fitLarge)
@@ -132,7 +139,7 @@
 +            (session->exposure != info->exposure || session->job.width != info->color_width || session->job.height != info->color_height ||
               session->colorFormat != cfmt || (session->job.width && cw != session->job.width) ||
               (session->job.height && ch != session->job.height));
-@@ -593,4 +617,11 @@
+@@ -593,4 +624,11 @@
          if (!session->encode)
          {
 +            NativeGameCodec *enc = nullptr;
@@ -144,13 +151,13 @@
 +            {
              if (!session->bridge)
              {
-@@ -602,4 +633,5 @@
+@@ -602,4 +640,5 @@
                  session->bridge = new hip_reference::D3D12Bridge();
                  session->bridge->Create(session->queue, opt, {});
 +            session->bridge->PrepareStagedKernels();
                  session->hipPrepared = true;
                  char geoMsg[192] {};
-@@ -612,13 +644,6 @@
+@@ -612,13 +651,6 @@
                  SetError(geoMsg);
              }
 -            NativeGameCodec *enc = nullptr;
@@ -165,14 +172,14 @@
 +                enc->Create(session->device, {color}, session->shaderDir, true, (ID3D12Resource*)info->exposure);
                  rgbIn = new NativeGameRgbInput();
                  rgbIn->Create(session->device, enc->Output(), session->shaderDir);
-@@ -626,5 +651,5 @@
+@@ -626,5 +658,5 @@
                  rgbOut->Create(session->device, session->bridge->Output(), session->shaderDir);
                  dec = new NativeGameCodec();
 -                dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir);
 +                dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir, true, (ID3D12Resource*)info->exposure);
                  if (dec->BufferOutput())
                  {
-@@ -648,4 +673,13 @@
+@@ -648,4 +680,13 @@
                  delete rgbIn;
                  delete enc;
 +                // No frame commands have been exposed/submitted by this transaction.
@@ -186,7 +193,7 @@
 +                    session->initializationBlocked = true; // retain resources until safe destruction
                  throw;
              }
-@@ -681,4 +715,7 @@
+@@ -681,4 +722,7 @@
          }
  
 +        session->capture.Begin(DllDirectory(),info->frame_id,info->pre_exposure,info->exposure_scale,(ID3D12Resource*)info->exposure);
@@ -194,14 +201,14 @@
 +        session->exposureState=(D3D12_RESOURCE_STATES)info->exposure_state;
          session->job = {};
          session->job.color = color;
-@@ -688,4 +725,6 @@
+@@ -688,4 +732,6 @@
          session->job.transfer_strength = transfer_strength;
          session->job.color_strength = color_strength;
 +        session->job.pre_exposure=std::isfinite(info->pre_exposure)&&info->pre_exposure>0?info->pre_exposure:1.f;
 +        session->job.exposure_scale=std::isfinite(info->exposure_scale)&&info->exposure_scale>0?info->exposure_scale:1.f;
          session->job.debug_view = debug_view;
          session->colorFormat = cfmt;
-@@ -715,5 +754,8 @@
+@@ -715,5 +761,8 @@
          if (!list || !j || j->state < LMXXF_NR_JOB_PREPARED)
              return Fail(LMXXF_NR_INVALID_ARGUMENT, "RecordInputs: need prepared job and command list");
 -        session->encode->Record(list, {j->colorState}, 1.f);
@@ -211,7 +218,7 @@
 +        session->capture.Record(session->device,list,session->encode->Output(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,"proxy");
          session->rgbInput->Record(list, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
          session->bridge->RecordInputCopy(list, session->rgbInput->PostBase(), nullptr);
-@@ -736,5 +778,6 @@
+@@ -736,5 +785,6 @@
                          "EnqueueHip: weights not found (set LMXXF_WEIGHTS_DIR to tiled assets, not 0.24.2 HIP/)");
          auto *j = static_cast<Job *>(job ? job : &session->job);
 -        session->bridge->EnqueueAfterProducer(j->seed, false);
@@ -219,7 +226,7 @@
 +        j->hipQueued = true;
          j->state = LMXXF_NR_JOB_NR_COMPLETE;
          SetError("");
-@@ -760,7 +803,7 @@
+@@ -760,7 +810,7 @@
              return Fail(LMXXF_NR_FAILED, "RecordOutputs: decode missing");
          session->decode->Record(list,
 -                                {D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
@@ -230,7 +237,7 @@
 +                                1.f, NativeCodecParameters{j->transfer_strength, j->color_strength, NativeCodecDebugView(j->debug_view),j->pre_exposure,j->exposure_scale});
          if (session->decode->BufferOutput())
          {
-@@ -798,4 +841,7 @@
+@@ -798,4 +848,7 @@
              list->ResourceBarrier(2, barriers);
          }
 +        session->capture.Record(session->device,list,session->rgbTex->Output(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,"neural");
@@ -238,7 +245,7 @@
 +        j->outputsRecorded = true;
          j->state = LMXXF_NR_JOB_CONSUMER_COMPLETE;
          SetError("");
-@@ -837,6 +883,9 @@
+@@ -837,6 +890,9 @@
              return Fail(LMXXF_NR_INVALID_ARGUMENT, "null context");
          auto *j = static_cast<Job *>(job ? job : &session->job);
 -        if (j)

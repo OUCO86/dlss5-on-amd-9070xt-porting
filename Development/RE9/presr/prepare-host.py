@@ -55,8 +55,15 @@ validation += r'''        {
             // onto the network surface by the codec and restored to the source extent, like small inputs since 0.15.
             static const bool fitLarge = [&] {
                 unsigned v = 0;
-                const std::wstring flags = JoinPath(JoinPath(session->assetsDir, L".."), L"native-game-flags.txt");
-                if (FILE *f = _wfopen(flags.c_str(), L"rb")) { char line[256]; while (fgets(line, sizeof line, f)) sscanf(line, "DLSS5_FIT_LARGE=%u", &v); fclose(f); }
+                if (const char *e = std::getenv("DLSS5_FIT_LARGE")) return e[0] == '1' && !e[1];
+                // assets may be ...\DLSS5-AMD\native-game-tiled-assets or its HIP subfolder: walk up to the flags file
+                std::wstring dir = session->assetsDir;
+                for (int up = 0; up < 4 && !dir.empty(); up++)
+                {
+                    const std::wstring flags = JoinPath(dir, L"native-game-flags.txt");
+                    if (FILE *f = _wfopen(flags.c_str(), L"rb")) { char line[256]; while (fgets(line, sizeof line, f)) sscanf(line, "DLSS5_FIT_LARGE=%u", &v); fclose(f); break; }
+                    const size_t cut = dir.find_last_of(L"\\/"); if (cut == std::wstring::npos) break; dir.resize(cut);
+                }
                 return v == 1;
             }();
             if (fitLarge)
