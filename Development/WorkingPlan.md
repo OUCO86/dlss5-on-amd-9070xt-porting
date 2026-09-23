@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-23 10:05，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-23 10:20，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。
 
@@ -10,16 +10,16 @@
 ## 待办（按顺序）
 
 1. **放弃逐位的第一处：ffn_fused 的 QKV 归一化交换**（消融上界 1.8%，results/mhfast-tail-ablate-20260923）。做法分两步：
-   - 1a（逐位）已完成：−0.28/−0.21ms，进生产源。
-   - 1b（非逐位）：在 1a 之上，part 0/1 各 8 个 wave 每 wave 持一个 head 的 32 列，平方和 wave 内完成（4 个 8 项部分和重结合），去掉两个 barrier 和 LDS 往返。**先在 1a 基础上重做消融定上界**（旧上界 1.8% 里 LDS 往返部分已被 1a 拿走，估剩 0.7～1%）；上界不到 0.5% 就不做。做的话编候选装机由用户看画质。
+   - 1a（逐位）完成：−0.28/−0.21ms，进生产源 `HIP_FFN_TRANSPOSED_TAIL`。
+   - 1b（非逐位）完成实验：再 −0.18/−0.14ms（1.1%），`HIP_FFN_WAVE_NORM` 进源默认 0。**等回归出 12 帧 RGB 后用 rgbdiff.py 看差异量级，再由用户决定装不装 6b**。
    - 不做注意力行和（寄存器版只剩 4 条 WMMA）。
-2. **prod6 候选**：把 prod5 + in16 别名 + 尾段转置一起编（gfx1200/gfx1201），跑 regression-prod6.ps1，出 install.ps1 + payload.json。攒着，用户说装再装。
+2. **prod6 候选**（prod5 + in16 别名 + 尾段转置，逐位）：模块已编，regression-prod6（1000 帧计时 + 额外控制）与 6b 回归运行中（后台）。跑完：写 payload.json（6 个 hsaco：c32/mh_fused/mh_fast × 两架构），归档 regression 日志，攒着，用户说装再装。
 3. **318 成稿**：素材在文末"待整理材料"和各时间点补记；成稿前重新检索文献（Roofline 2009、Hierarchical Roofline、微基准反推、Hong & Kim 2009、PaLM MFU），重排结构。结尾句已备。
 4. host 侧小改等 addon 重编时顺带：宽权重片段（−0.03ms）、小 launch 合并（未量）。
 
 ## 不做 / 已关
 
-CU 模式逐核、C32/C512/ViT 注意力寄存器化、split_projection 转置尾声、BatchNorm 合并 barrier、ffn_fused VGPR 封 96、注意力残差读提前（寄存器版已盖住延迟）、c256 注意力尾巴（结构税：投影要 8 头 AV，host 链上无并发兄弟）。
+CU 模式逐核、C32/C512/ViT 注意力寄存器化、split_projection 转置尾声、BatchNorm 合并 barrier、ffn_fused VGPR 封 96、注意力残差读提前（寄存器版已盖住延迟）、注意力投影输出转置（原版是滚动循环，转置反而多指令多 VGPR）、c256 注意力尾巴（结构税：投影要 8 头 AV，host 链上无并发兄弟）。
 
 ## 机器与流程
 
