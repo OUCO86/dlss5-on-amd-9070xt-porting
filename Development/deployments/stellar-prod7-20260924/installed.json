@@ -1,0 +1,25 @@
+{
+    "source_commit":  "prod7-20260924",
+    "backup":  "D:\\DLSSNR-Lab\\stellar-prod7-20260924\\backups\\20260924-071340",
+    "items":  [
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead-fast-padded-wave-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod7-gfx1200\\multihead-fast-padded-wave-packed.hsaco",
+                      "existed":  true,
+                      "before":  "410A2DFF30D48C2108B595883135E736D0901E57E989915227D1CF9CBE225763",
+                      "after":  "36ad568fb15e5aa15caad9ce3a7ec5afb0d7227b45d0147526362e9a2ab86809"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead-fast-padded-wave-packed.hsaco",
+                      "source":  "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod7-modules\\multihead-fast-padded-wave-packed.hsaco",
+                      "existed":  true,
+                      "before":  "F9BC18D9FC090847216758F8FF497F24E23F8D23DE556E999CF3ACF70071DC85",
+                      "after":  "98faa6d4268ac8a129078233ac32022d615159a5f5460205fbb0b31e45e8f30f"
+                  }
+              ],
+    "unchanged":  {
+                      "OptiScaler.ini":  "80CDA873E59CC9DCBF127D51E1D737EA916D384F1AD17F9F884DC595586C82E0",
+                      "dxgi.dll":  "FBFB6676B829DAD7E020FB830586A16AA0EC6ADD78016DB48EF12E2AE1803231",
+                      "DLSS5-AMD/native-game-flags.txt":  "E666E22F4E3E687441E992CE9F73B9585BF652A10A0ABBD41647F5BEADC18D8D"
+                  }
+}

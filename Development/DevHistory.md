@@ -283,3 +283,7 @@ FFN 占满一帧换 mh_fast 模块看时钟（`results/clock-ledger-20260924/ffn
 ## 2026-09-24 01:30：mh_fast 全行写（HIP_FFN_LINE_STORES）——逐位，−0.6/−0.7%，prod7 候选回归通过
 
 功耗账本指出的那把刀做完：out 从 qfeature LDS 暂存整行写出，norm 三个 part 暂存后整行写出（多一个 barrier，LDS 每组 +8.4 KB，驻留仍由 VGPR 定）。模块集 ABBA 三孪生逐位全 0，1080 −0.10/−0.10/−0.08ms，900 −0.08/−0.09/−0.09ms；FFN 占满一帧时钟 +1.2%（2526→2554 MHz）。写出字节没变所以没到"去掉写"的 +7%，省的是部分写的开销。prod7 候选（只换 mh_fast 两架构）回归：12 帧 RGB 哈希 2 序列 × 2 档全部与 prod2 基线一致，四组额外对照一致；1000 帧计时 900 12.01/12.03、1080 16.91/16.92（基线 prod2 12.62/12.72、17.80/17.88）。`results/mhfast-line-stores-20260924`、`deployments/stellar-prod7-20260924`。未装机，等用户关游戏。
+
+## 2026-09-24 07:13：prod7 装进剑星
+
+用户确认游戏关闭后 `stellar-prod7-20260924\install.ps1`：2 个 mh_fast 模块（gfx1200/gfx1201）哈希核对后替换，宿主/INI/flags 未动，备份 `D:\DLSSNR-Lab\stellar-prod7-20260924\backups\20260924-071340`（`-RestoreBackup` 回滚）。等用户实玩反馈。
