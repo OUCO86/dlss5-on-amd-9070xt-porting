@@ -67,6 +67,24 @@ Integration: **Magpie / regular OptiScaler → dlss5-amd.addon64 → shared HIP 
 
 ## Building
 
+### Building the current packages (0.29) — where every shipped file comes from
+
+| Shipped file | Source | Build |
+|---|---|---|
+| `dlss5-amd.addon64` (Magpie / OptiScaler packages) | `src/native_submission_order_probe.cpp` + `src/*.h`, `Development/HIP/*.h` (bridge) | `bash scripts/build-addon-oneclick.sh dlss5-amd.addon64 --hip` on Linux/WSL (fetches MinHook + ReShade 6.8 headers into `third_party/`; needs `g++-mingw-w64-x86-64`) |
+| `DLSS5-AMD\native-game-tiled-assets\HIP\gfx1200\*.hsaco`, `...\gfx1201\*.hsaco` (24 modules each) | `hip/*.hip`, recipe `hip/build-modules.ps1` | on any Windows box with an AMD driver that ships `amd_comgr_3.dll`: `x86_64-w64-mingw32-g++ -std=c++17 -O2 -static hip/rtc_compile.cpp -o rtc_compile.exe`, then `powershell -File hip\build-modules.ps1 -Compiler rtc_compile.exe -OutputDir <out>` (both targets by default; `-Only <name>` for one module). No GPU is needed to compile; the assembly lands next to each `.hsaco` as `.hsaco.s` |
+| `native_codec_encode.hlsl`, `native_codec_decode.hlsl`, `native_text_overlay.hlsl` | `shaders/` | copied as source; compiled at runtime by the system `d3dcompiler` (variants selected by `#define`s from the host) |
+| RE9 package: `dxgi.dll` (modified OptiScaler host) + `LmxxfNrRuntime.dll` | TheAutomatic's fork `release/1.9.0` @ `8f71f73` + our patches in `Development/RE9/presr/` | `python3 Development/RE9/presr/prepare-host.py` (needs the pinned clone at `/tmp/re9-upstream-bridge-review`; rewrites the host/runtime sources and copies `src/`, `shaders/`, `hip/` into `third_party/lmxxf/`), then `bash Development/RE9/presr/build-runtime.sh` (MinGW, runtime + smoke test) and `build-host.ps1` (MSVC v143 / MSBuild on Windows) — see `Development/RE9/presr/README.md`; the same sources are shipped as `sources/re9-presr-source.tar.gz` (`bundle-source.py`) |
+| standalone `LmxxfNrRuntime.dll` (API in `include/LmxxfNrApi.h`, contributed by TheAutomatic) | `src/LmxxfNrRuntime.cpp` | `bash scripts/build-runtime.sh` |
+| `DLSS5-AMD\native-game-flags.txt` | `scripts/hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt` (documented in `scripts/CONFIGURATION.md`) | copied |
+| weights (`*.f16` / `*.f32`), `noise.f32` | not in this repository (see *Weights*) | packages carry them; a fresh package is built from the previous full package |
+
+Packaging: `Development/tools/package-029.ps1` (Windows) unzips the previous full packages, verifies every file against their `SHA256SUMS.txt`, swaps in the changed files listed above (each hash-checked, the modules additionally against the copies installed on the test machine), compiles the fit shaders, writes `release.json`, `SHA256SUMS.txt` and the zip, and reads the zip back. Earlier versions: `package-028.ps1`, `package-0281-re9.ps1`.
+
+Validation before shipping kernels: `Development/HIP/validate-modules.ps1` (bit-exact checks of a module set against goldens) and the whole-network regression used for every production candidate (`Development/deployments/stellar-prod6-20260923/regression-prod6.ps1`: 12-frame RGB hashes on two input sequences, 1000-frame timing, extra controls) — every kernel change in this repository since 0.20 is bit-exact with the previous one unless its flag says otherwise (`HIP_FFN_WAVE_NORM`, off by default, is the only non-bit-exact switch).
+
+How the kernel work is organised (for contributors): every optimisation is an experiment under `Development/HIP/experiments/<name>/` (a `prepare.py` that patches the production source into `_pairN` variants or module sets, `build.ps1`, `run.ps1`, sometimes `analyze.py`), with its result written up in `Development/results/<name>-<date>/README.md`; adopted changes become a `HIP_*` flag with the default set in the source. `Development/WorkingPlan.md` says what is being worked on; `Development/DevHistory.md` records what was done and why.
+
 ### HIP edition (0.20)
 
 Requirements: Linux / WSL with `x86_64-w64-mingw32-g++`, ReShade 6.8 add-on headers and MinHook sources (for the DLL);

@@ -63,6 +63,24 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 ## 编译
 
+### 现在的包怎么编（0.29）——每个发布文件从哪来
+
+| 包里的文件 | 源码 | 编法 |
+|---|---|---|
+| `dlss5-amd.addon64`（Magpie / OptiScaler 包） | `src/native_submission_order_probe.cpp` + `src/*.h`、`Development/HIP/*.h`（桥） | Linux/WSL：`bash scripts/build-addon-oneclick.sh dlss5-amd.addon64 --hip`（自动把 MinHook 和 ReShade 6.8 头文件拉到 `third_party/`；需要 `g++-mingw-w64-x86-64`） |
+| `DLSS5-AMD\native-game-tiled-assets\HIP\gfx1200\*.hsaco`、`...\gfx1201\*.hsaco`（各 24 个模块） | `hip/*.hip`，配方 `hip/build-modules.ps1` | 任意一台装着 AMD 驱动（System32 里有 `amd_comgr_3.dll`）的 Windows：`x86_64-w64-mingw32-g++ -std=c++17 -O2 -static hip/rtc_compile.cpp -o rtc_compile.exe`，然后 `powershell -File hip\build-modules.ps1 -Compiler rtc_compile.exe -OutputDir <out>`（默认两种架构都编；`-Only <名字>` 只编一个）。编译不需要显卡；每个 `.hsaco` 旁边会落 `.hsaco.s` 汇编 |
+| `native_codec_encode.hlsl`、`native_codec_decode.hlsl`、`native_text_overlay.hlsl` | `shaders/` | 直接以源码随包；运行时由系统 `d3dcompiler` 编（宿主按 `#define` 选变体） |
+| RE9 包：`dxgi.dll`（改过的 OptiScaler 宿主）+ `LmxxfNrRuntime.dll` | TheAutomatic 的 fork `release/1.9.0` @ `8f71f73` + 我们在 `Development/RE9/presr/` 的补丁 | `python3 Development/RE9/presr/prepare-host.py`（需要固定版本的克隆在 `/tmp/re9-upstream-bridge-review`；重写宿主/runtime 源码并把 `src/`、`shaders/`、`hip/` 拷进 `third_party/lmxxf/`），再 `bash Development/RE9/presr/build-runtime.sh`（MinGW，编 runtime 和冒烟测试）和 `build-host.ps1`（Windows 上 MSVC v143 / MSBuild）——见 `Development/RE9/presr/README.md`；同一套源码打成 `sources/re9-presr-source.tar.gz` 随包（`bundle-source.py`） |
+| 独立的 `LmxxfNrRuntime.dll`（接口 `include/LmxxfNrApi.h`，TheAutomatic 贡献） | `src/LmxxfNrRuntime.cpp` | `bash scripts/build-runtime.sh` |
+| `DLSS5-AMD\native-game-flags.txt` | `scripts/hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt`（说明在 `scripts/CONFIGURATION.md`） | 直接拷 |
+| 权重（`*.f16` / `*.f32`）、`noise.f32` | 不在仓库里（见"权重"） | 随包；新包从上一个完整包接着做 |
+
+打包：`Development/tools/package-029.ps1`（Windows）把上一版完整包解开、逐文件对 `SHA256SUMS.txt` 校验，换上表里变过的文件（每个都核 hash，模块还要和测试机上装着的那份相同），编一遍 fit shader，写 `release.json`、`SHA256SUMS.txt`，压 zip 再读回核对。之前的版本：`package-028.ps1`、`package-0281-re9.ps1`。
+
+内核出包前的验证：`Development/HIP/validate-modules.ps1`（一套模块对 golden 的逐位校验）和每个生产候选都要过的整网回归（`Development/deployments/stellar-prod6-20260923/regression-prod6.ps1`：两段输入各 12 帧 RGB hash、1000 帧计时、额外控制组）。0.20 以来仓库里每一次内核改动都和上一版逐位相同，除非它的开关自己说明不是（目前唯一的非逐位开关 `HIP_FFN_WAVE_NORM`，默认关）。
+
+内核的活是怎么组织的（给想接着做的人）：每个优化都是 `Development/HIP/experiments/<名字>/` 下的一个实验（`prepare.py` 把生产源码改成 `_pairN` 变体或模块集，`build.ps1`、`run.ps1`，有时还有 `analyze.py`），结果写在 `Development/results/<名字>-<日期>/README.md`；采用的改动变成源码里带默认值的 `HIP_*` 开关。`Development/WorkingPlan.md` 是现在在干什么，`Development/DevHistory.md` 是干过什么、为什么。
+
 ### HIP 版（0.20）
 
 需要：Linux / WSL 上的 `x86_64-w64-mingw32-g++`、ReShade 6.8 插件头文件、MinHook 源码（编 DLL）；一台装着 AMD 驱动、System32

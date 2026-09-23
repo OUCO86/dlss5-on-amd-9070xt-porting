@@ -24,5 +24,6 @@ if ! grep -q ID3D12SDKConfiguration "$(x86_64-w64-mingw32-g++ -print-sysroot 2>/
   echo "using mingw-w64 v11 D3D12/DXGI headers from third_party/mingw-headers (system mingw-w64 is too old)"
 fi
 out=${1:-native-game.addon64}
-bash "$here/build-addon.sh" "$tp/minhook" "$tp/reshade/include" "$out" --tiled
+mode=${2:---tiled}   # --tiled (DX12 chain, up to 0.15) or --hip (HIP backend, 0.20+: dlss5-amd.addon64 of the current packages)
+bash "$here/build-addon.sh" "$tp/minhook" "$tp/reshade/include" "$out" "$mode"
 echo "add-on: $out ($(stat -c %s "$out") bytes, sha256 $(sha256sum "$out" | cut -c1-16)…)"
