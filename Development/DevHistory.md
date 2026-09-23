@@ -279,3 +279,7 @@ WorkingPlan 的"C32 产出端并宽"试完：FFN 收缩 + prefix + 投影全部�
 ## 2026-09-24 01:15：FFN 核族的电烧在全局窄写；并宽指令不省电，减少触及行数才省
 
 FFN 占满一帧换 mh_fast 模块看时钟（`results/clock-ledger-20260924/ffn-tail`、`ffn-stores`）：串行求和、LDS 交换 + barrier 都不耗电；去掉 norm 全局写 +4% 时钟，norm 和 out 都去 +7%。prod6 把 norm 写 24 条 b8 并成 3 条 b64，时间 −2.6ms 但时钟不动——转置后每条写仍触及 16 行，功耗跟触及行数走。下一把刀（逐位）：out 从已有的 qfeature LDS 暂存整行写出，norm 按 part 暂存 4 KB 后整行写出，每行只写一次；预期 FFN 占满时钟 +7%、整帧 1～2%。
+
+## 2026-09-24 01:30：mh_fast 全行写（HIP_FFN_LINE_STORES）——逐位，−0.6/−0.7%，prod7 候选回归通过
+
+功耗账本指出的那把刀做完：out 从 qfeature LDS 暂存整行写出，norm 三个 part 暂存后整行写出（多一个 barrier，LDS 每组 +8.4 KB，驻留仍由 VGPR 定）。模块集 ABBA 三孪生逐位全 0，1080 −0.10/−0.10/−0.08ms，900 −0.08/−0.09/−0.09ms；FFN 占满一帧时钟 +1.2%（2526→2554 MHz）。写出字节没变所以没到"去掉写"的 +7%，省的是部分写的开销。prod7 候选（只换 mh_fast 两架构）回归：12 帧 RGB 哈希 2 序列 × 2 档全部与 prod2 基线一致，四组额外对照一致；1000 帧计时 900 12.01/12.03、1080 16.91/16.92（基线 prod2 12.62/12.72、17.80/17.88）。`results/mhfast-line-stores-20260924`、`deployments/stellar-prod7-20260924`。未装机，等用户关游戏。
