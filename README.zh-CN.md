@@ -72,7 +72,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 | `native_codec_encode.hlsl`、`native_codec_decode.hlsl`、`native_text_overlay.hlsl` | `shaders/` | 直接以源码随包；运行时由系统 `d3dcompiler` 编（宿主按 `#define` 选变体） |
 | RE9 包：`dxgi.dll`（改过的 OptiScaler 宿主）+ `LmxxfNrRuntime.dll` | TheAutomatic 的 fork `release/1.9.0` @ `8f71f73` + 我们在 `Development/RE9/presr/` 的补丁 | `python3 Development/RE9/presr/prepare-host.py`（需要固定版本的克隆在 `/tmp/re9-upstream-bridge-review`；重写宿主/runtime 源码并把 `src/`、`shaders/`、`hip/` 拷进 `third_party/lmxxf/`），再 `bash Development/RE9/presr/build-runtime.sh`（MinGW，编 runtime 和冒烟测试）和 `build-host.ps1`（Windows 上 MSVC v143 / MSBuild）——见 `Development/RE9/presr/README.md`；同一套源码打成 `sources/re9-presr-source.tar.gz` 随包（`bundle-source.py`） |
 | 独立的 `LmxxfNrRuntime.dll`（接口 `include/LmxxfNrApi.h`，TheAutomatic 贡献） | `src/LmxxfNrRuntime.cpp` | `bash scripts/build-runtime.sh` |
-| `DLSS5-AMD\native-game-flags.txt` | `scripts/hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt`（说明在 `scripts/CONFIGURATION.md`） | 直接拷 |
+| `DLSS5-AMD\native-game-flags.txt`（包也认 `DLSS5_HIP_MODULES=<目录>`，从别处加载模块；`Development/HIP/validate-modules.ps1` 对一套模块跑逐位校验） | `scripts/hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt`（说明在 `scripts/CONFIGURATION.md`） | 直接拷 |
 | 权重（`*.f16` / `*.f32`）、`noise.f32` | 不在仓库里（见"权重"） | 随包；新包从上一个完整包接着做 |
 
 打包：`Development/tools/package-029.ps1`（Windows）把上一版完整包解开、逐文件对 `SHA256SUMS.txt` 校验，换上表里变过的文件（每个都核 hash，模块还要和测试机上装着的那份相同），编一遍 fit shader，写 `release.json`、`SHA256SUMS.txt`，压 zip 再读回核对。之前的版本：`package-028.ps1`、`package-0281-re9.ps1`。
@@ -81,27 +81,10 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 内核的活是怎么组织的（给想接着做的人）：每个优化都是 `Development/HIP/experiments/<名字>/` 下的一个实验（`prepare.py` 把生产源码改成 `_pairN` 变体或模块集，`build.ps1`、`run.ps1`，有时还有 `analyze.py`），结果写在 `Development/results/<名字>-<日期>/README.md`；采用的改动变成源码里带默认值的 `HIP_*` 开关。`Development/WorkingPlan.md` 是现在在干什么，`Development/DevHistory.md` 是干过什么、为什么。
 
-### HIP 版（0.20）
+### 历史：DX12 版（0.15 及之前）
 
-需要：Linux / WSL 上的 `x86_64-w64-mingw32-g++`、ReShade 6.8 插件头文件、MinHook 源码（编 DLL）；一台装着 AMD 驱动、System32
-里有 `amd_comgr_3.dll` 和 `amdhip64_7.dll` 的 Windows 机器（编内核；不用 HIP SDK、不用 DXC、不用开发人员模式）。插件的 DX12
-侧还有几个小的 HLSL（编解码、屏幕文字）在运行时用系统自带的 `d3dcompiler` 编，任何 Windows 都有。
+**现在的包不需要下面任何东西**（0.20 起是 HIP 后端：不要预览版 DXC、不要 Agility SDK、不要开发人员模式）。留着是因为 `shaders/` 里那套 DX12 wave-matrix 实现仍是逐位参考链，也是这个移植的历史。
 
-```bash
-bash scripts/build-addon.sh <minhook源码目录> <reshade的include目录> dlss5-amd.addon64 --hip   # 插件，HIP 后端
-x86_64-w64-mingw32-g++ -std=c++17 -O2 -static hip/rtc_compile.cpp -o hip/rtc_compile.exe   # 内核编译器
-```
-
-```powershell
-# AMD 机器上：全部 24 个模块 -> <out>\*.hsaco + modules.json + SHA256SUMS（约一分钟）
-powershell -ExecutionPolicy Bypass -File hip\build-modules.ps1 -OutputDir <out>
-```
-
-模块装到权重旁边的 `DLSS5-AMD\native-game-tiled-assets\HIP\`（或用 `DLSS5_HIP_MODULES` 指向目录）。
-`Development/HIP/validate-modules.ps1` 对一套模块跑三道逐位校验；`Development/HIP/package-hip.ps1` 组装游戏包和 Magpie 包。
-配方规则见 `hip/README.md`。
-
-### DX12 版（0.15 及之前）
 
 需要：Linux 上的 `x86_64-w64-mingw32-g++`（交叉编译）；Windows + RDNA 4 显卡 + 暴露 D3D12 wave matrix（linalg
 tier 10）的驱动；Shader Model 6.10 预览版 `dxc`（带 `dx/linalg.h`）；ReShade 6.8 插件头文件；MinHook 源码。

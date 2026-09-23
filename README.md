@@ -76,7 +76,7 @@ Integration: **Magpie / regular OptiScaler → dlss5-amd.addon64 → shared HIP 
 | `native_codec_encode.hlsl`, `native_codec_decode.hlsl`, `native_text_overlay.hlsl` | `shaders/` | copied as source; compiled at runtime by the system `d3dcompiler` (variants selected by `#define`s from the host) |
 | RE9 package: `dxgi.dll` (modified OptiScaler host) + `LmxxfNrRuntime.dll` | TheAutomatic's fork `release/1.9.0` @ `8f71f73` + our patches in `Development/RE9/presr/` | `python3 Development/RE9/presr/prepare-host.py` (needs the pinned clone at `/tmp/re9-upstream-bridge-review`; rewrites the host/runtime sources and copies `src/`, `shaders/`, `hip/` into `third_party/lmxxf/`), then `bash Development/RE9/presr/build-runtime.sh` (MinGW, runtime + smoke test) and `build-host.ps1` (MSVC v143 / MSBuild on Windows) — see `Development/RE9/presr/README.md`; the same sources are shipped as `sources/re9-presr-source.tar.gz` (`bundle-source.py`) |
 | standalone `LmxxfNrRuntime.dll` (API in `include/LmxxfNrApi.h`, contributed by TheAutomatic) | `src/LmxxfNrRuntime.cpp` | `bash scripts/build-runtime.sh` |
-| `DLSS5-AMD\native-game-flags.txt` | `scripts/hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt` (documented in `scripts/CONFIGURATION.md`) | copied |
+| `DLSS5-AMD\native-game-flags.txt` (a package also honours `DLSS5_HIP_MODULES=<dir>` to load modules from elsewhere; `Development/HIP/validate-modules.ps1` runs the bit-exact checks on a module set) | `scripts/hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt` (documented in `scripts/CONFIGURATION.md`) | copied |
 | weights (`*.f16` / `*.f32`), `noise.f32` | not in this repository (see *Weights*) | packages carry them; a fresh package is built from the previous full package |
 
 Packaging: `Development/tools/package-029.ps1` (Windows) unzips the previous full packages, verifies every file against their `SHA256SUMS.txt`, swaps in the changed files listed above (each hash-checked, the modules additionally against the copies installed on the test machine), compiles the fit shaders, writes `release.json`, `SHA256SUMS.txt` and the zip, and reads the zip back. Earlier versions: `package-028.ps1`, `package-0281-re9.ps1`.
@@ -85,28 +85,10 @@ Validation before shipping kernels: `Development/HIP/validate-modules.ps1` (bit-
 
 How the kernel work is organised (for contributors): every optimisation is an experiment under `Development/HIP/experiments/<name>/` (a `prepare.py` that patches the production source into `_pairN` variants or module sets, `build.ps1`, `run.ps1`, sometimes `analyze.py`), with its result written up in `Development/results/<name>-<date>/README.md`; adopted changes become a `HIP_*` flag with the default set in the source. `Development/WorkingPlan.md` says what is being worked on; `Development/DevHistory.md` records what was done and why.
 
-### HIP edition (0.20)
+### Historical: DX12 editions (up to 0.15)
 
-Requirements: Linux / WSL with `x86_64-w64-mingw32-g++`, ReShade 6.8 add-on headers and MinHook sources (for the DLL);
-a Windows machine with an AMD driver that ships `amd_comgr_3.dll` and `amdhip64_7.dll` (for the kernels; no HIP SDK, no
-DXC, no developer mode). The add-on's DX12 side still compiles the small HLSL helpers (codec, text overlay) at runtime with
-the system `d3dcompiler`, which every Windows has.
+**None of the following is needed for the current packages** (HIP backend since 0.20: no preview DXC, no Agility SDK, no developer mode). It is kept for the DX12 wave-matrix implementation in `shaders/`, which remains the bit-exact reference chain and the history of the port.
 
-```bash
-bash scripts/build-addon.sh <minhook-src> <reshade-include> dlss5-amd.addon64 --hip   # the add-on, HIP backend
-x86_64-w64-mingw32-g++ -std=c++17 -O2 -static hip/rtc_compile.cpp -o hip/rtc_compile.exe   # the kernel compiler
-```
-
-```powershell
-# on the AMD machine: all 24 modules -> <out>\*.hsaco + modules.json + SHA256SUMS (about a minute)
-powershell -ExecutionPolicy Bypass -File hip\build-modules.ps1 -OutputDir <out>
-```
-
-Install the modules as `DLSS5-AMD\native-game-tiled-assets\HIP\` next to the weights (or point `DLSS5_HIP_MODULES` at the
-folder). `Development/HIP/validate-modules.ps1` runs the three bit-exact checks against a module set;
-`Development/HIP/package-hip.ps1` assembles the game and Magpie packages. See `hip/README.md` for the recipe rules.
-
-### DX12 editions (up to 0.15)
 
 Requirements: Linux / WSL with `x86_64-w64-mingw32-g++` (cross build), Windows with an RDNA 4 GPU and a driver exposing
 D3D12 wave matrices (linalg tier 10), the Shader Model 6.10 preview `dxc` (with `dx/linalg.h`), ReShade 6.8 add-on
