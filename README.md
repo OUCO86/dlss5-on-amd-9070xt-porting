@@ -1,4 +1,6 @@
-# DLSS 5 (DLSSNR) on AMD RX 9070 XT
+# DLSS5@AMD RDNA4
+
+DLSS 5 (DLSSNR) on AMD RX 9070 XT / RDNA 4.
 
 [中文说明](README.zh-CN.md)
 
