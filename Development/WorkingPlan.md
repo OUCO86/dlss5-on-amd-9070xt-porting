@@ -1,26 +1,25 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-23 10:20，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-23 10:25，Hikari）
 
-> 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。
+> 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 
 ## 状态
 
-- 算力缺口研究：launch 级、核内级、请求级三层账已闭合，逐位约束下的手法穷尽。整网累计约 −5%：−2.7% 已装剑星（fence + 折叠 FFN），−2.2% 攒在 prod5 候选（字节链 + mh 注意力寄存器化），−0.5% + −1.7% 在生产源未编（C32 in16 别名 `HIP_C32_IN16_ALIAS`、ffn_fused 尾段转置 `HIP_FFN_TRANSPOSED_TAIL`）。
-- 研究结论（写进 318）：必要损失约 25～30%；可回收的已回收；三条规则——读写成本 ≈ 指令数 + 触及行数（两项都算），驻留只在它是瓶颈时值钱，同一改法赚不赚看该核的瓶颈。
+- 已装剑星（prod2）：fence + 折叠 FFN，−2.7%。
+- **prod6 候选（逐位，攒着未装）**：prod5（字节链 + mh 注意力寄存器化）+ C32 in16 别名 + ffn_fused 尾段转置。回归全过，1000 帧计时相对装机版 **−4.3%（900）/ −4.5%（1080）**。`D:\DLSSNR-Lab\stellar-prod6-20260923\install.ps1`，payload 6 文件。用户说装再装。
+- **6b（非逐位，仅研究）**：prod6 + `HIP_FFN_WAVE_NORM`（wave 内 QKV 归一化），再 −1.1%（合计 −5.4/−5.6%）。12 帧 RGB 差：mean 4.3e-4、PSNR 58 dB、1.4% 像素 >1/255、max 0.17。源里默认 0。**等用户决定要不要在游戏里看**；要看的话另做 6b payload（还要编 gfx1200）。
+- 研究结论（进 318）：必要损失约 25～30%；可回收的已回收约 7%；三条规则——读写成本 ≈ 指令数 + 触及行数（转置并宽只对"展开的多条窄写"有效，原版是滚动循环别动）；驻留只在它是瓶颈时值钱；同一改法赚不赚看该核当前的瓶颈（阶段账要在当前驻留下重打）。
 
 ## 待办（按顺序）
 
-1. **放弃逐位的第一处：ffn_fused 的 QKV 归一化交换**（消融上界 1.8%，results/mhfast-tail-ablate-20260923）。做法分两步：
-   - 1a（逐位）完成：−0.28/−0.21ms，进生产源 `HIP_FFN_TRANSPOSED_TAIL`。
-   - 1b（非逐位）完成实验：再 −0.18/−0.14ms（1.1%），`HIP_FFN_WAVE_NORM` 进源默认 0。**等回归出 12 帧 RGB 后用 rgbdiff.py 看差异量级，再由用户决定装不装 6b**。
-   - 不做注意力行和（寄存器版只剩 4 条 WMMA）。
-2. **prod6 候选**（prod5 + in16 别名 + 尾段转置，逐位）：模块已编，regression-prod6（1000 帧计时 + 额外控制）与 6b 回归运行中（后台）。跑完：写 payload.json（6 个 hsaco：c32/mh_fused/mh_fast × 两架构），归档 regression 日志，攒着，用户说装再装。
-3. **318 成稿**：素材在文末"待整理材料"和各时间点补记；成稿前重新检索文献（Roofline 2009、Hierarchical Roofline、微基准反推、Hong & Kim 2009、PaLM MFU），重排结构。结尾句已备。
-4. host 侧小改等 addon 重编时顺带：宽权重片段（−0.03ms）、小 launch 合并（未量）。
+1. **等用户拍板**：装 prod6？看 6b 画质？两件都不急。
+2. **318 成稿**：素材在文末"待整理材料"和各时间点补记（最新 10:00 那条是规则改口）；成稿前重新检索文献（Roofline 2009、Hierarchical Roofline、微基准反推、Hong & Kim 2009、PaLM MFU），重排结构。结尾句改成"必要损失约 25～30%，可回收的已回收 7%，剩下的要么改算法要么认了"。
+3. 还可以试的逐位小刀（各估 ≤0.5%）：C32 产出端 `out` 16 条字节写（要连 FFN 收缩、saved_ffn、ffn8 一起转置，改动大，先看 C32 输出段的静态写是不是"展开的多条窄写"——是）；host 侧宽权重片段 / 小 launch 合并等 addon 重编顺带。
+4. 非逐位第二处（只在用户认可 6b 画质之后）：C32 QKV 归一化同型改法（C32 用的是 ones-WMMA 平方和，先消融定上界）；ViT/C512 K 分块累加顺序。
 
 ## 不做 / 已关
 
-CU 模式逐核、C32/C512/ViT 注意力寄存器化、split_projection 转置尾声、BatchNorm 合并 barrier、ffn_fused VGPR 封 96、注意力残差读提前（寄存器版已盖住延迟）、注意力投影输出转置（原版是滚动循环，转置反而多指令多 VGPR）、c256 注意力尾巴（结构税：投影要 8 头 AV，host 链上无并发兄弟）。
+CU 模式逐核、C32/C512/ViT 注意力寄存器化、split_projection 转置尾声、BatchNorm 合并 barrier、ffn_fused VGPR 封 96、注意力残差读提前、注意力投影输出转置、注意力行和改 VALU、c256 注意力尾巴（结构税）。
 
 ## 机器与流程
 
-9070 机器 `amd9070`，工作根 `D:\DLSSNR-Lab\hip-backend\`；编译 `dual-arch-src\rtc_compile.exe <out> <src> comgr gfx1201`；跑前 `check-idle.ps1`；长 ssh 用后台任务。实验模板：kernel 后缀 ABBA（c32-lds-alias）、模块集 ABBA（mhfast-vgpr-cap）、核内打点（launch-occupancy）。
+9070 机器 `amd9070`，工作根 `D:\DLSSNR-Lab\hip-backend\`；编译 `dual-arch-src\rtc_compile.exe <out> <src> comgr gfx1201`（输出旁自带 .hsaco.s）；跑前 `check-idle.ps1`；长 ssh 用后台任务。实验模板：kernel 后缀 ABBA（c32-lds-alias）、模块集 ABBA（mhfast-vgpr-cap；容忍 bitdiff 的 host 在 mhfast-tail-ablate）、核内打点（launch-occupancy）；候选流程 deployments/stellar-prod6-20260923（build → regression → payload → install）。生产配方：c32 = ISA_HALF+PREPACKED+C32_DIAG，mh_fused = ISA_HALF+MH_RTZ_ISA，mh_fast = ISA_HALF+PREPACKED+FFN_HOIST_RES 2，deep_fast = ISA_HALF+PREPACKED+BRANCHLESS_F。

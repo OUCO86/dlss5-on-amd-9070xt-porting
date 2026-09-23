@@ -11,6 +11,6 @@
 
 槽全部不交叠，核心频率两侧相同。上界（消融 2）1.5%，拿到 1.1%。
 
-差异量级：整网原始 FP32 输出大约每三个元素有一个不同，这是 fp8 归一化偶发单位翻转经十几层放大的结果，不能直接读成画质。画质看 [prod6b 回归](../../deployments/stellar-prod6-20260923/) 的 12 帧 RGB 逐像素差（rgbdiff.py：max / mean / >1/255 比例 / PSNR）和用户在游戏里的判断。**未进生产源默认值**：`HIP_FFN_WAVE_NORM` 默认 0，prod6 候选不含它；6b 模块只用于差异研究。
+差异量级：整网原始 FP32 输出大约每三个元素有一个不同，这是 fp8 归一化偶发单位翻转经十几层放大的结果，不能直接读成画质。画质：[prod6b 回归](../../deployments/stellar-prod6-20260923/README.md) 的 12 帧 RGB 逐像素差——mean 4.3e-4、PSNR 57～59 dB、1.2～1.5% 像素差超过 1/255、max 0.12～0.19（个别边缘像素）；整网计时 6b 相对装机版 −5.4/−5.6%。是否可接受由用户在游戏里判断。**未进生产源默认值**：`HIP_FFN_WAVE_NORM` 默认 0，prod6 候选不含它；6b 模块只用于差异研究。
 
 证据：1080/、900/ 下 network.csv、run.log、telemetry.log；summary.txt；console.log。工具 HIP/experiments/mhfast-wave-norm。

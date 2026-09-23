@@ -3277,3 +3277,7 @@ part 0/1 每 wave 一个 head 32 列，平方和 lane 内 16 项 + 一次 bpermu
 ## 2026-09-23 10:15：prod6 候选编译（prod5 + in16 别名 + ffn_fused 尾段转置，逐位），回归运行中
 
 c32 gfx1200 F256217E… / gfx1201 6F66096E…；mh_fast gfx1200 410A2DFF… / gfx1201 F9BC18D9…。6b（wave norm）gfx1201 4D1FFA75…，仅研究。deployments/stellar-prod6-20260923。
+
+## 2026-09-23 10:20：prod6 回归通过；6b 画质量级
+
+prod6（逐位）：hash/额外控制组全同，1000 帧计时 900 −0.54ms（−4.3%）、1080 −0.80ms（−4.5%）相对装机版。payload.json 6 文件，攒着未装。6b（+wave 归一化）：−5.4/−5.6%，12 帧 RGB 差 mean 4.3e-4、PSNR 58 dB、1.4% 像素 >1/255、max 0.17，待用户看画质。deployments/stellar-prod6-20260923。
