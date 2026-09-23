@@ -7,7 +7,8 @@ $ErrorActionPreference='Stop'
 $Repo=Split-Path -Parent $PSScriptRoot
 if(-not (Test-Path (Join-Path $DxcRoot 'bin\x64\dxc.exe'))){throw "dxc.exe not found under $DxcRoot\bin\x64"}
 New-Item -ItemType Directory -Force $Folder | Out-Null
-Copy-Item (Join-Path $Repo 'shaders\*') $Folder -Force
+Copy-Item (Join-Path $Repo 'shaders\*.hlsl') $Folder -Force
+Copy-Item (Join-Path $Repo 'shaders\dx12-network\*') $Folder -Force   # historical DX12 network chain (flat layout expected by bench.ps1)
 Copy-Item (Join-Path $Repo 'scripts\bench.ps1') $Folder -Force
 # bench.ps1 refreshes hashes in shader-manifest.json (name + sha256 of every runtime-compiled source): generate it from the copies
 $Manifest=@(Get-ChildItem $Folder -Include *.hlsl,*.hlsli -Recurse | ForEach-Object { @{name=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()} })

@@ -32,7 +32,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 |---|---|
 | `src/` | 常规 ReShade addon、图像编解码与游戏接入；Magpie和普通OptiScaler共用这套addon源码。 |
 | `hip/` | 共用HIP网络计算核、gfx1200/gfx1201编译配方；三包共用同一网络源码。 |
-| `shaders/` | 图像编码/解码、拷贝等配套HLSL，以及历史DX12网络实现；HIP版也需要部分shader。 |
+| `shaders/` | 现在的包运行时仍要编的 12 个 D3D12 胶水 shader（编解码、屏幕文字、RGB 搬运、时序座标、帧检查）；`shaders/dx12-network/` 是历史的 Shader Model 6.10 网络链（0.15 及之前）。见 `shaders/README.md`。 |
 | `scripts/` | 常规addon编译、发布配置和包内说明；`hip-game-flags.txt`、`hip-magpie-flags.txt`为常规包默认配置，`re9-presr.ini`为新RE9宿主覆盖配置。 |
 | `Development/HIP/` | HIP宿主、D3D12互操作、离线验证；`experiments/`是未必采用的实验。这里部分代码参与编译。 |
 | `Development/RE9/presr/` | RE9专用OptiScaler/runtime适配：锁定的上游版本、补丁、准备/构建/安装脚本及测试。完整上游源码不在本Git里。 |
@@ -69,7 +69,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 |---|---|---|
 | `dlss5-amd.addon64`（Magpie / OptiScaler 包） | `src/native_submission_order_probe.cpp` + `src/*.h`、`Development/HIP/*.h`（桥） | Linux/WSL：`bash scripts/build-addon-oneclick.sh dlss5-amd.addon64 --hip`（自动把 MinHook 和 ReShade 6.8 头文件拉到 `third_party/`；需要 `g++-mingw-w64-x86-64`） |
 | `DLSS5-AMD\native-game-tiled-assets\HIP\gfx1200\*.hsaco`、`...\gfx1201\*.hsaco`（各 24 个模块） | `hip/*.hip`，配方 `hip/build-modules.ps1` | 任意一台装着 AMD 驱动（System32 里有 `amd_comgr_3.dll`）的 Windows：`x86_64-w64-mingw32-g++ -std=c++17 -O2 -static hip/rtc_compile.cpp -o rtc_compile.exe`，然后 `powershell -File hip\build-modules.ps1 -Compiler rtc_compile.exe -OutputDir <out>`（默认两种架构都编；`-Only <名字>` 只编一个）。编译不需要显卡；每个 `.hsaco` 旁边会落 `.hsaco.s` 汇编 |
-| `native_codec_encode.hlsl`、`native_codec_decode.hlsl`、`native_text_overlay.hlsl` | `shaders/` | 直接以源码随包；运行时由系统 `d3dcompiler` 编（宿主按 `#define` 选变体） |
+| `shaders/*.hlsl` 那 12 个（编解码、屏幕文字、RGB 搬运、时序座标、帧检查） | `shaders/`（历史 DX12 网络链在 `shaders/dx12-network/`） | 直接以源码随包；运行时由系统 `d3dcompiler` 编（宿主按 `#define` 选 44 个变体） |
 | RE9 包：`dxgi.dll`（改过的 OptiScaler 宿主）+ `LmxxfNrRuntime.dll` | TheAutomatic 的 fork `release/1.9.0` @ `8f71f73` + 我们在 `Development/RE9/presr/` 的补丁 | `python3 Development/RE9/presr/prepare-host.py`（需要固定版本的克隆在 `/tmp/re9-upstream-bridge-review`；重写宿主/runtime 源码并把 `src/`、`shaders/`、`hip/` 拷进 `third_party/lmxxf/`），再 `bash Development/RE9/presr/build-runtime.sh`（MinGW，编 runtime 和冒烟测试）和 `build-host.ps1`（Windows 上 MSVC v143 / MSBuild）——见 `Development/RE9/presr/README.md`；同一套源码打成 `sources/re9-presr-source.tar.gz` 随包（`bundle-source.py`） |
 | 独立的 `LmxxfNrRuntime.dll`（接口 `include/LmxxfNrApi.h`，TheAutomatic 贡献） | `src/LmxxfNrRuntime.cpp` | `bash scripts/build-runtime.sh` |
 | `DLSS5-AMD\native-game-flags.txt`（包也认 `DLSS5_HIP_MODULES=<目录>`，从别处加载模块；`Development/HIP/validate-modules.ps1` 对一套模块跑逐位校验） | `scripts/hip-game-flags.txt` / `hip-magpie-flags.txt` / `hip-re9-flags.txt`（说明在 `scripts/CONFIGURATION.md`） | 直接拷 |

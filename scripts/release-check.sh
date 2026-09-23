@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pre-tag check: the repository must reproduce what the game is running. Run on the Linux side with ssh access to the AMD box.
-#   1. shaders: compile every shader from shaders/ with compile-shaders.ps1 on the AMD box and compare each .cso hash with the
+#   1. shaders: compile every shader from shaders/ and shaders/dx12-network/ with compile-shaders.ps1 on the AMD box and compare each .cso hash with the
 #      copy in the game's asset folder (D:\DLSSNR-Lab\native-game-tiled-assets) — catches sources missing from the repo,
 #      hand-compiled kernels and stale compile lines.
 #   2. flags: scripts/game-flags.txt vs the flag file the game reads (D:\DLSSNR-Lab\native-game-flags.txt), development-only
