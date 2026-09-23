@@ -153,6 +153,7 @@
 - **小通道 FFN 换布局**：C64/C128 tiled 或 frag（+0.3～0.4 更慢）。
 - **C512**：mix 并进 FFN、FP8 展开（有逐位反例，只能收缩用 FP8）、attention+投影融合。
 - **各种 hipGraph**：当前 GPU 时间把 CPU 提交全盖住了，收益为零。
+- **C32 转置尾部并宽**（09-24：逐位同，慢 0.03ms；C32 卡读队列，写并宽不是瓶颈，转置反而让残差/缩放读变差）。
 - **其他**：DX12 overlap（与游戏并发是双输）；VMM 稀疏映射（驱动只认"保留区 == 一个完整物理块"，封死）；buffer_load 32 位地址（正确，常量必须是 `0x31004000`，但无收益）；噪声缓存；多遍 NR（5090 上也不值）；C32 注意力寄存器化（压力抵消收益）；注意力投影输出转置（滚动循环别转置）。
 
 ---
@@ -262,3 +263,7 @@
 5. 之后神经路径生效：画面变灰、帧率不变（60）。日志：曝光扫描 >64 个候选（RE9 定制的过滤在 Katana 上失效，曝光未识别，FP16 线性场景色按曝光 1 归一化）；`prior job not yet submitted; original SR` 反复出现（Submitted 钩子对队列/时机的假设是 RE9 的，卧龙提交路径不同，多数帧绕过）。
 
 结论：卧龙 2 不是"装不上"，是三层都要适配：EnableFfxInputs、动态分辨率关、以及 RE9 宿主的曝光发现 + 提交观察两处 Katana 化。当前机上装的是 RE9 变体 + `LmxxfDiagnostic=off`。代码改动：`src/native_submission_order_probe.cpp` 优先钩 upscaler dll 并在 hook_status 行记模块名/导出地址、派发入口前 8 次记类型（剑星回归未做，未发包）。未记入 0.29。
+
+## 2026-09-24 00:30：C32 转置尾部（out 并宽）null
+
+WorkingPlan 的"C32 产出端并宽"试完：FFN 收缩 + prefix + 投影全部转置，ffn8/scratch.ex/out/pre16 的窄写并宽。逐位同，但 1080/900 六组配对全部慢 0.03ms（0.2～0.3%）。原因：残差初始化和缩放访问改成 lane=行后 LDS 读变差，投影缩放 2→16 读，chain/finish VGPR +15。开关 `HIP_C32_TRANSPOSED_TAIL` 留 0，进"不要重做"。详见 `results/c32-transposed-tail-20260924`。
