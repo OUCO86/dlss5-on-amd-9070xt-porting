@@ -1,0 +1,1 @@
+dlss5-fitlarge.addon64 sha256 ee81476380a85993b523bdd41f4694e187a04d955ab2c3ecc23c31c5520a1fb7 (3934967 bytes), built from 39e8567 with scripts/build-addon.sh --hip; staged at D:\DLSSNR-Lab\stellar-fitlarge-20260923\dlss5-amd.addon64
