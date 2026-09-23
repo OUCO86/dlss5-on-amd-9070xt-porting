@@ -287,3 +287,7 @@ FFN 占满一帧换 mh_fast 模块看时钟（`results/clock-ledger-20260924/ffn
 ## 2026-09-24 07:13：prod7 装进剑星
 
 用户确认游戏关闭后 `stellar-prod7-20260924\install.ps1`：2 个 mh_fast 模块（gfx1200/gfx1201）哈希核对后替换，宿主/INI/flags 未动，备份 `D:\DLSSNR-Lab\stellar-prod7-20260924\backups\20260924-071340`（`-RestoreBackup` 回滚）。等用户实玩反馈。
+
+## 2026-09-24 07:19：用户反馈 prod7
+
+《剑星》900P 中画质拉伸 2K，常测场景稳定 60 帧（prod6 时"最快接近 60"）。prod7 通过实玩，进 0.30。
