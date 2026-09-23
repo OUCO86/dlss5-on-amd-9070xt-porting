@@ -4,29 +4,38 @@ DLSS 5（DLSSNR）跑在 AMD RX 9070 XT / RDNA 4 上。
 
 [English](README.md)
 
-把 NVIDIA DLSS 5 的神经渲染器（`nvngx_dlssnr.dll` 里那张 71 块的 Swin/ViT 网络，"DLSSNR"）逐块逆向，用
-Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8（E4M3）的 HLSL 计算着色器，在 AMD RDNA 4
-显卡上跑起来，并通过 ReShade 插件钩住游戏的 FSR dispatch，对 1080p 画面做后处理。
+把 NVIDIA DLSS 5 的神经渲染器（`nvngx_dlssnr.dll` 里那张 71 块的 Swin/ViT 网络，"DLSSNR"）从零重做到 AMD RDNA 4 上。网络逐块逆向后，
+现在以每架构 24 个 HIP 内核的形式运行（gfx1201 = RX 9070 系，gfx1200 = RX 9060 系），跑在 AMD 驱动自带的 HIP 7 运行时上。权重是 NVIDIA 的，
+从用户自己那份 DLL 里提取；本仓库不分发任何 NVIDIA 的东西。
 
-**REFramework 专用版（0.28.1）**：针对《生化9》特殊提交方式，采用配套的修改版OptiScaler宿主和`LmxxfNrRuntime.dll`，流水线为游戏渲染→HIP DLSS5→FSR→显示。已验证2K无边框输出，并补上同帧曝光归一化/还原。神经输入仍须≤1920×1080，网络按输入自动选择档位。0.28.1在初始化前拒绝超限输入并保留原始超分，修复初始化失败后换回有效尺寸无法恢复的问题。旧RE9 0.28已撤下。F6由新宿主管理，旧后置addon停用；其他RE游戏（包括旧版已测的Xbox《鬼武者》）需重新验证，不能沿用0.27兼容结论。
+现在每个包的流水线都是：**游戏按它的（低）渲染分辨率出一帧 → 我们的网络处理这一帧 → 宿主的超分（FSR）放大到显示分辨率。** 三个包是三种接到这个位置的方式：
 
-**最新（2026-09-23，0.29 三包）**：超过1920×1080的输入缩到1080档跑网络再按原分辨率合成（`DLSS5_FIT_LARGE=1`），六项逐位无损内核优化（约−7%，《剑星》900P约60fps），链接见下表。上一版（2026-09-22，常规包0.28／RE9专用包0.28.1）：三个完整包更新共享HIP核的六项无损优化：RGB末端共用读取、C128/C256全零填充快路径、ViT展开/投影与解码器投影固定尺寸优化。《剑星》实玩无明显异常，画面和帧率基本不变；不承诺固定提升。常规两包沿用原宿主，RE9特殊包采用新前置宿主并修复曝光遗漏。未新增有损优化；完整模型及gfx1200/gfx1201模块随包，自适应复用在常规包默认关闭。
+| 包 | 给谁 | 怎么接 |
+|---|---|---|
+| **OptiScaler**（常规） | 本身支持 DLSS 的游戏（《剑星》《匹诺曹的谎言》……） | OptiScaler 用 FSR 接管游戏的 DLSS 调用；我们的 ReShade 插件（`dlss5-amd.addon64`）先在 FSR 的输入上跑网络 |
+| **Magpie**（便携） | 任何游戏，不需要游戏支持超分 | Magpie 抓游戏窗口；网络接在效果组的 FSR3_SR 一项里，之后 FSR4 放大到全屏（可选 XeSS 帧生成） |
+| **OptiScaler-REFramework**（只给 RE9） | 《生化危机 9》，常规路线切不开它的命令提交 | TheAutomatic 改的 OptiScaler 宿主 + 我们的 `LmxxfNrRuntime.dll`（成对使用，别和常规包混装） |
 
-**默认配置**：新包自动带入仓库中的[普通游戏配置](scripts/hip-game-flags.txt)、[Magpie配置](scripts/hip-magpie-flags.txt)或[REFramework配置](scripts/hip-re9-flags.txt)，不继承本机试玩设置。来源与打包方法见[配置说明](scripts/CONFIGURATION.md)。
+**当前版本：0.29（2026-09-23）。** 超过 1920×1080 的输入不再拒绝：按比例缩到 1080 档跑网络，再按原版 codec 的合成方式还原到原分辨率
+（原分辨率画面是底，网络输出只做亮度/颜色引导；`DLSS5_FIT_LARGE=1`）。0.28 以来六项逐位无损的内核优化（整网约 −7%）。
+RX 9070 XT 实测：《剑星》900P 简单场景约 60 帧、1080P 约 40 帧、2560×1440 Native AA 44 帧；RE9 Native AA 实测正常。下载链接在下面更新记录的表里。
 
-**常规addon开启自适应复用（不适用于0.28 RE9 runtime）**：在游戏目录的`DLSS5-AMD/native-game-flags.txt`中将`DLSS5_VIT_ADAPTIVE=0`改为`1`，并设置`DLSS5_VIT_REUSE_HOTKEY=1`、`DLSS5_HIP_GRAPH=0`、`DLSS5_HIP_VIT_BYTE_STREAM=0`，重启游戏。F8切换复用/完整计算；F8不取消原有跳层配置。精确流式注意力直接生效，无需开关。机制和限制见[ViT复用说明](Development/HIP/VIT-REUSE.md)。
+**环境要求。** RDNA 4 显卡（RX 9070 XT 实测；RX 9060 的内核随包但没机器测）和带 `amdhip64_7.dll` 的 AMD 驱动（现在的正式版驱动就带）。
+不需要 HIP SDK、Agility SDK、预览版 DXC、Windows 开发人员模式。900P 下插件占显存约 1.2 GB（权重 0.6 GB、激活 0.3 GB；`DLSS5_HIP_MEMORY=1`
+会把明细写进 `logs\native-hip.txt`）；显存被顶满会掉帧且不恢复，《剑星》里贴图质量开"高"或更低。
 
-**现状（2026-09-17，`0.20`，HIP 后端）**：推理后端从 DirectX 12 Shader Model 6.10 wave matrix 换成 AMD HIP——网络的 24 个内核以 gfx1201 二进制（`.hsaco`）随包提供，由 AMD 驱动自带的 HIP 7 运行时（`amdhip64_7.dll`）执行。输出与 0.15 的 DX12 链逐位相同（40 帧输出哈希一致）；独立测试台 1600×900 每帧 16.8 → ≈15.5 ms，《剑星》游戏内 900p 47 → 52 fps。不再需要 Agility SDK 1.721 预览运行时、Shader Model 6.10 和 Windows 开发人员模式。下面的 DX12 链作为历史记录保留。
+**配置。** 每个包带的 `DLSS5-AMD\native-game-flags.txt` 就是仓库模板（[常规](scripts/hip-game-flags.txt)、[Magpie](scripts/hip-magpie-flags.txt)、
+[RE9](scripts/hip-re9-flags.txt)；键的说明在 [scripts/CONFIGURATION.md](scripts/CONFIGURATION.md)）。网络档位按输入自动选（≤1280×720 走 720，
+≤1600×900 走 900，其余 1080；`DLSS5_NETWORK_HEIGHT` 可强制）。常规插件还有一个可选的有损功能"ViT 自适应复用"（`DLSS5_VIT_ADAPTIVE=1`
+加 [Development/HIP/VIT-REUSE.md](Development/HIP/VIT-REUSE.md) 里列的几个键，F8 切换）；RE9 runtime 的配置在 `OptiScaler.ini` 的 `[DlssNr]`，
+flags 文件里它只读 `DLSS5_FIT_LARGE`。
 
-**现状（2026-09-13，Magpie 整包 `0.15`）**：RX 9070 XT 上支持**宽不超过 1920、高不超过 1080** 的普通游戏窗口。窗口比 1080p 小几个像素也能自动适配，保持原有宽高比；处理后由 FSR4 放大到屏幕，保留 XeSS 帧生成（ZeroMV）。游戏不需要原生支持 FSR/DLSS。
+**Magpie 提示。** 包内效果组里的 `FSR3_SR` 就是 DLSS5 的入口（界面名字还是 FSR3）；这一项保持输入尺寸，后面的 FSR4 负责放大。
+AMD 光流只在第一项开，FSR4 和 XeSS 帧生成的 Optical Flow Method 选 None。`Alt+Shift+A` 启停缩放，`F6` 在所有包里都是开关网络。
 
-用户实玩《鬼武者》：1080p 窗口放大到 2K，保持约 **30 帧**。另用测试窗口在 4K 桌面验证，网络约 **29 fps**；这是两种场景，不是插帧前后的对比。
-
-**效果组里的 `FSR3_SR` 就是 DLSS5 的入口**：插件在这一项接入 DLSS5，界面仍显示 FSR3；不用再找或添加单独的 DLSS5 滤镜。第一项保持输入尺寸，后面的 FSR4 负责放大。光流只在第一项选 AMDOF；FSR4 和 XeSS 插帧的 Optical Flow Method 选 None，避免额外光流造成发糊。
-
-便携预设为 **FSR3（由本插件接入 DLSS5）→ FSR4 充满屏幕 → XeSS 帧生成**。默认开启小窗口适配（`DLSS5_FIT_INPUT=1`）和网络帧率显示，FPS 数字至少间隔三秒刷新。
-
-0.20（HIP）只要驱动带 `amdhip64_7.dll`（我们在 AMD 32.0.31007.2048 预览驱动上验证；正式版驱动同样带这个文件，2026-09-17 有用户反馈正式版可用）。0.15 及之前的 DX12 版需要 Windows 开发人员模式和 AMD 26.10.07.02 预览驱动。HIP 插件 900p 实测占显存 1.2GB（权重 0.6GB、激活 0.3GB、共享缓冲 0.07GB 加运行时开销；`DLSS5_HIP_MEMORY=1` 会把明细写进 `logs\native-hip.txt`）。显存被顶满仍会掉帧且不恢复；《星刃》游戏内钩子版的贴图质量应选「高」或更低。0.22 起 900 档把 1600×900 补到 960 行而不是 1024 行（60 行反射 + 一行零 ViT token，和 1080 档补 token 网格的做法一样）：内核不变、少算约 6%（15.2 → 14.4ms），输出与 0.21 的布局不同（31.5dB），两者都没有参考可言对错；0.21 的布局保留为 `DLSS5_NETWORK_HEIGHT=900w`，也仍是逐位黄金值的测试台几何（960 行的黄金值在 `Development/HIP/validate-modules-960.ps1`）。`DLSS5_NETWORK_HEIGHT=auto` 按输入窗口自动选网络档位（≤1280×720 走 720，≤1600×900 走 900，其余走 1080，超过 1920×1080 拒绝），左上角帧率后面显示实际档位（如 `1600X900`）；写 720/900/1080 则固定。画质/速度档位由 `native-game-flags.txt` 里的 `DLSS5_SKIP_BLOCKS` 决定：不写 = 全网络；`42,43,46`（默认）约 −1ms、约 41dB；`12,28,41,42,43,44,46,52,53`（性能档）900p 再 −0.8ms（15.25 → 14.48ms，2026-09-17 ABBA），相对默认输出约 30dB。`scripts/game-flags.txt` 和 `scripts/magpie-flags.txt` 分别记录两种运行配置，`scripts/bench.ps1` 编译配套 shader。安装方法见 [Magpie 包内说明](scripts/package-README-magpie.txt)。
+**来路。** 0.15 及之前，网络是 Direct3D 12 Shader Model 6.10 wave-matrix 着色器（现在放在 `shaders/dx12-network/`，仍是逐位参考链）。
+0.20 把推理搬到 HIP，输出逐位相同、耗时少约 8%；0.22 把 900 档补到 960 行；0.24 引入渲染分辨率上的前置路径；0.26.1～0.28.1 和 TheAutomatic
+一起做出 RE9 的宿主/runtime 路线。每一版的细节在更新记录里。
 
 ## 仓库结构
 
@@ -53,15 +62,16 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 - **网络**：pre 块（C32 @1920×1152）→ 编码器（C32 ×4、C64 ×4、C128 ×6、C256 ×8、C512 ×8）→ 8 个全局 ViT 块
   （640 token × 1024）→ 解码器（C512 → C32，带跳连）→ 第 70 块 post → RGB 头。8×8 窗口注意力，4 倍隐层 FFN，
-  f16 残差流在块间量化到 E4M3。
-- **核**：所有 GEMM 都是 wave-matrix 乘（A 16×32、B 32×16、f32 累加器），E4M3/f16 操作数直接从显存加载；行归约
-  （归一化、softmax 分母）用对全 1 tile 的 MMA 完成；量化用硬件 `Cast<F8_E4M3FN>`。C32 注意力把两个窗口的
-  QKV + 注意力 + 投影放在一个 256 线程组里做完。
-- **游戏侧**：插件钩住 FSR dispatch，编码画面，用运动向量采样上一帧网络输出（时序 history），网络走延迟提交环
-  （每帧 6 个命令列表），结果拷回。输出侧有一个小的时间平滑 pass（`native_output_smooth.hlsl`），压网络在抖动边缘
-  周围产生的闪烁。
-- **数值**：一条"精确链"逐位复现 NVIDIA 的核（每步显式 f16 舍入）；快速链放宽（f32 累加、硬件舍入），用 PSNR
-  对精确链校验。
+  残差流在块间以 E4M3 字节传递。
+- **核**（`hip/`）：所有 GEMM 都是 RDNA 4 的 WMMA 16×16×16 指令，FP8（E4M3）或 f16 操作数、f32 累加器，操作数直接从显存或 LDS 加载；
+  行归约（归一化的平方和、softmax 分母）用对全 1 tile 的 WMMA 完成；量化用硬件 FP8 转换。C32 块把一个 8×8 窗口的 FFN + 注意力 + 投影
+  放在一个 128 线程组里做完，隐层激活留在寄存器；C64～C256 的注意力把指数留在寄存器；权重在初始化时预排成 WMMA 片段顺序。每架构 24 个核。
+- **游戏侧**：宿主把渲染分辨率的那一帧交给我们；codec（`shaders/native_codec_encode.hlsl`）把它编码到网络面上（任何尺寸的输入都适配到
+  720/900/1080 档，镜像补边），网络在 D3D12↔HIP 共享缓冲上跑（用 fence 同步），decode 着色器把结果和原帧合成（网络只引导原分辨率画面的
+  亮度和颜色）再交给宿主的超分。前置（渲染分辨率）路径里网络自己的时序历史每帧重置，时序工作由超分做；Magpie 路径没有游戏的运动向量。
+  屏幕左上角有状态行（`DLSS5 ON 1707x961 -> FSR 2560x1440`、INITIALIZING、UNSUPPORTED）。
+- **数值**：一条"精确链"逐位复现 NVIDIA 的核（每步显式 f16 舍入）；发布用的快速链放宽（f32 累加、硬件舍入），用 PSNR 对精确链校验（约 42 dB）。
+  0.20 以来每一次内核改动都和上一版逐位相同，除非它的开关自己说明不是（目前只有 `HIP_FFN_WAVE_NORM`，默认关），每个候选装机前都过 12 帧 RGB hash 回归。
 
 ## 编译
 

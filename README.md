@@ -4,31 +4,47 @@ DLSS 5 (DLSSNR) on AMD RX 9070 XT / RDNA 4.
 
 [中文说明](README.zh-CN.md)
 
-A from-scratch Direct3D 12 re-implementation of NVIDIA's DLSS 5 neural renderer ("DLSSNR", the 71-block
-Swin/ViT network shipped in `nvngx_dlssnr.dll`) that runs on an AMD RDNA 4 GPU. The network was reverse-engineered
-block by block, re-written as HLSL compute shaders using Shader Model 6.10 wave-matrix (`dx::linalg`) intrinsics with
-FP8 (E4M3) operands, and wired into a game through a ReShade add-on that hooks the FSR dispatch and post-processes the
-1080p frame.
+A from-scratch re-implementation of NVIDIA's DLSS 5 neural renderer ("DLSSNR", the 71-block Swin/ViT network shipped in
+`nvngx_dlssnr.dll`) for AMD RDNA 4. The network was reverse-engineered block by block and now runs as 24 HIP kernels per
+architecture (gfx1201 = RX 9070 series, gfx1200 = RX 9060 series) on the HIP 7 runtime that ships with the AMD driver. The
+weights are NVIDIA's, extracted from the user's own copy of the DLL; nothing of NVIDIA's is distributed here.
 
-**REFramework variant (0.28.1)**: special RE9 integration using a matched modified OptiScaler host and `LmxxfNrRuntime.dll`: rendering → HIP DLSS5 → FSR → display. Tested2560×1440 borderless output; same-frame exposure normalization/restoration fixes the omitted exposure. Neural input remains≤1920×1080 with automatic network tier selection. Version 0.28.1 rejects oversized input before initialization, retains original SR, and recovers after failed initialization when returning to valid sizes. The RE9 0.28 download has been withdrawn. F6 is handled by the new host; the old post-present addon is disabled. Other RE games, including Xbox Onimusha previously tested with the old route, require new validation.
+Pipeline in every current package: **the game renders at its (low) render resolution → our network processes that frame →
+the host upscaler (FSR) takes it to the display resolution.** Three packages, three ways of getting into that position:
 
-**Latest (2026-09-23, 0.29 — all three packages)**: inputs above 1920×1080 are fitted onto the 1080 tier and composed back at source resolution (`DLSS5_FIT_LARGE=1`), six bit-exact kernel improvements (about −7%, Stellar Blade 900p ~60 fps); links in the table below. Previous (2026-09-22, regular packages 0.28 / RE9-specific package 0.28.1): six shared lossless kernel improvements—RGB head read sharing, exact-zero C128/C256 padding shortcuts, and fixed-shape ViT expansion/projection plus decoder projection. Stellar Blade gameplay showed no visible regression or FPS change; no fixed speedup is promised. Regular packages retain their existing hosts; RE9 uses the new pre-SR host and exposure fix. No new lossy optimization. Full models and gfx1200/gfx1201 kernels are included; optional adaptive reuse remains off by default in regular packages.
+| Package | For | How |
+|---|---|---|
+| **OptiScaler** (regular) | games that expose DLSS (Stellar Blade, Lies of P, …) | OptiScaler answers the game's DLSS call with FSR; our ReShade add-on (`dlss5-amd.addon64`) runs the network on the FSR input first |
+| **Magpie** (portable) | any game, no upscaler support needed | Magpie captures the game window; the network runs in the FSR3_SR slot of its effect group, then FSR4 fills the screen (optional XeSS frame generation) |
+| **OptiScaler-REFramework** (RE9 only) | Resident Evil Requiem, whose command submission the regular route cannot split | TheAutomatic's modified OptiScaler host + our `LmxxfNrRuntime.dll` (matched pair; do not mix with the regular packages) |
 
-**Release configuration**: package defaults are tracked in [scripts/CONFIGURATION.md](scripts/CONFIGURATION.md); fresh packages copy the matching repository template instead of inheriting local gameplay settings.
+**Current release: 0.29 (2026-09-23).** Inputs above 1920×1080 are no longer rejected: they are fitted (downsampled) onto the
+1080 network tier and composed back at the source resolution the way the original codec does (the full-resolution frame is
+the base, the network output steers luminance/colour; `DLSS5_FIT_LARGE=1`). Six bit-exact kernel improvements since 0.28
+(about −7% whole-network time). Measured on the RX 9070 XT: Stellar Blade 900p simple scenes ≈60 fps, 1080p ≈40 fps,
+2560×1440 Native AA 44 fps; RE9 Native AA tested. Download links are in the changelog table below.
 
-**Regular add-on features retained from0.27**: exact streaming ViT attention is enabled in source builds. Optional R3 adaptive reuse is disabled by default; enabling it trades some accuracy for speed. See [configuration and matched DLL/module requirements](Development/HIP/VIT-REUSE.md). INT4 and sparse pruning experiments are not included. The0.28 RE9 runtime does not use this addon configuration/hotkey path.
+**Requirements.** An RDNA 4 GPU (RX 9070 XT tested; RX 9060 kernels included, untested) and an AMD driver that ships
+`amdhip64_7.dll` (current release drivers do). No HIP SDK, no Agility SDK, no preview DXC, no Windows Developer Mode. The
+add-on takes ≈1.2 GB of VRAM at 900p (0.6 GB weights, 0.3 GB activations; `DLSS5_HIP_MEMORY=1` writes the breakdown to
+`logs\native-hip.txt`); if VRAM is exhausted the frame rate drops and does not recover, so keep texture quality at "High" or
+below in Stellar Blade.
 
-**Status (2026-09-17, `0.20`, HIP backend)**: the inference backend moved from DirectX 12 Shader Model 6.10 wave matrix to AMD HIP — the 24 network kernels ship as gfx1201 binaries (`.hsaco`) and run through the HIP 7 runtime that comes with the AMD driver (`amdhip64_7.dll`). Output is bit-identical to the 0.15 DX12 chain (same 40-frame output hash); isolated 1600×900 inference 16.8 → ≈15.5 ms, Stellar Blade in-game 900p 47 → 52 fps. No Agility SDK 1.721 preview runtime, no Shader Model 6.10 and no Windows Developer Mode are needed any more. The DX12 chain below stays as documented history.
+**Configuration.** Each package ships the repository template as `DLSS5-AMD\native-game-flags.txt`
+([regular](scripts/hip-game-flags.txt), [Magpie](scripts/hip-magpie-flags.txt), [RE9](scripts/hip-re9-flags.txt); keys are explained in
+[scripts/CONFIGURATION.md](scripts/CONFIGURATION.md)). The network tier follows the input (≤1280×720 → 720, ≤1600×900 → 900,
+else 1080; `DLSS5_NETWORK_HEIGHT` forces one). The regular add-on also has an optional lossy *adaptive ViT reuse*
+(`DLSS5_VIT_ADAPTIVE=1` plus the keys listed in [Development/HIP/VIT-REUSE.md](Development/HIP/VIT-REUSE.md), F8 toggles it);
+the RE9 runtime is configured through `OptiScaler.ini` `[DlssNr]` and reads only `DLSS5_FIT_LARGE` from the flags file.
 
-**Status (2026-09-13, Magpie bundle `0.15`)**: ordinary game windows up to **1920 pixels wide and 1080 pixels high** now work on RX 9070 XT. Smaller or slightly cropped windows are fitted automatically, preserving their aspect ratio. FSR4 then scales the processed picture to the screen; XeSS Frame Generation (ZeroMV) remains enabled. Games do not need native FSR/DLSS support.
+**Magpie notes.** The `FSR3_SR` item of the bundled effect group *is* the DLSS5 entry (its UI name stays FSR3); keep it at
+input size and let the following FSR4 item upscale. Use AMD optical flow only on that first item and set Optical Flow Method
+to None for FSR4 and XeSS frame generation. `Alt+Shift+A` starts/stops scaling, `F6` toggles the network in every package.
 
-In the user's *Onimusha* test, a 1080p window scaled to 2K maintained about **30 fps**. A separate synthetic-window test on a 4K desktop measured about **29 network fps**; these are different scenarios, not a before/after frame-generation comparison.
-
-**The `FSR3_SR` item in the effect group is the DLSS5 entry point.** The add-on runs DLSS5 through that item while its UI name remains FSR3; there is no separate DLSS5 filter to add. Keep this first item at input size; the following FSR4 item handles upscaling. Enable AMDOF only for the first item; set Optical Flow Method to None for FSR4 and XeSS Frame Generation, which looked sharper in the user’s test.
-
-The portable preset runs **FSR3 (DLSS5 through this add-on) → FSR4 filling the screen → XeSS Frame Generation**. Small-window adaptation (`DLSS5_FIT_INPUT=1`) and the network FPS display are enabled; the FPS number refreshes at intervals of at least three seconds.
-
-0.20 (HIP) needs a driver that ships `amdhip64_7.dll` (verified by us on AMD 32.0.31007.2048, the same preview driver as before; a user reported on 2026-09-17 that the release driver, which ships the same file, works too). The DX12 editions up to 0.15 need Windows Developer Mode and AMD's 26.10.07.02 preview driver. The HIP add-on takes 1.2 GB of VRAM at 900p (0.6 GB weights, 0.3 GB activations, 0.07 GB shared buffers, plus runtime overhead; `DLSS5_HIP_MEMORY=1` writes the breakdown to `logs\native-hip.txt`). VRAM pressure still drops the frame rate and does not recover; for the Stellar Blade in-game hook, use texture quality "High" or lower. Since 0.22 the 900 tier pads 1600×900 to 960 rows instead of 1024 (60 reflected rows plus one row of zero ViT tokens, the way the 1080 tier pads its token grid): same kernels, ≈6% less work (15.2 → 14.4 ms), output differs from the 0.21 layout (31.5 dB) with no reference to call either one right; the 0.21 layout stays available as `DLSS5_NETWORK_HEIGHT=900w` and remains the bench geometry of the bit-exact goldens (`Development/HIP/validate-modules-960.ps1` holds the 960-row goldens). `DLSS5_NETWORK_HEIGHT=auto` picks the network tier from the input window (≤1280×720 → 720, ≤1600×900 → 900, else 1080; larger than 1920×1080 is rejected) and the FPS overlay shows the tier, e.g. `1600X900`; 720/900/1080 pin it. Runtime tiers via `DLSS5_SKIP_BLOCKS` in `native-game-flags.txt`: unset = full network; `42,43,46` (default) ≈ −1 ms at ≈41 dB; `12,28,41,42,43,44,46,52,53` (performance) another −0.8 ms at 900p (15.25 → 14.48 ms, 2026-09-17 ABBA) at ≈30 dB against the default output. `scripts/game-flags.txt` and `scripts/magpie-flags.txt` hold the two runtime configurations; `scripts/bench.ps1` compiles the shader set. See the [Magpie package instructions](scripts/package-README-magpie.txt) (Chinese).
+**Where this came from.** 0.15 and earlier ran the network as Direct3D 12 Shader Model 6.10 wave-matrix shaders (now in
+`shaders/dx12-network/`, still the bit-exact reference chain). 0.20 moved inference to HIP with bit-identical output and
+≈8% less time; 0.22 padded the 900 tier to 960 rows; 0.24 introduced the pre-upscale (render-resolution) path; 0.26.1–0.28.1
+built the RE9 host/runtime route with TheAutomatic. Details per version are in the changelog.
 
 ## What is in this repository
 
@@ -55,17 +71,22 @@ Integration: **Magpie / regular OptiScaler → dlss5-amd.addon64 → shared HIP 
 
 - **Network**: pre-block (C32 @1920×1152) → encoder (C32 ×4, C64 ×4, C128 ×6, C256 ×8, C512 ×8) → 8 global ViT blocks
   (640 tokens × 1024) → decoder (C512 → C32, skip connections) → post-block 70 → RGB head. Window attention on 8×8
-  windows, FFN with a 4× hidden layer, f16 residual stream quantized to E4M3 between blocks.
-- **Kernels**: every GEMM is a wave-matrix multiply (16×32 A, 32×16 B, f32 accumulator) with E4M3 or f16 operands
-  loaded straight from memory; row reductions (normalization, softmax denominators) are MMAs against an all-ones tile;
-  quantization uses the hardware `Cast<F8_E4M3FN>`. The C32 attention runs QKV + attention + projection of two windows in
-  one 256-thread group.
-- **Game side**: the add-on hooks the FSR dispatch, encodes the frame, samples the previous network output through the
-  motion vectors (temporal history), runs the network on a deferred submission ring (6 command lists per frame), and
-  copies the result back. A small output-side temporal smoothing pass (`native_output_smooth.hlsl`) damps the shimmer
-  the network adds around jittering edges.
-- **Numerics**: an "exact" chain reproduces the NVIDIA kernels bit for bit (explicit f16 rounding after every step);
-  the fast chain relaxes it (f32 accumulation, hardware rounding) and is validated against the exact chain by PSNR.
+  windows, FFN with a 4× hidden layer, the residual stream carried as E4M3 bytes between blocks.
+- **Kernels** (`hip/`): every GEMM is an RDNA 4 WMMA 16×16×16 instruction with FP8 (E4M3) or f16 operands and an f32
+  accumulator, operands loaded straight from memory or LDS; row reductions (normalisation sums, softmax denominators) are
+  WMMAs against an all-ones tile; quantisation uses the hardware FP8 casts. The C32 block runs FFN + attention + projection
+  of one 8×8 window in a single 128-thread group with the hidden activations kept in registers; the C64–C256 attention keeps
+  its exponentials in registers; weights are prepacked into WMMA fragment order at initialisation. 24 kernels per architecture.
+- **Game side**: the host hands us the frame at render resolution; the codec (`shaders/native_codec_encode.hlsl`) encodes it onto
+  the network surface (fitting any input size to the 720/900/1080 tier, reflected padding), the network runs on a D3D12↔HIP
+  shared buffer with fences, and the decode shader composes the result with the original frame (the network steers luminance
+  and colour of the full-resolution picture) before the host upscaler sees it. In the pre-upscale (render-resolution) path
+  the network's own temporal history is reset every frame and the upscaler does the temporal work; the Magpie path has no
+  game motion vectors. An overlay shows the state (`DLSS5 ON 1707x961 -> FSR 2560x1440`, INITIALIZING, UNSUPPORTED).
+- **Numerics**: an "exact" reference chain reproduces NVIDIA's kernels bit for bit (explicit f16 rounding at every step); the
+  shipped fast chain relaxes that (f32 accumulation, hardware rounding) and is judged against it (≈42 dB PSNR). Every kernel
+  change since 0.20 is bit-exact against the previous version unless its flag says otherwise (only `HIP_FFN_WAVE_NORM`, off
+  by default), verified by a 12-frame RGB hash regression before each candidate is installed.
 
 ## Building
 
