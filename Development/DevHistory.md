@@ -4,7 +4,10 @@
 > **2026-09-23 压缩**：原文 593KB（约 30 万 token）已整本移到 `Development/history/DevHistory-full-20260923.md`（git `a300c20` 之前的完整版）。本文只留结论、关键数字、现行约定和"别再做"的清单；要查某一刀的细节、SHA、日志路径，去原文 grep 日期或关键词，别整本读。
 > 更早的逐刀原始记录在 `Development/history/` 其余文件（见文末索引）；每轮实验的数据在 `Development/results/<名字>-<日期>/`、`Development/HIP/experiments/<名字>/`。
 
-续写规则：新事件追加到「时间线」末尾（时间正序），「当前状态」「待办」两节原地改。再长到读不动时，把旧事件压进里程碑表，原文照样挪进 history/。
+**续写规则**：
+- 新事件**直接追加在文件最末尾**（§12 流水，时间正序，`## 日期 时间：标题` + 正文），不要往 §4 的表里塞，也不要插到中间。
+- 「§3 当前状态」「§11 待办」原地改；新的"不要重做"补进 §7，新教训补进 §8。
+- §12 长到读不动时：每天压成 §4 的一行，结论并入 §5～§8，原文照样挪进 history/。
 
 ---
 
@@ -229,7 +232,7 @@
 
 ---
 
-## 附：history/ 文件索引
+## 附：history/ 文件索引（流水在本表之后）
 
 | 文件 | 内容 |
 |---|---|
@@ -239,3 +242,11 @@
 | `CURRENT-STATE.md` | 09-07～09-10 fast 链逐刀状态（最新在上） |
 | `amd-port-plan.md` / `fast-path-plan.md` / `next-steps-plan*.md` / `PLAN.md` | 各阶段计划 |
 | `README.md`、`native-runtime-contract.md`、`local-patch-tool.md`、`optiscaler-intro.md` | 早期索引 / 已过时的方案 |
+
+---
+
+## 12. 流水（新事件追加在本节末尾，时间正序）
+
+## 2026-09-23 16:00：DevHistory 压缩
+
+原文 593KB（约 30 万 token，新 session 读不动）按主题重组为本文件（约 22KB）：逆向事实、当前状态、里程碑、性能演进、算力缺口认识、不要重做清单、合并教训、运维入口、游戏适配、待办。完整原文 `git mv` 到 `Development/history/DevHistory-full-20260923.md`（提交 e0824bf）。续写规则改为新事件只追加在文件最末尾。
