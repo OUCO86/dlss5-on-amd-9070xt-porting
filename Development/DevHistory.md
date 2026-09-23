@@ -3297,3 +3297,7 @@ prod6（逐位）：hash/额外控制组全同，1000 帧计时 900 −0.54ms（
 ## 2026-09-23 14:10：DLSS5_FIT_LARGE 修正与剑星实测；RE9 runtime 同步
 
 修正：pre-upscale 在 phase 0 判 supported 并由此启动初始化，环境变量那时还没灌入 → 改为直接读 flags 文件设 `NativeFitLargeInputOverride()`（addon c1bc7374…）。剑星 2K Native AA（渲染 2560×1440）出图，44 fps；合成走原版 codec：网络 1080 层输出与 proxy 双线性采到 2K，按亮度比调制 2K 原图（原图是底），不是双线性放大。用户认可。RE9：prepare-host.py 的尺寸校验加 `NativeFitLargeInput()`，PrepareFrame 首次调用从 `assetsDir\..\native-game-flags.txt` 读 `DLSS5_FIT_LARGE`；上游 host 无 caps 尺寸门（仅 ABI 测试断言 1920×1080，caps 未改）。runtime de99a735… 装入 RE9 根目录与 _storage_（deployments/re9-fitlarge-20260923），等用户实测。模板 hip-re9-flags.txt 加 `DLSS5_FIT_LARGE=1`。
+
+## 2026-09-23 14:30：RE9 超 1080p 输入实测通过
+
+runtime 6e9974d7…（flags 文件从 assets 目录逐级向上找，优先环境变量）。用户 RE9 Native AA（2560×1440）DLSS5 效果恢复。剑星与 RE9 两条线 DLSS5_FIT_LARGE 均验证。待入 0.29 包：addon c1bc7374…、RE9 runtime 6e9974d7…、四份 flags 模板 + hip-re9-flags 加 `DLSS5_FIT_LARGE=1`、README 一行、回 issue #6。

@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-23 14:05，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-23 14:35，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 
@@ -10,7 +10,7 @@
 
 ## 待办（按顺序）
 
-0. **岔路：issue #6 超 1080p 输入（DLSS5_FIT_LARGE）**——代码已改、addon 已编（ee814763…）、测试包在 `stellar-fitlarge-20260923\install.ps1`。等用户装上在 1440p Native/DLAA 或 Ultra Quality 下试；成了就进下一个发布包（0.29），README/包说明补一行；不成看日志 `DLSS5-AMD\logs\native-pre-upscale.txt`。做完回主线。
+0. **岔路：issue #6 超 1080p 输入（DLSS5_FIT_LARGE）——两条线实测通过**（剑星 2K Native AA 44fps；RE9 Native AA 正常）。剩余：打 0.29 三包（Magpie / OptiScaler / OptiScaler-REFramework：addon c1bc7374…、RE9 runtime 6e9974d7…、flags 模板含 `DLSS5_FIT_LARGE=1`）、README 加一行、回 issue #6（超宽屏理论可用未实测，请网友反馈）。打包流程见 scripts/package-release.py 与 DevHistory 0.28 条目。做完回主线。
 
 1. 6b 画质：用户想看的话，编 gfx1200 的 6b mh_fast、做 6b payload（只换 mh_fast 两架构）、装机由用户在游戏里判断。不想看就关闭这条。
 2. **318 成稿**：素材在文末"待整理材料"和各时间点补记（最新 10:00 那条是规则改口）；成稿前重新检索文献（Roofline 2009、Hierarchical Roofline、微基准反推、Hong & Kim 2009、PaLM MFU），重排结构。结尾句改成"必要损失约 25～30%，可回收的已回收 7%，剩下的要么改算法要么认了"。
