@@ -35,7 +35,8 @@ CU 模式下每 CU 可用 LDS 是 64KB（128KB/WGP 的一半），C32 的驻留�
 
 - **C32 in16 别名到 Scratch**（c32-lds-alias）：in16 只活到残差初始化，Scratch 到 QKV 归一化才首写，中间两个 sync_window；别名后三核 LDS 19712→15360，驻留 6→8。逐位按构造相同。
 - c256_attention 的尾巴要么减组时长（组内 16 wave 已是两批 head，改 4 批组数翻倍每组减半），要么让相邻两个独立 launch 并发（同 stream 做不到，需要第二 stream + 事件，host 侧改动）。
-- ffn_fused_c256：VGPR 102→≤96 可到 16 wave/SIMD（+33% 槽位），但稳态本来就没贴顶，收益不确定。
+- ffn_fused_c256：VGPR 102→≤96 可到 16 wave/SIMD（+33% 槽位）——已试（[mhfast-vgpr-cap](../mhfast-vgpr-cap-20260923/README.md)），溢出 8～9 个寄存器，反而 +0.06/+0.07ms，关闭。
+- c256_attention 的第二 stream 想法作废：host 里每次注意力前后是同一条链上的 ffn_fused（产 norm→注意力→下一块 FFN），没有可并发的兄弟 launch。尾巴是结构税。
 
 ## 限制
 

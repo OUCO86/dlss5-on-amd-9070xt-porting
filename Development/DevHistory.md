@@ -3245,3 +3245,7 @@ fence-scope-all 留的"未做"：逐处过四个文件的带栅栏同步点（c3
 ## 2026-09-23 08:00：C32 in16 别名到 Scratch，逐位同，−0.09/−0.06ms，进生产源
 
 mapped/post 三核 LDS 19712→15360，驻留 3→4 组/CU。in16 生命期止于残差初始化，Scratch 生于 QKV，中间两个 sync_window。三份复现槽不交叠。`HIP_C32_IN16_ALIAS` 默认 1，攒进下一批候选（未编 prod6、未回归、未装）。results/c32-lds-alias-20260923。
+
+## 2026-09-23 08:05：ffn_fused_c256 VGPR 封 96，逐位同，+0.06/+0.07ms，不采用
+
+waves_per_eu(16,16) 让两个 c256 frag 核降到 96 VGPR、各溢出 8～9 个寄存器，驻留 12→16 wave/SIMD 反而更慢，三份复现槽不交叠。驻留只在它是瓶颈时值钱。c256_attention 尾巴确认为结构税（host 链上无可并发兄弟 launch）。results/mhfast-vgpr-cap-20260923。

@@ -193,3 +193,4 @@ RGP64dispatch：L0请求251822080→167936000（−33.31%），L2请求114033044
 ## 2026-09-23 08:00补充（Hikari）：launch 级驻留账与 in16 别名
 
 [launch 级账](../launch-occupancy-20260923/README.md)：每 wave 实时戳 + HW_ID。**纠正：128 个 SIMD，不是 256。** C32 驻留贴 LDS 上限（CU 模式 64KB：chain 4 组/CU = 8 wave/SIMD，mapped/post 3 组 = 6），爬坡+尾巴 1%，缺口全在核内；ffn_fused_c256 VGPR 封顶 12/SIMD、尾 8～12%；c256_attention 每 launch 2～2.5 轮组、尾巴 25～37%（约 0.15ms/帧，结构性）。[in16 别名](../c32-lds-alias-20260923/README.md)：三核 LDS 回到 15360、驻留 6→8，逐位同，−0.09/−0.06ms（三份复现），进生产源攒着。驻留 +33% 只换 4%：这三核在 6 wave 时延迟已盖住大半。
+[VGPR 封顶](../mhfast-vgpr-cap-20260923/README.md)：ffn_fused_c256 驻留 12→16 wave/SIMD 反而 +0.06/+0.07ms（溢出 8～9 寄存器），关闭。launch 级账到此闭合：C32 贴 LDS 上限且核内为主；ffn_fused 驻留够用；c256_attention 尾巴是链式依赖下的结构税。
