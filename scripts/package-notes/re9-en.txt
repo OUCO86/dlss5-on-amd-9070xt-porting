@@ -18,7 +18,7 @@ Select DLSS in game. Start with2K/Balanced and frame generation off; test frame 
 
 F6 toggles NR. Insert opens OptiScaler/REFramework (their default keys can overlap). Use the neural menu to adjust Detail strength/Colour strength, keeping both in0..1. Reducing Colour strength also suppresses coloured texture/material changes, not just saturation.
 
-Settings are in OptiScaler.ini [DlssNr]: NrBackend=lmxxf, Enabled=true, RunBeforeSR=true, LmxxfDiagnostic=off. Information overlays use OptiScaler controls. Old addon F7 and DLSS5_SHOW_FPS/NOTICE do not control this runtime. Old native-game-flags.txt is not read; no standard-addon F8 reuse control. Default skipped blocks42,43,46 remain; adaptive reuse is off.
+Settings are in OptiScaler.ini [DlssNr]: NrBackend=lmxxf, Enabled=true, RunBeforeSR=true, LmxxfDiagnostic=off. Information overlays use OptiScaler controls. Old addon F7 and DLSS5_SHOW_FPS/NOTICE do not control this runtime. Only DLSS5_FIT_LARGE is read from DLSS5-AMD\native-game-flags.txt (other keys have no effect); no standard-addon F8 reuse control. Default skipped blocks42,43,46 remain; adaptive reuse is off.
 
 RX9070XT numerical/exposure tests, menu rendering and repeated startup have passed. Full gameplay, scene changes and frame generation still need further feedback. Previous0.27 Xbox Onimusha validation does NOT validate this new host. Other RE games/gfx1200 hardware/HDR display output remain unverified.
 
