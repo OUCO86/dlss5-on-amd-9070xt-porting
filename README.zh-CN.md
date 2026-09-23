@@ -8,7 +8,7 @@ Direct3D 12 从零重写成 Shader Model 6.10 wave-matrix（`dx::linalg`）+ FP8
 
 **REFramework 专用版（0.28.1）**：针对《生化9》特殊提交方式，采用配套的修改版OptiScaler宿主和`LmxxfNrRuntime.dll`，流水线为游戏渲染→HIP DLSS5→FSR→显示。已验证2K无边框输出，并补上同帧曝光归一化/还原。神经输入仍须≤1920×1080，网络按输入自动选择档位。0.28.1在初始化前拒绝超限输入并保留原始超分，修复初始化失败后换回有效尺寸无法恢复的问题。旧RE9 0.28已撤下。F6由新宿主管理，旧后置addon停用；其他RE游戏（包括旧版已测的Xbox《鬼武者》）需重新验证，不能沿用0.27兼容结论。
 
-**最新（2026-09-22，常规包0.28／RE9专用包0.28.1）**：三个完整包更新共享HIP核的六项无损优化：RGB末端共用读取、C128/C256全零填充快路径、ViT展开/投影与解码器投影固定尺寸优化。《剑星》实玩无明显异常，画面和帧率基本不变；不承诺固定提升。常规两包沿用原宿主，RE9特殊包采用新前置宿主并修复曝光遗漏。未新增有损优化；完整模型及gfx1200/gfx1201模块随包，自适应复用在常规包默认关闭。
+**最新（2026-09-23，0.29 三包）**：超过1920×1080的输入缩到1080档跑网络再按原分辨率合成（`DLSS5_FIT_LARGE=1`），六项逐位无损内核优化（约−7%，《剑星》900P约60fps），链接见下表。上一版（2026-09-22，常规包0.28／RE9专用包0.28.1）：三个完整包更新共享HIP核的六项无损优化：RGB末端共用读取、C128/C256全零填充快路径、ViT展开/投影与解码器投影固定尺寸优化。《剑星》实玩无明显异常，画面和帧率基本不变；不承诺固定提升。常规两包沿用原宿主，RE9特殊包采用新前置宿主并修复曝光遗漏。未新增有损优化；完整模型及gfx1200/gfx1201模块随包，自适应复用在常规包默认关闭。
 
 **默认配置**：新包自动带入仓库中的[普通游戏配置](scripts/hip-game-flags.txt)、[Magpie配置](scripts/hip-magpie-flags.txt)或[REFramework配置](scripts/hip-re9-flags.txt)，不继承本机试玩设置。来源与打包方法见[配置说明](scripts/CONFIGURATION.md)。
 
@@ -161,7 +161,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy_fast.ps1 -Source <lab> -
 | 0.27 · [Magpie](https://pan.quark.cn/s/ec3a3282aa76) · [OptiScaler](https://pan.quark.cn/s/004278159ed8) · [OptiScaler-REFramework](https://pan.quark.cn/s/010683548f68)（HIP） | 09-20 | 精确流式ViT注意力减少中间存储与重复读取，保持原计算/舍入；可选R3自适应复用增加变化检测、静止输入延长缓存和融合提交，默认关闭。三包直接使用仓库默认配置，带完整模型和双架构内核，不含INT4/剪枝。REFramework保留固定900P、最高1080P SDR后置契约。DLL重新编译，三包各44个shader变体及ZIP逐文件校验通过。 |
 | 0.28 · [Magpie](https://pan.quark.cn/s/11547f398eb4) · [OptiScaler](https://pan.quark.cn/s/f7f423b0ea3a)（HIP） | 09-22 | 六项无损核优化：RGB共用读取、C128/C256零填充跳过、ViT展开/投影及解码投影固定尺寸优化。常规《剑星》实玩效果/帧率基本不变。普通版宿主不变，完整模型和双架构核随包；RE9 0.28下载已撤下，改用下方0.28.1。 |
 | 0.28.1 · [OptiScaler-REFramework](https://pan.quark.cn/s/1375693a0d21)（HIP） | 09-22 | RE9专用完整包：真实输入超限时在HIP初始化前拒绝并保留原始超分；初始化失败安全回滚，改回有效尺寸可恢复，保护未退休帧。10组/12提交帧回归和用户初步实玩通过，宿主/runtime需配套更新；源码与TheAutomatic署名随包。 |
-| 0.29 · Magpie · OptiScaler · OptiScaler-REFramework（HIP） | 09-23 | 超过1920×1080的输入不再拒绝：缩到1080档跑网络，再按原版codec方式还原到原分辨率（`DLSS5_FIT_LARGE=1`，issue #6；《剑星》2K Native AA 44fps、RE9 Native AA实测；超宽屏未实机）。共享核自0.28以来六项逐位无损优化（栅栏作用域、C32折叠FFN、字节链+向量化输入、注意力寄存器化、in16别名、FFN尾段转置）约−7%，《剑星》900P约60fps。RE9宿主不变、runtime更新。 |
+| 0.29 · [Magpie](https://pan.quark.cn/s/fe1b6af36cad) · [OptiScaler](https://pan.quark.cn/s/209e04e7acaf) · [OptiScaler-REFramework](https://pan.quark.cn/s/505d38a63a85)（HIP） | 09-23 | 超过1920×1080的输入不再拒绝：缩到1080档跑网络，再按原版codec方式还原到原分辨率（`DLSS5_FIT_LARGE=1`，issue #6；《剑星》2K Native AA 44fps、RE9 Native AA实测；超宽屏未实机）。共享核自0.28以来六项逐位无损优化（栅栏作用域、C32折叠FFN、字节链+向量化输入、注意力寄存器化、in16别名、FFN尾段转置）约−7%，《剑星》900P约60fps。RE9宿主不变、runtime更新。 |
 
 ## 权重
 
