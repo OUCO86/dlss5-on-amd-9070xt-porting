@@ -3305,3 +3305,7 @@ runtime 6e9974d7…（flags 文件从 assets 目录逐级向上找，优先环�
 ## 2026-09-23 14:43：0.29 三包完成
 
 Development/tools/package-029.ps1（底包 0.28 / 0.28.1，逐文件核对；模块 8 个与剑星装机副本 hash 相同；RE9 runtime 冒烟通过；44 个 fit shader 变体编译通过；zip 读回校验）。成品 D:\給網友打包：Magpie-DLSS5-AMD-0.29.zip 336,211,082 字节 sha256 fb005c3e…；OptiScaler-DLSS5-AMD-0.29.zip 366,408,307 字节 55142927…；OptiScaler-REFramework-DLSS5-AMD-0.29.zip 420,881,710 字节 668133f9…。README 中英文 0.29 行已加（链接待用户上传后补）、编译方法一节已加。清单 Development/releases/0.29/packages.json。
+
+## 2026-09-23 15:33：用户反馈（0.29 发布后）
+
+网友《剑星》900P 最低画质 73 fps（RX 9070 XT）。900P 网络本身约 12.1 ms（上限约 82 fps），最低画质下游戏渲染占比很小，余下是 codec 合成与拷贝。README 相关待补：默认跳块 42/43/46（40.66 dB，清空 `DLSS5_SKIP_BLOCKS` 即全跑约 +1 ms）；ViT 自适应复用默认关、开了有损；精确流式注意力常开且逐位。
