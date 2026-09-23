@@ -250,3 +250,15 @@
 ## 2026-09-23 16:00：DevHistory 压缩
 
 原文 593KB（约 30 万 token，新 session 读不动）按主题重组为本文件（约 22KB）：逆向事实、当前状态、里程碑、性能演进、算力缺口认识、不要重做清单、合并教训、运维入口、游戏适配、待办。完整原文 `git mv` 到 `Development/history/DevHistory-full-20260923.md`（提交 e0824bf）。续写规则改为新事件只追加在文件最末尾。
+
+## 2026-09-23 23:00～09-24 00:05：《卧龙 2》Alpha Demo 试装（网友反馈"用不了"）
+
+游戏在 9070 机 `C:\Program Files (x86)\Steam\steamapps\common\Wo Long 2 Wings of Ember Alpha Demo`（Katana 引擎，Streamline 2.9 接 DLSS，自带 FSR）。装 0.29 常规 OptiScaler 包（脚本 `Development/deployments/wolong2-20260923/install.ps1`，覆盖游戏自带 libxess/libxell 时备份到 `_dlss5_backup`），逐层排查：
+
+1. ReShade 菜单出、无 DLSS5：游戏选 DLSS 后 OptiScaler 建了 fsr31 特征，每帧 Evaluate/Dispatch 都在跑，但 addon 钩的 `amd_fidelityfx_dx12.dll::ffxDispatch` 一次没触发。改钩 `amd_fidelityfx_upscaler_dx12.dll`（26KB 的 dx12.dll 只是转发壳）仍无触发。
+2. 根因（读 OptiScaler 源码 FfxApi_Proxy.h）：游戏自己先加载了 upscaler dll，OptiScaler 把它当"游戏加载的 FFX 模块"用 Detours 钩其五个导出做输入捕获，自己的派发走 Detours 跳板，不经导出入口。`[Inputs] EnableFfxInputs=false` 后钩子每帧触发，网络初始化成功（1580×888 → 900 档）。
+3. 常规前置随即被自家检查拒绝：`UNSAFE: draw/dispatch after deferred upscaler in same list`——和 RE9 同类，FSR 之后同列表还有 draw。
+4. 换 RE9 宿主（`-Variant re9`，不装 REFramework dinput8.dll）：`PrepareFrame: render input metadata/texture size mismatch`（游戏开着动态分辨率，纹理按最大分配）+ 宿主 300ms/2 帧稳定判定永远过不了。关掉游戏内动态分辨率后两者消失（1664×935 = 1664×935）。
+5. 之后神经路径生效：画面变灰、帧率不变（60）。日志：曝光扫描 >64 个候选（RE9 定制的过滤在 Katana 上失效，曝光未识别，FP16 线性场景色按曝光 1 归一化）；`prior job not yet submitted; original SR` 反复出现（Submitted 钩子对队列/时机的假设是 RE9 的，卧龙提交路径不同，多数帧绕过）。
+
+结论：卧龙 2 不是"装不上"，是三层都要适配：EnableFfxInputs、动态分辨率关、以及 RE9 宿主的曝光发现 + 提交观察两处 Katana 化。当前机上装的是 RE9 变体 + `LmxxfDiagnostic=off`。代码改动：`src/native_submission_order_probe.cpp` 优先钩 upscaler dll 并在 hook_status 行记模块名/导出地址、派发入口前 8 次记类型（剑星回归未做，未发包）。未记入 0.29。
