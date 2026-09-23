@@ -154,7 +154,7 @@ static void log(const char*kind,void*list,void*queue,unsigned value=0){
 }
 /* Read before initialization: the usual environment flags are applied by the background loader. */
 static bool fit_small_input(){static const bool enabled=[]{unsigned v=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_FIT_INPUT=%u",&v);fclose(f);}return v==1;}();return enabled;}
-static bool fit_large_input(){static const bool enabled=[]{unsigned v=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_FIT_LARGE=%u",&v);fclose(f);}return v==1;}();return enabled;}
+static bool fit_large_input(){static const bool enabled=[]{unsigned v=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_FIT_LARGE=%u",&v);fclose(f);}if(v==1)NativeFitLargeInputOverride()=true;return v==1;}();return enabled;}
 static bool supported_input(unsigned w,unsigned h){return (w==1920&&h==1080)||(fit_small_input()&&NativeInputGeometry::Supported(w,h,fit_large_input()));}
 static std::atomic<void**>fit_context{nullptr};
 using DestroyContext=uint32_t(*)(void**,const void*);

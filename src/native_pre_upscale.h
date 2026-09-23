@@ -23,6 +23,7 @@ inline int Mode(){
  static int configured=[](){int mode=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f)){size_t n=strlen(line);while(n&&(line[n-1]=='\n'||line[n-1]=='\r'||line[n-1]==' '))line[--n]=0;if(!strcmp(line,"DLSS5_PRE_UPSCALE=1"))mode=1;else if(!strcmp(line,"DLSS5_PRE_UPSCALE=2"))mode=2;else if(!strcmp(line,"DLSS5_PRE_UPSCALE=0"))mode=0;}fclose(f);}return mode;}();return configured;
 }
 inline bool Enabled(){return Mode()!=0;}
+inline bool FitLargeFromFile(){static const bool v=[]{unsigned x=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_FIT_LARGE=%u",&x);fclose(f);}return x==1;}();return v;}
 struct DisplaySettings {unsigned notice=2;unsigned fps=0;};
 inline const DisplaySettings&Display(){
  // Read before the background initializer applies flags to the environment.
@@ -157,6 +158,7 @@ inline bool Process(ID3D12CommandQueue*q,Job&j){
   D3D12_RESOURCE_STATES replay_states[7]{};
   for(unsigned i=0;i<7;i++)if(d.resources[i].resource){replay_states[i]=j.states[i];if(!Reverse(j.states[i],d.resources[i].state))throw std::runtime_error("terminal resource state not representable by FFX");}
   auto*color=static_cast<ID3D12Resource*>(d.resources[0].resource);auto*motion=static_cast<ID3D12Resource*>(d.resources[2].resource);auto cd=color->GetDesc();
+  if(FitLargeFromFile())NativeFitLargeInputOverride()=true;
   bool supported=NativeInputGeometry::Supported(d.render[0],d.render[1],NativeFitLargeInput())&&NativeIsGameColor(cd.Format)&&!(cd.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
   if(Mode()==1&&supported&&!neural_oneshot.Bypassed()){
    bool same=s->low&&s->low->GetDesc().Width==d.render[0]&&s->low->GetDesc().Height==d.render[1]&&s->low->GetDesc().Format==cd.Format;
