@@ -3281,3 +3281,7 @@ c32 gfx1200 F256217E… / gfx1201 6F66096E…；mh_fast gfx1200 410A2DFF… / gf
 ## 2026-09-23 10:20：prod6 回归通过；6b 画质量级
 
 prod6（逐位）：hash/额外控制组全同，1000 帧计时 900 −0.54ms（−4.3%）、1080 −0.80ms（−4.5%）相对装机版。payload.json 6 文件，攒着未装。6b（+wave 归一化）：−5.4/−5.6%，12 帧 RGB 差 mean 4.3e-4、PSNR 58 dB、1.4% 像素 >1/255、max 0.17，待用户看画质。deployments/stellar-prod6-20260923。
+
+## 2026-09-23 11:28：prod6 装入剑星
+
+6 文件 hash 校验通过，host/INI/flags 未动，备份 `D:\DLSSNR-Lab\stellar-prod6-20260923\backups\20260923-112851`（回退：`install.ps1 -RestoreBackup <该目录>`）。装机版 = prod6，相对上一装机版 −4.3/−4.5%。等用户实玩反馈。
