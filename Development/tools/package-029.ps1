@@ -1,4 +1,4 @@
-param([string]$Version='0.29',[string]$SourceCommit='cda8171',[string]$ConfigDirectory='D:\DLSSNR-Lab\release-029\scripts',[switch]$Resume)
+﻿param([string]$Version='0.29',[string]$SourceCommit='cda8171',[string]$ConfigDirectory='D:\DLSSNR-Lab\release-029\scripts',[switch]$Resume)
 # 0.29: three full packages from the 0.28 (Magpie / OptiScaler) and 0.28.1 (OptiScaler-REFramework) baselines.
 # Changes: regular add-on (DLSS5_FIT_LARGE), the four shared HIP modules x two architectures (prod6, identical to the copies
 # installed and played on the Stellar Blade machine), flags templates, RE9 runtime (host dxgi.dll unchanged), RE9 flags file kept.
