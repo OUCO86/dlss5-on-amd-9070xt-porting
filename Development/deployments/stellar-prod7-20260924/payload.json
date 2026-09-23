@@ -1,0 +1,12 @@
+[
+  {
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead-fast-padded-wave-packed.hsaco",
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod7-gfx1200\\multihead-fast-padded-wave-packed.hsaco",
+    "sha256": "36ad568fb15e5aa15caad9ce3a7ec5afb0d7227b45d0147526362e9a2ab86809"
+  },
+  {
+    "target": "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead-fast-padded-wave-packed.hsaco",
+    "source": "D:\\DLSSNR-Lab\\hip-backend\\network-fixed-shapes\\prod7-modules\\multihead-fast-padded-wave-packed.hsaco",
+    "sha256": "98faa6d4268ac8a129078233ac32022d615159a5f5460205fbb0b31e45e8f30f"
+  }
+]
