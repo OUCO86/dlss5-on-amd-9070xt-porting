@@ -378,3 +378,4 @@ RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都�
 用户定"这一轮做完就打包"。C512 链 7 个核各发 `_pdl` 孪生（`HIP/experiments/pdl-c512`，四个模块），逐位；900：只 C512 −0.16 ms、只 C64-256 −0.19、两者都开 −0.15/−0.16；1080：−0.11 / −0.12 / −0.09。不相加——板功耗钉 325 W，填了空隙就掉时钟，两族像共用一份"时钟预算"。**不采用**，实验和结论归档 `results/pdl-c512-20260925`；用户加功耗上限后可复测叠加。坑：实验 host 打在生产头文件上，生产 ctor 只在 opt.pdl 时分配旗子缓冲，timeline 的 flags.txt 没写 PDL=1 → 对空指针算偏移 launch 失败。
 0.30 打包：`Development/tools/package-030.ps1`（0.29 复制：三包基线 0.29，模块 prod8 两架构与剑星机上一致，插件 0211a78a，flags 模板查 PDL=1 / ASYNC=auto / STRENGTH=auto，常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`，RE9 宿主/runtime 与 0.29 同哈希，codec hlsl 与 0.29 同哈希）；package-notes 六份改 0.30；README 两处"当前版本"与更新记录行（链接待上传）。
 
+07:53 三包打完（`Development/tools/release-030-results.json`，D:\給網友打包）：Magpie 336,377,155 B sha256 2b467532…、OptiScaler 366,576,181 B 8b3f1ae3…、OptiScaler-REFramework 421,034,771 B ae445772…；每包 SHA256SUMS 逐项核对、44 个 shader 变体编过、RE9 runtime 冒烟通过。等用户上传夸克 + Google 后填 README 链接。
