@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-25 01:30，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-25 08:20，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 > 节奏：过日子式，没有 deadline。有兴致就挑一把逐位的小刀试，没兴致就写文章、回 issue。
@@ -20,7 +20,7 @@
 - **"只有光影变化"的担心已量化**：高通对数亮度 RMS 比 / 相关 / 梯度幅值比——纯调色是 corr≈0.9997、比 1.0；剑星 1.11/0.887/+13%，赛博 1.00/0.973/+13%，生化 1.03～1.13/0.98/+19%，都不是纯调色。图在各 deployments 的 detail-crop-*.png。
 - **网友"统一 RE9 与常规包"补丁审完**（`Development/RE9/presr/contrib/generic-host-20260924/REVIEW.md`）：查询记账 + 提前包裹两处可用，backend 补丁是我们 prepare-host 的旧翻版，runtime 脚本没打我们的补丁不可用，无测试证据。**等用户问到他在哪个游戏跑通、帧率多少再定**要不要合进 prepare-host.py 用 MSVC 编宿主到剑星实测。
 
-## 0.30 打包（等用户说打包）
+## 0.30 打包（09-25 进行中：package-030.ps1，lab D:\DLSSNR-Lab\release-030；打完等用户上传夸克 + Google，再把链接填进 README 两处）
 
 复制 package-029.ps1 → package-030（版本号、hash）；内核 prod7；addon a569ed6f…（strength-auto）；常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`（`[Inputs] EnableFfxInputs=false`，对剑星空操作）；flags 模板 `ASYNC=auto`（Cyberpunk2077.exe 查表→同步）；README 更新记录一行，夸克 + Google Drive 两链接；帧率（prod8）：剑星 900P→2K 中画质 60～61、1080P→2K 47～48；赛博 低画质 平衡 51～52、质量 41。README 已有"分游戏说明"段和 0.29 的 Google Drive 链接。
 
@@ -33,7 +33,7 @@
 1. ~~直达共享内存的读取~~（09-24 01:00 验过：gfx1201 没有 `vmem-to-lds-load-insts` 特性，comgr 拒绝 builtin，汇编器也不认 `global_load_lds_b128`——RDNA4 根本没有这条指令，是硬件没铺路，不是我们不会写。关。）原文：RDNA4 `global_load_lds`，数据从显存直接落 LDS，不经寄存器、不占向量发射。先验两件事：comgr 上 builtin 在不在（`__builtin_amdgcn_global_load_lds`）、gfx1201 支持到多宽（传闻 gfx12 有 b128）。落点按 lane 线性排，packed 行距 36 字节不线性，要改行距或改读法。逐位天然成立。唯一没碰过的"搬运方式"级改法。
 2. **L0 黑箱再量一层**（第三章"L2 命中 99.95% 但停顿 68%"）：受控小程序量 L0 每 CU 每周期送多少字节、地址低位到 bank 的映射（bit10 敏感已摸到一角）、请求合并规则。不直接提速，决定第一格"必要损失"是真必要还是地址排布撞了它。
 3. ~~频率当第四张账本~~（09-24 01:05 做完，`results/clock-ledger-20260924`）：是功耗墙，板功耗钉 325～328 W，时钟随核族变——FFN(C64～C256) 最费电（占满时 −8～9%），ViT 最省电（+1～2%），整网 2.75 是加权。后续两件：(a) 318 第一章"ViT 单测 2.5 GHz"改口；(b) 已追到：FFN 的电烧在全局窄写（norm +4%、norm+out +7% 时钟），ALU/LDS/barrier 不耗电，并宽指令不省电（触及行数没变）。**全行写做完（01:30）**：逐位，−0.6/−0.7%，FFN 占满时钟 +1.2%（没到 +7%：字节没少，只省了部分写）。prod7 候选回归通过（`deployments/stellar-prod7-20260924`），**等用户关游戏装机**。用户侧：Adrenalin 功耗上限 +10% 值得剑星实测。
-4. ~~launch 尾巴用两条流盖住~~（09-25 01:30 做完，改道：双流在这驱动上不并发、事件一对 110 μs；同流 `hipExtAnyOrderLaunch` + tile 旗子（土法 PDL）逐位，**900 −1.6%、1080 −0.6%**，`results/pdl-chain-20260925`。**prod8 候选**（两模块两架构 + 插件 + `DLSS5_HIP_PDL=1`）regression-prod8 过（逐位；对 prod2 900 −6.3%/1080 −5.7%，比 prod7 约 −1.2%/−0.5%），已装剑星（06:40）。还能挤：等旗子那次 L2 往返没法和核开头重叠；C512 链 13×7 个小 launch 和 ViT 同一套机制可搬，核各不相同要分别接；Down/Up/pool 接旗子链头也能任意序。）
+4. ~~launch 尾巴用两条流盖住~~（09-25 01:30 做完，改道：双流在这驱动上不并发、事件一对 110 μs；同流 `hipExtAnyOrderLaunch` + tile 旗子（土法 PDL）逐位，**900 −1.6%、1080 −0.6%**，`results/pdl-chain-20260925`。**prod8 候选**（两模块两架构 + 插件 + `DLSS5_HIP_PDL=1`）regression-prod8 过（逐位；对 prod2 900 −6.3%/1080 −5.7%，比 prod7 约 −1.2%/−0.5%），已装剑星（06:40）。C512 链搬过去了（`results/pdl-c512-20260925`）：单独 −0.16 ms，叠在 C64-256 上不相加——功耗墙，不采用。ViT/Down/Up 同理不值得。用户开 Adrenalin 功耗上限 +10% 后可复测 C512 叠加。）
 5. **mapped/post 输入按 tile 顺序写**：chain 类已是 tile 顺序 + 128 位读；mapped/post 读行主序 f32 十六行散读。让 HLSL 编码 / 合并层按 tile 顺序写，这两核读等待砍一半，估整网 1% 上下。"生产者按消费者布局写"的最后一处。
 6. **旧 null 重测前先解谜**：wave 局部栅栏（LOCAL_FFN/ATTN_SYNC）09-16 null 是旧驻留下的，现在 barrier 等待 8.7%；但后来记录它和 lane staging 组合后哈希变了，先搞清为什么不逐位。
 

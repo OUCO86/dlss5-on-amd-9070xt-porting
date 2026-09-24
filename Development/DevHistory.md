@@ -372,3 +372,9 @@ RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都�
 修：(1) shim 的 `ffxDestroyContext` 也钩（同 dispatch 的双钩子），命中记 `fit_context_destroyed via=shim/provider`；(2) 自愈：钉住的上下文连续 120 次没派发而别的上下文在派发，视为已死，改钉新的（记 `fit_context_reassigned`），FSR4 跟随者交替派发时每次命中都清零计数，钉不丢；(3) restart 预算只在失败（phase 5）时消耗，几何/队列变化无限次。插件 0211a78a…（`deployments/stellar-prod8-20260925` payload 已更新），等用户关游戏装。与 PDL 无关（flags 曾临时改 0，装机脚本写回 1）。
 07:03 装剑星（用户切档位来回确认恢复）。根因追到 09-24 `1a3aa01`（卧龙 2 那次把主钩子挪到 upscaler dll、dispatch 补了 shim 双钩子而 destroy 没补）；0.29 发包时钩子还在 shim 上，不受影响。用户实测剑星：900P→2K 简单场景 60～61，1080P→2K 47～48。07:08 同一 payload 装进 2077（install.ps1 加 -Game）。
 用户实测 2077（Splashtop 远程，简单场景）：低画质 2K 质量档（1707×961，1080 网络）41 帧，平衡档 51～52（昨天 prod7 50～51）。黄字仍不显示（老问题，低优先级）。
+
+## 2026-09-25 07:20～08:20：C512 链旗子（不采用）与 0.30 打包
+
+用户定"这一轮做完就打包"。C512 链 7 个核各发 `_pdl` 孪生（`HIP/experiments/pdl-c512`，四个模块），逐位；900：只 C512 −0.16 ms、只 C64-256 −0.19、两者都开 −0.15/−0.16；1080：−0.11 / −0.12 / −0.09。不相加——板功耗钉 325 W，填了空隙就掉时钟，两族像共用一份"时钟预算"。**不采用**，实验和结论归档 `results/pdl-c512-20260925`；用户加功耗上限后可复测叠加。坑：实验 host 打在生产头文件上，生产 ctor 只在 opt.pdl 时分配旗子缓冲，timeline 的 flags.txt 没写 PDL=1 → 对空指针算偏移 launch 失败。
+0.30 打包：`Development/tools/package-030.ps1`（0.29 复制：三包基线 0.29，模块 prod8 两架构与剑星机上一致，插件 0211a78a，flags 模板查 PDL=1 / ASYNC=auto / STRENGTH=auto，常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`，RE9 宿主/runtime 与 0.29 同哈希，codec hlsl 与 0.29 同哈希）；package-notes 六份改 0.30；README 两处"当前版本"与更新记录行（链接待上传）。
+

@@ -1,7 +1,10 @@
 OptiScaler-REFramework-DLSS5-AMD @VERSION@ — special RE9 pre-SR full package
 
+0.30 update
+Shared HIP kernels updated to the same set as the regular package (FFN full-line stores, bit-exact, about -0.6%; the any-order twin kernels are bundled but not used by this runtime). Host dxgi.dll and runtime LmxxfNrRuntime.dll are identical to 0.29; only the kernels under DLSS5-AMD\native-game-tiled-assets\HIP change.
+
 0.29 update
-Render inputs beyond 1920x1080 no longer fall back to the original SR: they are fitted onto the 1080 tier for the network and composed back to the source resolution the way the original codec does before FSR (DLSS5_FIT_LARGE=1 in DLSS5-AMD\native-game-flags.txt, on by default). RE9 Native AA tested. Six bit-exact shared kernel improvements since 0.28 (about -7%). Host dxgi.dll is identical to 0.28.1; the runtime is updated -- replace both the root and _storage_ copies together.
+Render inputs beyond 1920x1080 no longer fall back to the original SR: they are fitted onto the 1080 tier for the network and composed back to the source resolution the way the original codec does before FSR (DLSS5_FIT_LARGE=1 in DLSS5-AMD\native-game-flags.txt, on by default). RE9 Native AA tested.
 
 0.28.1 fix
 Reject actual neural inputs exceeding1920x1080 before HIP initialization or geometry changes, retaining the original SR path. Roll back partially initialized resources so valid sizes can recover within the same session; protect recorded, unretired frames. Ten regression cases/twelve submitted and read-back frames passed, followed by an initial user resolution-switching test.

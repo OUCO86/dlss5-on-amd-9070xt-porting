@@ -1,5 +1,8 @@
 OptiScaler-REFramework-DLSS5-AMD @VERSION@ — RE9特殊前置完整包
 
+0.30 更新
+共享HIP核更新到与常规包相同的一组（含FFN全行写，逐位无损约−0.6%；任意序孪生核随包但本runtime不启用，无影响）。宿主dxgi.dll与runtime LmxxfNrRuntime.dll与0.29相同，只换DLSS5-AMD\native-game-tiled-assets\HIP下的核。
+
 0.29 更新
 超过1920×1080的渲染输入不再退回原始超分：缩到1080档跑网络，再按原版codec方式还原到原分辨率交给FSR（DLSS5-AMD\native-game-flags.txt 里 DLSS5_FIT_LARGE=1，默认开）。RE9 Native AA实测正常。共享HIP核自0.28以来六项逐位无损优化（约−7%）。宿主dxgi.dll与0.28.1相同，runtime更新，需一起替换根目录与_storage_两处。
 
