@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 07:20，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 18:30，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 > 节奏：过日子式，没有 deadline。有兴致就挑一把逐位的小刀试，没兴致就写文章、回 issue。
@@ -10,6 +10,10 @@
 - **6b（非逐位，仅研究，未装）**：`HIP_FFN_WAVE_NORM` 再 −1.1%，12 帧 RGB 差 PSNR 58 dB、1.4% 像素 >1/255、max 0.17。源里默认 0。要不要装进游戏看闪不闪，用户随时可拍板，不催。
 - **318 初稿已写**（wechat/318.md，八章），等用户过稿并补 313/324/325 的公众号链接。
 - 研究结论：必要损失七八成（算法非矩阵工作、8×8 窗口形状税、L2 之下的供数税、launch 尾巴）；已回收 7%；放弃逐位最多再 1% 左右。三条规则——读写成本 ≈ 指令数 + 触及行数；驻留只在它是瓶颈时值钱；同一改法赚不赚看该核当下被什么卡住（阶段账要在当前驻留下重打）。
+
+## 游戏适配进行中：《赛博朋克 2077》（09-24，详见 DevHistory 末条）
+
+机上：常规包 + 探针 addon（钩 upscaler dll、状态表补齐、DLSS5_PAPER_WHITE/DLSS5_DUMP_FRAME），flags：EnableFfxInputs=false（OptiScaler.ini）、**DLSS5_PRE_UPSCALE_ASYNC=0**（关键：别名瞬态资源）、PAPER_WHITE=1、DEBUG_DUMPS=1/DUMP_FRAME=3000（验完删）。等用户实机看 ASYNC=0 + 纸白 1。通过后：README 加"REDengine/Katana 类游戏：EnableFfxInputs=false + ASYNC=0"，剑星回归（addon 改了钩子顺序/状态表），进 0.30 的 addon。**卧龙 2 也回头试 ASYNC=0**——它那条"同列表后有 draw"是真的，但灰画面那半也可能是同一别名问题。
 
 ## 搁置的岔路：《卧龙 2》Alpha Demo（09-23 夜，详见 DevHistory 末条；09-24 00:20 用户定：先放一边，回主线优化）
 

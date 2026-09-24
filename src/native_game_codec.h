@@ -132,7 +132,7 @@ public:
  }
  void Record(ID3D12GraphicsCommandList*c,const std::vector<D3D12_RESOURCE_STATES>&before,float paper_white=1.f){Record(c,before,paper_white,LegacyParameters());}
  void Record(ID3D12GraphicsCommandList*c,const std::vector<D3D12_RESOURCE_STATES>&before,float paper_white,const NativeCodecParameters&parameters){
-  if(!c||!pso||before.size()!=count+(exposure_texture?1u:0u)||(paper_white!=1.f&&paper_white!=.5f&&paper_white!=2.f)||!parameters.Valid())throw std::runtime_error("codec unverified record contract");
+  if(!c||!pso||before.size()!=count+(exposure_texture?1u:0u)||!(paper_white>0.f&&paper_white<=64.f&&paper_white==paper_white) /* 2026-09-24: any finite positive scale (DLSS5_PAPER_WHITE); was {0.5,1,2} */||!parameters.Valid())throw std::runtime_error("codec unverified record contract");
   if(recorded)transition(c,output,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
   for(UINT i=0;i<count;i++)transition(c,source[i],before[i],D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
   if(exposure_texture)transition(c,exposure_texture,before.back(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);

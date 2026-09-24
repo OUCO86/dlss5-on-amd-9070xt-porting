@@ -88,7 +88,13 @@ inline bool Reverse(D3D12_RESOURCE_STATES s,uint32_t&out){
  case D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE:out=4;return true;case D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE:out=8;return true;
  case (int(D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)|int(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)):out=12;return true;
  case D3D12_RESOURCE_STATE_COPY_SOURCE:out=16;return true;case D3D12_RESOURCE_STATE_COPY_DEST:out=32;return true;
- case D3D12_RESOURCE_STATE_GENERIC_READ:out=20;return true;case D3D12_RESOURCE_STATE_RENDER_TARGET:out=256;return true;default:return false;}
+ case D3D12_RESOURCE_STATE_GENERIC_READ:out=20;return true;case D3D12_RESOURCE_STATE_RENDER_TARGET:out=256;return true;
+ case D3D12_RESOURCE_STATE_DEPTH_WRITE:out=512;return true;case D3D12_RESOURCE_STATE_DEPTH_READ:out=512;return true; /* PRESENT == COMMON (0) in D3D12 */
+ /* 2026-09-24 (Cyberpunk 2077): the game leaves FSR inputs in read-combination states after the upscaler. Any pure read combination of
+    shader/copy/depth-read bits maps to the FFX read state that covers it (the FFX side only distinguishes compute/pixel/copy reads); a
+    DEPTH_READ|shader-read combination is still shader-readable. Same rule as the forward map: mask off the bits FFX cannot express. */
+ default:{const D3D12_RESOURCE_STATES read=D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE|D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE|D3D12_RESOURCE_STATE_COPY_SOURCE|D3D12_RESOURCE_STATE_DEPTH_READ|D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER|D3D12_RESOURCE_STATE_INDEX_BUFFER|D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+  if(s==0||(s&~read))return false;out=0;if(s&D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)out|=4;if(s&D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)out|=8;if(s&D3D12_RESOURCE_STATE_COPY_SOURCE)out|=16;if(!out)out=4;return true;}}
 }
 inline bool Capture(void**context,const Header*h,ID3D12GraphicsCommandList*native,unsigned frame){
  if(Fatal().load()||!Enabled()||Replaying()||!original||!native||native->GetType()!=D3D12_COMMAND_LIST_TYPE_DIRECT)return false;
@@ -156,8 +162,9 @@ inline bool Process(ID3D12CommandQueue*q,Job&j){
   // Unknown terminal states cannot be safely repaired after capture. Stop the
   // experiment rather than guessing the resource's state at the FFX boundary.
   D3D12_RESOURCE_STATES replay_states[7]{};
-  for(unsigned i=0;i<7;i++)if(d.resources[i].resource){replay_states[i]=j.states[i];if(!Reverse(j.states[i],d.resources[i].state))throw std::runtime_error("terminal resource state not representable by FFX");}
+  for(unsigned i=0;i<7;i++)if(d.resources[i].resource){replay_states[i]=j.states[i];if(!Reverse(j.states[i],d.resources[i].state)){char m[128];snprintf(m,sizeof m,"terminal resource state not representable by FFX (resource %u d3d12 state 0x%x)",i,unsigned(j.states[i]));throw std::runtime_error(m);}}
   auto*color=static_cast<ID3D12Resource*>(d.resources[0].resource);auto*motion=static_cast<ID3D12Resource*>(d.resources[2].resource);auto cd=color->GetDesc();
+  if(j.frame<=2){char m[256];snprintf(m,sizeof m,"inputs: color fmt=%u %llux%u motion fmt=%u depth fmt=%u exposure=%s reactive=%s tc=%s output fmt=%u mvscale=%g,%g jitter=%g,%g pre_exposure=%g flags=0x%x",unsigned(cd.Format),(unsigned long long)cd.Width,cd.Height,unsigned(motion->GetDesc().Format),d.resources[1].resource?unsigned(static_cast<ID3D12Resource*>(d.resources[1].resource)->GetDesc().Format):0u,d.resources[3].resource?"yes":"no",d.resources[4].resource?"yes":"no",d.resources[5].resource?"yes":"no",unsigned(static_cast<ID3D12Resource*>(d.resources[6].resource)->GetDesc().Format),d.motion_scale[0],d.motion_scale[1],d.jitter[0],d.jitter[1],d.pre_exposure,d.flags);Log(j.frame,d,m);}
   if(FitLargeFromFile())NativeFitLargeInputOverride()=true;
   bool supported=NativeInputGeometry::Supported(d.render[0],d.render[1],NativeFitLargeInput())&&NativeIsGameColor(cd.Format)&&!(cd.Flags&D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
   if(Mode()==1&&supported&&!neural_oneshot.Bypassed()){

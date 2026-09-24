@@ -25,6 +25,9 @@
    `bright` is replaced by the current input before the network reads it -- the network's own no-history convention (preblock_input_mix
    fills the history features with the input colour), applied per pixel. Breaks the self-sustaining black tiles: the temporal branch
    reproduces a black history tile as a black output tile, which becomes the next history. */
+/* 2026-09-24 (Cyberpunk 2077): scene-linear range differs per game (Cyberpunk's sky reads 6..13 where Stellar Blade's is ~1); DLSS5_PAPER_WHITE
+   scales the codec's normalisation on both the encode and the decode side. Default 1 = previous behaviour. */
+inline float NativePaperWhite(){static const float v=[]{const wchar_t*e=_wgetenv(L"DLSS5_PAPER_WHITE");float f=e?float(wcstod(e,nullptr)):1.f;return (f>0.f&&f<=64.f)?f:1.f;}();return v;}
 class NativeHistoryGuard {
  ID3D12Resource*warped{},*base{};ID3D12RootSignature*root{};ID3D12PipelineState*pso{};float dark{},bright{};
 public:
@@ -283,7 +286,7 @@ private:
   r.submit.Submit([&](ID3D12GraphicsCommandList*c){
    D3D12_RESOURCE_BARRIER b[2]{};for(auto&v:b)v.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
    /* 1. decode the previous frame's result into our buffer (reads proxy/neural/original of that frame, all still intact) */
-   if(r.have_result)r.decode.Record(c,{D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE});
+   if(r.have_result)r.decode.Record(c,{D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE},NativePaperWhite());
    /* 2. capture this frame from the untouched target: the original for its later decode, the encoded proxy, this frame's motion */
    b[0].Transition={target,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,source_state,D3D12_RESOURCE_STATE_COPY_SOURCE};
    b[1].Transition={r.original_copy,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_COPY_DEST};
@@ -291,7 +294,7 @@ private:
    c->CopyResource(r.original_copy,target);
    for(auto&v:b)std::swap(v.Transition.StateBefore,v.Transition.StateAfter);
    if(source_state!=D3D12_RESOURCE_STATE_COPY_SOURCE)c->ResourceBarrier(1,b);c->ResourceBarrier(1,b+1);
-   r.encode.Record(c,{source_state});
+   r.encode.Record(c,{source_state},NativePaperWhite());
    if(use_history)r.feed.RecordMotion(c,motion_texture);
    /* 3. deliver the previous frame's result into the target */
    if(r.have_result){
@@ -350,7 +353,7 @@ public:
      ID3D12Resource*rb=nullptr;if(SUCCEEDED(NativeCreateCommittedResource(dev,&hp,D3D12_HEAP_FLAG_NONE,&rd,D3D12_RESOURCE_STATE_COPY_DEST,nullptr,IID_PPV_ARGS(&rb)))){r.submit.Submit([&](ID3D12GraphicsCommandList*c){c->CopyBufferRegion(rb,0,r.black.RingSlot(bad),0,r.black.RingBytes());});r.submit.Flush();void*p=nullptr;D3D12_RANGE range{0,SIZE_T(r.black.RingBytes())},none{};if(SUCCEEDED(rb->Map(0,&range,&p))){if(FILE*f=_wfopen((prefix+L"-residual.f32").c_str(),L"wb")){fwrite(p,1,size_t(r.black.RingBytes()),f);fclose(f);}rb->Unmap(0,&none);}rb->Release();}
      r.black.CountDump();dump_prefix=prefix;}}
    const auto cpu_start=std::chrono::steady_clock::now();if(r.probe_on)r.probe.Reset();
-   r.submit.Submit([&](ID3D12GraphicsCommandList*c){if(r.probe_on)r.probe.Mark(c,"t0");r.encode.Record(c,{source_state});r.input.Record(c,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+   r.submit.Submit([&](ID3D12GraphicsCommandList*c){if(r.probe_on)r.probe.Mark(c,"t0");r.encode.Record(c,{source_state},NativePaperWhite());r.input.Record(c,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
     if(use_history){r.feed.RecordMotion(c,motion_texture);r.coordinates.Record(c);r.sampler.Record(c);r.history_guard.Record(c);}if(r.probe_on)r.probe.Mark(c,"t1");});
    if(!dump_prefix.empty()&&(use_history||(r.temporal&&r.black.enabled))){r.submit.Flush();DumpTemporalNow(dump_prefix);{char line[160];snprintf(line,sizeof line,"black_probe dumped history=%u reset=%u motion=%u",use_history?1u:0u,reset?1u:0u,motion_texture?1u:0u);if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu %s\n",GetCurrentProcessId(),line);fclose(f);}}dump_prefix.clear();}
    r.network.Run(r.submit,seed,r.temporal?use_history:temporal_enabled);

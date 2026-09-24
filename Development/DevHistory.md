@@ -291,3 +291,12 @@ FFN 占满一帧换 mh_fast 模块看时钟（`results/clock-ledger-20260924/ffn
 ## 2026-09-24 07:19：用户反馈 prod7
 
 《剑星》900P 中画质拉伸 2K，常测场景稳定 60 帧（prod6 时"最快接近 60"）。prod7 通过实玩，进 0.30。
+
+## 2026-09-24 07:30～18:30：《赛博朋克 2077》2.31 试装——三层坑，最后一层是别名瞬态资源
+
+常规 OptiScaler 0.29 包装进 `bin\x64`（`deployments/cyberpunk-20260924/install.ps1`，覆盖游戏自带的 5 个 xess/ffx dll，备份 `_dlss5_backup`）。网友"用不了"逐层：
+1. 和卧龙一样：游戏自带 FSR dll，OptiScaler 走 Detours 跳板 → `[Inputs] EnableFfxInputs=false` + 优先钩 upscaler dll 的 addon。
+2. `terminal resource state not representable by FFX`：Reverse() 只认 8 种状态。补齐深度态和任意只读组合态，并把撞到的状态值写进日志（`src/native_pre_upscale.h`）。
+3. **网络跑起来但画面只有色调变化。** dump 网络输入发现每帧都是同一幅"天空 + 灰地"的静止环境（第 600 帧和第 3000 帧统计四位全同，字节不同——云在动），而用户看的是街景。根因：`DLSS5_PRE_UPSCALE_ASYNC=1` 的延后提交让我们拷贝颜色纹理的命令排到游戏下一帧的早期通道之后，REDengine 的颜色缓冲是瞬态别名资源，那时那块显存装的是天空探针。剑星的颜色纹理持久，赛跑读到上一帧也看不出。**`DLSS5_PRE_UPSCALE_ASYNC=0` 后 dump 是真场景**（min 0.04 / 中位 0.17 / p99 0.64 / max 9.8，纸白 1 正好）。
+中途把纸白猜成 8 是错的（那是天空探针的量级），已改回 1；顺手加了 `DLSS5_PAPER_WHITE`（Record 的门从 {0.5,1,2} 放宽到有限正数）和 `DLSS5_DUMP_FRAME`（每帧路径第 n 帧 dump 游戏颜色输入，配 DLSS5_DEBUG_DUMPS）。dump 统计脚本在 /tmp/f16stats.py 一类的临时件，结论在此。用户实机确认待做（ASYNC=0 + 纸白 1 的组合还没看过）。
+教训：**同队列不等于同时序——延后提交遇到别名瞬态资源就读到别人的内容；游戏适配先关 ASYNC。**
