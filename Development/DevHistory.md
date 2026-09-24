@@ -300,3 +300,7 @@ FFN 占满一帧换 mh_fast 模块看时钟（`results/clock-ledger-20260924/ffn
 3. **网络跑起来但画面只有色调变化。** dump 网络输入发现每帧都是同一幅"天空 + 灰地"的静止环境（第 600 帧和第 3000 帧统计四位全同，字节不同——云在动），而用户看的是街景。根因：`DLSS5_PRE_UPSCALE_ASYNC=1` 的延后提交让我们拷贝颜色纹理的命令排到游戏下一帧的早期通道之后，REDengine 的颜色缓冲是瞬态别名资源，那时那块显存装的是天空探针。剑星的颜色纹理持久，赛跑读到上一帧也看不出。**`DLSS5_PRE_UPSCALE_ASYNC=0` 后 dump 是真场景**（min 0.04 / 中位 0.17 / p99 0.64 / max 9.8，纸白 1 正好）。
 中途把纸白猜成 8 是错的（那是天空探针的量级），已改回 1；顺手加了 `DLSS5_PAPER_WHITE`（Record 的门从 {0.5,1,2} 放宽到有限正数）和 `DLSS5_DUMP_FRAME`（每帧路径第 n 帧 dump 游戏颜色输入，配 DLSS5_DEBUG_DUMPS）。dump 统计脚本在 /tmp/f16stats.py 一类的临时件，结论在此。用户实机确认待做（ASYNC=0 + 纸白 1 的组合还没看过）。
 教训：**同队列不等于同时序——延后提交遇到别名瞬态资源就读到别人的内容；游戏适配先关 ASYNC。**
+
+## 2026-09-24 18:34：赛博朋克 2077 用户确认
+
+ASYNC=0 + 纸白 1 后用户实机："材质明显差异了"。赛博朋克通过。机上 flags 已清掉 DEBUG_DUMPS/DUMP_FRAME/PAPER_WHITE，保留 EnableFfxInputs=false（OptiScaler.ini）与 DLSS5_PRE_UPSCALE_ASYNC=0；addon 是探针版（钩 upscaler dll + 状态表补齐 + 两个诊断开关），进 0.30 前要过剑星回归。
