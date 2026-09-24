@@ -1,0 +1,40 @@
+{
+    "source_commit":  "prod8-20260925",
+    "backup":  "D:\\DLSSNR-Lab\\stellar-prod8-20260925\\backups\\20260925-064001",
+    "items":  [
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead-fast-padded-wave-packed.hsaco",
+                      "existed":  true,
+                      "old":  "36AD568FB15E5AA15CAAD9CE3A7EC5AFB0D7227B45D0147526362E9A2AB86809",
+                      "new":  "970C260E3ED6F3C6845896ACF9F86C59533DF2E2CAE5E756D3F7D83558BBB4C6"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/multihead_fused_attention.hsaco",
+                      "existed":  true,
+                      "old":  "C31405D07158C9074A629D2B9538B6CD3FD9C4F0CA7730FF04A745BC1A662D8B",
+                      "new":  "5B1CAD8F5B5061FBDF9D26C98C68785F4A57E359BFDAAB6B0A330E51F59DB10B"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead-fast-padded-wave-packed.hsaco",
+                      "existed":  true,
+                      "old":  "98FAA6D4268AC8A129078233AC32022D615159A5F5460205FBB0B31E45E8F30F",
+                      "new":  "EFEB32FD85D69BA25515B127D622A370C492FEC633D3A4C77CD96380F412D388"
+                  },
+                  {
+                      "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/multihead_fused_attention.hsaco",
+                      "existed":  true,
+                      "old":  "B01B506A6DF5DB190667EB8520D79DD8161BE6489AFE60C8016EEFC850E14F3C",
+                      "new":  "F7F23560D490868EACB161D7E49C958548FAAA1D61384014EA0859B5E8CEF1B9"
+                  },
+                  {
+                      "target":  "dlss5-amd.addon64",
+                      "existed":  true,
+                      "old":  "A569ED6FABEBE49A4370D6AE0C57A05375DBB76D2EF75207D73C3DACD8A03ABC",
+                      "new":  "5BE18AC35395D181E5047EB6F1DA4D8F2CFD6D4437158F41281A4456E0812C5E"
+                  }
+              ],
+    "unchanged":  {
+                      "OptiScaler.ini":  "80CDA873E59CC9DCBF127D51E1D737EA916D384F1AD17F9F884DC595586C82E0",
+                      "dxgi.dll":  "FBFB6676B829DAD7E020FB830586A16AA0EC6ADD78016DB48EF12E2AE1803231"
+                  }
+}
