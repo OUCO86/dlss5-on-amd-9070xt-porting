@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 18:40，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 18:50，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 > 节奏：过日子式，没有 deadline。有兴致就挑一把逐位的小刀试，没兴致就写文章、回 issue。
@@ -13,7 +13,7 @@
 
 ## 游戏适配进行中：《赛博朋克 2077》（09-24，详见 DevHistory 末条）
 
-机上：常规包 + 探针 addon（钩 upscaler dll、状态表补齐、DLSS5_PAPER_WHITE/DLSS5_DUMP_FRAME），flags：EnableFfxInputs=false（OptiScaler.ini）、**DLSS5_PRE_UPSCALE_ASYNC=0**（关键：别名瞬态资源）、PAPER_WHITE=1、DEBUG_DUMPS=1/DUMP_FRAME=3000（验完删）。**用户 18:34 确认通过（材质明显差异）。** 诊断 flags 已清。接下来：README 加"REDengine/Katana 类游戏：EnableFfxInputs=false + ASYNC=0"，剑星回归（addon 改了钩子顺序/状态表），进 0.30 的 addon。**卧龙 2 也回头试 ASYNC=0**——它那条"同列表后有 draw"是真的，但灰画面那半也可能是同一别名问题。
+机上：常规包 + 探针 addon（钩 upscaler dll、状态表补齐、DLSS5_PAPER_WHITE/DLSS5_DUMP_FRAME），flags：EnableFfxInputs=false（OptiScaler.ini）、**DLSS5_PRE_UPSCALE_ASYNC=0**（关键：别名瞬态资源）、PAPER_WHITE=1、DEBUG_DUMPS=1/DUMP_FRAME=3000（验完删）。**用户 18:34 确认通过（材质明显差异）。** 诊断 flags 已清。接下来：README 已加分游戏说明；**候选 addon 已装进剑星（stellar-addon030-20260924，备份可 -Restore）等用户玩一局确认无变化**；然后进 0.30。**卧龙 2 Alpha Demo 已被 Steam 卸载（18:45 发现，机上残留已清）**，等它再装回来时用常规包 + EnableFfxInputs=false + ASYNC=0 + 0.30 addon 重试；"同列表后有 draw"那条是真障碍，别名那半可能同赛博朋克。
 
 ## 搁置的岔路：《卧龙 2》Alpha Demo（09-23 夜，详见 DevHistory 末条；09-24 00:20 用户定：先放一边，回主线优化）
 
