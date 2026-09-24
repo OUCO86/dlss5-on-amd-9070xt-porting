@@ -1,15 +1,16 @@
-param([string]$RestoreBackup='')
+param([string]$RestoreBackup='',[ValidateSet('stellar','cyberpunk')][string]$Game='stellar')
 # prod8: prod7 kernels + _pdl twins (mh_fast, mh_fused, both archs) + PDL-capable add-on + DLSS5_HIP_PDL=1 in native-game-flags.txt.
 # -RestoreBackup <dir> puts back the DLLs, modules and the flags file recorded there.
 $ErrorActionPreference='Stop'
-$g='C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64'
-$l='D:\DLSSNR-Lab\stellar-prod8-20260925'
+$g=if($Game -eq 'cyberpunk'){'C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\bin\x64'}else{'C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64'}
+$proc=if($Game -eq 'cyberpunk'){'Cyberpunk2077'}else{'SB-Win64-Shipping'}
+$l="D:\DLSSNR-Lab\stellar-prod8-20260925\$Game";New-Item -ItemType Directory -Force $l|Out-Null
 $flagsRel='DLSS5-AMD/native-game-flags.txt'
-function Closed {if(Get-Process SB-Win64-Shipping -ErrorAction SilentlyContinue){throw 'Stellar Blade running; no DLL replacement allowed'}}
+function Closed {if(Get-Process $proc -ErrorAction SilentlyContinue){throw "$Game running; no DLL replacement allowed"}}
 function Restore($b){Closed;$m=Get-Content "$b\installed.json" -Raw|ConvertFrom-Json;foreach($i in $m.items){if($i.existed){Copy-Item (Join-Path $b $i.target) (Join-Path $g $i.target) -Force}else{Remove-Item (Join-Path $g $i.target) -ErrorAction SilentlyContinue}};Copy-Item (Join-Path $b $flagsRel) (Join-Path $g $flagsRel) -Force;"RESTORED $b"}
 Closed
 if($RestoreBackup){Restore $RestoreBackup;exit}
-$items=Get-Content "$l\payload.json" -Raw|ConvertFrom-Json
+$items=Get-Content "D:\DLSSNR-Lab\stellar-prod8-20260925\payload.json" -Raw|ConvertFrom-Json
 if(Test-Path "$g\_storage_\dlss5-amd.addon64"){$i=$items|Where-Object{$_.target -eq 'dlss5-amd.addon64'};$items += [pscustomobject]@{source=$i.source;target='_storage_/dlss5-amd.addon64';sha256=$i.sha256}}
 foreach($i in $items){if((Get-FileHash $i.source).Hash -ne $i.sha256){throw "Candidate hash mismatch: $($i.source)"}}
 $unchanged=@{};foreach($f in @('dxgi.dll','OptiScaler.ini')){$unchanged[$f]=(Get-FileHash (Join-Path $g $f)).Hash}
