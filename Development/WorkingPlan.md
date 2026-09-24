@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 21:55，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-25 01:30，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 > 节奏：过日子式，没有 deadline。有兴致就挑一把逐位的小刀试，没兴致就写文章、回 issue。
@@ -13,6 +13,7 @@
 
 ## 机上现状（09-24 21:00）——三处待收尾
 
+- **prod8 候选待装**（`deployments/stellar-prod8-20260925/install.ps1`，含 flags 写入与回滚；regression 结果见 DevHistory）。
 - **剑星 + 赛博朋克都装了 0.30 候选 addon a569ed6f…**（21:50；`deployments/addon030-strength-20260924`，`install.ps1 -Restore` 可退）：双钩子（shim + provider dispatch，线程局部深度防重入）+ `ASYNC=auto` 查表 + **`DLSS5_STRENGTH=auto` 查表（Cyberpunk2077.exe → 1,0 只转亮度，其他 1,1）**。两处 flags 的显式 STRENGTH 行已删，由表决定；剑星显式 ASYNC=1、赛博显式 ASYNC=0 + OptiScaler.ini `EnableFfxInputs=false`，和模板 auto 行为相同。**等用户玩 2077 确认 1,0 动态场景没问题、剑星无变化。**
 - **2077 红偏已定位**（DevHistory 21:10 条）：前置线性域取神经色相再过游戏 LUT 会转色相；只转亮度细节增益不丢。Magpie 后置 1080p 细节多一截但 30 帧对 51 帧，结构代价不是 bug。
 - **生化 9 已装 prod7 内核**（`deployments/re9-prod7-20260924`，`install.ps1 -Restore` 可退），抓帧验过神经路径确实在改细节（不是只变亮度）。
@@ -32,7 +33,7 @@
 1. ~~直达共享内存的读取~~（09-24 01:00 验过：gfx1201 没有 `vmem-to-lds-load-insts` 特性，comgr 拒绝 builtin，汇编器也不认 `global_load_lds_b128`——RDNA4 根本没有这条指令，是硬件没铺路，不是我们不会写。关。）原文：RDNA4 `global_load_lds`，数据从显存直接落 LDS，不经寄存器、不占向量发射。先验两件事：comgr 上 builtin 在不在（`__builtin_amdgcn_global_load_lds`）、gfx1201 支持到多宽（传闻 gfx12 有 b128）。落点按 lane 线性排，packed 行距 36 字节不线性，要改行距或改读法。逐位天然成立。唯一没碰过的"搬运方式"级改法。
 2. **L0 黑箱再量一层**（第三章"L2 命中 99.95% 但停顿 68%"）：受控小程序量 L0 每 CU 每周期送多少字节、地址低位到 bank 的映射（bit10 敏感已摸到一角）、请求合并规则。不直接提速，决定第一格"必要损失"是真必要还是地址排布撞了它。
 3. ~~频率当第四张账本~~（09-24 01:05 做完，`results/clock-ledger-20260924`）：是功耗墙，板功耗钉 325～328 W，时钟随核族变——FFN(C64～C256) 最费电（占满时 −8～9%），ViT 最省电（+1～2%），整网 2.75 是加权。后续两件：(a) 318 第一章"ViT 单测 2.5 GHz"改口；(b) 已追到：FFN 的电烧在全局窄写（norm +4%、norm+out +7% 时钟），ALU/LDS/barrier 不耗电，并宽指令不省电（触及行数没变）。**全行写做完（01:30）**：逐位，−0.6/−0.7%，FFN 占满时钟 +1.2%（没到 +7%：字节没少，只省了部分写）。prod7 候选回归通过（`deployments/stellar-prod7-20260924`），**等用户关游戏装机**。用户侧：Adrenalin 功耗上限 +10% 值得剑星实测。
-4. **launch 尾巴用两条流盖住**（C256 注意力尾巴 25～37%，一帧 0.15ms）：窗口注意力只看自己窗口、错位只跨相邻窗口，按图像上下两半拆两条流串事件，N+1 上半盖 N 下半的尾巴。核不动逐位不变，改提交结构。先把各核尾巴都量一遍定上限。
+4. ~~launch 尾巴用两条流盖住~~（09-25 01:30 做完，改道：双流在这驱动上不并发、事件一对 110 μs；同流 `hipExtAnyOrderLaunch` + tile 旗子（土法 PDL）逐位，**900 −1.6%、1080 −0.6%**，`results/pdl-chain-20260925`。**prod8 候选**（两模块两架构 + 插件 + `DLSS5_HIP_PDL=1`）regression-prod8 跑中，过了等用户关游戏装剑星。还能挤：等旗子那次 L2 往返没法和核开头重叠；C512 链 13×7 个小 launch 和 ViT 同一套机制可搬，核各不相同要分别接；Down/Up/pool 接旗子链头也能任意序。）
 5. **mapped/post 输入按 tile 顺序写**：chain 类已是 tile 顺序 + 128 位读；mapped/post 读行主序 f32 十六行散读。让 HLSL 编码 / 合并层按 tile 顺序写，这两核读等待砍一半，估整网 1% 上下。"生产者按消费者布局写"的最后一处。
 6. **旧 null 重测前先解谜**：wave 局部栅栏（LOCAL_FFN/ATTN_SYNC）09-16 null 是旧驻留下的，现在 barrier 等待 8.7%；但后来记录它和 lane staging 组合后哈希变了，先搞清为什么不逐位。
 

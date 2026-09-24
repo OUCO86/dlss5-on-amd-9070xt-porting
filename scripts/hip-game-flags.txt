@@ -128,4 +128,6 @@ DLSS5_VIT_REUSE_LOCAL=1.0
 DLSS5_VIT_REUSE_IMAGE=0.35
 DLSS5_VIT_REUSE_HOTKEY=1
 DLSS5_HIP_GRAPH=0
+# 0.30: C64/C128/C256 chain launches submitted any-order with per-tile flags (no AQL barrier); bit-exact, 900p about -1.6%.
+DLSS5_HIP_PDL=1
 DLSS5_HIP_VIT_BYTE_STREAM=0

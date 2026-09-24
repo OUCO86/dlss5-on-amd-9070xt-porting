@@ -357,3 +357,11 @@ RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都�
 - 落地：`native_game_codec.h` `LegacyParameters` 里 `DLSS5_STRENGTH` 缺省或 `auto` → 按 exe 查表（Cyberpunk2077.exe → 1,0，其他 1,1），写 `event=strength` 到 oneshot 日志；模板 `hip-game-flags.txt` 加 `DLSS5_STRENGTH=auto`，CONFIGURATION.md 一行。addon a569ed6f…（`deployments/addon030-strength-20260924`，build-addon-oneclick.sh --hip），21:50 两游戏都关着，已装进剑星和 2077（backup-stellar / backup-cyberpunk，`install.ps1 -Restore`），两处 flags 的显式 STRENGTH 行删掉由表决定。剑星行为不变（1,1）。
 - 细节上限：Magpie 在 1080p 上跑网络所以细节比 OP 多一截，但 30 帧对 51 帧；这是前置路线用 847p 换帧率的结构代价，不是 bug。
 - RE9 宿主路线（LmxxfNrRuntime.cpp 自己读 `DLSS5_STRENGTH`，上限 1）不受影响；RE9 是后置 sRGB 域，色相问题不适用。
+
+## 2026-09-24 23:00～25 01:30：launch 尾巴——双流死路，同流任意序 + tile 旗子成刀（900 −1.6%）
+
+主线第 4 条。先量驱动（`HIP/experiments/stream-overlap`）：两条 stream 在这块 Windows HIP 上**完全不并发**（只有一条硬件队列，`GPU_MAX_HW_QUEUES` 无效），跨流事件一对 110～180 μs；同流 `hipExtModuleLaunchKernel` + `hipExtAnyOrderLaunch`（去 AQL barrier 位）能让下一个 launch 在上一个收尾时派发（2 wave/SIMD 时每 launch 198 → 31 μs）。第一版 spin 核用 `readsteadycounter` 计时，那条 `s_sendmsg_rtn` 全 GPU 串行，量出来全是消息拥塞——换成 `SHADER_CYCLES` + `s_sleep` 才对。
+任意序没有"部分依赖"，只能把依赖搬进核里：土法 programmatic dependent launch（`HIP/experiments/pdl-chain`，`results/pdl-chain-20260925`）——C64/C128/C256 六条链上 FFN/QKV 核与窗口注意力核各发 `_pdl` 孪生，入口按 token 坐标等上游 tile 的计数器（FFN 组等上一块注意力的 ≤6 个窗口，注意力组等本块 FFN 的 ≤8 个 tile），出口每 wave `fence(release)` 后 +1；host 链头普通提交、其余任意序，计数器按（核种、通道、格子宽高）各一份、永不清零、目标为累计 wave 数；最近几块张量攥住不还 pool。逐位：18 个槽 2880 帧零差异。
+拆账（1080）：协议纯成本 +0.25～0.29 ms（发旗 0.10，等旗 0.15～0.19：组开头一次 L2 往返 + barrier，没法和核开头重叠），调度捡回 0.23（正好是 launch-occupancy 预测的尾巴）；组屏障发旗版净零，改每 wave 发计数器 + 去掉 per-group acquire 后净 −0.1（−0.6%）；**900：11.74 → 11.55，−0.18 ms，−1.6%**，三次重跑 −0.16～−0.19。只开 FFN 或只开注意力都是零，两头要一起。
+坑：(1) 环形槽位混用不同尺寸格子 → 累计目标追不上 → 死锁一次；(2) helper 里加空指针提前返回那版在任意序下三跑三报 `hipErrorLaunchFailure`，普通提交正常，撤掉后两跑两过，原因未明；(3) 时钟随功耗漂，只看相邻 A/B。
+生产化：两份 hip 源加 `HIP_PDL_KERNELS` 孪生（原核不动）、host `opt.pdl`（`DLSS5_HIP_PDL`，模板 =1，Magpie 模板同）、插件重编 5be18ac3…；`deployments/stellar-prod8-20260925`（build/regression/payload/install）。regression-prod8 跑中。
