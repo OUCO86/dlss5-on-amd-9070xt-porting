@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 21:00，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 21:55，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 > 节奏：过日子式，没有 deadline。有兴致就挑一把逐位的小刀试，没兴致就写文章、回 issue。
@@ -13,14 +13,15 @@
 
 ## 机上现状（09-24 21:00）——三处待收尾
 
-- **剑星 + 赛博朋克都装了双钩子 addon 2ac9c347…**（同时钩 shim 的 ffxDispatch 和 upscaler 的 provider dispatch，线程局部深度防重入；只钩 upscaler 那版 d8a8f22f… 把剑星弄坏过）。两处 flags 里 **`DLSS5_STRENGTH=2,1`（transfer 外推 2，用户要看"最高强度"的诊断态）——用户看完后改回 `1,1`**。剑星 flags 还是显式 ASYNC=1，赛博朋克显式 ASYNC=0 + OptiScaler.ini `EnableFfxInputs=false`；行为和 0.30 模板的 `ASYNC=auto` 相同。
+- **剑星 + 赛博朋克都装了 0.30 候选 addon a569ed6f…**（21:50；`deployments/addon030-strength-20260924`，`install.ps1 -Restore` 可退）：双钩子（shim + provider dispatch，线程局部深度防重入）+ `ASYNC=auto` 查表 + **`DLSS5_STRENGTH=auto` 查表（Cyberpunk2077.exe → 1,0 只转亮度，其他 1,1）**。两处 flags 的显式 STRENGTH 行已删，由表决定；剑星显式 ASYNC=1、赛博显式 ASYNC=0 + OptiScaler.ini `EnableFfxInputs=false`，和模板 auto 行为相同。**等用户玩 2077 确认 1,0 动态场景没问题、剑星无变化。**
+- **2077 红偏已定位**（DevHistory 21:10 条）：前置线性域取神经色相再过游戏 LUT 会转色相；只转亮度细节增益不丢。Magpie 后置 1080p 细节多一截但 30 帧对 51 帧，结构代价不是 bug。
 - **生化 9 已装 prod7 内核**（`deployments/re9-prod7-20260924`，`install.ps1 -Restore` 可退），抓帧验过神经路径确实在改细节（不是只变亮度）。
 - **"只有光影变化"的担心已量化**：高通对数亮度 RMS 比 / 相关 / 梯度幅值比——纯调色是 corr≈0.9997、比 1.0；剑星 1.11/0.887/+13%，赛博 1.00/0.973/+13%，生化 1.03～1.13/0.98/+19%，都不是纯调色。图在各 deployments 的 detail-crop-*.png。
 - **网友"统一 RE9 与常规包"补丁审完**（`Development/RE9/presr/contrib/generic-host-20260924/REVIEW.md`）：查询记账 + 提前包裹两处可用，backend 补丁是我们 prepare-host 的旧翻版，runtime 脚本没打我们的补丁不可用，无测试证据。**等用户问到他在哪个游戏跑通、帧率多少再定**要不要合进 prepare-host.py 用 MSVC 编宿主到剑星实测。
 
 ## 0.30 打包（等用户说打包）
 
-复制 package-029.ps1 → package-030（版本号、hash）；内核 prod7；addon 2ac9c347…（或更新）；常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`（`[Inputs] EnableFfxInputs=false`，对剑星空操作）；flags 模板 `ASYNC=auto`（Cyberpunk2077.exe 查表→同步）；README 更新记录一行，夸克 + Google Drive 两链接；帧率：剑星 900P→2K 中画质 60～61，赛博 低画质 900P→2K 50～51。README 已有"分游戏说明"段和 0.29 的 Google Drive 链接。
+复制 package-029.ps1 → package-030（版本号、hash）；内核 prod7；addon a569ed6f…（strength-auto）；常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`（`[Inputs] EnableFfxInputs=false`，对剑星空操作）；flags 模板 `ASYNC=auto`（Cyberpunk2077.exe 查表→同步）；README 更新记录一行，夸克 + Google Drive 两链接；帧率：剑星 900P→2K 中画质 60～61，赛博 低画质 900P→2K 50～51。README 已有"分游戏说明"段和 0.29 的 Google Drive 链接。
 
 ## 卧龙 2（Alpha Demo 被 Steam 卸载，机上残留已清）
 

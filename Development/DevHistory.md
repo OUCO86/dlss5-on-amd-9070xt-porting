@@ -332,3 +332,28 @@ RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都�
 - 游戏域 input→result：能量比 1.08/1.11/1.13（σ=1/2/4）、相关 0.99/0.986/0.982、梯度 +19%；平均亮度 4.108→4.077（几乎不变）。
 判据：色调-only 是相关 0.9997、比 1.0、梯度 1.0；RE9 明显不是。裁图 `deployments/re9-prod7-20260924/detail-crop-in-vs-out.png`：面板缝、划痕、黑色金属边缘都更硬。
 另外 prod7 与 0.28.1 内核逐位同（回归对 prod2 基线 12 帧哈希全同），换内核不可能改画面，只可能改速度；用户印象里的"之前不一样"不是内核造成的。发出去的 0.29 REFramework 包（prod6 内核 + fitlarge runtime）同理不受影响。本机 D: 上 0.29 包文件夹和 zip 已不在（用户上传后删了），无法重新哈希。
+
+## 2026-09-24 20:00～20:50：强度外推试看、Google Drive 链接、网友"统一宿主"补丁审查
+
+- 用户要看"最高强度"：`DLSS5_STRENGTH` 上限放到 3（>1 沿 lerp 外推，纯诊断），剑星/2077 flags 临时写 2,1；用户看完 21:07 已删回默认。
+- 0.29 三包补了 Google Drive 镜像（给没有中国手机号的用户），README 两处链接；以后发布 = 夸克 + Google Drive。
+- git：用户定"只推 297，别动外层 ai-theorys-study"。
+- 网友的 OptiScaler 通用宿主补丁（统一 RE9 与常规包）审完，归档 `Development/RE9/presr/contrib/generic-host-20260924/REVIEW.md`：查询记账（切点无未闭合查询即可切分）与提前包裹（返回地址判断游戏 exe 建列表）两处可用；backend 补丁是我们 prepare-host.py 旧快照的翻版且缺曝光 ABI v2 两行；runtime 编译脚本不打我们的 runtime 补丁（退回 0.26 时代）；宿主 dxgi.dll 需 MSVC 未提；无测试证据。等用户问到网友在哪个游戏跑通、帧率多少再定要不要合进 prepare-host 实测。
+
+## 2026-09-24 21:10～21:50：2077 三方对比（默认 / OP / Magpie 0.29）——红偏来自颜色转移，改成按 exe 查表 1,0
+
+用户同机位截四张（机位微差，逐像素对不上，看全局统计 + 等倍裁片；图在 `deployments/addon030-strength-20260924/`）：
+
+| | 平均 R/G/B | 高通细节 RMS（σ=2，log 亮度） |
+|---|---|---|
+| 默认 FSR（F6 关） | .107/.112/.059 | 0.159 |
+| OP 1,1（847p 前置） | .122/.094/.049 | 0.193（+22%） |
+| OP 1,0（只转亮度） | .120/.121/.072 | 0.189（+19%） |
+| Magpie 0.29（1080p 后置，OSD 30 帧 33 ms） | .105/.111/.055 | 0.212（+34%） |
+
+- 第一轮误判：先拿到的 op/magpie 两张机位差太多，看成"OP 动得轻"；补了默认那张才看清：OP 1,1 不是轻，是**色相转了方向**——R +14%、G −16%，绿色霓虹环境光压成灰褐；Magpie 和默认色调几乎一样，只加细节。
+- 原因：前置路线把色调映射**之前**的线性缓冲交给网络，解码 `Hue(neural×ratio, neural)` 在线性域取神经色相，再过 2077 的 tonemapper + LUT，色相就跑了；Magpie 吃的是 sRGB 成品，LUT 已定型。
+- 只转亮度（1,0）：色相比例回到游戏自己的，细节增益基本没丢（+19% 对 +22%），脸/报纸/红衣服都比默认清楚。
+- 落地：`native_game_codec.h` `LegacyParameters` 里 `DLSS5_STRENGTH` 缺省或 `auto` → 按 exe 查表（Cyberpunk2077.exe → 1,0，其他 1,1），写 `event=strength` 到 oneshot 日志；模板 `hip-game-flags.txt` 加 `DLSS5_STRENGTH=auto`，CONFIGURATION.md 一行。addon a569ed6f…（`deployments/addon030-strength-20260924`，build-addon-oneclick.sh --hip），21:50 两游戏都关着，已装进剑星和 2077（backup-stellar / backup-cyberpunk，`install.ps1 -Restore`），两处 flags 的显式 STRENGTH 行删掉由表决定。剑星行为不变（1,1）。
+- 细节上限：Magpie 在 1080p 上跑网络所以细节比 OP 多一截，但 30 帧对 51 帧；这是前置路线用 847p 换帧率的结构代价，不是 bug。
+- RE9 宿主路线（LmxxfNrRuntime.cpp 自己读 `DLSS5_STRENGTH`，上限 1）不受影响；RE9 是后置 sRGB 域，色相问题不适用。

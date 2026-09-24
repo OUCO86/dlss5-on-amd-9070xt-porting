@@ -48,7 +48,11 @@ EnableFfxInputs=false` (otherwise OptiScaler dispatches FSR through its own deto
 submission the add-on copied whatever the memory held at that moment, a sky probe, and the picture only changed in tone).
 This needs the add-on from 0.30 or later (hooks the upscaler dll directly and accepts the read-combination resource states
 those engines leave behind). Wo Long 2 additionally records draws after the upscaler in the same command list, which the
-regular route still rejects. Stellar Blade and Lies of P keep the defaults (`ASYNC=1`).
+regular route still rejects. Stellar Blade and Lies of P keep the defaults (`ASYNC=1`). From the 0.30 add-on both of these are
+automatic (`DLSS5_PRE_UPSCALE_ASYNC=auto`, `DLSS5_STRENGTH=auto`: per-title table). The strength table gives Cyberpunk 2077
+luminance-only transfer (`1,0`): the pre-upscale route hands the network the colour buffer before the game's tone mapper and
+LUT, and taking the network's hue there turned green neon ambient brown; luminance-only keeps the detail gain (+19% vs +22%
+high-pass energy over plain FSR, measured 2026-09-24) with the game's own colours.
 
 **Where this came from.** 0.15 and earlier ran the network as Direct3D 12 Shader Model 6.10 wave-matrix shaders (now in
 `shaders/dx12-network/`, still the bit-exact reference chain). 0.20 moved inference to HIP with bit-identical output and
