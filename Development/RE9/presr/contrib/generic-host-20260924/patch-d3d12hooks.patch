@@ -1,0 +1,17 @@
+diff --git a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/hooks/D3D12_Hooks.cpp b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/hooks/D3D12_Hooks.cpp
+index 54c3ec7..02f2613 100644
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/hooks/D3D12_Hooks.cpp
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/hooks/D3D12_Hooks.cpp
+@@ -3004,6 +3004,12 @@ static void HookToDevice(ID3D12Device* InDevice)
+                 LOG_ERROR("lmxxf SubmissionHooks::ArmCreate failed: {:X}", static_cast<unsigned>(armHr));
+             else
+                 LOG_INFO("lmxxf ArmCreate ok; CreateCommandList ProxyWrap deferred until swapchain (graphics tracker skipped)");
++            {
++                DlssNr::Submission::Hooks::SetEarlyExeWrap(true);
++                LOG_INFO("lmxxf early executable proxy: enabled");
++
++            }
++
+         }
+     }
+ 
