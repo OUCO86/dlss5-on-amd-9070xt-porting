@@ -129,14 +129,14 @@ public:
  /* steady-state frame interval (ms, average of the last 100 frames; 0 until then) for the on-screen fps (DLSS5_SHOW_FPS) */
  std::atomic<double>avg_ms{0.0};double AvgMs()const{return avg_ms.load();}
  /* A new upscaler session (Magpie: scaling stopped and started again -> new FSR context, queue and textures; or a failed initialization)
-    drops the frame and goes back to idle, so the next snapshot initializes again on the new queue. Bounded: at most 8 restarts per process. */
+    drops the frame and goes back to idle, so the next snapshot initializes again on the new queue. Bounded: at most 8 restarts after failures per process; geometry changes are unbounded. */
  unsigned restarts{};
  bool ResetForNewSession(const char*why){
-  unsigned state=phase.load();if(state==1||state==3)return false;if(restarts>=8)return false;
+  unsigned state=phase.load();if(state==1||state==3)return false;if(state==5){if(restarts>=8)return false;restarts++;} /* 2026-09-25: only failed sessions spend the restart budget; geometry/queue changes (preset switches) are free */
   std::lock_guard<std::mutex>guard(request_mutex);
   delete frame;frame=nullptr;if(queue){queue->Release();queue=nullptr;}
   avg_ms.store(0.0);
-  armed_request=0;last_request=0;every_frame=false;every_frame_count=0;next_poll=0;restarts++;
+  armed_request=0;last_request=0;every_frame=false;every_frame_count=0;next_poll=0;
   Log("session_reset",why);phase.store(0,std::memory_order_release);return true;
  }
  /* state: the D3D12 state the upscaler declared for its output (the frame transitions from it and back to it) */

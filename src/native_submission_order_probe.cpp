@@ -159,9 +159,16 @@ static bool supported_input(unsigned w,unsigned h){return (w==1920&&h==1080)||(f
 static std::atomic<void**>fit_context{nullptr};
 using DestroyContext=uint32_t(*)(void**,const void*);
 static DestroyContext original_destroy{};
+static DestroyContext original_destroy_shim{};
+static std::atomic<unsigned>foreign_dispatches{0};
+static uint32_t destroy_context_shim(void**context,const void*allocation_callbacks){
+ auto result=original_destroy_shim(context,allocation_callbacks);
+ if(result==0){auto expected=context;if(fit_context.compare_exchange_strong(expected,nullptr))if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=fit_context_destroyed via=shim context=%p\n",GetCurrentProcessId(),context);fclose(f);}}
+ return result;
+}
 static uint32_t destroy_context(void**context,const void*allocation_callbacks){
  auto result=original_destroy(context,allocation_callbacks);
- if(result==0){auto expected=context;fit_context.compare_exchange_strong(expected,nullptr);}
+ if(result==0){auto expected=context;if(fit_context.compare_exchange_strong(expected,nullptr))if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=fit_context_destroyed via=provider context=%p\n",GetCurrentProcessId(),context);fclose(f);}}
  return result;
 }
 /* 2026-09-24: two entry points. OptiScaler 0.9.4 ships the FSR SDK 2.0 split dlls: amd_fidelityfx_dx12.dll (26 KB shim) forwards
@@ -180,7 +187,16 @@ static uint32_t dispatch_core(void**context,const Header*h,Dispatch orig){
  /* Select the first upscaler context until it is destroyed (including its size-error notice). A following FSR4 (even when its output
     also fits 1080p) must not replace the input stage's motion, pending work or status text. */
  if(fit_small_input()){
-  auto chosen=fit_context.load();if(chosen&&chosen!=context)return original(context,h);
+  auto chosen=fit_context.load();
+  if(chosen&&chosen!=context){
+   /* 2026-09-25: Stellar Blade preset switch -> OptiScaler creates a new FSR context and releases the old one; when the release
+      does not reach our destroy hook the pin stuck to a dead context and every later dispatch passed through in silence. A pinned
+      context that has not dispatched for 120 foreign dispatches is treated as gone (a second live context alternating with the
+      chosen one resets the count on every chosen dispatch, so the FSR4-follower case keeps its pin). */
+   if(foreign_dispatches.fetch_add(1)+1>=120){fit_context.compare_exchange_strong(chosen,nullptr);foreign_dispatches.store(0);
+    if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=fit_context_reassigned old=%p new=%p\n",GetCurrentProcessId(),chosen,context);fclose(f);}}
+   else return original(context,h);
+  }else foreign_dispatches.store(0);
   ResourcePayload candidate{};SIZE_T bytes=0;
   if(context&&ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<const char*>(h)+312,&candidate,sizeof candidate,&bytes)&&bytes==sizeof candidate&&candidate.resource){
    void**expected=nullptr;fit_context.compare_exchange_strong(expected,context);
@@ -489,6 +505,11 @@ static DWORD WINAPI worker(void*){
   if(ds==MH_OK)ds=MH_EnableHook(reinterpret_cast<void*>(destroy));
   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu fit_context_destroy_hook=%u\n",GetCurrentProcessId(),unsigned(ds));fclose(f);}
   if(ds!=MH_OK)return 5;
+  /* the shim's own ffxDestroyContext (Stellar Blade's host destroys through it; the pinned handle is the shim-level one) */
+  {HMODULE shim=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");void*sd=shim&&shim!=module?reinterpret_cast<void*>(GetProcAddress(shim,"ffxDestroyContext")):nullptr;
+   if(sd&&sd!=reinterpret_cast<void*>(destroy)){HMODULE pinned3=nullptr;GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(sd),&pinned3);
+    auto s3=MH_CreateHook(sd,reinterpret_cast<void*>(&destroy_context_shim),reinterpret_cast<void**>(&original_destroy_shim));if(s3==MH_OK)s3=MH_EnableHook(sd);
+    if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu shim_destroy_hook_status=%u target=%p\n",GetCurrentProcessId(),unsigned(s3),sd);fclose(f);}}}
  }
 #ifdef NATIVE_ORDER_NEURAL
  if(!module){NativeMotionSign()=-1.f;cross_thread_submit=true;s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&xess_execute),reinterpret_cast<void**>(&original_xess));}else

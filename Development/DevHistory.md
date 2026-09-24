@@ -365,3 +365,8 @@ RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都�
 拆账（1080）：协议纯成本 +0.25～0.29 ms（发旗 0.10，等旗 0.15～0.19：组开头一次 L2 往返 + barrier，没法和核开头重叠），调度捡回 0.23（正好是 launch-occupancy 预测的尾巴）；组屏障发旗版净零，改每 wave 发计数器 + 去掉 per-group acquire 后净 −0.1（−0.6%）；**900：11.74 → 11.55，−0.18 ms，−1.6%**，三次重跑 −0.16～−0.19。只开 FFN 或只开注意力都是零，两头要一起。
 坑：(1) 环形槽位混用不同尺寸格子 → 累计目标追不上 → 死锁一次；(2) helper 里加空指针提前返回那版在任意序下三跑三报 `hipErrorLaunchFailure`，普通提交正常，撤掉后两跑两过，原因未明；(3) 时钟随功耗漂，只看相邻 A/B。
 生产化：两份 hip 源加 `HIP_PDL_KERNELS` 孪生（原核不动）、host `opt.pdl`（`DLSS5_HIP_PDL`，模板 =1，Magpie 模板同）、插件重编 5be18ac3…；`deployments/stellar-prod8-20260925`（build/regression/payload/install）。regression-prod8（01:02）：900/1080 各两序列 12 帧哈希对 prod2 逐位全同；1000 帧 ABBA 对 prod2 基线：900 −0.80 ms（−6.3%，prod7 同口径 −0.65/−5.1%，即 prod8 比 prod7 约 −1.2%），1080 −1.02 ms（−5.7%，prod7 −0.92/−5.2%，约 −0.5%）。日志 `deployments/stellar-prod8-20260925/regression-prod8.log`。06:40 装进剑星（5 文件 + flags 一行，备份 backups\20260925-064001）。
+
+## 2026-09-25 06:47～07:20：剑星切 DLSS 档位后 DLSS5 消失——钉死的 FSR 上下文
+
+用户装 prod8 后从"平衡"切"质量"/"DLAA"，效果没了，切回也没了（进程内永久失效）。日志：06:47:00 切 DLAA 时 OptiScaler 建了新 FSR 上下文（1000002）并释放旧的（1000001），我们的 pre-upscale 日志从那一刻起一行都没有——不是回归失败，是 `dispatch_core` 在 `DLSS5_FIT_INPUT` 分支里把 `fit_context` 钉在第一个上下文上，"直到它被销毁"，而销毁钩子只挂在 upscaler dll 的 `ffxDestroyContext` 上；剑星的宿主经 shim 调用，我们钉住的是 shim 级句柄，provider 级销毁钩子里的指针对不上，永远清不掉——后面每个 dispatch（新上下文，任何档位）都静默透传。`restarts>=8` 也是个隐患：每次切分辨率的 session reset 都吃预算，切八次就死。
+修：(1) shim 的 `ffxDestroyContext` 也钩（同 dispatch 的双钩子），命中记 `fit_context_destroyed via=shim/provider`；(2) 自愈：钉住的上下文连续 120 次没派发而别的上下文在派发，视为已死，改钉新的（记 `fit_context_reassigned`），FSR4 跟随者交替派发时每次命中都清零计数，钉不丢；(3) restart 预算只在失败（phase 5）时消耗，几何/队列变化无限次。插件 0211a78a…（`deployments/stellar-prod8-20260925` payload 已更新），等用户关游戏装。与 PDL 无关（flags 曾临时改 0，装机脚本写回 1）。
