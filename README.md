@@ -41,6 +41,15 @@ the RE9 runtime is configured through `OptiScaler.ini` `[DlssNr]` and reads only
 input size and let the following FSR4 item upscale. Use AMD optical flow only on that first item and set Optical Flow Method
 to None for FSR4 and XeSS frame generation. `Alt+Shift+A` starts/stops scaling, `F6` toggles the network in every package.
 
+**Per-game notes (regular package).** Titles that ship their own FSR dll next to the executable (REDengine: *Cyberpunk 2077*
+2.31; Katana: *Wo Long 2*) need two settings, both verified on Cyberpunk 2077 on 2026-09-24: `OptiScaler.ini` `[Inputs]
+EnableFfxInputs=false` (otherwise OptiScaler dispatches FSR through its own detour and the add-on never sees the call) and
+`DLSS5_PRE_UPSCALE_ASYNC=0` in `native-game-flags.txt` (their colour buffer is a transient aliased resource; with deferred
+submission the add-on copied whatever the memory held at that moment, a sky probe, and the picture only changed in tone).
+This needs the add-on from 0.30 or later (hooks the upscaler dll directly and accepts the read-combination resource states
+those engines leave behind). Wo Long 2 additionally records draws after the upscaler in the same command list, which the
+regular route still rejects. Stellar Blade and Lies of P keep the defaults (`ASYNC=1`).
+
 **Where this came from.** 0.15 and earlier ran the network as Direct3D 12 Shader Model 6.10 wave-matrix shaders (now in
 `shaders/dx12-network/`, still the bit-exact reference chain). 0.20 moved inference to HIP with bit-identical output and
 ≈8% less time; 0.22 padded the 900 tier to 960 rows; 0.24 introduced the pre-upscale (render-resolution) path; 0.26.1–0.28.1

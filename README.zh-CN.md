@@ -33,6 +33,8 @@ flags 文件里它只读 `DLSS5_FIT_LARGE`。
 **Magpie 提示。** 包内效果组里的 `FSR3_SR` 就是 DLSS5 的入口（界面名字还是 FSR3）；这一项保持输入尺寸，后面的 FSR4 负责放大。
 AMD 光流只在第一项开，FSR4 和 XeSS 帧生成的 Optical Flow Method 选 None。`Alt+Shift+A` 启停缩放，`F6` 在所有包里都是开关网络。
 
+**分游戏说明（常规包）。** 自带 FSR dll 的游戏（REDengine 的《赛博朋克 2077》2.31、Katana 的《卧龙 2》）要改两处，2026-09-24 在《赛博朋克 2077》上验证：`OptiScaler.ini` 的 `[Inputs] EnableFfxInputs=false`（否则 OptiScaler 走自己的 Detours 派发 FSR，插件根本接不到调用）；`native-game-flags.txt` 里 `DLSS5_PRE_UPSCALE_ASYNC=0`（这类引擎的颜色缓冲是瞬态别名资源，延后提交时插件拷到的是那块显存当时的住户——天空探针，画面就只剩色调变化）。需要 0.30 及以后的插件（直接钩 upscaler dll，并接受这些引擎留下的只读组合资源状态）。《卧龙 2》还会在同一条命令列表里于超分之后继续绘制，常规路线目前仍拒绝。《剑星》《匹诺曹的谎言》保持默认（`ASYNC=1`）。
+
 **来路。** 0.15 及之前，网络是 Direct3D 12 Shader Model 6.10 wave-matrix 着色器（现在放在 `shaders/dx12-network/`，仍是逐位参考链）。
 0.20 把推理搬到 HIP，输出逐位相同、耗时少约 8%；0.22 把 900 档补到 960 行；0.24 引入渲染分辨率上的前置路径；0.26.1～0.28.1 和 TheAutomatic
 一起做出 RE9 的宿主/runtime 路线。每一版的细节在更新记录里。
