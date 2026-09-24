@@ -38,8 +38,19 @@ inline const DisplaySettings&Display(){
 }
 
 inline bool Async(){
- if(const wchar_t*v=_wgetenv(L"DLSS5_PRE_UPSCALE_ASYNC"))return !wcscmp(v,L"1");
- static bool enabled=[](){unsigned v=0;if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_PRE_UPSCALE_ASYNC=%u",&v);fclose(f);}return v==1;}();return enabled;
+ /* DLSS5_PRE_UPSCALE_ASYNC = 1 | 0 | auto. auto (the shipped template since 0.30): per-title quirk table -- engines whose FSR colour
+    buffer is a transient aliased resource must submit synchronously, otherwise the deferred copy reads whatever the memory holds at
+    that moment (Cyberpunk 2077 2.31: a sky probe; picture only changed in tone). Everything else keeps the asynchronous submission. */
+ static const int mode=[](){
+  auto parse=[](const wchar_t*v)->int{if(!v)return -1;if(!wcscmp(v,L"1"))return 1;if(!wcscmp(v,L"0"))return 0;return -1;};
+  int m=parse(_wgetenv(L"DLSS5_PRE_UPSCALE_ASYNC"));
+  if(m<0){char v[16]{};if(FILE*f=_wfopen(NativeLabPath(L"native-game-flags.txt").c_str(),L"rb")){char line[256];while(fgets(line,sizeof line,f))sscanf(line,"DLSS5_PRE_UPSCALE_ASYNC=%15s",v);fclose(f);}
+   if(!strcmp(v,"1"))m=1;else if(!strcmp(v,"0"))m=0;}
+  if(m<0){wchar_t exe[MAX_PATH]{};GetModuleFileNameW(nullptr,exe,MAX_PATH);const wchar_t*base=wcsrchr(exe,L'\\');base=base?base+1:exe;
+   static const wchar_t*const sync_titles[]={L"Cyberpunk2077.exe"};m=1;for(const wchar_t*t:sync_titles)if(!_wcsicmp(base,t))m=0;
+   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-pre-upscale.txt").c_str(),L"ab")){fprintf(f,"async=auto exe=%ls -> %s\n",base,m?"asynchronous":"synchronous (quirk)");fclose(f);}}
+  return m;}();
+ return mode==1;
 }
 inline LONG CALLBACK ExceptionTrace(EXCEPTION_POINTERS*p){
  if(!p||p->ExceptionRecord->ExceptionCode!=EXCEPTION_ACCESS_VIOLATION)return EXCEPTION_CONTINUE_SEARCH;

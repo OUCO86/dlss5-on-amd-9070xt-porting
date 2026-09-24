@@ -112,7 +112,9 @@ DLSS5_UPSCALER=ffx
 DLSS5_HIP_MH_BYTE_STREAM=1
 DLSS5_HIP_MH_FFN_FRAG256=1
 DLSS5_HIP_MH_FEATURE_BYTE=1
-DLSS5_PRE_UPSCALE_ASYNC=1
+# auto (0.30): asynchronous submission except for titles whose FSR colour buffer is a transient aliased resource (Cyberpunk 2077), which need
+# synchronous submission or the add-on copies a stale buffer (picture only changes in tone). 1/0 force it.
+DLSS5_PRE_UPSCALE_ASYNC=auto
 DLSS5_HIP_DECODER_BYTE=1
 DLSS5_HIP_MH_PROJ_DIAG_FB=1
 DLSS5_PRE_UPSCALE=1
