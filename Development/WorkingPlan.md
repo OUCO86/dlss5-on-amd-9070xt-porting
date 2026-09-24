@@ -13,7 +13,7 @@
 
 ## 机上现状（09-24 21:00）——三处待收尾
 
-- **prod8 已装剑星 + 2077**（剑星 07:03 插件 0211a78a，备份 `backups\20260925-070328`；2077 07:08，备份 `cyberpunk\backups\20260925-070852`；`install.ps1 -Game cyberpunk -RestoreBackup <dir>`）。用户实测剑星：900P→2K 简单场景 60～61，1080P→2K 47～48；切档位（平衡/质量/DLAA）来回不再失效。等 2077 反馈。进 0.30：模块 prod8 两架构 + 插件 5be18ac3… + 模板 `DLSS5_HIP_PDL=1`。
+- **prod8 已装剑星 + 2077**（剑星 07:03 插件 0211a78a，备份 `backups\20260925-070328`；2077 07:08，备份 `cyberpunk\backups\20260925-070852`；`install.ps1 -Game cyberpunk -RestoreBackup <dir>`）。用户实测剑星：900P→2K 简单场景 60～61，1080P→2K 47～48；切档位（平衡/质量/DLAA）来回不再失效。2077：质量档 41、平衡 51～52（prod7 50～51）。**prod8 = 0.30 内核/插件定稿候选。**进 0.30：模块 prod8 两架构 + 插件 5be18ac3… + 模板 `DLSS5_HIP_PDL=1`。
 - **剑星 + 赛博朋克都装了 0.30 候选 addon a569ed6f…**（21:50；`deployments/addon030-strength-20260924`，`install.ps1 -Restore` 可退）：双钩子（shim + provider dispatch，线程局部深度防重入）+ `ASYNC=auto` 查表 + **`DLSS5_STRENGTH=auto` 查表（Cyberpunk2077.exe → 1,0 只转亮度，其他 1,1）**。两处 flags 的显式 STRENGTH 行已删，由表决定；剑星显式 ASYNC=1、赛博显式 ASYNC=0 + OptiScaler.ini `EnableFfxInputs=false`，和模板 auto 行为相同。**等用户玩 2077 确认 1,0 动态场景没问题、剑星无变化。**
 - **2077 红偏已定位**（DevHistory 21:10 条）：前置线性域取神经色相再过游戏 LUT 会转色相；只转亮度细节增益不丢。Magpie 后置 1080p 细节多一截但 30 帧对 51 帧，结构代价不是 bug。
 - **生化 9 已装 prod7 内核**（`deployments/re9-prod7-20260924`，`install.ps1 -Restore` 可退），抓帧验过神经路径确实在改细节（不是只变亮度）。
@@ -22,7 +22,7 @@
 
 ## 0.30 打包（等用户说打包）
 
-复制 package-029.ps1 → package-030（版本号、hash）；内核 prod7；addon a569ed6f…（strength-auto）；常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`（`[Inputs] EnableFfxInputs=false`，对剑星空操作）；flags 模板 `ASYNC=auto`（Cyberpunk2077.exe 查表→同步）；README 更新记录一行，夸克 + Google Drive 两链接；帧率：剑星 900P→2K 中画质 60～61，赛博 低画质 900P→2K 50～51。README 已有"分游戏说明"段和 0.29 的 Google Drive 链接。
+复制 package-029.ps1 → package-030（版本号、hash）；内核 prod7；addon a569ed6f…（strength-auto）；常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`（`[Inputs] EnableFfxInputs=false`，对剑星空操作）；flags 模板 `ASYNC=auto`（Cyberpunk2077.exe 查表→同步）；README 更新记录一行，夸克 + Google Drive 两链接；帧率（prod8）：剑星 900P→2K 中画质 60～61、1080P→2K 47～48；赛博 低画质 平衡 51～52、质量 41。README 已有"分游戏说明"段和 0.29 的 Google Drive 链接。
 
 ## 卧龙 2（Alpha Demo 被 Steam 卸载，机上残留已清）
 
