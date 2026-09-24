@@ -164,7 +164,17 @@ static uint32_t destroy_context(void**context,const void*allocation_callbacks){
  if(result==0){auto expected=context;fit_context.compare_exchange_strong(expected,nullptr);}
  return result;
 }
-static uint32_t dispatch(void**context,const Header*h){
+/* 2026-09-24: two entry points. OptiScaler 0.9.4 ships the FSR SDK 2.0 split dlls: amd_fidelityfx_dx12.dll (26 KB shim) forwards
+   to amd_fidelityfx_upscaler_dx12.dll. Stellar Blade's host dispatches through the shim's export (and the shim reaches the provider
+   without going through the provider's export symbol), Cyberpunk 2077's host calls the provider export directly. Hook both; a call that
+   entered through the shim is passed straight through at the provider layer (thread-local depth). The layer that observed the call
+   supplies the trampoline used for the deferred replay (global `original`). */
+static Dispatch original_shim{},original_sr{};static thread_local unsigned shim_depth=0;
+static uint32_t dispatch_core(void**context,const Header*h,Dispatch orig);
+static uint32_t dispatch_shim(void**context,const Header*h){++shim_depth;uint32_t r=dispatch_core(context,h,original_shim);--shim_depth;return r;}
+static uint32_t dispatch_sr(void**context,const Header*h){if(shim_depth)return original_sr(context,h);return dispatch_core(context,h,original_sr);}
+static uint32_t dispatch_core(void**context,const Header*h,Dispatch orig){
+ original=orig;
  {static std::atomic<unsigned>seen{};unsigned k=seen.fetch_add(1);if(k<8)if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=ffx_dispatch_entry n=%u type=%08x context=%p\n",GetCurrentProcessId(),k,h?unsigned(h->type):0u,context);fclose(f);}}
  if(!h||(h->type&0x00ffffffu)!=0x00010001u)return original(context,h);
  /* Select the first upscaler context until it is destroyed (including its size-error notice). A following FSR4 (even when its output
@@ -483,7 +493,17 @@ static DWORD WINAPI worker(void*){
 #ifdef NATIVE_ORDER_NEURAL
  if(!module){NativeMotionSign()=-1.f;cross_thread_submit=true;s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&xess_execute),reinterpret_cast<void**>(&original_xess));}else
 #endif
- s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&dispatch),reinterpret_cast<void**>(&original));if(s==MH_OK)s=MH_EnableHook(reinterpret_cast<void*>(target));
+ if(module){
+  s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&dispatch_sr),reinterpret_cast<void**>(&original_sr));if(s==MH_OK)s=MH_EnableHook(reinterpret_cast<void*>(target));
+  original=original_sr;
+  /* the shim, when it is a different module with its own export: hook it too (Stellar Blade's host calls this one) */
+  HMODULE shim=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");void*shim_target=shim&&shim!=module?reinterpret_cast<void*>(GetProcAddress(shim,"ffxDispatch")):nullptr;
+  if(s==MH_OK&&shim_target&&shim_target!=reinterpret_cast<void*>(target)){
+   HMODULE pinned2=nullptr;GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(shim_target),&pinned2);
+   auto s2=MH_CreateHook(shim_target,reinterpret_cast<void*>(&dispatch_shim),reinterpret_cast<void**>(&original_shim));if(s2==MH_OK)s2=MH_EnableHook(shim_target);
+   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu shim_hook_status=%u target=%p\n",GetCurrentProcessId(),unsigned(s2),shim_target);fclose(f);}
+  }
+ }else{s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&dispatch_sr),reinterpret_cast<void**>(&original_sr));if(s==MH_OK)s=MH_EnableHook(reinterpret_cast<void*>(target));original=original_sr;}
  // Do not retry an existing-hook conflict or modify another addon's hook.
  if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){wchar_t name[MAX_PATH]{};GetModuleFileNameW(module?module:xess,name,MAX_PATH);const wchar_t*base=wcsrchr(name,L'\\');fprintf(f,"pid=%lu hook_status=%u upscaler=%s module=%ls target=%p\n",GetCurrentProcessId(),unsigned(s),module?"ffx":"xess",base?base+1:name,target);
   /* diagnostic: where the other FFX dlls' ffxDispatch exports live (shim vs upscaler vs driver provider) */
