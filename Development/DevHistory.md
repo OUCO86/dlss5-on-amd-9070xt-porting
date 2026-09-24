@@ -324,3 +324,11 @@ ASYNC=0 + 纸白 1 后用户实机："材质明显差异了"。赛博朋克通�
 ## 2026-09-24 19:40：prod7 内核装进 RE9
 
 RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都对不上）。runtime 从 HIP\gfx1201 加载（LUID 选子目录），SHA256SUMS 只查文件名。`deployments/re9-prod7-20260924/install.ps1`：两架构各覆盖生产模块（10 个换掉，参考/实验模块不动），备份 `D:\DLSSNR-Lab\re9-prod7-20260924\backup`（-Restore）。gfx1201 mh_fast 98faa6d4、gfx1200 36ad568f = prod7。等用户看效果。
+
+## 2026-09-24 19:50：RE9 装 prod7 后用户"绝对只是亮度变化"——抓帧量化说不是
+
+用 RE9 宿主的 capture-colour.request（runtime 从 _storage_ 加载，请求放 _storage_）抓同帧：input RGB9E5 1512×848、proxy/neural 1600×900 FP16、result FP16。
+- 网络域 proxy→neural：细纹理能量比 1.03、相关 0.979、**梯度幅值 +19.5%**。
+- 游戏域 input→result：能量比 1.08/1.11/1.13（σ=1/2/4）、相关 0.99/0.986/0.982、梯度 +19%；平均亮度 4.108→4.077（几乎不变）。
+判据：色调-only 是相关 0.9997、比 1.0、梯度 1.0；RE9 明显不是。裁图 `deployments/re9-prod7-20260924/detail-crop-in-vs-out.png`：面板缝、划痕、黑色金属边缘都更硬。
+另外 prod7 与 0.28.1 内核逐位同（回归对 prod2 基线 12 帧哈希全同），换内核不可能改画面，只可能改速度；用户印象里的"之前不一样"不是内核造成的。发出去的 0.29 REFramework 包（prod6 内核 + fitlarge runtime）同理不受影响。本机 D: 上 0.29 包文件夹和 zip 已不在（用户上传后删了），无法重新哈希。
