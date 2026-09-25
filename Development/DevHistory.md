@@ -461,3 +461,9 @@ C128/C256独立实现均通过固定输入RGB逐位。初始C256有private spill
 最终筛选组合frag+launder+sched+roll+ht2，只替换C64+C128共20块，C256维持prod8：900/1080各三组200帧ABBA，配对均值−0.29591/−0.50451ms，约2.5%/3.0%耗时下降。全部槽首尾bitdiff=0，目标调用36/帧、实际替换20/帧。C256单独短筛+0.21068ms，全部替换−0.16194ms；不能因为零spill就判定C256问题已解决。
 
 源码、全部分支筛选CSV/日志及校验脚本已归档c64-wave2；候选module SHA256=601f93af77afb3ac376ef5fdbe6cad8e9e2865f005988d4dc381a13fcacfe8bd。下一步保留生产FFN/QKV，仅验证C256一头一wave attention/projection。完整历史回归、gfx1200、游戏FPS仍待做；未部署。Daniel关键结构线索已转化为小幅实测收益，42%的因果份额与本项目质变目标尚未完成。
+
+## 2026-09-26：C256保留生产前段，单换一头一wave注意力获得小幅收益
+
+新增mode 6，独立核读取生产normalized FP8 [pixel][Q,K,V][channel]，用共享平面把V转成B片段后复用为AV，attention/projection段由已验证完整原型生成。原FFN/QKV与输入feature保持不变，输出PDL每窗口16wave计数改为8，前段计数与槽复用方式不变。现有PDL可见性/复用待审问题仍保留，测试通过不代替协议证明。
+
+900/1080各三组200帧ABBA，配对均值−0.09923/−0.12809ms，所有槽首尾bitdiff=0，16块/帧替换计数正确。C256全融合+0.21068ms回退可通过保留生产前段避开；仍非大幅提升。gfx1201 float/byte输出151/142VGPR、零spill、32KiB LDS，module cc8166b3…；mode 7组合随后完成两档各三组200帧ABBA：900 −0.39283ms、1080 −0.67259ms（约3.3%/4.0%耗时下降），所有槽首尾逐位同、36块/帧替换正确。结果目录c64-wave2-20260926，下一步组合分账及feature直接读取省LDS。

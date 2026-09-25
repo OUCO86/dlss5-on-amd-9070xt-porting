@@ -14,7 +14,7 @@ for path in sorted(root.glob('results-*/slots.csv')):
    frames=int(r['frames'])
    if 'target_calls' in r:
     assert int(r['target_calls'])==frames*36
-    assert int(r['replaced'])==frames*[0,8,12,16,36,20][int(r['mode'])]
+    assert int(r['replaced'])==frames*[0,8,12,16,36,20,16,36][int(r['mode'])]
    else:assert int(r['c64_calls'])==frames*8
   times=[float(r['ms']) for r in rows];delta=(times[1]+times[2]-times[0]-times[3])/2
   stats[candidate].append(delta)

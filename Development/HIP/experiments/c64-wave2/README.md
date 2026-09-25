@@ -13,3 +13,7 @@
 首版只有固定输入两档筛选通过，尚未经过完整多帧历史回归，也未装机。性能与后续扩展见 `Development/results/c64-wave2-20260926`；目标仍是找到并实现足够大的整网收益，首个约1%的结果不是目标完成。
 
 扩展版本模板覆盖C64/128/256，mode 1/2/3分别替换，4全部，5仅C64+C128。build/run参数Layout、Launder、Schedule、RollQuery、HiddenTiles成对设置；当前最佳混合筛选为frag+Launder+Schedule+RollQuery+HiddenTiles 2、Candidates 5。Schedule只约束编译器排程，不添加GPU组同步。analyze.py复核ABBA与替换计数。完整回归待做。
+
+C256拆分实验mode 6：保留生产FFN/QKV，仅替换attention/projection。输入仍是[pixel][Q,K,V][channel] FP8，feature单独FP8；先在AV平面暂存V并转B片段，所有head加载后复用为AV。生成器复用完整核的attention/projection段，保持归约顺序。新核256线程、8wave，PDL输出累计目标从16调整为8；前段FFN的计数不变，同一slot跨模式累计不同增量。保留现有PDL可见性/复用协议，不能据逐位测试宣布其待审问题已解决。gfx1201编译float/byte输出分别151/142VGPR，零spill。
+
+mode 7组合C64/C128整块融合与C256仅attention替换，共36块；mode 6/7不支持DeferQ，因Q已由生产者归一化。运行组合实验与单族实验分别统计，不直接相加各自收益。
