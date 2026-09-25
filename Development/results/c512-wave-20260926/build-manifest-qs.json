@@ -1,0 +1,8 @@
+{
+    "schedule_fence":  true,
+    "label":  "qs",
+    "module_sha256":  "CCC2F575AE2A22FE86DC59C8C9AE5E6543ACCFB1F5CE296D0DA67C71EDADD7DD",
+    "roll_query":  true,
+    "roll_k":  false,
+    "source_sha256":  "0BAF404F0F6EBD2B8B805893A5DEA0B810B6D056A0A00A8290CD92313D05A9AE"
+}

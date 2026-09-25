@@ -1,0 +1,9 @@
+{
+  "kernel_sha256": "2694ce5805dbbd284066d1926a29dc600b2c2fa6a0ab88df68a426ae91ae6513",
+  "host_source_sha256": "2f05ef7f7ca7e281c1ecdd6d3bf43c5acea9363d819f569078c182c892aef4b9",
+  "modes": {
+    "0": "production: prod8 + wave-owned 46 + PDL=1",
+    "1": "+ C512 attention/projection one head per wave",
+    "2": "+ C512, two waves per head (query tiles split)"
+  }
+}

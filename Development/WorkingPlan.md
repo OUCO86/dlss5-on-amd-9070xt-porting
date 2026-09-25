@@ -132,6 +132,8 @@
 
 ## 已关路线
 
+- **C512 一头一 wave（attention/projection-only，09-26）**：逐位但 null（900 −0.017、1080 −0.019 ms）；C512 窗口少（104/135），融合丢并行度，两 wave 一头撞 VGPR 上限。C512 若再动，看 FFN 链而非注意力。`results/c512-wave-20260926`。
+
 - 直达 LDS 读取：现有 gfx1201/comgr 的 builtin 与汇编试验不支持目标指令，当前工具链路线已关；不重复盲试。
 - 双 stream 重叠：当前 Windows HIP 实测不并发，事件对成本高；已改用同流任意序。
 - C32 转置尾部并宽逐位但慢；其余旧 null 见 DevHistory §7。只有明确瓶颈/条件变化才重测。

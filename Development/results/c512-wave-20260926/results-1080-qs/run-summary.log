@@ -1,0 +1,116 @@
+CONFIG wave_owned_active=1 pdl=1
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+C512_CALLS per_frame=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=3 slot=0 mode=0 ms=15.325871 calls=2600 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=3 slot=1 mode=3 ms=15.587139 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=3 slot=2 mode=3 ms=15.580182 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=3 slot=3 mode=0 ms=15.327074 calls=2600 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=0 mode=0 ms=15.341452 calls=2600 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=1 mode=4 ms=15.671891 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=2 mode=4 ms=15.694250 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=3 mode=0 ms=15.360490 calls=2600 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=3 slot=0 mode=0 ms=15.368265 calls=2600 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=3 slot=1 mode=3 ms=15.629015 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=3 slot=2 mode=3 ms=15.616685 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=3 slot=3 mode=0 ms=15.384442 calls=2600 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=4 slot=0 mode=0 ms=15.400181 calls=2600 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=4 slot=1 mode=4 ms=15.734924 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=4 slot=2 mode=4 ms=15.730145 calls=2600 replaced=2600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=1 candidate=4 slot=3 mode=0 ms=15.406349 calls=2600 replaced=0
+DYNAMIC frame=0 candidate=3 seed=123 history=0 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=1 candidate=3 seed=140 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=2 candidate=3 seed=157 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=3 candidate=3 seed=174 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=4 candidate=3 seed=191 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=5 candidate=3 seed=208 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=6 candidate=3 seed=225 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=7 candidate=3 seed=242 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=8 candidate=3 seed=259 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=9 candidate=3 seed=276 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=10 candidate=3 seed=293 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=11 candidate=3 seed=310 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=12 candidate=3 seed=327 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=13 candidate=3 seed=344 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=14 candidate=3 seed=361 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=15 candidate=3 seed=378 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=0 candidate=4 seed=123 history=0 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=1 candidate=4 seed=140 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=2 candidate=4 seed=157 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=3 candidate=4 seed=174 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=4 candidate=4 seed=191 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=5 candidate=4 seed=208 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=6 candidate=4 seed=225 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=7 candidate=4 seed=242 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=8 candidate=4 seed=259 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=9 candidate=4 seed=276 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=10 candidate=4 seed=293 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=11 candidate=4 seed=310 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=12 candidate=4 seed=327 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=13 candidate=4 seed=344 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=14 candidate=4 seed=361 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+DYNAMIC frame=15 candidate=4 seed=378 history=1 calls=13 replaced=13
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+PASS C512 one-wave
