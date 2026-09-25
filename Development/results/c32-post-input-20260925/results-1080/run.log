@@ -1,0 +1,73 @@
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=0 mode=0 ms=16.623619 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=1 mode=1 ms=16.652394 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=2 mode=1 ms=16.667794 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=3 mode=0 ms=16.673875 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=0 mode=0 ms=16.648600 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=1 mode=2 ms=16.693831 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=2 mode=2 ms=16.691950 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=3 mode=0 ms=16.654631 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=0 mode=0 ms=16.674737 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=1 mode=1 ms=16.688275 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=2 mode=1 ms=16.677056 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=3 mode=0 ms=16.647163 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=0 mode=0 ms=16.658375 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=1 mode=2 ms=16.711794 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=2 mode=2 ms=16.710963 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=3 mode=0 ms=16.717300 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=1 slot=0 mode=0 ms=16.747331 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=1 slot=1 mode=1 ms=16.733575 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=1 slot=2 mode=1 ms=16.725587 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=1 slot=3 mode=0 ms=16.743050 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=2 slot=0 mode=0 ms=16.720275 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=2 slot=1 mode=2 ms=16.729644 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=2 slot=2 mode=2 ms=16.732631 calls=160
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=2 candidate=2 slot=3 mode=0 ms=16.705094 calls=160
+PASS post input controls

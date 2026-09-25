@@ -1,0 +1,12 @@
+{
+  "source": "/home/lmxxf/work/ai-theorys-study/wechat/assets/297/hip/c32_fused_ffn_attention.hip",
+  "source_sha256": "bb1fdcb421f5b483cd5f71a3269c9b55bd204122cfee2632661265a07ed6aecf",
+  "host_sha256": "f06d492cdb16873e618082992a85fa9999007afad16cabaec391dfbfb636518e",
+  "modes": {
+    "0": "production",
+    "1": "identical control",
+    "2": "reuse vertical low-resolution input",
+    "3": "reuse with even-geometry specialization",
+    "4": "FP16 block69 main -> post70 low"
+  }
+}

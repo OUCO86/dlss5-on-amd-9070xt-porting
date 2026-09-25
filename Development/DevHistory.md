@@ -63,17 +63,19 @@
 
 ---
 
-## 3. 当前状态（2026-09-23 16:00）
+## 3. 当前状态（2026-09-25）
 
-**《剑星》装机版 = prod6**（HIP，OptiScaler 前置链，900P auto）：Zero 实测 900P 简单场景接近 60fps，无异常。备份 `D:\DLSSNR-Lab\stellar-prod6-20260923\backups\20260923-112851`（回退 `install.ps1 -RestoreBackup <该目录>`）。addon 后来换成 FIT_LARGE 版 `c1bc7374…`。用户个人 flags 里 `ADAPTIVE=1`（ViT 复用开）。
+**装机与发布**：《剑星》与2077已装prod8 / 插件0211a78a；0.30三包已发布，夸克与Google链接已填，清单 `Development/tools/release-030-results.json`。剑星900P→2K简单场景60～61fps，1080P→2K 47～48；2077质量41、平衡51～52（用户远程读数）。RE9机上为prod7内核。部署/备份详见末尾流水。
 
-**发布**：0.29 三包已在 `D:\給網友打包`（Magpie `fb005c3e…`、OptiScaler `55142927…`、OptiScaler-REFramework `668133f9…`），清单 `Development/releases/0.29/packages.json`；**网盘链接待 Zero 上传后补进 README**。0.28 三包及 RE9 0.28.1 链接已在 README。
+**地平线6**：0.30前置被同列表后续draw拒绝，手动 `DLSS5_PRE_UPSCALE=0` 后置可用，记录约44fps；首次黑屏未复现，dump脚本已备。下一版计划自动回落。
 
 **黄金 hash**（HIP 900 档正确性回归）：900w 三道 `FEEA9EF3…`（40 帧）/ `22C171FC…`（每 8 帧 reset）/ `75B62D2F…`（seed123 history）；960 三道（900 漏派发修复后）`047c36e1…` / `b4f66e9d…` / `0e4afd83…`。HLSL 参考 `C7C2F49D…`。脚本 `validate-modules.ps1`、`validate-modules-960.ps1`。
 
-**性能**：离线 900 档约 12.1ms、1080 档约 17.3ms（prod6，完整 NativeGameFrame 回放）；HLSL 900 约 16.8ms。网友 900P 最低画质 73fps。
+**性能口径**：prod8完整NativeGameFrame旧回放约900 12ms / 1080 17ms；本轮纯HIP固定输入约11.7/16.7ms，不能跨口径直接比较。
 
-**未装的研究候选**：6b（ffn_fused wave 内 QKV 归一化，非逐位，−5.4/−5.6%，PSNR 58dB）等 Zero 看画质；ffn_fused_c256 宽权重片段（约 −0.03ms，host 打包器改动，等下次 addon 重编时顺带）。
+**研究**：post输入三候选与ViT编号六候选均无稳定收益。新C32阶段账已完成，FFN主体和输入准备各约四分之一（插桩wave周期口径）。对角残差删零候选长槽约−0.026/−0.015ms，双架构编译和96帧候选RGB回归通过，未装机/未改发布版，详见 `results/c32-diag-zero-20260925`。
+
+**其他待选**：非逐位6b约−1.1%、PSNR58dB，等Zero看动态画质；C256宽权重片段约−0.03ms待顺带（不是已启用的普通FRAG256路径）。下一研究入口 `WorkingPlan.md`。
 
 ---
 
@@ -226,7 +228,7 @@
 ## 11. 待办
 
 - README 补三点：默认跳过 42/43/46 三块（40.66dB，清空 `DLSS5_SKIP_BLOCKS` 即全跑，约 +1ms）；ViT 自适应复用默认关、开了有损；精确流式注意力常开且逐位。
-- 0.29 网盘链接等 Zero 上传后补进 README，回复 issue #6。
+- 0.30已发布、双网盘链接已填；issue #6回复状态另核。
 - 6b（wave 内归一化）画质等 Zero 看。
 - 算力缺口主线：ViT 剩余缺口的限制因素、C32 余下部分的归因。
 - 9060 / XT（gfx1200）至今只做了编译验证，没有实机测过。
@@ -382,3 +384,56 @@ RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都�
 08:08 用户上传完成：夸克 https://pan.quark.cn/s/80a735ab9f88（三包一个分享）、Google Drive https://drive.google.com/drive/folders/1pKZpLosgJXxUOZTMg_m0sbCipX9Q3WYo；README 两处链接已填。0.30 发布。
 
 19:55 《极限竞速：地平线 6》（Xbox 商店版，`C:\XboxGames\Forza Horizon 6\Content`，实际运行路径在 WindowsApps 下）装 0.30 常规包（`deployments/forza6-030-20260925/install.ps1`，覆盖了游戏自带 `amd_fidelityfx_upscaler_dx12.dll`/`libxess.dll`，有备份可 `-Restore`）。第一次启动黑屏卡死（OptiScaler/ReShade 日志在第三次 D3D12CreateDevice 后同秒断掉，进程活着，插件一行未写——它在 30 帧 Present 之前不动手），关插件后正常，再开插件却不再复现，原因未抓到；`dump.ps1`（dbghelp MiniDumpWriteDump）备着，再黑就抓。真正的问题：链路通了（DLSS→OptiScaler→FSR，`render=1508x848 upscale=2560x1440`），但前置路线第一帧 `UNSAFE: draw/dispatch after deferred upscaler in same list` → fatal 透传，F6 无反应——和卧龙 2 同一种列表布局。`DLSS5_PRE_UPSCALE=0` 后置路线可用：1440 缩 1080 档，稳态 22.5 ms/帧≈44fps，覆盖 5362/6300 帧，F6 切换有日志，STRENGTH auto→1,1，黄字不显示（同 2077）。0.30 包不动，README 分游戏段写手动改法；下一版把 PRE_UPSCALE 做成 auto（首帧探测列表尾部有无后续工作，有则落后置）。网友说的"运行不了"多半就是这种"装了跟没装一样"。
+
+
+## 2026-09-25 20:09 起：mapped/post 数据流审计与 post70 输入复用候选（Yami，待 GPU 实测）
+
+按更新后的 WorkingPlan 开始追生产者/消费者。发现旧计划的前提过时：mapped/post 的 staging 在 09-23 已改为每 lane 4 次 b128，不是仍在 16 次 b32；当前特征生产者也是 HIP 而不是 HLSL 编码。block1 ← block0 down；block66 ← decoder_project2x_h16w(oc=32)；post70 low ← block69 main，skip ← block0 main8。每 token 的通道本已连续，改 tile 顺序不保证减少缓存行请求，不能直接承诺读等待减半。
+
+先做较小候选 `HIP/experiments/c32-post-input`：post70 每 wave 两行像素共享同一低分辨率行，k=2/3 的 low 读取复用 k=0/1 寄存器；skip 与所有数值运算不变，奇数 sy/height 回落原读法。保留原核、同体异名 control、reuse 三个导出；新 runner 从现行 host 提取选项，prod8 模块底包、PDL=1、adaptive/graph/dup 关，两档整网 ABBA，计时外槽首尾逐位比较，并检查 post 每帧确实调用一次。生产源码和游戏安装均未改。
+
+本机地址/有效性检查 59,904 对通过，MinGW Windows host 编译通过；已传 `D:\DLSSNR-Lab\hip-backend\c32-post-input`，入口 `start.ps1`（检查空闲→GPU 编译→900/1080 对照）。此时 GPU 编译、原核/control ISA 对照、GPU 逐位和性能结果均待执行，不宣称提速。原始依据和操作见实验 README；布局改造仍保留，先看这个重复读候选值不值得。
+
+
+## 2026-09-25 22:21 起：自主跑完 post70 三种输入候选，均不采用
+
+Zero 明确授权：DLSS5 优化的耗时编译、实验、回归、分析由 agent 自行执行，不再让用户手动跑命令。已记 WorkingPlan；仍遵守机器空闲检查。
+
+`HIP/experiments/c32-post-input` 在 gfx1201 跑三类候选，两档各三轮 ABBA，并有同体异名 control。通用纵向低分辨率复用：900/1080 平均 +0.0265/+0.0278ms；将偶数几何提升到 host 检查后：+0.0084/−0.0028ms；block69 main→post70 low 用 FP16 精确传值：+0.0071/+0.0056ms。control 单次噪声约 ±0.028ms；后两者无稳定收益，不采用。每槽首尾 RGB 逐位检查全同，计时内无读回，post 调用计数确认每帧一次；这是固定输入筛选，不是全时序回归。
+
+ELF 比对确认实验模块内 10 个原核机器码与 prod8 全同，control 与原 post 全同。偶数特化实际少两条 b128；FP16 post 改为 4 条 b64 低分辨率读取，post VGPR 都为 158，block69 VGPR 153 未变。不是假 null，也不能因此宣布整个 staging 已到极限。结果和代码身份归档 `results/c32-post-input-20260925/README.md`。生产源码、游戏安装、发布包未改。
+
+同时补读 ViT 旧 page/pitch/groups 记录：完整 4MiB 权重的 padding/xor 收益很小，随机 stride 重排和多 wave 合组更慢。下一轮若做调度，限定真实核一 wave 一组的小范围二维 tile 编号重排，验证 A/B 复用取舍，不重追特殊 span64。
+
+
+## 2026-09-25 22:33 起：ViT 局部二维工作组编号，六候选无稳定收益
+
+`HIP/experiments/vit-group-order`：真实展开/收缩各做 GM2/4/8，保持每组一 wave、原累加顺序和输出地址，只让相邻 token tile 接连访问同一列权重。区别于旧随机 stride 和多 wave 合组。26,973 个 tile 映射检查无漏无重，覆盖 900 档25行的尾组。
+
+两档各三组 ABBA（每槽20预热+160计时帧）。展开三候选的900均值 +0.006～+0.008ms，1080约0～+0.013ms；收缩900约−0.002～+0.005ms，1080约+0.002～+0.019ms。同期同体异名对照单次约−0.011～+0.036ms，未获稳定收益，六个均不采用。各槽首尾RGB逐位同，调用计数确认命中；这是固定输入筛选，不是全时序回归。
+
+两次模块内76个原核函数体对prod8逐字节全同，展开/收缩control也全同。展开VGPR77→78/77/77，收缩205→211/212/212，地址计算改变编译调度，不能把耗时差全归给缓存。数据、源码身份、ISA核对归档 `results/vit-group-order-20260925`。生产、游戏和发布包未改。
+
+下一步改为重测prod8 C32阶段账：旧c32-phase-trace逐核同步+Memcpy更新全局trace指针，host替换锚点还没适配PDL；先改成参数传trace区域、预分配、少量阶段/稀疏采样，并确认计时ISA和插桩扰动，别直接沿旧阶段份额猜刀。WorkingPlan已更新。
+
+
+## 2026-09-25 22:56 起：重建 C32 阶段账，得到一把约0.1～0.2%的逐位小刀
+
+`c32-phase-current` 去掉旧工具逐核CPU同步/Memcpy，预分配trace缓冲并经参数传指针，显式本地20位SHADER_CYCLES，不用REALTIME消息。每次测一个阶段与整段、每32窗口抽一个、8帧轮换余数。两档粗分+FFN细分全部RGB逐位同，插桩约+0.05～0.14ms（不到整帧1%）；部分核VGPR增加，故只以稳定阶段排序指导实验，不冒充未插桩精确账。新观测：输入准备约24%，FFN整体38%；其中主体25%、残差4%、入口同步2.6%、FFN发布6.8%。主体包括权重读取/量化，不是纯WMMA份额。结果 `results/c32-phase-current-20260925`。
+
+沿残差检查发现非对角K16半块恒零，`c32-diag-zero` 去掉每wave六条乘零WMMA。六组真实权重×全部有限FP8编码，49,152个float32结果逐位同；短槽3轮、800帧长槽2轮，两档十组候选对照均快。长槽900 −0.0256ms（约0.2%）、1080 −0.0148ms（约0.09%），收益很小，留下一次合包，不单独装游戏。
+
+标准导出候选收窄为只改chain/chain_finish_dcrop/chain_finish三核：三个函数体与实测孪生相同，其余七核对prod8字节不变。双架构编译通过，gfx1201正式NativeGameFrame回放8条件×12帧，96个候选RGB帧与prod8逐帧同哈希（含720、900/1080移动、history和浮点路径）；gfx1200仅编译。最终C32 hash gfx1201 e41c5c0b… / gfx1200 fafe5fe1…，候选在 `D:\DLSSNR-Lab\hip-backend\c32-diag-zero\candidate-modules` / `candidate-gfx1200`。完整结果、每帧hash和复现代码见 `results/c32-diag-zero-20260925`。生产源码和游戏/发布包未换。
+
+下一刀查C32 FFN权重的片段预排，尤其32×128收缩矩阵的跨行读取；只改排列与对应寻址，不同时动同步/输出转置。WorkingPlan已更新，§3当前状态也从prod6/0.29旧摘要同步到prod8/0.30。
+
+
+## 2026-09-26 01:55 起：闭源v0.4.0汇编调查，单wave/寄存器路线；偏淡对应默认LocalTone=0
+
+用户给桌面下载目录dlssnr_on_amd_setup.exe，SHA 2d37453e…与官方v0.4.0资产digest一致（发布说明：比0.3.3性能提升42%）。另下载官方0.3.3（af5b9bbe…）对照。静态提取DLL与HIP fat bundle，用libLLVM20反汇编gfx1201：旧44、新86个函数，未知指令0；未运行安装器或闭源核、未改游戏。
+
+C32的32线程/2KB LDS/零barrier寄存器快核在0.3.3已有；0.4.0新增42个核，其中24个C64/128/256专用MH核，另有reg1d/reg_vit与512布局转换。C64新核64线程/4KB LDS/7个静态barrier，对照旧通用核256线程/15616B/17个；有真实spill，不能只看零barrier。C32入口/出口四次128位读写，坐标除4、tile步长512B，支持4×4片段组织推断。packed-half归约与我们的求和路线不同，未证明逐位等价。C256 chain是显式DLSSNR_CHAIN开启，默认不能归功给它。
+
+02:10用户补充网友截图偏淡、灯光/色彩不浓。进一步找到安装包完整INI模板：LocalTone=0、LocalStructure=1、ToneChannels=0、ToneLift=0、Style=0、ToneCurve=reinhard。UI明确LocalTone管大范围光照/色彩，宿主也将默认0送入控制参数；这与反馈相符，但未拿网友INI/做同帧A/B，不能定死为根因，更不能说它关闭光照计算换帧率。PreUpscale默认1，所以1080输出也不自动等于1080网络输入。
+
+报告/身份/资源/默认INI在 `results/closed-v040-20260926`，复现工具 `tools/closed-inspect`，原二进制与完整反汇编只留/tmp。WorkingPlan把独立C32单wave窗口原型提到优先位，保留我们原数值与视觉控制；权重片段预排转后续小刀。单窗口四wave不是算法必付成本，这条认知需修正。

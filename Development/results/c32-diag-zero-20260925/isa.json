@@ -1,0 +1,61 @@
+{
+  "production_functions_identical": {
+    "c32_fast_ffn_attention_fused_half_chain": true,
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": true,
+    "c32_post_merge_head_half": true,
+    "c32_post_merge_fused_half": true,
+    "c32_fast_ffn_attention_fused": true,
+    "c32_fast_ffn_attention_fused_half": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish": true,
+    "c32_fast_ffn_attention_fused_half_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_mapped": true
+  },
+  "kernels": {
+    "c32_fast_ffn_attention_fused_half_chain": {
+      "vgpr": 151,
+      "code_bytes": 21768,
+      "static_wmma": 56
+    },
+    "c32_fast_ffn_attention_fused_half_chain_dz1": {
+      "vgpr": 151,
+      "code_bytes": 21768,
+      "static_wmma": 56
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish": {
+      "vgpr": 153,
+      "code_bytes": 22488,
+      "static_wmma": 56
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dz1": {
+      "vgpr": 153,
+      "code_bytes": 22488,
+      "static_wmma": 56
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": {
+      "vgpr": 153,
+      "code_bytes": 22984,
+      "static_wmma": 56
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_dz2": {
+      "vgpr": 153,
+      "code_bytes": 22828,
+      "static_wmma": 50
+    },
+    "c32_fast_ffn_attention_fused_half_chain_dz2": {
+      "vgpr": 151,
+      "code_bytes": 21612,
+      "static_wmma": 50
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dz2": {
+      "vgpr": 153,
+      "code_bytes": 22332,
+      "static_wmma": 50
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_dz1": {
+      "vgpr": 153,
+      "code_bytes": 22984,
+      "static_wmma": 56
+    }
+  }
+}

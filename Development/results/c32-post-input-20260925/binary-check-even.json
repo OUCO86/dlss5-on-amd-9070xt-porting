@@ -1,0 +1,15 @@
+{
+  "production_functions_identical": {
+    "c32_fast_ffn_attention_fused_half_chain": true,
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": true,
+    "c32_post_merge_head_half": true,
+    "c32_post_merge_fused_half": true,
+    "c32_fast_ffn_attention_fused": true,
+    "c32_fast_ffn_attention_fused_half": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish": true,
+    "c32_fast_ffn_attention_fused_half_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_mapped": true
+  },
+  "control_identical": true
+}

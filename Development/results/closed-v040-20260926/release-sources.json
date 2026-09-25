@@ -1,0 +1,30 @@
+[
+  {
+    "tag_name": "v0.4.0",
+    "published_at": "2026-09-25T17:24:10Z",
+    "html_url": "https://github.com/danielblnc/DLSS-NR-on-AMD/releases/tag/v0.4.0",
+    "body": "- 42% performance improvement over v0.3.3",
+    "assets": [
+      {
+        "name": "dlssnr_on_amd_setup.exe",
+        "size": 13183488,
+        "digest": "sha256:2d37453e918a1c5487314b3ae7c088b624ac0be1b82469427ec04b481a845ded",
+        "browser_download_url": "https://github.com/danielblnc/DLSS-NR-on-AMD/releases/download/v0.4.0/dlssnr_on_amd_setup.exe"
+      }
+    ]
+  },
+  {
+    "tag_name": "v0.3.3",
+    "published_at": "2026-09-25T15:54:02Z",
+    "html_url": "https://github.com/danielblnc/DLSS-NR-on-AMD/releases/tag/v0.3.3",
+    "body": "- BIG 23% performance improvement over v0.3.2\r\n- New graphical installer with integrated settings editor\r\n- New overlay controls: Style (Default, Natural, Cinematic), Tone curve (Reinhard or ACES), Black lift, Exposure (game-provided or auto-exposure) and Tone intensity\r\n- Reinhard usually provides better colors, but it oversaturates in some games like Cyberpunk. I recommend ACES for those games.\r\n- Fixed frame dumps capturing the wrong input frame, plus many other visual bug fixes",
+    "assets": [
+      {
+        "name": "dlssnr_on_amd_setup.exe",
+        "size": 10763776,
+        "digest": "sha256:af5b9bbe8e97eea4c564341a78caf752de02a0b622a141c53c5a70e782fec994",
+        "browser_download_url": "https://github.com/danielblnc/DLSS-NR-on-AMD/releases/download/v0.3.3/dlssnr_on_amd_setup.exe"
+      }
+    ]
+  }
+]

@@ -1,0 +1,79 @@
+{
+  "production_functions_identical": {
+    "c32_fast_ffn_attention_fused_half_chain": true,
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": true,
+    "c32_post_merge_head_half": true,
+    "c32_post_merge_fused_half": true,
+    "c32_fast_ffn_attention_fused": true,
+    "c32_fast_ffn_attention_fused_half": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish": true,
+    "c32_fast_ffn_attention_fused_half_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_mapped": true
+  },
+  "control_identical": true,
+  "kernels": {
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": {
+      "code_bytes": 22984,
+      "vgpr": 153,
+      "staging_static_global_loads": {
+        "global_load_b128": 1
+      }
+    },
+    "c32_post_merge_head_half": {
+      "code_bytes": 18128,
+      "vgpr": 158,
+      "staging_static_global_loads": {
+        "global_load_b32": 4,
+        "global_load_b128": 6
+      }
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_half_low": {
+      "code_bytes": 22616,
+      "vgpr": 153,
+      "staging_static_global_loads": {
+        "global_load_b128": 1
+      }
+    },
+    "c32_post_merge_head_half_reuse": {
+      "code_bytes": 18148,
+      "vgpr": 158,
+      "staging_static_global_loads": {
+        "global_load_b32": 4,
+        "global_load_b128": 6
+      }
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish": {
+      "code_bytes": 22488,
+      "vgpr": 153,
+      "staging_static_global_loads": {
+        "global_load_b128": 1
+      }
+    },
+    "c32_post_merge_head_half_reuse_even": {
+      "code_bytes": 17924,
+      "vgpr": 158,
+      "staging_static_global_loads": {
+        "global_load_b32": 4,
+        "global_load_b128": 4
+      }
+    },
+    "c32_post_merge_head_half_half_low": {
+      "code_bytes": 18196,
+      "vgpr": 158,
+      "staging_static_global_loads": {
+        "global_load_b64": 4,
+        "global_load_b32": 4,
+        "global_load_b128": 2
+      }
+    },
+    "c32_post_merge_head_half_control": {
+      "code_bytes": 18128,
+      "vgpr": 158,
+      "staging_static_global_loads": {
+        "global_load_b32": 4,
+        "global_load_b128": 6
+      }
+    }
+  }
+}
