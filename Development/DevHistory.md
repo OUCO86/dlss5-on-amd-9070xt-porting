@@ -519,3 +519,8 @@ prepare-runtime.py把已验证组合Network接进原NativeGameFrame/D3D12桥接�
 生产host的完整NativeGameFrame回归：720/900/1080静态/移动/历史6对12帧，72候选帧逐位相同；关闭MH byte stream和关闭byte feature两种配置，在没有新增模块的旧模块目录测试flag1回落，额外24帧逐位，计数0替换。性能使用无计数插桩的生产host：每槽1000帧去前200，900 11.98305→11.26020ms（−0.72284，−6.03%）；1080 16.99276→15.87261ms（−1.12014，−6.59%）。
 
 add-on SHA256 3e3ca57a079b607405227a7b3b5b1c72b71ae0416438928e69bc3b65808e67a8；payload包括两架构四新模块和add-on，部署脚本提供prod8预检、游戏关闭检查、已存在/新增文件备份恢复、flags回滚。gfx1200实验基线只含5个旧更新模块，不能假装是完整24模块集；安装仅增补新pair，其他旧模块不改。已准备但未执行安装/发布。RE9/C API实例配置尚未接此环境开关，后续独立处理。下一步同场景真实游戏ABBA与继续研究Daniel剩余ViT/C512差异，目标未完成。
+
+## 2026-09-26 04:55～05:49：wave-owned 剑星实机 A/B（闇采数，朱雀补记）
+
+闇在最后一次提交后按 install.ps1 实装了一轮，并已自行回滚：04:55 prod8 拍 `baseline-a`，05:02 安装（备份 `D:\DLSSNR-Lab\hip-backend\wave-owned-production\deploy-stellar\backups\20260926-050241`），05:12/05:18 拍 `candidate-b1/b2`，之后回滚到 prod8（05:49 核对：addon 0211a78a、flags 无 WAVE_OWNED、无新模块）。每组 6 张 HUD 截图 + samples.json（约 500MB，未分析），目录 `wave-owned-production\game-evidence\`。
+同场景《剑星》2K 质量档（1707×961 → 1080 网络，FSR 输出 2560×1440），HUD 读数：baseline 47/47/46，candidate b1 49/49/49、b2 49/49/49；05:49 用户在 prod8 下复读 47～48，补齐 ABBA 的第二个 A。**约 +2fps（+4%），帧时约 −0.7ms**；离线 1080 档网络 −1.12ms，游戏里兑现六成多（网络约占 21ms 帧的 17ms，外加功耗墙）。画面未见异常，逐位一致由离线回归保证。尚未正式装机，2077 未测。
