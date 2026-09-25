@@ -11,3 +11,5 @@
 实验host从当前生产源生成副本，仅指定通道走新模块。其他生产模块来自prod8，基线PDL=1；新核普通同流提交，正确处理PDL前序结束。每帧目标调用计数、RGB逐位与ABBA检查。
 
 首版只有固定输入两档筛选通过，尚未经过完整多帧历史回归，也未装机。性能与后续扩展见 `Development/results/c64-wave2-20260926`；目标仍是找到并实现足够大的整网收益，首个约1%的结果不是目标完成。
+
+扩展版本模板覆盖C64/128/256，mode 1/2/3分别替换，4全部，5仅C64+C128。build/run参数Layout、Launder、Schedule、RollQuery、HiddenTiles成对设置；当前最佳混合筛选为frag+Launder+Schedule+RollQuery+HiddenTiles 2、Candidates 5。Schedule只约束编译器排程，不添加GPU组同步。analyze.py复核ABBA与替换计数。完整回归待做。
