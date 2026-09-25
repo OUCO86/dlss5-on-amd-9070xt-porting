@@ -6,9 +6,9 @@ def rep(s,a,b):
  assert s.count(a)==1,(a[:100],s.count(a))
  return s.replace(a,b,1)
 base=(ROOT/'hip/multihead_fast_padded.hip').read_text()
-kernel='#define HIP_ISA_HALF 1\n#define HIP_PREPACKED_WEIGHTS 1\n#define HIP_FFN_HOIST_RES 2\n#define HIP_PDL_KERNELS 0\n'+base+'\n'+(HERE/'kernel.inc').read_text()
+kernel='#define HIP_ISA_HALF 1\n#define HIP_PREPACKED_WEIGHTS 1\n#define HIP_FFN_HOIST_RES 2\n#define HIP_PDL_KERNELS 0\n'+base+'\n'+(ROOT/'hip/wave_owned_mh.inc').read_text()
 # Derive attention-only core from the exact fused prototype, sharing its math.
-core=(HERE/'kernel.inc').read_text()
+core=(ROOT/'hip/wave_owned_mh.inc').read_text()
 attention=core[core.index(' // One wave owns all keys'):core.index('#define W2_KERNEL')]
 attention=rep(attention,'i2 a=w2_load<C>(plane0,qt,ct);','''i2 a;
 #if W2_DIRECT_FEATURE
@@ -17,8 +17,8 @@ attention=rep(attention,'i2 a=w2_load<C>(plane0,qt,ct);','''i2 a;
    a=w2_load<C>(plane0,qt,ct);
 #endif
 ''')
-setup=(HERE/'attention-setup.inc').read_text()
-kernel+='\n#if !W2_DEFER_Q\n'+setup+attention+'\n'+(HERE/'attention-exports.inc').read_text()+'\n#endif\n'
+setup=(ROOT/'hip/wave_owned_attention_setup.inc').read_text()
+kernel+='\n#if !W2_DEFER_Q\n'+setup+attention+'\n'+(ROOT/'hip/wave_owned_attention_exports.inc').read_text()+'\n#endif\n'
 (OUT/'kernel.hip').write_text(kernel)
 (OUT/'kernel-frag.hip').write_text('#define W2_FRAGMENT_WEIGHTS 1\n'+kernel)
 (OUT/'kernel-defer.hip').write_text('#define W2_DEFER_Q 1\n'+kernel)
@@ -68,7 +68,7 @@ s=rep(s,anchor,'''  if((w2_mode==6||w2_mode==7)&&c==256){
 '''+anchor)
 p.write_text(s)
 native=(ROOT/'src/native_hip_network.h').read_text();a=native.index('hip_reference::Options o;');b=native.index('  const wchar_t*modules=',a)
-options=native[a:b].replace('o.width=g.processing_width;o.height=g.processing_height;o.post_shift=post_shift','o.width=W;o.height=H;o.post_shift=3').replace('o.assets=Utf8(directory)','o.assets=argv[1]')
+options=native[a:b].replace('o.width=g.processing_width;o.height=g.processing_height;o.post_shift=post_shift','o.width=W;o.height=H;o.post_shift=3').replace('o.assets=Utf8(directory)','o.assets=argv[1]')+'\n o.wave_owned=false; // experimental mode selection owns dispatch\n'
 (OUT/'network.cpp').write_text((HERE/'runner.cpp.in').read_text().replace('/* OPTIONS */',options))
 for name in ('build.ps1','run.ps1','start.ps1'):shutil.copyfile(HERE/name,OUT/name)
 (OUT/'manifest.json').write_text(json.dumps({'base_source_sha256':hashlib.sha256(base.encode()).hexdigest(),'kernel_sha256':hashlib.sha256(kernel.encode()).hexdigest(),'host_source_sha256':hashlib.sha256((ROOT/'Development/HIP/hip_reference_network.h').read_bytes()).hexdigest(),'modes':{'0':'prod8 PDL baseline','1':'C64','2':'C128','3':'C256','4':'all C64/C128/C256','5':'C64+C128','6':'C256 attention-only','7':'C64/C128 fused + C256 attention-only'},'layouts':['row','frag']},indent=2)+'\n')

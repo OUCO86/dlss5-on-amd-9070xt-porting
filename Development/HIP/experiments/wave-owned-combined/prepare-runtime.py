@@ -4,6 +4,7 @@ HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[3];OUT=Path('/tmp/wave-ow
 runpy.run_path(str(HERE/'prepare.py'))
 shutil.copytree(ROOT/'src',OUT/'src',dirs_exist_ok=True)
 shutil.copytree(Path('/tmp/wave-owned-combined/Development/HIP'),OUT/'Development/HIP',dirs_exist_ok=True)
+native=OUT/'src/native_hip_network.h';native.write_text(native.read_text().replace('  const wchar_t*modules=', '  o.wave_owned=false; // use the historical experiment dispatch\n  const wchar_t*modules=',1))
 p=OUT/'Development/HIP/hip_reference_network.h';s=p.read_text()
 old='bool w2_frag=std::getenv("W2_FRAG")&&std::string(std::getenv("W2_FRAG"))=="1";'
 assert s.count(old)==1

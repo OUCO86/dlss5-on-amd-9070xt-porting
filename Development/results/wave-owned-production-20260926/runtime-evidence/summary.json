@@ -1,0 +1,84 @@
+{
+  "correctness": [
+    {
+      "baseline": "base-900-0",
+      "candidate": "candidate-900-0",
+      "matching_frames": 12,
+      "active": true
+    },
+    {
+      "baseline": "base-900-1",
+      "candidate": "candidate-900-1",
+      "matching_frames": 12,
+      "active": true
+    },
+    {
+      "baseline": "base-1080-0",
+      "candidate": "candidate-1080-0",
+      "matching_frames": 12,
+      "active": true
+    },
+    {
+      "baseline": "base-1080-1",
+      "candidate": "candidate-1080-1",
+      "matching_frames": 12,
+      "active": true
+    },
+    {
+      "baseline": "extra-720-motion-False",
+      "candidate": "extra-720-motion-True",
+      "matching_frames": 12,
+      "active": true
+    },
+    {
+      "baseline": "extra-900-history-False",
+      "candidate": "extra-900-history-True",
+      "matching_frames": 12,
+      "active": true
+    },
+    {
+      "baseline": "extra-900-float-in-False",
+      "candidate": "extra-900-float-in-True",
+      "matching_frames": 12,
+      "active": false
+    },
+    {
+      "baseline": "extra-900-float-feature-False",
+      "candidate": "extra-900-float-feature-True",
+      "matching_frames": 12,
+      "active": false
+    }
+  ],
+  "timing": {
+    "900": {
+      "slots_ms": [
+        11.97181,
+        11.25001375,
+        11.27039375,
+        11.994285
+      ],
+      "baseline_ms": 11.9830475,
+      "candidate_ms": 11.26020375,
+      "delta_ms": -0.7228437499999991,
+      "time_reduction_percent": 6.032219683682295,
+      "frames_per_slot": 1000,
+      "warmup_excluded": 200
+    },
+    "1080": {
+      "slots_ms": [
+        16.953075,
+        15.84969375,
+        15.89553375,
+        17.03243625
+      ],
+      "baseline_ms": 16.992755625,
+      "candidate_ms": 15.87261375,
+      "delta_ms": -1.1201418750000016,
+      "time_reduction_percent": 6.591878914282931,
+      "frames_per_slot": 1000,
+      "warmup_excluded": 200
+    }
+  },
+  "candidate_frames_bit_exact": 72,
+  "fallback_frames_bit_exact": 24
+}

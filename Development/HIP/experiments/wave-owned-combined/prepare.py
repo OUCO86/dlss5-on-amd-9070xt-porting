@@ -26,7 +26,7 @@ s=rep(s,'  U count=Count(n),threads=256;unsigned groups=0;std::string module=m,k
 ''')
 p.write_text(s)
 native=(ROOT/'src/native_hip_network.h').read_text();a=native.index('hip_reference::Options o;');b=native.index('  const wchar_t*modules=',a)
-options=native[a:b].replace('o.width=g.processing_width;o.height=g.processing_height;o.post_shift=post_shift','o.width=W;o.height=H;o.post_shift=3').replace('o.assets=Utf8(directory)','o.assets=argv[1]')
+options=native[a:b].replace('o.width=g.processing_width;o.height=g.processing_height;o.post_shift=post_shift','o.width=W;o.height=H;o.post_shift=3').replace('o.assets=Utf8(directory)','o.assets=argv[1]')+'\n o.wave_owned=false; // experimental mode selection owns dispatch\n'
 runner=(HERE.parent/'c32-wave1/runner.cpp.in').read_text().replace('candidates{1,2,3,4}','candidates{1,2,3}').replace('m>8','m>3').replace('candidate 1..8','candidate 1..3').replace('{0,4,2,2,8,1,9,1,10}','{0,36,10,46}').replace('calls!=frames*10','calls!=frames*46').replace('net.W2Calls()!=10','net.W2Calls()!=46').replace('PASS C32 one-wave','PASS combined wave ownership')
 (OUT/'network.cpp').write_text(runner.replace('/* OPTIONS */',options))
 for name in ['prepare-modules.ps1','run.ps1']:shutil.copyfile(HERE/name,OUT/name)

@@ -1,0 +1,16 @@
+[
+    {
+        "module":  "c32-wave1",
+        "normalized_assembly_equal":  true,
+        "normalization":  "__hip_cuid_\u003chex\u003e only",
+        "incremental_sha256":  "73A2DFDBB84967086B7F8E36C1776163EE8D584B1240764ECEDC276B330DE3D2",
+        "recipe_sha256":  "CBCA672DCB1B3C00BBAF7A5DD957445B301C2F31A2D2DC6A03836D3257EFAC12"
+    },
+    {
+        "module":  "c64-wave2",
+        "normalized_assembly_equal":  true,
+        "normalization":  "__hip_cuid_\u003chex\u003e only",
+        "incremental_sha256":  "8F03E233F638325B869CFB46E965E933242C893367F7FBEBCF187862EC3CDA91",
+        "recipe_sha256":  "6DD9835F7B77F03CE1AE39BD2E7700FDCD83D027E50F650A5E2DDC155ACC47C8"
+    }
+]

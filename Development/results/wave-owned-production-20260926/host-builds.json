@@ -1,0 +1,7 @@
+{
+  "benchmark.exe": "7078145166e05798bf7afd3445aa5d81dee463784c09d1ba7c438ae7c471e94c",
+  "benchmark-trace.exe": "f50f3c255433a8975d5738a86858ff0e26081baf69a019963a085361517b1f9a",
+  "native-game.addon64": "3e3ca57a079b607405227a7b3b5b1c72b71ae0416438928e69bc3b65808e67a8",
+  "production_host_sha256": "2f05ef7f7ca7e281c1ecdd6d3bf43c5acea9363d819f569078c182c892aef4b9",
+  "native_hip_header_sha256": "6b8fadcaaa5f1dea8951bf5046b6f38228adf71f8c4412bc071bd162a1740893"
+}
