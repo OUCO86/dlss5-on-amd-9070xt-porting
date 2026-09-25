@@ -18,11 +18,13 @@ the host upscaler (FSR) takes it to the display resolution.** Three packages, th
 | **Magpie** (portable) | any game, no upscaler support needed | Magpie captures the game window; the network runs in the FSR3_SR slot of its effect group, then FSR4 fills the screen (optional XeSS frame generation) |
 | **OptiScaler-REFramework** (RE9 only) | Resident Evil Requiem, whose command submission the regular route cannot split | TheAutomatic's modified OptiScaler host + our `LmxxfNrRuntime.dll` (matched pair; do not mix with the regular packages) |
 
-**Current release: 0.29 (2026-09-23).** Inputs above 1920×1080 are no longer rejected: they are fitted (downsampled) onto the
-1080 network tier and composed back at the source resolution the way the original codec does (the full-resolution frame is
-the base, the network output steers luminance/colour; `DLSS5_FIT_LARGE=1`). Six bit-exact kernel improvements since 0.28
-(about −7% whole-network time). Measured on the RX 9070 XT: Stellar Blade 900p simple scenes ≈60 fps, 1080p ≈40 fps,
-2560×1440 Native AA 44 fps; RE9 Native AA tested. Download links are in the changelog table below.
+**Current release: 0.30 (2026-09-25).** Chain launches go out any-order with per-tile flags (the FFN and attention
+kernels of the C64/C128/C256 blocks no longer wait for the previous launch to drain; `DLSS5_HIP_PDL=1`), plus FFN full-line
+stores: both bit-exact, about −2% whole-network time on top of 0.29. Cyberpunk 2077 works with no configuration (regular
+package `OptiScaler.ini` carries `EnableFfxInputs=false`; `DLSS5_PRE_UPSCALE_ASYNC=auto` and `DLSS5_STRENGTH=auto` look the
+executable up in a table). Fixed: neural processing vanished after switching the DLSS preset in-game. Measured on the
+RX 9070 XT: Stellar Blade 900p→2K simple scenes 60–61 fps, 1080p→2K 47–48; Cyberpunk 2077 low settings balanced 51–52,
+quality 41. Download links are in the changelog table below ([Quark](https://pan.quark.cn/s/80a735ab9f88), plus a [Google Drive mirror](https://drive.google.com/drive/folders/1pKZpLosgJXxUOZTMg_m0sbCipX9Q3WYo?usp=sharing) for users without a Chinese phone number).
 
 **Requirements.** An RDNA 4 GPU (RX 9070 XT tested; RX 9060 kernels included, untested) and an AMD driver that ships
 `amdhip64_7.dll` (current release drivers do). No HIP SDK, no Agility SDK, no preview DXC, no Windows Developer Mode. The
@@ -40,6 +42,19 @@ the RE9 runtime is configured through `OptiScaler.ini` `[DlssNr]` and reads only
 **Magpie notes.** The `FSR3_SR` item of the bundled effect group *is* the DLSS5 entry (its UI name stays FSR3); keep it at
 input size and let the following FSR4 item upscale. Use AMD optical flow only on that first item and set Optical Flow Method
 to None for FSR4 and XeSS frame generation. `Alt+Shift+A` starts/stops scaling, `F6` toggles the network in every package.
+
+**Per-game notes (regular package).** Titles that ship their own FSR dll next to the executable (REDengine: *Cyberpunk 2077*
+2.31; Katana: *Wo Long 2*) need two settings, both verified on Cyberpunk 2077 on 2026-09-24: `OptiScaler.ini` `[Inputs]
+EnableFfxInputs=false` (otherwise OptiScaler dispatches FSR through its own detour and the add-on never sees the call) and
+`DLSS5_PRE_UPSCALE_ASYNC=0` in `native-game-flags.txt` (their colour buffer is a transient aliased resource; with deferred
+submission the add-on copied whatever the memory held at that moment, a sky probe, and the picture only changed in tone).
+This needs the add-on from 0.30 or later (hooks the upscaler dll directly and accepts the read-combination resource states
+those engines leave behind). Wo Long 2 additionally records draws after the upscaler in the same command list, which the
+regular route still rejects. Stellar Blade and Lies of P keep the defaults (`ASYNC=1`). From the 0.30 add-on both of these are
+automatic (`DLSS5_PRE_UPSCALE_ASYNC=auto`, `DLSS5_STRENGTH=auto`: per-title table). The strength table gives Cyberpunk 2077
+luminance-only transfer (`1,0`): the pre-upscale route hands the network the colour buffer before the game's tone mapper and
+LUT, and taking the network's hue there turned green neon ambient brown; luminance-only keeps the detail gain (+19% vs +22%
+high-pass energy over plain FSR, measured 2026-09-24) with the game's own colours.
 
 **Where this came from.** 0.15 and earlier ran the network as Direct3D 12 Shader Model 6.10 wave-matrix shaders (now in
 `shaders/dx12-network/`, still the bit-exact reference chain). 0.20 moved inference to HIP with bit-identical output and
@@ -181,7 +196,8 @@ chain's own output did not change by a single bit.
 | 0.27 · [Magpie](https://pan.quark.cn/s/ec3a3282aa76) · [OptiScaler](https://pan.quark.cn/s/004278159ed8) · [OptiScaler-REFramework](https://pan.quark.cn/s/010683548f68) (HIP) | 09-20 | Exact streaming ViT attention reduces intermediate storage and repeated reads. Optional R3 adaptive reuse adds change checks, identical-input cache extension and fused anchor updates; disabled by default. Defaults are copied from tracked per-variant templates. Full model/runtime payloads and gfx1200/gfx1201 modules; no INT4 or pruning. REFramework retains fixed 900p / max1080p SDR post-processing. |
 | 0.28 · [Magpie](https://pan.quark.cn/s/11547f398eb4) · [OptiScaler](https://pan.quark.cn/s/f7f423b0ea3a) (HIP) | 09-22 | Six lossless kernel improvements: RGB read sharing, C128/C256 zero-padding shortcuts, fixed-shape ViT expansion/projection and decoder projection. Stellar Blade gameplay/FPS essentially unchanged. Regular hosts unchanged; full model and dual-architecture kernels included. RE9 0.28 has been withdrawn; use 0.28.1 below. |
 | 0.28.1 · [OptiScaler-REFramework](https://pan.quark.cn/s/1375693a0d21) (HIP) | 09-22 | RE9-specific full package: reject oversized render input before HIP initialization, keep original SR, roll back failed initialization and recover valid sizes; protect unretired frames. Ten regression cases/twelve submitted frames and initial user testing passed. Update the matched host/runtime together; corresponding source and TheAutomatic credit included. |
-| 0.29 · [Magpie](https://pan.quark.cn/s/fe1b6af36cad) · [OptiScaler](https://pan.quark.cn/s/209e04e7acaf) · [OptiScaler-REFramework](https://pan.quark.cn/s/505d38a63a85) (HIP) | 09-23 | Inputs above 1920×1080 are fitted onto the 1080 tier and composed back at source resolution (`DLSS5_FIT_LARGE=1`, issue #6; Stellar Blade 2K Native AA 44 fps, RE9 Native AA tested; ultrawide untested). Six bit-exact kernel improvements since 0.28 (fence scope, folded C32 FFN, byte chain + vectorised staging, register-resident attention, in16 aliasing, transposed FFN tail): about −7%, Stellar Blade 900p ~60 fps. RE9 host unchanged, runtime updated. |
+| 0.29 · [Magpie](https://pan.quark.cn/s/fe1b6af36cad) · [OptiScaler](https://pan.quark.cn/s/209e04e7acaf) · [OptiScaler-REFramework](https://pan.quark.cn/s/505d38a63a85) (HIP) · all three on [Google Drive](https://drive.google.com/drive/folders/1VPsX33sLTxBG4J8kJ_IzBDlkbBTCc5Eo?usp=sharing) | 09-23 | Inputs above 1920×1080 are fitted onto the 1080 tier and composed back at source resolution (`DLSS5_FIT_LARGE=1`, issue #6; Stellar Blade 2K Native AA 44 fps, RE9 Native AA tested; ultrawide untested). Six bit-exact kernel improvements since 0.28 (fence scope, folded C32 FFN, byte chain + vectorised staging, register-resident attention, in16 aliasing, transposed FFN tail): about −7%, Stellar Blade 900p ~60 fps. RE9 host unchanged, runtime updated. |
+| 0.30 · all three packages (Magpie · OptiScaler · OptiScaler-REFramework, HIP) on [Quark](https://pan.quark.cn/s/80a735ab9f88) and on [Google Drive](https://drive.google.com/drive/folders/1pKZpLosgJXxUOZTMg_m0sbCipX9Q3WYo?usp=sharing) | 09-25 | Chain launches any-order with per-tile flags (programmatic-dependent-launch emulation, `DLSS5_HIP_PDL=1`; bit-exact; 900p about −1.6%, 1080p −0.6%; `results/pdl-chain-20260925`) and FFN full-line stores (bit-exact, −0.6%). Cyberpunk 2077 zero-config: regular `OptiScaler.ini` `[Inputs] EnableFfxInputs=false`, `DLSS5_PRE_UPSCALE_ASYNC=auto` (2077 synchronous: transient aliased colour buffer), `DLSS5_STRENGTH=auto` (2077 luminance-only 1,0: hue taken before the game LUT turned green ambient brown). Fix: preset/resolution switch killed neural processing (FSR context pin never cleared through the shim; restart budget now counts failures only). RE9 package: same kernels, host/runtime unchanged from 0.29. Stellar Blade 900p→2K 60–61 fps, 1080p→2K 47–48; Cyberpunk low balanced 51–52, quality 41. |
 
 ## Weights
 

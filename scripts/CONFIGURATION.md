@@ -23,3 +23,7 @@ Development/native-game-flags.txt是早期测试配置，scripts/game-flags.txt�
 0.28三包入口为Development/tools/package-028.ps1。从逐文件校验的0.27完整ZIP构建；Magpie/普通OptiScaler使用各自flags模板，RE9使用re9-presr.ini覆盖基准OptiScaler.ini，并删除无效的旧native-game-flags.txt/post-present addon。RE9网络默认跳层42,43,46、复用关闭，旧F8/SHOW_FPS/NOTICE不适用；细节/颜色强度在OptiScaler菜单调，范围0～1。包内中文/英文说明来自scripts/package-notes/。打包不读取游戏个人配置。
 
 0.28.1仅重打RE9专用包，入口Development/tools/package-0281-re9.ps1；采用74b8a67边界/恢复修复候选，其他两包维持0.28。新包验证通过后撤下本地RE9 0.28整包及其README下载入口。
+
+| `DLSS5_PRE_UPSCALE_ASYNC` | `auto` (regular template) / `0` (Magpie) | Pre-upscale submission. `auto`: asynchronous except for titles in the add-on's quirk table (Cyberpunk 2077: transient aliased colour buffer needs synchronous submission). `1`/`0` force it. |
+| `DLSS5_STRENGTH` | `auto` (regular template) | `transfer,colour` strength, each 0..1 (>1 extrapolates, diagnostic). `auto`: 1,1 except titles in the add-on's quirk table (Cyberpunk 2077: 1,0 -- its FSR colour buffer is pre-tone-map linear, so the network's hue run through the game's LUT turns green ambient brown; luminance-only keeps the detail gain with the game's own hue). |
+| `DLSS5_HIP_PDL` | `1` (0.30 templates) | Chain launches of the C64/C128/C256 blocks go out with `hipExtAnyOrderLaunch` and the kernels wait on / publish per-tile flags (programmatic-dependent-launch emulation); the next launch fills the previous one's tail. Bit-exact; 900p about -1.6%, 1080p about -0.6%. `0` restores plain in-order launches. |

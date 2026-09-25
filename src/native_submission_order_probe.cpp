@@ -159,18 +159,44 @@ static bool supported_input(unsigned w,unsigned h){return (w==1920&&h==1080)||(f
 static std::atomic<void**>fit_context{nullptr};
 using DestroyContext=uint32_t(*)(void**,const void*);
 static DestroyContext original_destroy{};
-static uint32_t destroy_context(void**context,const void*allocation_callbacks){
- auto result=original_destroy(context,allocation_callbacks);
- if(result==0){auto expected=context;fit_context.compare_exchange_strong(expected,nullptr);}
+static DestroyContext original_destroy_shim{};
+static std::atomic<unsigned>foreign_dispatches{0};
+static uint32_t destroy_context_shim(void**context,const void*allocation_callbacks){
+ auto result=original_destroy_shim(context,allocation_callbacks);
+ if(result==0){auto expected=context;if(fit_context.compare_exchange_strong(expected,nullptr))if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=fit_context_destroyed via=shim context=%p\n",GetCurrentProcessId(),context);fclose(f);}}
  return result;
 }
-static uint32_t dispatch(void**context,const Header*h){
+static uint32_t destroy_context(void**context,const void*allocation_callbacks){
+ auto result=original_destroy(context,allocation_callbacks);
+ if(result==0){auto expected=context;if(fit_context.compare_exchange_strong(expected,nullptr))if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=fit_context_destroyed via=provider context=%p\n",GetCurrentProcessId(),context);fclose(f);}}
+ return result;
+}
+/* 2026-09-24: two entry points. OptiScaler 0.9.4 ships the FSR SDK 2.0 split dlls: amd_fidelityfx_dx12.dll (26 KB shim) forwards
+   to amd_fidelityfx_upscaler_dx12.dll. Stellar Blade's host dispatches through the shim's export (and the shim reaches the provider
+   without going through the provider's export symbol), Cyberpunk 2077's host calls the provider export directly. Hook both; a call that
+   entered through the shim is passed straight through at the provider layer (thread-local depth). The layer that observed the call
+   supplies the trampoline used for the deferred replay (global `original`). */
+static Dispatch original_shim{},original_sr{};static thread_local unsigned shim_depth=0;
+static uint32_t dispatch_core(void**context,const Header*h,Dispatch orig);
+static uint32_t dispatch_shim(void**context,const Header*h){++shim_depth;uint32_t r=dispatch_core(context,h,original_shim);--shim_depth;return r;}
+static uint32_t dispatch_sr(void**context,const Header*h){if(shim_depth)return original_sr(context,h);return dispatch_core(context,h,original_sr);}
+static uint32_t dispatch_core(void**context,const Header*h,Dispatch orig){
+ original=orig;
  {static std::atomic<unsigned>seen{};unsigned k=seen.fetch_add(1);if(k<8)if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=ffx_dispatch_entry n=%u type=%08x context=%p\n",GetCurrentProcessId(),k,h?unsigned(h->type):0u,context);fclose(f);}}
  if(!h||(h->type&0x00ffffffu)!=0x00010001u)return original(context,h);
  /* Select the first upscaler context until it is destroyed (including its size-error notice). A following FSR4 (even when its output
     also fits 1080p) must not replace the input stage's motion, pending work or status text. */
  if(fit_small_input()){
-  auto chosen=fit_context.load();if(chosen&&chosen!=context)return original(context,h);
+  auto chosen=fit_context.load();
+  if(chosen&&chosen!=context){
+   /* 2026-09-25: Stellar Blade preset switch -> OptiScaler creates a new FSR context and releases the old one; when the release
+      does not reach our destroy hook the pin stuck to a dead context and every later dispatch passed through in silence. A pinned
+      context that has not dispatched for 120 foreign dispatches is treated as gone (a second live context alternating with the
+      chosen one resets the count on every chosen dispatch, so the FSR4-follower case keeps its pin). */
+   if(foreign_dispatches.fetch_add(1)+1>=120){fit_context.compare_exchange_strong(chosen,nullptr);foreign_dispatches.store(0);
+    if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu kind=fit_context_reassigned old=%p new=%p\n",GetCurrentProcessId(),chosen,context);fclose(f);}}
+   else return original(context,h);
+  }else foreign_dispatches.store(0);
   ResourcePayload candidate{};SIZE_T bytes=0;
   if(context&&ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<const char*>(h)+312,&candidate,sizeof candidate,&bytes)&&bytes==sizeof candidate&&candidate.resource){
    void**expected=nullptr;fit_context.compare_exchange_strong(expected,context);
@@ -479,11 +505,26 @@ static DWORD WINAPI worker(void*){
   if(ds==MH_OK)ds=MH_EnableHook(reinterpret_cast<void*>(destroy));
   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu fit_context_destroy_hook=%u\n",GetCurrentProcessId(),unsigned(ds));fclose(f);}
   if(ds!=MH_OK)return 5;
+  /* the shim's own ffxDestroyContext (Stellar Blade's host destroys through it; the pinned handle is the shim-level one) */
+  {HMODULE shim=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");void*sd=shim&&shim!=module?reinterpret_cast<void*>(GetProcAddress(shim,"ffxDestroyContext")):nullptr;
+   if(sd&&sd!=reinterpret_cast<void*>(destroy)){HMODULE pinned3=nullptr;GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(sd),&pinned3);
+    auto s3=MH_CreateHook(sd,reinterpret_cast<void*>(&destroy_context_shim),reinterpret_cast<void**>(&original_destroy_shim));if(s3==MH_OK)s3=MH_EnableHook(sd);
+    if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu shim_destroy_hook_status=%u target=%p\n",GetCurrentProcessId(),unsigned(s3),sd);fclose(f);}}}
  }
 #ifdef NATIVE_ORDER_NEURAL
  if(!module){NativeMotionSign()=-1.f;cross_thread_submit=true;s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&xess_execute),reinterpret_cast<void**>(&original_xess));}else
 #endif
- s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&dispatch),reinterpret_cast<void**>(&original));if(s==MH_OK)s=MH_EnableHook(reinterpret_cast<void*>(target));
+ if(module){
+  s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&dispatch_sr),reinterpret_cast<void**>(&original_sr));if(s==MH_OK)s=MH_EnableHook(reinterpret_cast<void*>(target));
+  original=original_sr;
+  /* the shim, when it is a different module with its own export: hook it too (Stellar Blade's host calls this one) */
+  HMODULE shim=GetModuleHandleW(L"amd_fidelityfx_dx12.dll");void*shim_target=shim&&shim!=module?reinterpret_cast<void*>(GetProcAddress(shim,"ffxDispatch")):nullptr;
+  if(s==MH_OK&&shim_target&&shim_target!=reinterpret_cast<void*>(target)){
+   HMODULE pinned2=nullptr;GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(shim_target),&pinned2);
+   auto s2=MH_CreateHook(shim_target,reinterpret_cast<void*>(&dispatch_shim),reinterpret_cast<void**>(&original_shim));if(s2==MH_OK)s2=MH_EnableHook(shim_target);
+   if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){fprintf(f,"pid=%lu shim_hook_status=%u target=%p\n",GetCurrentProcessId(),unsigned(s2),shim_target);fclose(f);}
+  }
+ }else{s=MH_CreateHook(reinterpret_cast<void*>(target),reinterpret_cast<void*>(&dispatch_sr),reinterpret_cast<void**>(&original_sr));if(s==MH_OK)s=MH_EnableHook(reinterpret_cast<void*>(target));original=original_sr;}
  // Do not retry an existing-hook conflict or modify another addon's hook.
  if(FILE*f=_wfopen(NativeLabPath(L"logs\\native-submission-order.txt").c_str(),L"ab")){wchar_t name[MAX_PATH]{};GetModuleFileNameW(module?module:xess,name,MAX_PATH);const wchar_t*base=wcsrchr(name,L'\\');fprintf(f,"pid=%lu hook_status=%u upscaler=%s module=%ls target=%p\n",GetCurrentProcessId(),unsigned(s),module?"ffx":"xess",base?base+1:name,target);
   /* diagnostic: where the other FFX dlls' ffxDispatch exports live (shim vs upscaler vs driver provider) */

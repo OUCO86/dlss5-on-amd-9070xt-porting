@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-24 07:20，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-25 08:10，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 > 节奏：过日子式，没有 deadline。有兴致就挑一把逐位的小刀试，没兴致就写文章、回 issue。
@@ -11,19 +11,29 @@
 - **318 初稿已写**（wechat/318.md，八章），等用户过稿并补 313/324/325 的公众号链接。
 - 研究结论：必要损失七八成（算法非矩阵工作、8×8 窗口形状税、L2 之下的供数税、launch 尾巴）；已回收 7%；放弃逐位最多再 1% 左右。三条规则——读写成本 ≈ 指令数 + 触及行数；驻留只在它是瓶颈时值钱；同一改法赚不赚看该核当下被什么卡住（阶段账要在当前驻留下重打）。
 
-## 搁置的岔路：《卧龙 2》Alpha Demo（09-23 夜，详见 DevHistory 末条；09-24 00:20 用户定：先放一边，回主线优化）
+## 机上现状（09-24 21:00）——三处待收尾
 
-机上现状：装的是 RE9 宿主变体（无 REFramework），`EnableFfxInputs=false`、`LmxxfDiagnostic=off`，游戏内动态分辨率已关。神经路径已生效但画面灰、多数帧绕过。要做两处 Katana 化：
-1. 曝光发现：RE9 的曝光扫描过滤在卧龙上撞出 >64 个候选，先用 `capture-colour.request` 抓一帧看 FP16 输入范围和真实曝光值，再决定是收紧过滤还是走固定曝光/无曝光归一化。
-2. 提交观察：`prior job not yet submitted` 反复——`LmxxfBackend::Submitted` 只认同一队列且不在逻辑 Execute 内，卧龙的提交队列/时机不同，要放宽或改观察点。
-做完后：剑星回归（`src/native_submission_order_probe.cpp` 的钩子顺序改了），常规包 README 记"Katana 引擎游戏需 EnableFfxInputs=false + 关动态分辨率"。不急，网友那边先回"正在适配"。
+- **prod8 已装剑星 + 2077**（剑星 07:03 插件 0211a78a，备份 `backups\20260925-070328`；2077 07:08，备份 `cyberpunk\backups\20260925-070852`；`install.ps1 -Game cyberpunk -RestoreBackup <dir>`）。用户实测剑星：900P→2K 简单场景 60～61，1080P→2K 47～48；切档位（平衡/质量/DLAA）来回不再失效。2077：质量档 41、平衡 51～52（prod7 50～51）。**prod8 = 0.30 内核/插件定稿候选。**进 0.30：模块 prod8 两架构 + 插件 5be18ac3… + 模板 `DLSS5_HIP_PDL=1`。
+- **剑星 + 赛博朋克都装了 0.30 候选 addon a569ed6f…**（21:50；`deployments/addon030-strength-20260924`，`install.ps1 -Restore` 可退）：双钩子（shim + provider dispatch，线程局部深度防重入）+ `ASYNC=auto` 查表 + **`DLSS5_STRENGTH=auto` 查表（Cyberpunk2077.exe → 1,0 只转亮度，其他 1,1）**。两处 flags 的显式 STRENGTH 行已删，由表决定；剑星显式 ASYNC=1、赛博显式 ASYNC=0 + OptiScaler.ini `EnableFfxInputs=false`，和模板 auto 行为相同。**等用户玩 2077 确认 1,0 动态场景没问题、剑星无变化。**
+- **2077 红偏已定位**（DevHistory 21:10 条）：前置线性域取神经色相再过游戏 LUT 会转色相；只转亮度细节增益不丢。Magpie 后置 1080p 细节多一截但 30 帧对 51 帧，结构代价不是 bug。
+- **生化 9 已装 prod7 内核**（`deployments/re9-prod7-20260924`，`install.ps1 -Restore` 可退），抓帧验过神经路径确实在改细节（不是只变亮度）。
+- **"只有光影变化"的担心已量化**：高通对数亮度 RMS 比 / 相关 / 梯度幅值比——纯调色是 corr≈0.9997、比 1.0；剑星 1.11/0.887/+13%，赛博 1.00/0.973/+13%，生化 1.03～1.13/0.98/+19%，都不是纯调色。图在各 deployments 的 detail-crop-*.png。
+- **网友"统一 RE9 与常规包"补丁审完**（`Development/RE9/presr/contrib/generic-host-20260924/REVIEW.md`）：查询记账 + 提前包裹两处可用，backend 补丁是我们 prepare-host 的旧翻版，runtime 脚本没打我们的补丁不可用，无测试证据。**等用户问到他在哪个游戏跑通、帧率多少再定**要不要合进 prepare-host.py 用 MSVC 编宿主到剑星实测。
+
+## 0.30 已发布（09-25 08:08，夸克 + Google Drive，README 两处链接已填）
+
+内核 prod8 两架构 + 插件 0211a78a + 模板 PDL=1/ASYNC=auto/STRENGTH=auto + 常规包 `EnableFfxInputs=false`；RE9 只换内核。三包大小/哈希 `Development/tools/release-030-results.json`。等网友反馈；issue 来了照旧。
+
+## 卧龙 2（Alpha Demo 被 Steam 卸载，机上残留已清）
+
+等它装回来：常规包 + EnableFfxInputs=false + ASYNC=0（或把 WoLong2.exe 加进查表）+ 0.30 addon 重试；"同列表后有 draw"那条是真障碍，别名那半可能同赛博朋克。若网友的切分宿主真跑通，卧龙这类天然解决。
 
 ## 下一批探索（09-24 00:50 从 318 三张账本里挑出来的，按值不值得排；先做 1 和 3）
 
 1. ~~直达共享内存的读取~~（09-24 01:00 验过：gfx1201 没有 `vmem-to-lds-load-insts` 特性，comgr 拒绝 builtin，汇编器也不认 `global_load_lds_b128`——RDNA4 根本没有这条指令，是硬件没铺路，不是我们不会写。关。）原文：RDNA4 `global_load_lds`，数据从显存直接落 LDS，不经寄存器、不占向量发射。先验两件事：comgr 上 builtin 在不在（`__builtin_amdgcn_global_load_lds`）、gfx1201 支持到多宽（传闻 gfx12 有 b128）。落点按 lane 线性排，packed 行距 36 字节不线性，要改行距或改读法。逐位天然成立。唯一没碰过的"搬运方式"级改法。
 2. **L0 黑箱再量一层**（第三章"L2 命中 99.95% 但停顿 68%"）：受控小程序量 L0 每 CU 每周期送多少字节、地址低位到 bank 的映射（bit10 敏感已摸到一角）、请求合并规则。不直接提速，决定第一格"必要损失"是真必要还是地址排布撞了它。
 3. ~~频率当第四张账本~~（09-24 01:05 做完，`results/clock-ledger-20260924`）：是功耗墙，板功耗钉 325～328 W，时钟随核族变——FFN(C64～C256) 最费电（占满时 −8～9%），ViT 最省电（+1～2%），整网 2.75 是加权。后续两件：(a) 318 第一章"ViT 单测 2.5 GHz"改口；(b) 已追到：FFN 的电烧在全局窄写（norm +4%、norm+out +7% 时钟），ALU/LDS/barrier 不耗电，并宽指令不省电（触及行数没变）。**全行写做完（01:30）**：逐位，−0.6/−0.7%，FFN 占满时钟 +1.2%（没到 +7%：字节没少，只省了部分写）。prod7 候选回归通过（`deployments/stellar-prod7-20260924`），**等用户关游戏装机**。用户侧：Adrenalin 功耗上限 +10% 值得剑星实测。
-4. **launch 尾巴用两条流盖住**（C256 注意力尾巴 25～37%，一帧 0.15ms）：窗口注意力只看自己窗口、错位只跨相邻窗口，按图像上下两半拆两条流串事件，N+1 上半盖 N 下半的尾巴。核不动逐位不变，改提交结构。先把各核尾巴都量一遍定上限。
+4. ~~launch 尾巴用两条流盖住~~（09-25 01:30 做完，改道：双流在这驱动上不并发、事件一对 110 μs；同流 `hipExtAnyOrderLaunch` + tile 旗子（土法 PDL）逐位，**900 −1.6%、1080 −0.6%**，`results/pdl-chain-20260925`。**prod8 候选**（两模块两架构 + 插件 + `DLSS5_HIP_PDL=1`）regression-prod8 过（逐位；对 prod2 900 −6.3%/1080 −5.7%，比 prod7 约 −1.2%/−0.5%），已装剑星（06:40）。C512 链搬过去了（`results/pdl-c512-20260925`）：单独 −0.16 ms，叠在 C64-256 上不相加——功耗墙，不采用。ViT/Down/Up 同理不值得。用户开 Adrenalin 功耗上限 +10% 后可复测 C512 叠加。）
 5. **mapped/post 输入按 tile 顺序写**：chain 类已是 tile 顺序 + 128 位读；mapped/post 读行主序 f32 十六行散读。让 HLSL 编码 / 合并层按 tile 顺序写，这两核读等待砍一半，估整网 1% 上下。"生产者按消费者布局写"的最后一处。
 6. **旧 null 重测前先解谜**：wave 局部栅栏（LOCAL_FFN/ATTN_SYNC）09-16 null 是旧驻留下的，现在 barrier 等待 8.7%；但后来记录它和 lane staging 组合后哈希变了，先搞清为什么不逐位。
 
@@ -40,4 +50,6 @@ CU 模式逐核、C32 转置尾部并宽、C32/C512/ViT 注意力寄存器化、
 
 ## 机器与流程
 
-9070 机器 `amd9070`，工作根 `D:\DLSSNR-Lab\hip-backend\`；编译 `dual-arch-src\rtc_compile.exe <out> <src> comgr gfx1201`（输出旁自带 .hsaco.s）；跑前 `check-idle.ps1`；长 ssh 用后台任务。实验模板：kernel 后缀 ABBA（c32-lds-alias）、模块集 ABBA（mhfast-vgpr-cap；容忍 bitdiff 的 host 在 mhfast-tail-ablate）、核内打点（launch-occupancy）。候选流程 deployments/stellar-prod6-20260923（build → regression → payload → install）；发包 Development/tools/package-029.ps1（下次复制改版本号和 hash）。生产配方：c32 = ISA_HALF+PREPACKED+C32_DIAG，mh_fused = ISA_HALF+MH_RTZ_ISA，mh_fast = ISA_HALF+PREPACKED+FFN_HOIST_RES 2，deep_fast = ISA_HALF+PREPACKED+BRANCHLESS_F。
+**git（09-24 用户定）：只 commit/push 本仓（297），不再往外层 ai-theorys-study 提指针提交。**
+
+9070 机器 `amd9070`，工作根 `D:\DLSSNR-Lab\hip-backend\`；编译 `dual-arch-src\rtc_compile.exe <out> <src> comgr gfx1201`（输出旁自带 .hsaco.s）；跑前 `check-idle.ps1`；长 ssh 用后台任务。实验模板：kernel 后缀 ABBA（c32-lds-alias）、模块集 ABBA（mhfast-vgpr-cap；容忍 bitdiff 的 host 在 mhfast-tail-ablate）、核内打点（launch-occupancy）。候选流程 deployments/stellar-prod6-20260923（build → regression → payload → install）；发包 Development/tools/package-029.ps1（下次复制改版本号和 hash）；**发布 = 夸克 + Google Drive 双上传**（09-24 起，Google 给没有中国手机号的用户），README 两处链接都要写。生产配方：c32 = ISA_HALF+PREPACKED+C32_DIAG，mh_fused = ISA_HALF+MH_RTZ_ISA，mh_fast = ISA_HALF+PREPACKED+FFN_HOIST_RES 2，deep_fast = ISA_HALF+PREPACKED+BRANCHLESS_F。

@@ -1,0 +1,74 @@
+diff --git a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/CommandListProxy.h b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/CommandListProxy.h
+index 5696a4f..5715cdf 100644
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/CommandListProxy.h
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/CommandListProxy.h
+@@ -1,6 +1,7 @@
+ #pragma once
+ #include "LogicalList.h"
+ #include "ContinuationState.h"
++#include "QueryStateBook.h"
+ #include "ResourceStateBook.h"
+ #include <atomic>
+ 
+@@ -36,6 +37,7 @@ class CommandListProxy final : public ID3D12GraphicsCommandList10, public ILogicalCommandList
+     LogicalList logical;
+     ContinuationState contState;
+     ResourceStateBook resBook;
++    QueryStateBook queryBook;
+     bool splitIneligible = false;
+     std::atomic<bool> rawInterfaceEscaped { false };
+     const char *splitIneligibleReason = nullptr;
+@@ -180,7 +182,8 @@ class CommandListProxy final : public ID3D12GraphicsCommandList10, public ILogicalCommandList
+             return hr;
+         contState.Reset();
+         resBook.Reset();
+-        splitIneligible = false;
++        queryBook.Reset();
++        splitIneligible = false;
+         splitIneligibleReason = nullptr;
+         if (initial)
+             contState.OnPso(initial);
+@@ -215,8 +218,9 @@ class CommandListProxy final : public ID3D12GraphicsCommandList10, public ILogicalCommandList
+     }
+     bool STDMETHODCALLTYPE IsSplitIneligible() override
+     {
+-        return rawInterfaceEscaped || splitIneligible || logical.WasSplit() || !resBook.CanSplit(nullptr);
++        return rawInterfaceEscaped || splitIneligible || logical.WasSplit() || !queryBook.CanSplit() || !resBook.CanSplit(nullptr);
+     }
++
+     ID3D12CommandList *STDMETHODCALLTYPE UnsplitNativeList() override
+     {
+         return logical.WasSplit() ? nullptr : logical.Current();
+@@ -226,6 +230,7 @@ class CommandListProxy final : public ID3D12GraphicsCommandList10, public ILogicalCommandList
+         if (rawInterfaceEscaped) return "native_interface_escaped";
+         if (logical.WasSplit()) return "already_split";
+         if (splitIneligibleReason) return splitIneligibleReason;
++        if (!queryBook.CanSplit()) return "open_query";
+         const char *reason = nullptr;
+         resBook.CanSplit(&reason);
+         return reason ? reason : "eligible";
+@@ -505,20 +510,21 @@ class CommandListProxy final : public ID3D12GraphicsCommandList10, public ILogicalCommandList
+     }
+     void STDMETHODCALLTYPE BeginQuery(ID3D12QueryHeap *h, D3D12_QUERY_TYPE t, UINT i) override
+     {
+-        MarkSplitIneligible("query");
++        if (!queryBook.Begin(h, t, i))
++            MarkSplitIneligible("query_invalid_scope");
+         if (auto *c = Cur())
+             c->BeginQuery(h, t, i);
+     }
+     void STDMETHODCALLTYPE EndQuery(ID3D12QueryHeap *h, D3D12_QUERY_TYPE t, UINT i) override
+     {
+-        MarkSplitIneligible("query");
++        if (!queryBook.End(h, t, i))
++            MarkSplitIneligible("query_invalid_scope");
+         if (auto *c = Cur())
+             c->EndQuery(h, t, i);
+     }
+     void STDMETHODCALLTYPE ResolveQueryData(ID3D12QueryHeap *h, D3D12_QUERY_TYPE t, UINT s, UINT n, ID3D12Resource *d,
+                                             UINT64 o) override
+     {
+-        MarkSplitIneligible("query");
+         if (auto *c = Cur())
+             c->ResolveQueryData(h, t, s, n, d, o);
+     }

@@ -112,7 +112,12 @@ DLSS5_UPSCALER=ffx
 DLSS5_HIP_MH_BYTE_STREAM=1
 DLSS5_HIP_MH_FFN_FRAG256=1
 DLSS5_HIP_MH_FEATURE_BYTE=1
-DLSS5_PRE_UPSCALE_ASYNC=1
+# auto (0.30): asynchronous submission except for titles whose FSR colour buffer is a transient aliased resource (Cyberpunk 2077), which need
+# synchronous submission or the add-on copies a stale buffer (picture only changes in tone). 1/0 force it.
+DLSS5_PRE_UPSCALE_ASYNC=auto
+# auto (0.30): transfer,colour strength per title. Cyberpunk 2077 gets 1,0 (luminance only): its colour buffer is pre-tone-map linear,
+# taking the network's hue there and running it through the game's LUT turns green neon ambient brown. Others 1,1. "a,b" (0..1) forces it.
+DLSS5_STRENGTH=auto
 DLSS5_HIP_DECODER_BYTE=1
 DLSS5_HIP_MH_PROJ_DIAG_FB=1
 DLSS5_PRE_UPSCALE=1
@@ -123,4 +128,6 @@ DLSS5_VIT_REUSE_LOCAL=1.0
 DLSS5_VIT_REUSE_IMAGE=0.35
 DLSS5_VIT_REUSE_HOTKEY=1
 DLSS5_HIP_GRAPH=0
+# 0.30: C64/C128/C256 chain launches submitted any-order with per-tile flags (no AQL barrier); bit-exact, 900p about -1.6%.
+DLSS5_HIP_PDL=1
 DLSS5_HIP_VIT_BYTE_STREAM=0

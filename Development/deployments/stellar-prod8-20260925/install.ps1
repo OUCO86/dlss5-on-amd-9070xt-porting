@@ -1,0 +1,29 @@
+param([string]$RestoreBackup='',[ValidateSet('stellar','cyberpunk')][string]$Game='stellar')
+# prod8: prod7 kernels + _pdl twins (mh_fast, mh_fused, both archs) + PDL-capable add-on + DLSS5_HIP_PDL=1 in native-game-flags.txt.
+# -RestoreBackup <dir> puts back the DLLs, modules and the flags file recorded there.
+$ErrorActionPreference='Stop'
+$g=if($Game -eq 'cyberpunk'){'C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\bin\x64'}else{'C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB\Binaries\Win64'}
+$proc=if($Game -eq 'cyberpunk'){'Cyberpunk2077'}else{'SB-Win64-Shipping'}
+$l="D:\DLSSNR-Lab\stellar-prod8-20260925\$Game";New-Item -ItemType Directory -Force $l|Out-Null
+$flagsRel='DLSS5-AMD/native-game-flags.txt'
+function Closed {if(Get-Process $proc -ErrorAction SilentlyContinue){throw "$Game running; no DLL replacement allowed"}}
+function Restore($b){Closed;$m=Get-Content "$b\installed.json" -Raw|ConvertFrom-Json;foreach($i in $m.items){if($i.existed){Copy-Item (Join-Path $b $i.target) (Join-Path $g $i.target) -Force}else{Remove-Item (Join-Path $g $i.target) -ErrorAction SilentlyContinue}};Copy-Item (Join-Path $b $flagsRel) (Join-Path $g $flagsRel) -Force;"RESTORED $b"}
+Closed
+if($RestoreBackup){Restore $RestoreBackup;exit}
+$items=Get-Content "D:\DLSSNR-Lab\stellar-prod8-20260925\payload.json" -Raw|ConvertFrom-Json
+if(Test-Path "$g\_storage_\dlss5-amd.addon64"){$i=$items|Where-Object{$_.target -eq 'dlss5-amd.addon64'};$items += [pscustomobject]@{source=$i.source;target='_storage_/dlss5-amd.addon64';sha256=$i.sha256}}
+foreach($i in $items){if((Get-FileHash $i.source).Hash -ne $i.sha256){throw "Candidate hash mismatch: $($i.source)"}}
+$unchanged=@{};foreach($f in @('dxgi.dll','OptiScaler.ini')){$unchanged[$f]=(Get-FileHash (Join-Path $g $f)).Hash}
+$b="$l\backups\$(Get-Date -Format yyyyMMdd-HHmmss)"
+$records=@(foreach($i in $items){$p=Join-Path $g $i.target;$exist=Test-Path $p;$old=$null;if($exist){$old=(Get-FileHash $p).Hash;$dst=Join-Path $b $i.target;New-Item -ItemType Directory (Split-Path $dst) -Force|Out-Null;Copy-Item $p $dst;if((Get-FileHash $dst).Hash -ne $old){throw 'Backup hash mismatch'}};[pscustomobject]@{target=$i.target;existed=$exist;old=$old;new=$i.sha256}})
+$fb=Join-Path $b $flagsRel;New-Item -ItemType Directory (Split-Path $fb) -Force|Out-Null;Copy-Item (Join-Path $g $flagsRel) $fb
+$m=[pscustomobject]@{source_commit='prod8-20260925';backup=$b;items=$records;unchanged=$unchanged}
+$m|ConvertTo-Json -Depth 6|Set-Content "$b\installed.json"
+try{
+ Closed
+ foreach($i in $items){Copy-Item $i.source (Join-Path $g $i.target) -Force;if((Get-FileHash (Join-Path $g $i.target)).Hash -ne $i.sha256){throw 'Installed payload mismatch'}}
+ $fp=Join-Path $g $flagsRel;$lines=@(Get-Content $fp)|Where-Object{$_ -notmatch '^DLSS5_HIP_PDL='};[IO.File]::WriteAllLines($fp,$lines+@('DLSS5_HIP_PDL=1'))
+ foreach($f in $unchanged.Keys){if((Get-FileHash (Join-Path $g $f)).Hash -ne $unchanged[$f]){throw "Unexpected host/INI change $f"}}
+ $m|ConvertTo-Json -Depth 6|Set-Content "$l\installed.json"
+ "INSTALLED $($items.Count) verified files + DLSS5_HIP_PDL=1; host/INI unchanged; BACKUP=$b"
+}catch{Restore $b;throw}

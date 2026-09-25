@@ -129,14 +129,14 @@ public:
  /* steady-state frame interval (ms, average of the last 100 frames; 0 until then) for the on-screen fps (DLSS5_SHOW_FPS) */
  std::atomic<double>avg_ms{0.0};double AvgMs()const{return avg_ms.load();}
  /* A new upscaler session (Magpie: scaling stopped and started again -> new FSR context, queue and textures; or a failed initialization)
-    drops the frame and goes back to idle, so the next snapshot initializes again on the new queue. Bounded: at most 8 restarts per process. */
+    drops the frame and goes back to idle, so the next snapshot initializes again on the new queue. Bounded: at most 8 restarts after failures per process; geometry changes are unbounded. */
  unsigned restarts{};
  bool ResetForNewSession(const char*why){
-  unsigned state=phase.load();if(state==1||state==3)return false;if(restarts>=8)return false;
+  unsigned state=phase.load();if(state==1||state==3)return false;if(state==5){if(restarts>=8)return false;restarts++;} /* 2026-09-25: only failed sessions spend the restart budget; geometry/queue changes (preset switches) are free */
   std::lock_guard<std::mutex>guard(request_mutex);
   delete frame;frame=nullptr;if(queue){queue->Release();queue=nullptr;}
   avg_ms.store(0.0);
-  armed_request=0;last_request=0;every_frame=false;every_frame_count=0;next_poll=0;restarts++;
+  armed_request=0;last_request=0;every_frame=false;every_frame_count=0;next_poll=0;
   Log("session_reset",why);phase.store(0,std::memory_order_release);return true;
  }
  /* state: the D3D12 state the upscaler declared for its output (the frame transitions from it and back to it) */
@@ -170,6 +170,10 @@ public:
     // Temporal alignment probe: dump history/motion/color/warped at frames 300 and 600 while the user pans the camera.
     // Flicker probe (DLSS5_FLICKER_DUMP=<first frame>): dump five consecutive frames (history = previous output, color =
     // this frame's input) so input vs output frame-to-frame differences can be compared offline.
+    /* 2026-09-24 (Cyberpunk): the request-1 one-shot dump is the load-in frame. With DLSS5_DEBUG_DUMPS, also dump the game colour
+       input of the 600th every-frame call (gameplay) so the scene's linear range can be measured offline (logs\neural-<pid>-request-<n>-frame600.f16). */
+    {static const unsigned long dump_at=[]{const wchar_t*v=_wgetenv(L"DLSS5_DUMP_FRAME");unsigned long n=v?wcstoul(v,nullptr,10):600ul;return n?n:600ul;}(); /* DLSS5_DUMP_FRAME=<n>: which every-frame call to dump (default 600) */
+     if(every_frame_count+1==dump_at&&_wgetenv(L"DLSS5_DEBUG_DUMPS")){auto b=NativeReadSubmittedFrame(q,source,state);wchar_t label[32];swprintf(label,32,L"frame%lu",dump_at);Save(request,label,b);Log("frame_dump","game colour input written");}}
     {static long flicker_first=[]{const wchar_t*v=_wgetenv(L"DLSS5_FLICKER_DUMP");return v?wcstol(v,nullptr,10):-1L;}();
      const long index=long(every_frame_count)+1;
      if(flicker_first>0&&index>=flicker_first&&index<flicker_first+5){wchar_t prefix[MAX_PATH];swprintf(prefix,MAX_PATH,NativeLabPath(L"logs\\flicker-%lu-%ld").c_str(),GetCurrentProcessId(),index);frame->RequestTemporalDump(prefix);Log("flicker_dump_requested",std::to_string(index).c_str());}}
