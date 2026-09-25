@@ -65,7 +65,7 @@
 
 ## 3. 当前状态（2026-09-26）
 
-**装机与发布**：《剑星》09-26 05:51 装 wave-owned（插件3e3ca57a + c32-wave1/c64-wave2，`DLSS5_HIP_WAVE_OWNED=1`，2K质量档47～48→49～50fps，日志 wave_owned_active=1）；2077仍prod8 / 插件0211a78a；0.30三包已发布，夸克与Google链接已填，清单 `Development/tools/release-030-results.json`。剑星900P→2K简单场景60～61fps，1080P→2K 47～48；2077质量41、平衡51～52（用户远程读数）。RE9机上为prod7内核。部署/备份详见末尾流水。
+**装机与发布**：《剑星》09-26 装 wave-owned（c32-wave1/c64-wave2，`DLSS5_HIP_WAVE_OWNED=1`）+ 06:43 auto-tier add-on f71f38a3（flags `NETWORK_HEIGHT=auto`，2K质量档自动走900）；2077仍prod8 / 插件0211a78a；0.30三包已发布，夸克与Google链接已填，清单 `Development/tools/release-030-results.json`。剑星900P→2K简单场景60～61fps，1080P→2K 47～48；2077质量41、平衡51～52（用户远程读数）。RE9机上为prod7内核。部署/备份详见末尾流水。
 
 **地平线6**：0.30前置被同列表后续draw拒绝，手动 `DLSS5_PRE_UPSCALE=0` 后置可用，记录约44fps；首次黑屏未复现，dump脚本已备。下一版计划自动回落。
 
@@ -547,3 +547,8 @@ Zero 定标准测试：1080P 窗口、FSR 原生 AA（渲染 1920×1080，两边
 - 我们 wave-owned：日志 `input=1920x1080 network=1920x1080`、wave_owned_active=1；**主菜单 47～48，最简场景 51～52**。
 - Daniel 0.4.0（swap.ps1）：**主菜单 47～48，最简场景 51～52**，完全相同。其日志网络 14.0ms（200 帧均值，history off）、游戏队列自旋等待 14.1ms、present 周期 19.5ms。
 我们离线 15.87ms 为 1920×1152（多 72 行补齐，+6.7%），按像素折 ≈14.9ms，另含时序历史一路；游戏内持平是因为我们 PRE_UPSCALE_ASYNC=1 与游戏渲染重叠，他是 inline 自旋。结论：**同尺寸打平**；此前 2K 质量档他领先 7 帧全因少算 35% 像素，已由 cd0fea6 往下缩进 900 档补齐。可做的小账：1080 档底部 72 行补齐（原版几何，逐位约束所致）。
+
+## 2026-09-26 06:43～06:50：auto-tier add-on 装进剑星并三档验收
+
+本机重编 add-on（cd0fea6 源码，`deployments/autotier-20260926`，f71f38a3），只换 addon、flags `NETWORK_HEIGHT=auto`，备份 `D:\DLSSNR-Lab\autotier-20260926\backups\20260926-064302`（`install.ps1 -RestoreBackup`）。注意：本机 mingw 13-posix 编译**不确定性**（同源连编两次哈希不同），且与闇装的 3e3ca57a（4,055,051 B，非本机编）大小不同；源码差异仅 `native_network_geometry.h`，以游戏内行为验收。
+同进程切三档，日志与用户读数（主菜单 / 最简场景）：1080P AA 1920×1080→1080 档 47～48 / 51～52（与旧 add-on 同）；2K AA 2560×1440→1080（FIT_LARGE 缩）42～43 / 45～46；**2K 质量 1707×961→900 档 56～57 / 60**（与固定 900 一致）。auto 新规则通过，今后标准测试不必改 flags。
