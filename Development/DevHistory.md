@@ -63,9 +63,9 @@
 
 ---
 
-## 3. 当前状态（2026-09-25）
+## 3. 当前状态（2026-09-26）
 
-**装机与发布**：《剑星》与2077已装prod8 / 插件0211a78a；0.30三包已发布，夸克与Google链接已填，清单 `Development/tools/release-030-results.json`。剑星900P→2K简单场景60～61fps，1080P→2K 47～48；2077质量41、平衡51～52（用户远程读数）。RE9机上为prod7内核。部署/备份详见末尾流水。
+**装机与发布**：《剑星》09-26 05:51 装 wave-owned（插件3e3ca57a + c32-wave1/c64-wave2，`DLSS5_HIP_WAVE_OWNED=1`，2K质量档47～48→49～50fps，日志 wave_owned_active=1）；2077仍prod8 / 插件0211a78a；0.30三包已发布，夸克与Google链接已填，清单 `Development/tools/release-030-results.json`。剑星900P→2K简单场景60～61fps，1080P→2K 47～48；2077质量41、平衡51～52（用户远程读数）。RE9机上为prod7内核。部署/备份详见末尾流水。
 
 **地平线6**：0.30前置被同列表后续draw拒绝，手动 `DLSS5_PRE_UPSCALE=0` 后置可用，记录约44fps；首次黑屏未复现，dump脚本已备。下一版计划自动回落。
 
@@ -524,3 +524,7 @@ add-on SHA256 3e3ca57a079b607405227a7b3b5b1c72b71ae0416438928e69bc3b65808e67a8�
 
 闇在最后一次提交后按 install.ps1 实装了一轮，并已自行回滚：04:55 prod8 拍 `baseline-a`，05:02 安装（备份 `D:\DLSSNR-Lab\hip-backend\wave-owned-production\deploy-stellar\backups\20260926-050241`），05:12/05:18 拍 `candidate-b1/b2`，之后回滚到 prod8（05:49 核对：addon 0211a78a、flags 无 WAVE_OWNED、无新模块）。每组 6 张 HUD 截图 + samples.json（约 500MB，未分析），目录 `wave-owned-production\game-evidence\`。
 同场景《剑星》2K 质量档（1707×961 → 1080 网络，FSR 输出 2560×1440），HUD 读数：baseline 47/47/46，candidate b1 49/49/49、b2 49/49/49；05:49 用户在 prod8 下复读 47～48，补齐 ABBA 的第二个 A。**约 +2fps（+4%），帧时约 −0.7ms**；离线 1080 档网络 −1.12ms，游戏里兑现六成多（网络约占 21ms 帧的 17ms，外加功耗墙）。画面未见异常，逐位一致由离线回归保证。尚未正式装机，2077 未测。
+
+## 2026-09-26 05:51～05:54：wave-owned 正式装进剑星
+
+用户关游戏后 `install.ps1 -Game stellar`：5 文件哈希校验、flags 加 `DLSS5_HIP_WAVE_OWNED=1`、dxgi/OptiScaler.ini 不变，备份 `deploy-stellar\backups\20260926-055146`。用户同场景 2K 质量档实测 49～50fps（prod8 47～48）。`native-hip.txt` 当前进程 `wave_owned_requested=1 wave_owned_active=1`，未回落。2077 未装，发布包未改。
