@@ -1,0 +1,11 @@
+{
+    "defer_q":  false,
+    "module_sha256":  "6A0C6426EE94BB3EC8A1294A9570F3B0A4FFB2062E2A14E5F79D5EDEF54B4DDE",
+    "schedule_fence":  true,
+    "launder_qkv":  true,
+    "hidden_tiles":  2,
+    "direct_feature":  true,
+    "layout":  "frag",
+    "source_sha256":  "9F37B016D3B43E54CB3E0E587708896F90A03362419C394976DAF55961EC3117",
+    "roll_query":  true
+}

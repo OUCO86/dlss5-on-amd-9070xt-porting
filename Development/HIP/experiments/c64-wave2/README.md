@@ -17,3 +17,5 @@
 C256拆分实验mode 6：保留生产FFN/QKV，仅替换attention/projection。输入仍是[pixel][Q,K,V][channel] FP8，feature单独FP8；先在AV平面暂存V并转B片段，所有head加载后复用为AV。生成器复用完整核的attention/projection段，保持归约顺序。新核256线程、8wave，PDL输出累计目标从16调整为8；前段FFN的计数不变，同一slot跨模式累计不同增量。保留现有PDL可见性/复用协议，不能据逐位测试宣布其待审问题已解决。gfx1201编译float/byte输出分别151/142VGPR，零spill。
 
 mode 7组合C64/C128整块融合与C256仅attention替换，共36块；mode 6/7不支持DeferQ，因Q已由生产者归一化。运行组合实验与单族实验分别统计，不直接相加各自收益。
+
+DirectFeature是attention-only的独立开关，默认关；build/run/start均传同名参数，模块目录带-direct。只省feature共享平面，不改完整融合核。1080逐位筛选通过，跨批小差异尚未直接对照确认。

@@ -10,6 +10,13 @@ kernel='#define HIP_ISA_HALF 1\n#define HIP_PREPACKED_WEIGHTS 1\n#define HIP_FFN
 # Derive attention-only core from the exact fused prototype, sharing its math.
 core=(HERE/'kernel.inc').read_text()
 attention=core[core.index(' // One wave owns all keys'):core.index('#define W2_KERNEL')]
+attention=rep(attention,'i2 a=w2_load<C>(plane0,qt,ct);','''i2 a;
+#if W2_DIRECT_FEATURE
+   __builtin_memcpy(&a,feature+w2_pixel(win,qt*16+rc,workw)*C+ct*16+gr*8,8);
+#else
+   a=w2_load<C>(plane0,qt,ct);
+#endif
+''')
 setup=(HERE/'attention-setup.inc').read_text()
 kernel+='\n#if !W2_DEFER_Q\n'+setup+attention+'\n'+(HERE/'attention-exports.inc').read_text()+'\n#endif\n'
 (OUT/'kernel.hip').write_text(kernel)

@@ -467,3 +467,9 @@ C128/C256独立实现均通过固定输入RGB逐位。初始C256有private spill
 新增mode 6，独立核读取生产normalized FP8 [pixel][Q,K,V][channel]，用共享平面把V转成B片段后复用为AV，attention/projection段由已验证完整原型生成。原FFN/QKV与输入feature保持不变，输出PDL每窗口16wave计数改为8，前段计数与槽复用方式不变。现有PDL可见性/复用待审问题仍保留，测试通过不代替协议证明。
 
 900/1080各三组200帧ABBA，配对均值−0.09923/−0.12809ms，所有槽首尾bitdiff=0，16块/帧替换计数正确。C256全融合+0.21068ms回退可通过保留生产前段避开；仍非大幅提升。gfx1201 float/byte输出151/142VGPR、零spill、32KiB LDS，module cc8166b3…；mode 7组合随后完成两档各三组200帧ABBA：900 −0.39283ms、1080 −0.67259ms（约3.3%/4.0%耗时下降），所有槽首尾逐位同、36块/帧替换正确。结果目录c64-wave2-20260926，下一步组合分账及feature直接读取省LDS。
+
+## 2026-09-26：C256 attention残差直接读取，LDS减半但新增收益未定
+
+实验增加DirectFeature开关：feature只在最终对角残差计算时从原FP8输入读，省掉16KiB plane0；V转置/AV复用仍用plane1。gfx1201模块6a0c6426…，LDS32768→16384B，float/byte输出VGPR151/142→152/144，零spill。1080 mode 6三组200帧ABBA全部槽首尾逐位，配对−0.15867/−0.17082/−0.14146ms，均值−0.15698ms。旧attention-only的−0.12809ms不在同批，不能把差值直接算新增收益；开关默认关，mode 7最佳已验证组合不变。
+
+源、manifest与日志归档c64-wave2。下一主线移到C32完整窗口单wave原型，先中间chain，再prefix/post生产者布局；不把其收益混入Daniel版本差异解释。
