@@ -1,0 +1,17 @@
+[
+  {
+    "variant": "first",
+    "module_sha256": "380a5da9f3585cfe5dae905816ff01775ec5293eab34f0b3ba54fc2b012bffc8",
+    "metadata_excerpt": "y_value\n      - .offset:         68\n        .size:           4\n        .value_kind:     by_value\n    .group_segment_fixed_size: 4096\n    .kernarg_segment_align: 8\n    .kernarg_segment_size: 72\n    .max_flat_workgroup_size: 32\n    .name:           c32_wave1_chain\n    .private_segment_fixed_size: 0\n    .sgpr_count:     21\n    .sgpr_spill_count: 0\n    .symbol:         c32_wave1_chain.kd\n    .uniform_work_group_size: 1\n    .uses_dynamic_stack: false\n    .vgpr_count:     240\n    .vgpr_spill_count: 0\n    .wavefront_size: 32\n    .workgroup_processor_mode: 0\namdhsa.target:   amdgcn-amd-amdhsa--gfx1201\namdhsa.version:\n  - 1\n  - 2\n...\n\n\t.end_amdgpu_metadata\n"
+  },
+  {
+    "variant": "launder",
+    "module_sha256": "e61b9fbda30a309e0e61d79d899b510ddecd28b4cd7c02d6b82ee14eb7e94adc",
+    "metadata_excerpt": "y_value\n      - .offset:         68\n        .size:           4\n        .value_kind:     by_value\n    .group_segment_fixed_size: 4096\n    .kernarg_segment_align: 8\n    .kernarg_segment_size: 72\n    .max_flat_workgroup_size: 32\n    .name:           c32_wave1_chain\n    .private_segment_fixed_size: 0\n    .sgpr_count:     26\n    .sgpr_spill_count: 0\n    .symbol:         c32_wave1_chain.kd\n    .uniform_work_group_size: 1\n    .uses_dynamic_stack: false\n    .vgpr_count:     239\n    .vgpr_spill_count: 0\n    .wavefront_size: 32\n    .workgroup_processor_mode: 0\namdhsa.target:   amdgcn-amd-amdhsa--gfx1201\namdhsa.version:\n  - 1\n  - 2\n...\n\n\t.end_amdgpu_metadata\n"
+  },
+  {
+    "variant": "rollh",
+    "module_sha256": "efc870c3724b07bae03bef98452e441e04b40dbf2f83062c0c21a7027b506cdf",
+    "metadata_excerpt": "y_value\n      - .offset:         68\n        .size:           4\n        .value_kind:     by_value\n    .group_segment_fixed_size: 4096\n    .kernarg_segment_align: 8\n    .kernarg_segment_size: 72\n    .max_flat_workgroup_size: 32\n    .name:           c32_wave1_chain\n    .private_segment_fixed_size: 0\n    .sgpr_count:     25\n    .sgpr_spill_count: 0\n    .symbol:         c32_wave1_chain.kd\n    .uniform_work_group_size: 1\n    .uses_dynamic_stack: false\n    .vgpr_count:     240\n    .vgpr_spill_count: 0\n    .wavefront_size: 32\n    .workgroup_processor_mode: 0\namdhsa.target:   amdgcn-amd-amdhsa--gfx1201\namdhsa.version:\n  - 1\n  - 2\n...\n\n\t.end_amdgpu_metadata\n"
+  }
+]
