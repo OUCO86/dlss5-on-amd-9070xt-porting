@@ -1,0 +1,31 @@
+{
+  "old_fast_channels": [
+    32
+  ],
+  "new_fast_channels": [
+    32,
+    64,
+    128,
+    256
+  ],
+  "new_jump_table": {
+    "32": "0x180039c8b",
+    "64": "0x18003a141",
+    "96": "0x180039cc0",
+    "128": "0x18003a076",
+    "160": "0x180039cc0",
+    "192": "0x180039cc0",
+    "224": "0x180039cc0",
+    "256": "0x18003a210"
+  },
+  "new_fallback_va": "0x180039cc0",
+  "workspace_bytes_per_window": {
+    "32": 8192,
+    "64": 8192,
+    "128": 16384,
+    "256": 32768
+  },
+  "old_workspace_param_offset": 160,
+  "old_c64_workspace_load_va": "0x95a04",
+  "old_c64_initial_workspace_store_va": "0x95c7c"
+}

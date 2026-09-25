@@ -1,0 +1,93 @@
+old VA 180036397..180036445
+   180036397:	48 c7 84 24 70 01 00 	mov    QWORD PTR [rsp+0x170],0x0
+   18003639e:	00 00 00 00 00
+   1800363a3:	83 fe 20             	cmp    esi,0x20
+   1800363a6:	75 3e                	jne    0x1800363e6
+   1800363a8:	f6 87 21 03 00 00 01 	test   BYTE PTR [rdi+0x321],0x1
+   1800363af:	74 35                	je     0x1800363e6
+   1800363b1:	44 89 a4 24 94 00 00 	mov    DWORD PTR [rsp+0x94],r12d
+   1800363b8:	00
+   1800363b9:	44 89 bc 24 98 00 00 	mov    DWORD PTR [rsp+0x98],r15d
+   1800363c0:	00
+   1800363c1:	c7 84 24 9c 00 00 00 	mov    DWORD PTR [rsp+0x9c],0x1
+   1800363c8:	01 00 00 00
+   1800363cc:	48 8d 8c 24 d0 00 00 	lea    rcx,[rsp+0xd0]
+   1800363d3:	00
+   1800363d4:	48 8d 94 24 94 00 00 	lea    rdx,[rsp+0x94]
+   1800363db:	00
+   1800363dc:	e8 2f 85 fe ff       	call   0x18001e910
+   1800363e1:	e9 67 03 00 00       	jmp    0x18003674d
+   1800363e6:	44 89 e3             	mov    ebx,r12d
+   1800363e9:	81 fe 80 00 00 00    	cmp    esi,0x80
+   1800363ef:	0f 94 c0             	sete   al
+   1800363f2:	34 0f                	xor    al,0xf
+   1800363f4:	0f b6 c0             	movzx  eax,al
+   1800363f7:	83 c6 e0             	add    esi,0xffffffe0
+   1800363fa:	f7 c6 df ff ff ff    	test   esi,0xffffffdf
+   180036400:	b9 0d 00 00 00       	mov    ecx,0xd
+   180036405:	0f 45 c8             	cmovne ecx,eax
+   180036408:	48 d3 e3             	shl    rbx,cl
+   18003640b:	44 89 f8             	mov    eax,r15d
+   18003640e:	48 0f af d8          	imul   rbx,rax
+   180036412:	48 3b 9f 90 01 00 00 	cmp    rbx,QWORD PTR [rdi+0x190]
+   180036419:	76 2a                	jbe    0x180036445
+   18003641b:	4c 8d b7 88 01 00 00 	lea    r14,[rdi+0x188]
+   180036422:	48 8b 8f 88 01 00 00 	mov    rcx,QWORD PTR [rdi+0x188]
+   180036429:	48 85 c9             	test   rcx,rcx
+   18003642c:	74 05                	je     0x180036433
+   18003642e:	e8 7d 2c 03 00       	call   0x1800690b0
+   180036433:	4c 89 f1             	mov    rcx,r14
+   180036436:	48 89 da             	mov    rdx,rbx
+   180036439:	e8 f2 2c 03 00       	call   0x180069130
+   18003643e:	48 89 9f 90 01 00 00 	mov    QWORD PTR [rdi+0x190],rbx
+new VA 180039c67..180039cbf
+   180039c67:	80 be 51 03 00 00 01 	cmp    BYTE PTR [rsi+0x351],0x1
+   180039c6e:	75 50                	jne    0x180039cc0
+   180039c70:	8d 4f e0             	lea    ecx,[rdi-0x20]
+   180039c73:	c1 c1 1b             	rol    ecx,0x1b
+   180039c76:	83 f9 07             	cmp    ecx,0x7
+   180039c79:	77 45                	ja     0x180039cc0
+   180039c7b:	48 8d 15 fe 07 04 00 	lea    rdx,[rip+0x407fe]        # 0x18007a480
+   180039c82:	48 63 0c 8a          	movsxd rcx,DWORD PTR [rdx+rcx*4]
+   180039c86:	48 01 d1             	add    rcx,rdx
+   180039c89:	ff e1                	jmp    rcx
+   180039c8b:	44 89 a4 24 bc 00 00 	mov    DWORD PTR [rsp+0xbc],r12d
+   180039c92:	00
+   180039c93:	44 89 bc 24 c0 00 00 	mov    DWORD PTR [rsp+0xc0],r15d
+   180039c9a:	00
+   180039c9b:	c7 84 24 c4 00 00 00 	mov    DWORD PTR [rsp+0xc4],0x1
+   180039ca2:	01 00 00 00
+   180039ca6:	48 8d 8c 24 c8 00 00 	lea    rcx,[rsp+0xc8]
+   180039cad:	00
+   180039cae:	48 8d 94 24 bc 00 00 	lea    rdx,[rsp+0xbc]
+   180039cb5:	00
+   180039cb6:	e8 e5 5a fe ff       	call   0x18001f7a0
+   180039cbb:	e9 a4 03 00 00       	jmp    0x18003a064
+new VA 180039cc0..180039d31
+   180039cc0:	44 89 e3             	mov    ebx,r12d
+   180039cc3:	44 89 f8             	mov    eax,r15d
+   180039cc6:	b9 0d 00 00 00       	mov    ecx,0xd
+   180039ccb:	83 ff 20             	cmp    edi,0x20
+   180039cce:	74 19                	je     0x180039ce9
+   180039cd0:	83 ff 40             	cmp    edi,0x40
+   180039cd3:	74 14                	je     0x180039ce9
+   180039cd5:	81 ff 80 00 00 00    	cmp    edi,0x80
+   180039cdb:	75 07                	jne    0x180039ce4
+   180039cdd:	b9 0e 00 00 00       	mov    ecx,0xe
+   180039ce2:	eb 05                	jmp    0x180039ce9
+   180039ce4:	b9 0f 00 00 00       	mov    ecx,0xf
+   180039ce9:	48 d3 e3             	shl    rbx,cl
+   180039cec:	48 0f af d8          	imul   rbx,rax
+   180039cf0:	48 3b 9e b8 01 00 00 	cmp    rbx,QWORD PTR [rsi+0x1b8]
+   180039cf7:	76 2a                	jbe    0x180039d23
+   180039cf9:	4c 8d b6 b0 01 00 00 	lea    r14,[rsi+0x1b0]
+   180039d00:	48 8b 8e b0 01 00 00 	mov    rcx,QWORD PTR [rsi+0x1b0]
+   180039d07:	48 85 c9             	test   rcx,rcx
+   180039d0a:	74 05                	je     0x180039d11
+   180039d0c:	e8 5f 5b 03 00       	call   0x18006f870
+   180039d11:	4c 89 f1             	mov    rcx,r14
+   180039d14:	48 89 da             	mov    rdx,rbx
+   180039d17:	e8 d4 5b 03 00       	call   0x18006f8f0
+   180039d1c:	48 89 9e b8 01 00 00 	mov    QWORD PTR [rsi+0x1b8],rbx
+   180039d23:	48 8b 86 b0 01 00 00 	mov    rax,QWORD PTR [rsi+0x1b0]
+   180039d2a:	48 89 84 24 68 01 00 	mov    QWORD PTR [rsp+0x168],rax

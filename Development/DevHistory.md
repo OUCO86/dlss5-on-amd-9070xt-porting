@@ -437,3 +437,12 @@ C32的32线程/2KB LDS/零barrier寄存器快核在0.3.3已有；0.4.0新增42�
 02:10用户补充网友截图偏淡、灯光/色彩不浓。进一步找到安装包完整INI模板：LocalTone=0、LocalStructure=1、ToneChannels=0、ToneLift=0、Style=0、ToneCurve=reinhard。UI明确LocalTone管大范围光照/色彩，宿主也将默认0送入控制参数；这与反馈相符，但未拿网友INI/做同帧A/B，不能定死为根因，更不能说它关闭光照计算换帧率。PreUpscale默认1，所以1080输出也不自动等于1080网络输入。
 
 报告/身份/资源/默认INI在 `results/closed-v040-20260926`，复现工具 `tools/closed-inspect`，原二进制与完整反汇编只留/tmp。WorkingPlan把独立C32单wave窗口原型提到优先位，保留我们原数值与视觉控制；权重片段预排转后续小刀。单窗口四wave不是算法必付成本，这条认知需修正。
+
+
+## 2026-09-26 02:21：从新增核名单收窄到关键派发与数据归属
+
+Zero指出Daniel可能是一个关键改法带来40%跃升，不能把42个导出理解成42项小优化。进一步对齐宿主：0.3.3在0x1800363a3先要求C==32才进寄存器快路；0.4.0在0x180039c67检查同类flag后，0x18007a480表把C32/64/128/256都分派到快核。默认flag条件旧版已有，变化是覆盖范围与实现，不是简单把默认0改1。
+
+旧通用路径每窗口显式global workspace为C32/C64 8KiB、C128 16KiB、C256 32KiB，新快分支绕过分配。旧C64 GPU入口从参数0xa0读取这块指针，加窗口号×8192，0x95c7c即有准备后输入的global_store_b32；还没完整标注其全部生命周期，不只叫“概率表”。旧swin_var本来也是融合核，真正关键候选是一个head的完整窗口归同一wave，减少中间状态落global/LDS，而不只是“多融合一次”。
+
+自家旧c64_window_fused.hip已核：256线程，head=alltid/128，first=awave*16，nrm/feat放LDS，仍一头四wave；其null没有否定一头一wave。主线改为C64受控原型，原色彩/分辨率/数值路线不动；42%因果份额仍待实验。证据追加closed-v040报告、dispatch-delta.json/txt，WorkingPlan同步。
