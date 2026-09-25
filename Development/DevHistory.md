@@ -446,3 +446,10 @@ Zero指出Daniel可能是一个关键改法带来40%跃升，不能把42个导�
 旧通用路径每窗口显式global workspace为C32/C64 8KiB、C128 16KiB、C256 32KiB，新快分支绕过分配。旧C64 GPU入口从参数0xa0读取这块指针，加窗口号×8192，0x95c7c即有准备后输入的global_store_b32；还没完整标注其全部生命周期，不只叫“概率表”。旧swin_var本来也是融合核，真正关键候选是一个head的完整窗口归同一wave，减少中间状态落global/LDS，而不只是“多融合一次”。
 
 自家旧c64_window_fused.hip已核：256线程，head=alltid/128，first=awave*16，nrm/feat放LDS，仍一头四wave；其null没有否定一头一wave。主线改为C64受控原型，原色彩/分辨率/数值路线不动；42%因果份额仍待实验。证据追加closed-v040报告、dispatch-delta.json/txt，WorkingPlan同步。
+
+
+## 2026-09-26：一头一wave的C64首版逐位跑通，继续追整网质变
+
+按Daniel版本差异线索独立实现c64-wave2：两wave覆盖完整窗口的两个head，两块4KiB LDS原生片段平面按生命周期复用，Q/K/V驻留寄存器，V用相反WMMA方向直接生成B片段。32项f32归一化用4次wave部分和传递保持原顺序，softmax保留现有WMMA归约，不改颜色/分辨率/跳层。4个barrier、VGPR190/191、零private spill。
+
+900/1080各三组200帧ABBA，最终RGB槽首尾逐位同；替换8个C64块后平均−0.149/−0.257ms，约1.3～1.5%。模块74ed8686…，工具与结果分别HIP/experiments/c64-wave2、results/c64-wave2-20260926。只是可行节点，目标未完成；下一步扩C128/C256分账，查片段供数与寄存器生命周期。未改生产和装机，完整多帧历史回归待稳定候选。

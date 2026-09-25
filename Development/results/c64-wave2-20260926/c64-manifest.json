@@ -1,0 +1,9 @@
+{
+  "base_source_sha256": "0af78d013369918b3379ec98fc111d336b0f43a035cf49af541b5aea9b4c7760",
+  "kernel_sha256": "3e6fe7ef7ac7cb6eb1dbc308045286e4b99b6d92d18c4fd0bb62caf02c1ed24b",
+  "host_source_sha256": "f06d492cdb16873e618082992a85fa9999007afad16cabaec391dfbfb636518e",
+  "modes": {
+    "0": "prod8 PDL baseline",
+    "1": "C64 fused two-wave, sequential32 normalization"
+  }
+}

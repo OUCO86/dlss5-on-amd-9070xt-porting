@@ -1,0 +1,37 @@
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=0 slot=0 mode=0 ms=11.560140 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=0 slot=1 mode=1 ms=11.450395 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=0 slot=2 mode=1 ms=11.472975 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=0 slot=3 mode=0 ms=11.637020 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=1 slot=0 mode=0 ms=11.639195 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=1 slot=1 mode=1 ms=11.479430 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=1 slot=2 mode=1 ms=11.496115 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=1 slot=3 mode=0 ms=11.671725 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=2 slot=0 mode=0 ms=11.666655 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=2 slot=1 mode=1 ms=11.521820 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=2 slot=2 mode=1 ms=11.538955 calls=1600
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=4608000 actual=0 expected=0
+SLOT repeat=2 slot=3 mode=0 ms=11.680715 calls=1600
+PASS C64 two-wave
