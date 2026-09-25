@@ -41,6 +41,7 @@
 
 - 逐位小刀：host 侧宽权重片段（−0.03ms）和小 launch 合并，等哪次因别的事重编 addon 时顺带。（C32 产出端并宽 09-24 试过：逐位同但慢 0.03ms，已关。）
 - 非逐位第二处（只在用户认可 6b 画质之后）：C32 QKV 归一化同型改法（先消融定上界）；ViT/C512 K 分块累加顺序。
+- **`DLSS5_PRE_UPSCALE=auto`**（下一版）：首帧探测同列表超分后有无后续 draw/dispatch，有则自动落后置（Forza 6、卧龙 2 这类），无则前置；Forza 6 首次启动黑屏一次未复现，`deployments/forza6-030-20260925/dump.ps1` 备着。
 - 网友反馈跟进：超宽屏 fit-large 实机、9060 系列、RE9 帧生成/HDR。issue 来了照旧：能修就修，修完进下个包。
 - 6b 若要装：编 gfx1200 的 6b mh_fast、做只换 mh_fast 两架构的 payload、装机由用户看画质。
 

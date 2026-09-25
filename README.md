@@ -54,7 +54,12 @@ regular route still rejects. Stellar Blade and Lies of P keep the defaults (`ASY
 automatic (`DLSS5_PRE_UPSCALE_ASYNC=auto`, `DLSS5_STRENGTH=auto`: per-title table). The strength table gives Cyberpunk 2077
 luminance-only transfer (`1,0`): the pre-upscale route hands the network the colour buffer before the game's tone mapper and
 LUT, and taking the network's hue there turned green neon ambient brown; luminance-only keeps the detail gain (+19% vs +22%
-high-pass energy over plain FSR, measured 2026-09-24) with the game's own colours.
+high-pass energy over plain FSR, measured 2026-09-24) with the game's own colours. Forza Horizon 6 (Xbox app build, tested
+2026-09-25): the regular package loads, but like Wo Long 2 the game keeps drawing after the upscaler in the same command list,
+so the pre-upscale route gives up on the first frame and passes everything through (F6 does nothing; `native-pre-upscale.txt`
+says `UNSAFE: draw/dispatch after deferred upscaler`). Set `DLSS5_PRE_UPSCALE=0` in `native-game-flags.txt` to take the
+post-upscale route instead: 2K quality (1508×848 render) about 44 fps, F6 works; the yellow fps overlay does not show. The
+next release detects this automatically.
 
 **Where this came from.** 0.15 and earlier ran the network as Direct3D 12 Shader Model 6.10 wave-matrix shaders (now in
 `shaders/dx12-network/`, still the bit-exact reference chain). 0.20 moved inference to HIP with bit-identical output and
