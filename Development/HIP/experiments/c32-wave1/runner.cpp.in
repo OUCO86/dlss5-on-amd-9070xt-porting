@@ -17,12 +17,12 @@ int main(int argc,char**argv){try{
   for(size_t i=0;i<v.size();i++){bool different=memcmp(&v[i],&expected[i],4)!=0;bad+=different;if(different&&first==expected.size())first=i;invalid+=!std::isfinite(v[i]);double e=double(v[i])-expected[i];mse+=e*e;maxerr=std::max(maxerr,std::abs(e));}
   printf("VERIFY bitdiff=%llu invalid=%llu max=%.9g rmse=%.9g first=%llu actual=%.9g expected=%.9g\n",(unsigned long long)bad,(unsigned long long)invalid,maxerr,sqrt(mse/v.size()),(unsigned long long)first,first<v.size()?v[first]:0,first<v.size()?expected[first]:0);fflush(stdout);
   if(bad||invalid)throw std::runtime_error("output mismatch");};
- std::vector<unsigned> candidates{1};if(const char*env=std::getenv("W2_CANDIDATES")){candidates.clear();std::string s=env;size_t p=0;while(p<s.size()){size_t e=s.find(',',p);if(e==std::string::npos)e=s.size();unsigned m=std::stoul(s.substr(p,e-p));if(m<1||m>1)throw std::runtime_error("candidate 1");candidates.push_back(m);p=e+1;}}
+ std::vector<unsigned> candidates{1,2,3,4};if(const char*env=std::getenv("W2_CANDIDATES")){candidates.clear();std::string s=env;size_t p=0;while(p<s.size()){size_t e=s.find(',',p);if(e==std::string::npos)e=s.size();unsigned m=std::stoul(s.substr(p,e-p));if(m<1||m>4)throw std::runtime_error("candidate 1..4");candidates.push_back(m);p=e+1;}}
  FILE*f=fopen("slots.csv","wb");if(!f)throw std::runtime_error("slots");fprintf(f,"repeat,candidate,slot,mode,frames,ms,target_calls,replaced\n");
  for(unsigned rep=0;rep<repeats;rep++)for(unsigned candidate:candidates){unsigned order[]={0,candidate,candidate,0};for(unsigned slot=0;slot<4;slot++){
   net.W2Mode(order[slot]);run();verify();for(unsigned i=0;i<20;i++)run();
   unsigned calls=net.W2Calls(),replaced=net.W2Replaced();auto begin=std::chrono::steady_clock::now();for(unsigned i=0;i<frames;i++)run();double ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-begin).count()/frames;
-  calls=net.W2Calls()-calls;replaced=net.W2Replaced()-replaced;verify();unsigned expected_calls[]={0,4};if(calls!=frames*4||replaced!=frames*expected_calls[order[slot]])throw std::runtime_error("target call count");
+  calls=net.W2Calls()-calls;replaced=net.W2Replaced()-replaced;verify();unsigned expected_calls[]={0,4,2,2,8};if(calls!=frames*8||replaced!=frames*expected_calls[order[slot]])throw std::runtime_error("target call count");
   fprintf(f,"%u,%u,%u,%u,%u,%.9f,%u,%u\n",rep,candidate,slot,order[slot],frames,ms,calls,replaced);fflush(f);printf("SLOT repeat=%u candidate=%u slot=%u mode=%u ms=%.6f calls=%u replaced=%u\n",rep,candidate,slot,order[slot],ms,calls,replaced);fflush(stdout);
  }}
  fclose(f);api.hipFree(x);api.hipFree(y);puts("PASS C32 one-wave");return 0;
