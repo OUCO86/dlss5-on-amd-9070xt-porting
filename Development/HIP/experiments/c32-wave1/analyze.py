@@ -1,5 +1,5 @@
 from pathlib import Path
-import csv,json,statistics,sys
+import csv,json,statistics,sys,re
 root=Path(sys.argv[1]);result={}
 for p in sorted(root.glob('results-*/slots.csv')):
  rows=list(csv.DictReader(p.open()));variants={}
@@ -9,9 +9,19 @@ for p in sorted(root.glob('results-*/slots.csv')):
    group=sorted([r for r in rows if int(r['repeat'])==rep and int(r['candidate'])==candidate],key=lambda r:int(r['slot']))
    assert [int(r['mode']) for r in group]==[0,candidate,candidate,0]
    for r in group:
-    assert int(r['target_calls']) in ((int(r['frames'])*4,int(r['frames'])*8) if candidate==1 else (int(r['frames'])*8,))
-    assert int(r['replaced'])==int(r['frames'])*[0,4,2,2,8][int(r['mode'])]
+    assert int(r['target_calls']) in (tuple(int(r['frames'])*n for n in ([4,8,9,10] if candidate==1 else [8,9,10] if candidate<=4 else [9,10] if candidate<=6 else [10])))
+    assert int(r['replaced'])==int(r['frames'])*[0,4,2,2,8,1,9,1,10][int(r['mode'])]
    t=[float(r['ms']) for r in group];pairs.append((t[1]+t[2]-t[0]-t[3])/2)
   variants[str(candidate)]={'paired_delta_ms':pairs,'mean_delta_ms':statistics.mean(pairs)}
+ log=(p.parent/'run.log').read_text();assert 'PASS C32 one-wave' in log
+ checks=re.findall(r'VERIFY bitdiff=(\d+) invalid=(\d+)',log);assert checks and all(a=='0' and b=='0' for a,b in checks)
+ dyn=re.findall(r'DYNAMIC frame=(\d+) candidate=(\d+) seed=(\d+) history=(\d+) calls=(\d+) replaced=(\d+)\nVERIFY bitdiff=0 invalid=0',log)
+ if dyn:
+  for frame,candidate,seed,history,calls,replaced in dyn:
+   assert int(seed)==123+int(frame)*17 and int(history)==int(int(frame)>0)
+   assert int(calls)==10 and int(replaced)==[0,4,2,2,8,1,9,1,10][int(candidate)]
+  for candidate in sorted({int(r['candidate']) for r in rows}):
+   assert [int(d[0]) for d in dyn if int(d[1])==candidate]==list(range(16))
+  variants['dynamic_frames_verified']=len(dyn)
  result[p.parent.name]=variants;print(p.parent.name,variants)
 (root/'summary.json').write_text(json.dumps(result,indent=2)+'\n')

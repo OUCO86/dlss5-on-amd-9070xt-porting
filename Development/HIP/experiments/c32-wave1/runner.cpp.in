@@ -17,13 +17,33 @@ int main(int argc,char**argv){try{
   for(size_t i=0;i<v.size();i++){bool different=memcmp(&v[i],&expected[i],4)!=0;bad+=different;if(different&&first==expected.size())first=i;invalid+=!std::isfinite(v[i]);double e=double(v[i])-expected[i];mse+=e*e;maxerr=std::max(maxerr,std::abs(e));}
   printf("VERIFY bitdiff=%llu invalid=%llu max=%.9g rmse=%.9g first=%llu actual=%.9g expected=%.9g\n",(unsigned long long)bad,(unsigned long long)invalid,maxerr,sqrt(mse/v.size()),(unsigned long long)first,first<v.size()?v[first]:0,first<v.size()?expected[first]:0);fflush(stdout);
   if(bad||invalid)throw std::runtime_error("output mismatch");};
- std::vector<unsigned> candidates{1,2,3,4};if(const char*env=std::getenv("W2_CANDIDATES")){candidates.clear();std::string s=env;size_t p=0;while(p<s.size()){size_t e=s.find(',',p);if(e==std::string::npos)e=s.size();unsigned m=std::stoul(s.substr(p,e-p));if(m<1||m>4)throw std::runtime_error("candidate 1..4");candidates.push_back(m);p=e+1;}}
+ std::vector<unsigned> candidates{1,2,3,4};if(const char*env=std::getenv("W2_CANDIDATES")){candidates.clear();std::string s=env;size_t p=0;while(p<s.size()){size_t e=s.find(',',p);if(e==std::string::npos)e=s.size();unsigned m=std::stoul(s.substr(p,e-p));if(m<1||m>8)throw std::runtime_error("candidate 1..8");candidates.push_back(m);p=e+1;}}
  FILE*f=fopen("slots.csv","wb");if(!f)throw std::runtime_error("slots");fprintf(f,"repeat,candidate,slot,mode,frames,ms,target_calls,replaced\n");
  for(unsigned rep=0;rep<repeats;rep++)for(unsigned candidate:candidates){unsigned order[]={0,candidate,candidate,0};for(unsigned slot=0;slot<4;slot++){
   net.W2Mode(order[slot]);run();verify();for(unsigned i=0;i<20;i++)run();
   unsigned calls=net.W2Calls(),replaced=net.W2Replaced();auto begin=std::chrono::steady_clock::now();for(unsigned i=0;i<frames;i++)run();double ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-begin).count()/frames;
-  calls=net.W2Calls()-calls;replaced=net.W2Replaced()-replaced;verify();unsigned expected_calls[]={0,4,2,2,8};if(calls!=frames*8||replaced!=frames*expected_calls[order[slot]])throw std::runtime_error("target call count");
+  calls=net.W2Calls()-calls;replaced=net.W2Replaced()-replaced;verify();unsigned expected_calls[]={0,4,2,2,8,1,9,1,10};if(calls!=frames*10||replaced!=frames*expected_calls[order[slot]])throw std::runtime_error("target call count");
   fprintf(f,"%u,%u,%u,%u,%u,%.9f,%u,%u\n",rep,candidate,slot,order[slot],frames,ms,calls,replaced);fflush(f);printf("SLOT repeat=%u candidate=%u slot=%u mode=%u ms=%.6f calls=%u replaced=%u\n",rep,candidate,slot,order[slot],ms,calls,replaced);fflush(stdout);
  }}
- fclose(f);api.hipFree(x);api.hipFree(y);puts("PASS C32 one-wave");return 0;
+ fclose(f);
+ unsigned dynamic_frames=0;if(const char*e=std::getenv("CW_DYNAMIC_FRAMES"))dynamic_frames=std::stoul(e);
+ if(dynamic_frames){
+  void*history{};api.Check(api.hipMalloc(&history,input.size()*4),"history");auto original=input,previous=input;
+  for(unsigned candidate:candidates)for(unsigned frame=0;frame<dynamic_frames;frame++){
+   for(size_t p=0;p<size_t(W)*H;p++){
+    size_t source=((p/W+(frame*3)%H)%H)*W+(p%W+frame*7)%W;
+    for(unsigned c=0;c<3;c++){float v=original[source*4+c]*(.8f+.025f*(frame%9))+.005f*(int(frame%5)-2);input[p*4+c]=frame%8==6?0.f:frame%8==7?1.f:std::min(1.f,std::max(0.f,v));}
+    input[p*4+3]=original[p*4+3];
+   }
+   api.Check(api.hipMemcpy(x,input.data(),input.size()*4,1),"dynamic upload");api.Check(api.hipMemcpy(history,previous.data(),previous.size()*4,1),"dynamic history upload");
+   unsigned seed=123+frame*17;void*hist=frame?history:nullptr;
+   net.W2Mode(0);net.Enqueue(x,hist,y,seed);net.Synchronize();api.Check(api.hipMemcpy(expected.data(),y,expected.size()*4,2),"dynamic baseline");
+   net.W2Mode(candidate);net.Enqueue(x,hist,y,seed);net.Synchronize();
+   printf("DYNAMIC frame=%u candidate=%u seed=%u history=%u calls=%u replaced=%u\n",frame,candidate,seed,frame?1:0,net.W2Calls(),net.W2Replaced());
+   unsigned replacements[]={0,4,2,2,8,1,9,1,10};if(net.W2Calls()!=10||net.W2Replaced()!=replacements[candidate])throw std::runtime_error("dynamic replacement count");
+   verify();previous=input;
+  }
+  api.hipFree(history);
+ }
+ api.hipFree(x);api.hipFree(y);puts("PASS C32 one-wave");return 0;
 }catch(const std::exception&e){fprintf(stderr,"FAIL %s\n",e.what());return 1;}}

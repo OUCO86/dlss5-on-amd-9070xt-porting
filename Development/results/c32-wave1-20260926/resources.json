@@ -149,5 +149,53 @@
         "workgroup_processor_mode": 0
       }
     }
+  },
+  {
+    "variant": "full-c32",
+    "module_sha256": "73a2dfdbb84967086b7f8e36c1776163ee8d584b1240764ecedc276b330de3d2",
+    "kernels": {
+      "c32_wave1_chain": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 165,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_mapped": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 165,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish_dcrop": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_post": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 176,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_prefix": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      }
+    }
   }
 ]

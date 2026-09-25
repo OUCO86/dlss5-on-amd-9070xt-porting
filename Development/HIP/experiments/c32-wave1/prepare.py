@@ -10,14 +10,14 @@ kernel='#define HIP_ISA_HALF 1\n#define HIP_PREPACKED_WEIGHTS 1\n'+base+'\n'+(HE
 for p in (ROOT/'Development/HIP').glob('*.h'):shutil.copyfile(p,OUT/'Development/HIP'/p.name)
 p=OUT/'Development/HIP/hip_reference_network.h';s=p.read_text()
 s=rep(s,'class Network {','class Network {\n unsigned w2_mode=0,w2_calls=0,w2_replaced=0;')
-s=rep(s,' Handle Stream()const{return stream;}',''' void W2Mode(unsigned mode){if(mode>4)throw std::runtime_error("c32 mode");Synchronize();w2_mode=mode;w2_calls=w2_replaced=0;}
+s=rep(s,' Handle Stream()const{return stream;}',''' void W2Mode(unsigned mode){if(mode>8)throw std::runtime_error("c32 mode");Synchronize();w2_mode=mode;w2_calls=w2_replaced=0;}
  unsigned W2Calls()const{return w2_calls;}unsigned W2Replaced()const{return w2_replaced;}
  Handle Stream()const{return stream;}''')
 s=rep(s,'if(opt.fused_mh){Handle m{};','''{Handle m{};api.Check(api.LoadModule(&m,(opt.modules+"/c32-wave1.hsaco").c_str()),"c32-wave1 module");modules["c32_wave1"]=m;}
 if(opt.fused_mh){Handle m{};''')
 s=rep(s,'  U count=Count(n),threads=256;unsigned groups=0;std::string module=m,kernel=name;','''  U count=Count(n),threads=256;unsigned groups=0;std::string module=m,kernel=name;
-  unsigned family=kernel=="c32_fast_ffn_attention_fused_half_chain"?1:kernel=="c32_fast_ffn_attention_fused_half_mapped"?2:(kernel=="c32_fast_ffn_attention_fused_half_chain_finish"||kernel=="c32_fast_ffn_attention_fused_half_chain_finish_dcrop")?3:0;
-  if(family){++w2_calls;if(w2_mode==4||w2_mode==family){++w2_replaced;module="c32_wave1";kernel=family==1?"c32_wave1_chain":family==2?"c32_wave1_mapped":kernel=="c32_fast_ffn_attention_fused_half_chain_finish_dcrop"?"c32_wave1_finish_dcrop":"c32_wave1_finish";groups=count;threads=32;}}''')
+  unsigned family=kernel=="c32_fast_ffn_attention_fused_half_chain"?1:kernel=="c32_fast_ffn_attention_fused_half_mapped"?2:(kernel=="c32_fast_ffn_attention_fused_half_chain_finish"||kernel=="c32_fast_ffn_attention_fused_half_chain_finish_dcrop")?3:kernel=="c32_post_merge_head_half"?5:kernel=="c32_fast_ffn_attention_fused_half_prefix_finish_main8"?7:0;
+  if(family){++w2_calls;if(w2_mode==8||(w2_mode==6&&family<=5)||(w2_mode==4&&family<=3)||w2_mode==family){++w2_replaced;module="c32_wave1";kernel=family==1?"c32_wave1_chain":family==2?"c32_wave1_mapped":family==5?"c32_wave1_post":family==7?"c32_wave1_prefix":kernel=="c32_fast_ffn_attention_fused_half_chain_finish_dcrop"?"c32_wave1_finish_dcrop":"c32_wave1_finish";groups=count;threads=32;}}''')
 p.write_text(s)
 native=(ROOT/'src/native_hip_network.h').read_text();a=native.index('hip_reference::Options o;');b=native.index('  const wchar_t*modules=',a)
 options=native[a:b].replace('o.width=g.processing_width;o.height=g.processing_height;o.post_shift=post_shift','o.width=W;o.height=H;o.post_shift=3').replace('o.assets=Utf8(directory)','o.assets=argv[1]')
