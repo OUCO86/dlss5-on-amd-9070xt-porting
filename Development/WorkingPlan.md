@@ -1,4 +1,4 @@
-# 当前工作计划（覆盖式，不续写；最后更新 2026-09-25 08:20，Hikari）
+# 当前工作计划（覆盖式，不续写；最后更新 2026-09-25 08:10，Hikari）
 
 > 这个文件只记"现在打算做什么、等什么"，每次直接覆盖。已完成的事进 DevHistory.md，不在这里重复。开 session 先读这页再动手。
 > 节奏：过日子式，没有 deadline。有兴致就挑一把逐位的小刀试，没兴致就写文章、回 issue。
@@ -20,9 +20,9 @@
 - **"只有光影变化"的担心已量化**：高通对数亮度 RMS 比 / 相关 / 梯度幅值比——纯调色是 corr≈0.9997、比 1.0；剑星 1.11/0.887/+13%，赛博 1.00/0.973/+13%，生化 1.03～1.13/0.98/+19%，都不是纯调色。图在各 deployments 的 detail-crop-*.png。
 - **网友"统一 RE9 与常规包"补丁审完**（`Development/RE9/presr/contrib/generic-host-20260924/REVIEW.md`）：查询记账 + 提前包裹两处可用，backend 补丁是我们 prepare-host 的旧翻版，runtime 脚本没打我们的补丁不可用，无测试证据。**等用户问到他在哪个游戏跑通、帧率多少再定**要不要合进 prepare-host.py 用 MSVC 编宿主到剑星实测。
 
-## 0.30 打包（09-25 进行中：package-030.ps1，lab D:\DLSSNR-Lab\release-030；打完等用户上传夸克 + Google，再把链接填进 README 两处）
+## 0.30 已发布（09-25 08:08，夸克 + Google Drive，README 两处链接已填）
 
-复制 package-029.ps1 → package-030（版本号、hash）；内核 prod7；addon a569ed6f…（strength-auto）；常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`（`[Inputs] EnableFfxInputs=false`，对剑星空操作）；flags 模板 `ASYNC=auto`（Cyberpunk2077.exe 查表→同步）；README 更新记录一行，夸克 + Google Drive 两链接；帧率（prod8）：剑星 900P→2K 中画质 60～61、1080P→2K 47～48；赛博 低画质 平衡 51～52、质量 41。README 已有"分游戏说明"段和 0.29 的 Google Drive 链接。
+内核 prod8 两架构 + 插件 0211a78a + 模板 PDL=1/ASYNC=auto/STRENGTH=auto + 常规包 `EnableFfxInputs=false`；RE9 只换内核。三包大小/哈希 `Development/tools/release-030-results.json`。等网友反馈；issue 来了照旧。
 
 ## 卧龙 2（Alpha Demo 被 Steam 卸载，机上残留已清）
 

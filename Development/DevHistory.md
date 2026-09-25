@@ -379,3 +379,4 @@ RE9 目录里的内核比 prod6 还旧（0.28.1 那版，c32/mh_fast 哈希都�
 0.30 打包：`Development/tools/package-030.ps1`（0.29 复制：三包基线 0.29，模块 prod8 两架构与剑星机上一致，插件 0211a78a，flags 模板查 PDL=1 / ASYNC=auto / STRENGTH=auto，常规包 OptiScaler.ini 叠加 `scripts/optiscaler-regular.ini`，RE9 宿主/runtime 与 0.29 同哈希，codec hlsl 与 0.29 同哈希）；package-notes 六份改 0.30；README 两处"当前版本"与更新记录行（链接待上传）。
 
 07:53 三包打完（`Development/tools/release-030-results.json`，D:\給網友打包）：Magpie 336,377,155 B sha256 2b467532…、OptiScaler 366,576,181 B 8b3f1ae3…、OptiScaler-REFramework 421,034,771 B ae445772…；每包 SHA256SUMS 逐项核对、44 个 shader 变体编过、RE9 runtime 冒烟通过。等用户上传夸克 + Google 后填 README 链接。
+08:08 用户上传完成：夸克 https://pan.quark.cn/s/80a735ab9f88（三包一个分享）、Google Drive https://drive.google.com/drive/folders/1pKZpLosgJXxUOZTMg_m0sbCipX9Q3WYo；README 两处链接已填。0.30 发布。
