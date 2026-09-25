@@ -1,0 +1,27 @@
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/ResourceStateBook.h
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/ResourceStateBook.h
+@@ -76,7 +76,10 @@
+             {
+                 sawAliasing = true;
+-                if (reasonOut)
+-                    *reasonOut = "aliasing_barrier";
+-                return false;
++                if (openSplitBarrier || bar.Flags != D3D12_RESOURCE_BARRIER_FLAG_NONE)
++                {
++                    if (reasonOut) *reasonOut = "aliasing_during_split_transition";
++                    return false;
++                }
++                continue;
+             }
+             if (bar.Type == D3D12_RESOURCE_BARRIER_TYPE_UAV)
+@@ -118,10 +121,4 @@
+             return false;
+         }
+-        if (sawAliasing)
+-        {
+-            if (reasonOut)
+-                *reasonOut = "aliasing_barrier";
+-            return false;
+-        }
+         return true;
+     }

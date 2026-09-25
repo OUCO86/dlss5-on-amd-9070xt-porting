@@ -1,0 +1,11 @@
+--- a/tests/lmxxf_create_execute.cpp
++++ b/tests/lmxxf_create_execute.cpp
+@@ -85,7 +85,7 @@
+     int hits = 0;
+ };
+ 
+-static void BetweenHit(void *ctx)
++static void BetweenHit(ID3D12CommandQueue *, void *ctx)
+ {
+     reinterpret_cast<BetweenCounter *>(ctx)->hits += 1;
+ }

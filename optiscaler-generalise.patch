@@ -1,0 +1,858 @@
+From d7bdc15ee45eca2eb8ec58c24617e555167e2f79 Mon Sep 17 00:00:00 2001
+From: OUCO86 <ouco86@users.noreply.github.com>
+Date: Thu, 24 Sep 2026 10:52:37 +0800
+Subject: [PATCH] Development/OptiScaler: generalise RE9 pre-SR host
+ integration
+
+Extract the host-layer integration from Development/RE9/presr/ into a
+general-purpose Development/OptiScaler/ directory. Remove RE9-specific
+debugging (ColourCapture, exposure capture, colour investigation) while
+keeping the core host patches.
+
+- LmxxfBackend: module path discovery, prior-job guard, Submitted()
+  queue check, Retire() error handling, non-fatal geometry rebind
+- LmxxfNrRuntime: struct_size check, shader path, EnqueueAfterProducer,
+  codec parameters, hipQueued/outputsRecorded state tracking,
+  WaitForSubmittedWork, staged kernel prep, input geometry validation
+- AmdBridge: recognize LmxxfNrRuntime.dll
+- ResourceStateBook: forward aliasing barriers verbatim during split
+- LmxxfProductionOptions: enable byte stream / feature byte options
+---
+ Development/OptiScaler/AmdBridge.cpp.patch    |   9 +
+ Development/OptiScaler/LmxxfBackend.cpp.patch |  46 ++++
+ Development/OptiScaler/LmxxfNrApi.h.patch     |  17 ++
+ .../OptiScaler/LmxxfNrRuntime.cpp.patch       | 259 ++++++++++++++++++
+ .../OptiScaler/LmxxfProductionOptions.h.patch |   8 +
+ Development/OptiScaler/README.md              |  47 ++++
+ .../OptiScaler/ResourceStateBook.h.patch      |  27 ++
+ Development/OptiScaler/build-host.ps1         |  11 +
+ Development/OptiScaler/build-runtime.sh       |  11 +
+ Development/OptiScaler/build-tests.cmd        |  13 +
+ Development/OptiScaler/bundle-source.py       |  48 ++++
+ .../OptiScaler/install-build-tools.ps1        |  11 +
+ Development/OptiScaler/install.ps1            |  38 +++
+ Development/OptiScaler/prepare-host.py        | 123 +++++++++
+ Development/OptiScaler/runtime-smoke.ps1      |  10 +
+ Development/OptiScaler/test-bridge.ps1        |  11 +
+ Development/OptiScaler/upstream.json          |   8 +
+ 17 files changed, 697 insertions(+)
+ create mode 100644 Development/OptiScaler/AmdBridge.cpp.patch
+ create mode 100644 Development/OptiScaler/LmxxfBackend.cpp.patch
+ create mode 100644 Development/OptiScaler/LmxxfNrApi.h.patch
+ create mode 100644 Development/OptiScaler/LmxxfNrRuntime.cpp.patch
+ create mode 100644 Development/OptiScaler/LmxxfProductionOptions.h.patch
+ create mode 100644 Development/OptiScaler/README.md
+ create mode 100644 Development/OptiScaler/ResourceStateBook.h.patch
+ create mode 100644 Development/OptiScaler/build-host.ps1
+ create mode 100644 Development/OptiScaler/build-runtime.sh
+ create mode 100644 Development/OptiScaler/build-tests.cmd
+ create mode 100644 Development/OptiScaler/bundle-source.py
+ create mode 100644 Development/OptiScaler/install-build-tools.ps1
+ create mode 100644 Development/OptiScaler/install.ps1
+ create mode 100644 Development/OptiScaler/prepare-host.py
+ create mode 100644 Development/OptiScaler/runtime-smoke.ps1
+ create mode 100644 Development/OptiScaler/test-bridge.ps1
+ create mode 100644 Development/OptiScaler/upstream.json
+
+diff --git a/Development/OptiScaler/AmdBridge.cpp.patch b/Development/OptiScaler/AmdBridge.cpp.patch
+new file mode 100644
+index 0000000..4252bd0
+--- /dev/null
++++ b/Development/OptiScaler/AmdBridge.cpp.patch
+@@ -0,0 +1,9 @@
++--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/amd/AmdBridge.cpp
+++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/amd/AmdBridge.cpp
++@@ -196,4 +196,6 @@
++     // frame". Recheck until the package path becomes available.
++     std::error_code ec;
+++    if(DlssNr::Backend::RequestedKind()==DlssNr::Backend::Kind::Lmxxf)
+++        return std::filesystem::exists(Directory() / L"LmxxfNrRuntime.dll", ec);
++     return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);
++ }
+diff --git a/Development/OptiScaler/LmxxfBackend.cpp.patch b/Development/OptiScaler/LmxxfBackend.cpp.patch
+new file mode 100644
+index 0000000..ae61b25
+--- /dev/null
++++ b/Development/OptiScaler/LmxxfBackend.cpp.patch
+@@ -0,0 +1,46 @@
++--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/LmxxfBackend.cpp
+++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/LmxxfBackend.cpp
++@@ -24,4 +24,8 @@
++     if (GetEnvironmentVariableW(L"LMXXF_MODULES_DIR", env, MAX_PATH) && env[0])
++         return env;
+++    for(const auto& base : {directory, directory.parent_path()}){
+++        const auto bundled=base / L"DLSS5-AMD" / L"native-game-tiled-assets" / L"HIP";
+++        if(std::filesystem::exists(bundled / L"SHA256SUMS"))return bundled;
+++    }
++     const auto nextToDll = directory / L"lmxxf-modules";
++     if (std::filesystem::exists(nextToDll))
++@@ -238,4 +242,5 @@
++                                      const AmdPreSr::Settings &settings)
++ {
+++    if(pendingJob){SetStatus("lmxxf: prior job not yet submitted; original SR");return nullptr;}
++     LmxxfCut::ClearPendingEnqueue();
++     pendingJob = nullptr;
++@@ -281,4 +286,6 @@
++     fi.debug_view = Config::Instance()->DlssNrDebugView.value_or_default();
++     fi.model_scale = settings.modelScale;
+++    fi.exposure=frame.exposure;fi.exposure_state=uint32_t(frame.exposureState);
+++    fi.pre_exposure=frame.preExposure;fi.exposure_scale=frame.exposureScale;
++ 
++     LmxxfNrJob job {};
++@@ -299,5 +306,5 @@
++         // Menu/resize: runtime drains/rebuilds codec on rebind/geometry; if still failing,
++         // drop host session so the next Record EnsureSession starts clean.
++-        const bool rebindish = frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry")));
+++        const bool rebindish = frameRc != LMXXF_NR_INVALID_ARGUMENT && (frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry"))));
++         if (rebindish && (prepareFrameFailLogs <= 2 || (prepareFrameFailLogs % 4) == 0))
++         {
++@@ -624,9 +631,11 @@
++ void LmxxfBackend::TraceBoundary(const std::string &) {}
++ 
++-void LmxxfBackend::Submitted(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *)
++-{
+++void LmxxfBackend::Submitted(ID3D12CommandQueue *submittedQueue, UINT, ID3D12CommandList *const *)
+++{
+++    if(DlssNr::Submission::InsideLogicalExecute() || submittedQueue != queue || LmxxfCut::Pending().job)return;
++     if (session && pendingJob && api && api->table.Retire)
++     {
++-        api->table.Retire(session, pendingJob);
+++        const auto rc=api->table.Retire(session, pendingJob);
+++        if(rc != LMXXF_NR_OK){SetStatus("lmxxf: consumer retirement failed");return;}
++         pendingJob = nullptr;
++     }
+diff --git a/Development/OptiScaler/LmxxfNrApi.h.patch b/Development/OptiScaler/LmxxfNrApi.h.patch
+new file mode 100644
+index 0000000..6a5d3db
+--- /dev/null
++++ b/Development/OptiScaler/LmxxfNrApi.h.patch
+@@ -0,0 +1,17 @@
++--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrApi.h
+++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrApi.h
++@@ -11,5 +11,5 @@
++ #endif
++ 
++-#define LMXXF_NR_ABI_VERSION 1u
+++#define LMXXF_NR_ABI_VERSION 2u
++ 
++ enum LmxxfNrStatus
++@@ -75,4 +75,7 @@
++     uint32_t debug_view;     /* 0=normal, 1=proxy, 2=neural solo, 3=diff 20x, 4=tint */
++     float model_scale;       /* 0.25..1.0, default 1.0 */
+++    void *exposure;
+++    uint32_t exposure_state;
+++    float pre_exposure, exposure_scale;
++ } LmxxfNrFrameInfo;
++ 
+diff --git a/Development/OptiScaler/LmxxfNrRuntime.cpp.patch b/Development/OptiScaler/LmxxfNrRuntime.cpp.patch
+new file mode 100644
+index 0000000..1a19d44
+--- /dev/null
++++ b/Development/OptiScaler/LmxxfNrRuntime.cpp.patch
+@@ -0,0 +1,259 @@
++--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrRuntime.cpp
+++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrRuntime.cpp
++@@ -12,4 +12,5 @@
++ #include "native_rgb_texture.h"
++ #include "hip_d3d12_bridge.h"
+++#include "ColourCapture.h"
++ 
++ #include <cstdio>
++@@ -89,4 +90,6 @@
++     const std::wstring dll = DllDirectory();
++     const std::wstring candidates[] = {
+++        JoinPath(dll, L"DLSS5-AMD\\native-game-tiled-assets"),
+++        JoinPath(dll, L"..\\DLSS5-AMD\\native-game-tiled-assets"),
++         JoinPath(dll, L"shaders"),
++         JoinPath(dll, L"..\\..\\third_party\\lmxxf\\shaders"),
++@@ -221,4 +224,5 @@
++ {
++     uint32_t state = LMXXF_NR_JOB_NONE;
+++    bool hipQueued = false, outputsRecorded = false;
++     ID3D12Resource *color = nullptr;
++     D3D12_RESOURCE_STATES colorState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
++@@ -227,4 +231,5 @@
++     float transfer_strength = 1.0f;
++     float color_strength = 1.0f;
+++    float pre_exposure=1.f,exposure_scale=1.f;
++     uint32_t debug_view = 0;
++ };
++@@ -241,4 +246,5 @@
++     bool modulesValidated = false;
++     bool hipPrepared = false;
+++    bool initializationBlocked = false;
++     bool queueBound = false;
++     hip_reference::D3D12Bridge *bridge = nullptr;
++@@ -249,6 +255,10 @@
++     ID3D12Resource *decodeDisplay = nullptr;
++     Job job {};
+++    Re9ColourCapture capture;
+++    ID3D12Resource* exposure=nullptr;
+++    D3D12_RESOURCE_STATES exposureState=D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
++     DXGI_FORMAT colorFormat = DXGI_FORMAT_UNKNOWN;
++ 
+++    std::vector<D3D12_RESOURCE_STATES> CodecStates(std::vector<D3D12_RESOURCE_STATES> s){if(exposure)s.push_back(exposureState);return s;}
++     void TeardownCodecChain()
++     {
++@@ -329,5 +339,5 @@
++     {
++         // GPU may still be reading codec/bridge resources; drain before teardown.
++-        if (FAILED(DrainGpu()))
+++        if ((bridge && !bridge->WaitForSubmittedWork()) || FAILED(DrainGpu()))
++         {
++             AbandonSessionResources();
++@@ -492,5 +502,5 @@
++             return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: null argument");
++         const uint32_t legacySize = 64;
++-        if ((info->struct_size != sizeof(LmxxfNrFrameInfo) && info->struct_size != legacySize) ||
+++        if ((info->struct_size != sizeof(LmxxfNrFrameInfo)) ||
++             job->struct_size != sizeof(LmxxfNrJob))
++             return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: struct_size mismatch");
++@@ -544,28 +554,4 @@
++         }
++ 
++-        // Match upstream auto tier: <=1280x720 -> 720, <=1600x900 -> 900, else 1080.
++-        // Prefer CRT _putenv so MinGW std::getenv sees "auto" (SetEnvironmentVariable alone may not).
++-        if (!std::getenv("DLSS5_NETWORK_HEIGHT"))
++-            _putenv("DLSS5_NETWORK_HEIGHT=auto");
++-        NativeResolveNetworkGeometry(info->color_width, info->color_height);
++-        if (!session->hipPrepared)
++-        {
++-            auto geo = NativeCurrentNetworkGeometry();
++-            auto opt = LmxxfProductionOptions(geo.processing_width, geo.processing_height,
++-                                              Utf8(session->modulesDir), Utf8(session->weightsDir));
++-            if (opt.graph)
++-                return Fail(LMXXF_NR_FAILED, "PrepareFrame: graph must stay off");
++-            session->bridge = new hip_reference::D3D12Bridge();
++-            session->bridge->Create(session->queue, opt, {});
++-            session->hipPrepared = true;
++-            char geoMsg[192] {};
++-            std::snprintf(geoMsg, sizeof geoMsg,
++-                          "lmxxf: HIP lazy Create color=%ux%u network=%ux%u (proc %ux%u)",
++-                          info->color_width, info->color_height, geo.valid_width, geo.valid_height,
++-                          geo.processing_width, geo.processing_height);
++-            OutputDebugStringA(geoMsg);
++-            OutputDebugStringA("\n");
++-            SetError(geoMsg);
++-        }
++         auto *color = static_cast<ID3D12Resource *>(info->color);
++         if (!color)
++@@ -575,7 +561,52 @@
++         const UINT cw = static_cast<UINT>(cdesc.Width);
++         const UINT ch = cdesc.Height;
+++        {
+++            // DLSS5_FIT_LARGE=1 in DLSS5-AMD\native-game-flags.txt (issue #6): inputs beyond 1920x1080 are fitted (downsampled)
+++            // onto the network surface by the codec and restored to the source extent, like small inputs since 0.15.
+++            static const bool fitLarge = [&] {
+++                unsigned v = 0;
+++                if (const char *e = std::getenv("DLSS5_FIT_LARGE")) return e[0] == '1' && !e[1];
+++                // assets may be ...\DLSS5-AMD\native-game-tiled-assets or its HIP subfolder: walk up to the flags file
+++                std::wstring dir = session->assetsDir;
+++                for (int up = 0; up < 4 && !dir.empty(); up++)
+++                {
+++                    const std::wstring flags = JoinPath(dir, L"native-game-flags.txt");
+++                    if (FILE *f = _wfopen(flags.c_str(), L"rb")) { char line[256]; while (fgets(line, sizeof line, f)) sscanf(line, "DLSS5_FIT_LARGE=%u", &v); fclose(f); break; }
+++                    const size_t cut = dir.find_last_of(L"\\/"); if (cut == std::wstring::npos) break; dir.resize(cut);
+++                }
+++                return v == 1;
+++            }();
+++            if (fitLarge)
+++                NativeFitLargeInputOverride() = true;
+++        }
+++        if (!NativeInputGeometry::Supported(cdesc.Width, ch, NativeFitLargeInput()))
+++        {
+++            char message[192] {};
+++            std::snprintf(message, sizeof message,
+++                          "PrepareFrame: render input %llux%u exceeds supported limit 1920x1080 (DLSS5_FIT_LARGE=0); original SR",
+++                          static_cast<unsigned long long>(cdesc.Width), ch);
+++            return Fail(LMXXF_NR_INVALID_ARGUMENT, message);
+++        }
+++        if (cw != info->color_width || ch != info->color_height)
+++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: render input metadata/texture size mismatch; original SR");
+++        if (cdesc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D || cdesc.DepthOrArraySize != 1 ||
+++            cdesc.MipLevels != 1 || cdesc.SampleDesc.Count != 1 ||
+++            (cdesc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) ||
+++            !(NativeIsGameColor(cfmt) || cfmt == DXGI_FORMAT_R9G9B9E5_SHAREDEXP))
+++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: unsupported render input texture; original SR");
+++        if (session->initializationBlocked)
+++            return Fail(LMXXF_NR_FAILED, "PrepareFrame: failed initialization could not drain safely; original SR");
+++        if (session->job.state != LMXXF_NR_JOB_NONE && session->job.state != LMXXF_NR_JOB_RETIRED)
+++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: previous frame not retired; original SR");
+++
+++        // Match upstream auto tier: <=1280x720 -> 720, <=1600x900 -> 900, else 1080.
+++        // Prefer CRT _putenv so MinGW std::getenv sees "auto" (SetEnvironmentVariable alone may not).
+++        if (!std::getenv("DLSS5_NETWORK_HEIGHT"))
+++            _putenv("DLSS5_NETWORK_HEIGHT=auto");
+++        _wputenv_s(L"DLSS5_CODEC_SRGB", L"0");
+++        NativeResolveNetworkGeometry(info->color_width, info->color_height);
++         const bool geoChanged =
++             session->encode &&
++-            (session->job.width != info->color_width || session->job.height != info->color_height ||
+++            (session->exposure != info->exposure || session->job.width != info->color_width || session->job.height != info->color_height ||
++              session->colorFormat != cfmt || (session->job.width && cw != session->job.width) ||
++              (session->job.height && ch != session->job.height));
++@@ -593,4 +624,11 @@
++         if (!session->encode)
++         {
+++            NativeGameCodec *enc = nullptr;
+++            NativeGameRgbInput *rgbIn = nullptr;
+++            NativeRgbTexture *rgbOut = nullptr;
+++            NativeGameCodec *dec = nullptr;
+++            ID3D12Resource *disp = nullptr;
+++            try
+++            {
++             if (!session->bridge)
++             {
++@@ -602,4 +640,5 @@
++                 session->bridge = new hip_reference::D3D12Bridge();
++                 session->bridge->Create(session->queue, opt, {});
+++            session->bridge->PrepareStagedKernels();
++                 session->hipPrepared = true;
++                 char geoMsg[192] {};
++@@ -612,13 +651,6 @@
++                 SetError(geoMsg);
++             }
++-            NativeGameCodec *enc = nullptr;
++-            NativeGameRgbInput *rgbIn = nullptr;
++-            NativeRgbTexture *rgbOut = nullptr;
++-            NativeGameCodec *dec = nullptr;
++-            ID3D12Resource *disp = nullptr;
++-            try
++-            {
++                 enc = new NativeGameCodec();
++-                enc->Create(session->device, {color}, session->shaderDir);
+++                enc->Create(session->device, {color}, session->shaderDir, true, (ID3D12Resource*)info->exposure);
++                 rgbIn = new NativeGameRgbInput();
++                 rgbIn->Create(session->device, enc->Output(), session->shaderDir);
++@@ -626,5 +658,5 @@
++                 rgbOut->Create(session->device, session->bridge->Output(), session->shaderDir);
++                 dec = new NativeGameCodec();
++-                dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir);
+++                dec->Create(session->device, {enc->Output(), rgbOut->Output(), color}, session->shaderDir, true, (ID3D12Resource*)info->exposure);
++                 if (dec->BufferOutput())
++                 {
++@@ -648,4 +680,13 @@
++                 delete rgbIn;
++                 delete enc;
+++                // No frame commands have been exposed/submitted by this transaction.
+++                // Prewarm can have HIP work: synchronize before releasing shared buffers.
+++                if (!session->bridge || session->bridge->WaitForSubmittedWork())
+++                {
+++                    session->TeardownCodecChain();
+++                    session->job = {};
+++                }
+++                else
+++                    session->initializationBlocked = true; // retain resources until safe destruction
++                 throw;
++             }
++@@ -681,4 +722,7 @@
++         }
++ 
+++        session->capture.Begin(DllDirectory(),info->frame_id,info->pre_exposure,info->exposure_scale,(ID3D12Resource*)info->exposure);
+++        session->exposure=(ID3D12Resource*)info->exposure;
+++        session->exposureState=(D3D12_RESOURCE_STATES)info->exposure_state;
++         session->job = {};
++         session->job.color = color;
++@@ -688,4 +732,6 @@
++         session->job.transfer_strength = transfer_strength;
++         session->job.color_strength = color_strength;
+++        session->job.pre_exposure=std::isfinite(info->pre_exposure)&&info->pre_exposure>0?info->pre_exposure:1.f;
+++        session->job.exposure_scale=std::isfinite(info->exposure_scale)&&info->exposure_scale>0?info->exposure_scale:1.f;
++         session->job.debug_view = debug_view;
++         session->colorFormat = cfmt;
++@@ -715,5 +761,8 @@
++         if (!list || !j || j->state < LMXXF_NR_JOB_PREPARED)
++             return Fail(LMXXF_NR_INVALID_ARGUMENT, "RecordInputs: need prepared job and command list");
++-        session->encode->Record(list, {j->colorState}, 1.f);
+++        session->capture.Record(session->device,list,j->color,j->colorState,"input");
+++        session->capture.Record(session->device,list,session->exposure,session->exposureState,"exposure");
+++        session->encode->Record(list, session->CodecStates({j->colorState}), 1.f, NativeCodecParameters{1.f,1.f,NativeCodecDebugView::Final,j->pre_exposure,j->exposure_scale});
+++        session->capture.Record(session->device,list,session->encode->Output(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,"proxy");
++         session->rgbInput->Record(list, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
++         session->bridge->RecordInputCopy(list, session->rgbInput->PostBase(), nullptr);
++@@ -736,5 +785,6 @@
++                         "EnqueueHip: weights not found (set LMXXF_WEIGHTS_DIR to tiled assets, not 0.24.2 HIP/)");
++         auto *j = static_cast<Job *>(job ? job : &session->job);
++-        session->bridge->EnqueueAfterProducer(j->seed, false);
+++        session->bridge->EnqueueAfterProducer(session->queue, j->seed, false);
+++        j->hipQueued = true;
++         j->state = LMXXF_NR_JOB_NR_COMPLETE;
++         SetError("");
++@@ -760,7 +810,7 @@
++             return Fail(LMXXF_NR_FAILED, "RecordOutputs: decode missing");
++         session->decode->Record(list,
++-                                {D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
++-                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, j->colorState},
++-                                1.f, j->transfer_strength, j->color_strength, j->debug_view);
+++                                session->CodecStates({D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+++                                 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, j->colorState}),
+++                                1.f, NativeCodecParameters{j->transfer_strength, j->color_strength, NativeCodecDebugView(j->debug_view),j->pre_exposure,j->exposure_scale});
++         if (session->decode->BufferOutput())
++         {
++@@ -798,4 +848,7 @@
++             list->ResourceBarrier(2, barriers);
++         }
+++        session->capture.Record(session->device,list,session->rgbTex->Output(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,"neural");
+++        session->capture.Record(session->device,list,session->decode->Output(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,"result");
+++        j->outputsRecorded = true;
++         j->state = LMXXF_NR_JOB_CONSUMER_COMPLETE;
++         SetError("");
++@@ -837,6 +890,9 @@
++             return Fail(LMXXF_NR_INVALID_ARGUMENT, "null context");
++         auto *j = static_cast<Job *>(job ? job : &session->job);
++-        if (j)
++-            j->state = LMXXF_NR_JOB_RETIRED;
+++        if (!j || !j->hipQueued || !j->outputsRecorded)
+++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "Retire: producer/HIP/consumer incomplete");
+++        session->bridge->NotifyOutputSubmitted(session->queue);
+++        if(session->capture.active){if(FAILED(session->DrainGpu()))return Fail(LMXXF_NR_FAILED, "capture completion failed");session->capture.DumpAfterCompletion();}
+++        j->state = LMXXF_NR_JOB_RETIRED;
++         SetError("");
++         return static_cast<int32_t>(LMXXF_NR_OK);
+diff --git a/Development/OptiScaler/LmxxfProductionOptions.h.patch b/Development/OptiScaler/LmxxfProductionOptions.h.patch
+new file mode 100644
+index 0000000..c0842c7
+--- /dev/null
++++ b/Development/OptiScaler/LmxxfProductionOptions.h.patch
+@@ -0,0 +1,8 @@
++--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfProductionOptions.h
+++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfProductionOptions.h
++@@ -60,4 +60,5 @@
++     o.vit_contract_frag = true;
++     o.prefix_inline = true;
+++    o.mh_feature_byte=o.mh_proj_diag_fb=o.mh_byte_stream=o.decoder_byte=o.mh_ffn_frag256=true;
++     return o;
++ }
+diff --git a/Development/OptiScaler/README.md b/Development/OptiScaler/README.md
+new file mode 100644
+index 0000000..98d2c1a
+--- /dev/null
++++ b/Development/OptiScaler/README.md
+@@ -0,0 +1,47 @@
++# OptiScaler pre-SR integration
++
++Game scene colour → HIP neural rendering → FSR/DLSS → display. This integrates the lmxxf
++HIP runtime into TheAutomatic's GPL-3.0 OptiScaler fork as a pre-SR backend.
++
++Host dependency: https://github.com/TheAutomatic/dlss-5-amd-project, pinned commit
++in `upstream.json`. The host modifications are preserved as patches; the lmxxf MIT
++core remains separate.
++
++## What this does
++
++The OptiScaler host hooks DLSS/FSR dispatch and, before the upscaler runs, passes the
++game's low-resolution frame to `LmxxfNrRuntime.dll` (the HIP runtime from this repo).
++The neural result is then fed to the upscaler as usual. Because the integration lives
++in the host layer, any game that works with OptiScaler works with the lmxxf backend —
++no per-game hooking needed.
++
++## Building
++
++### Runtime (Linux, cross-compiled to Windows DLL)
++
++```bash
++bash Development/OptiScaler/build-runtime.sh
++```
++
++### Host (Windows, MSVC)
++
++1. Clone the upstream repo to the path expected by `prepare-host.py`
++   (default `/tmp/re9-upstream-bridge-review`).
++2. Checkout the pinned commit from `upstream.json`.
++3. Run `prepare-host.py` to apply patches and copy core headers/shaders.
++4. Open the upstream solution in Visual Studio 2022 and build Release x64.
++
++## Deploy
++
++1. Copy the built OptiScaler host DLL next to the game exe.
++2. Copy `LmxxfNrRuntime.dll` next to it.
++3. Copy `native-game-tiled-assets/` (weights + HIP modules) next to it.
++4. In `OptiScaler.ini`, set `[DlssNr] NrBackend=lmxxf`.
++5. Run the game.
++
++## Notes
++
++- Standard 16:9 inputs (R10G10B10A2, R16G16B16A16, B8G8R8A8, etc.) work out of the box.
++- RGB9E5 (HDR compressed) input requires `private_float_output` — see
++  `src/native_game_codec.h`.
++- Inputs larger than 1920×1080 are downsampled by the codec when `DLSS5_FIT_LARGE=1`.
+diff --git a/Development/OptiScaler/ResourceStateBook.h.patch b/Development/OptiScaler/ResourceStateBook.h.patch
+new file mode 100644
+index 0000000..70cb8ec
+--- /dev/null
++++ b/Development/OptiScaler/ResourceStateBook.h.patch
+@@ -0,0 +1,27 @@
++--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/ResourceStateBook.h
+++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/submission/ResourceStateBook.h
++@@ -76,7 +76,10 @@
++             {
++                 sawAliasing = true;
++-                if (reasonOut)
++-                    *reasonOut = "aliasing_barrier";
++-                return false;
+++                if (openSplitBarrier || bar.Flags != D3D12_RESOURCE_BARRIER_FLAG_NONE)
+++                {
+++                    if (reasonOut) *reasonOut = "aliasing_during_split_transition";
+++                    return false;
+++                }
+++                continue;
++             }
++             if (bar.Type == D3D12_RESOURCE_BARRIER_TYPE_UAV)
++@@ -118,10 +121,4 @@
++             return false;
++         }
++-        if (sawAliasing)
++-        {
++-            if (reasonOut)
++-                *reasonOut = "aliasing_barrier";
++-            return false;
++-        }
++         return true;
++     }
+diff --git a/Development/OptiScaler/build-host.ps1 b/Development/OptiScaler/build-host.ps1
+new file mode 100644
+index 0000000..2f74788
+--- /dev/null
++++ b/Development/OptiScaler/build-host.ps1
+@@ -0,0 +1,11 @@
++$ErrorActionPreference='Stop'
++$root='D:\DLSSNR-Lab\re9-presr';$src="$root\source";$solution="$src\OptiScaler-DLSSNR-PreSR-Multipass-main"
++New-Item -ItemType Directory -Force $src,"$root\bin","$root\obj"|Out-Null
++if(!(Test-Path "$solution\OptiScaler\OptiScaler.vcxproj")){& tar.exe -xzf "$root\host-source.tar.gz" -C $src;if($LASTEXITCODE){throw 'Source unpack failed'}}
++[IO.File]::WriteAllText("$solution\OptiScaler\resource_build_date.h",('#define VER_BUILD_DATE "20260922_RE9_PreSR"'+"`r`n"))
++[IO.File]::WriteAllText("$solution\OptiScaler\resource_build_commit.h",('#define VER_BUILD_COMMIT "8f71f73_lmxxf_staged"'+"`r`n"))
++& 'D:\DLSSNR-Lab\build-tools\MSBuild\Current\Bin\MSBuild.exe' "$solution\OptiScaler\OptiScaler.vcxproj" /m:4 /t:Build /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0.26100.0 /p:PreBuildEventUseInBuild=false /p:PostBuildEventUseInBuild=false "/p:SolutionDir=$solution/" "/p:OutDir=$root/bin/" "/p:IntDir=$root/obj/" /v:minimal /nologo /fl "/flp:logfile=$root/build-host.log;verbosity=normal" > "$root\build-console.log" 2>&1
++$code=$LASTEXITCODE
++Get-Content "$root\build-console.log" -Tail 35
++if($code){throw "Host build failed $code"}
++Get-FileHash "$root\bin\OptiScaler.dll"
+diff --git a/Development/OptiScaler/build-runtime.sh b/Development/OptiScaler/build-runtime.sh
+new file mode 100644
+index 0000000..d5a8996
+--- /dev/null
++++ b/Development/OptiScaler/build-runtime.sh
+@@ -0,0 +1,11 @@
++#!/usr/bin/env bash
++set -euo pipefail
++cd "$(dirname "$0")/../../.."
++host=/tmp/re9-upstream-bridge-review
++runtime="$host/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime"
++out=/tmp/optiscaler-build
++mkdir -p "$out"
++python3 Development/OptiScaler/prepare-host.py
++x86_64-w64-mingw32-g++ -std=c++17 -O2 -shared -static -D_WIN32_WINNT=0x0A00 -DLMXXF_NR_RUNTIME_EXPORTS -I "$runtime" -I src -I Development/HIP "$runtime/LmxxfNrRuntime.cpp" -o "$out/LmxxfNrRuntime.dll" -ld3d12 -ldxgi -ld3dcompiler -ldxguid -luser32
++x86_64-w64-mingw32-g++ -std=c++17 -O2 -static -municode "$host/tests/lmxxf_nr_gpu.cpp" -o "$out/runtime-smoke.exe" -ld3d12 -ldxgi -ldxguid
++echo "Done: $out/LmxxfNrRuntime.dll"
+diff --git a/Development/OptiScaler/build-tests.cmd b/Development/OptiScaler/build-tests.cmd
+new file mode 100644
+index 0000000..658e54f
+--- /dev/null
++++ b/Development/OptiScaler/build-tests.cmd
+@@ -0,0 +1,13 @@
++@echo off
++setlocal
++call "D:\DLSSNR-Lab\build-tools\VC\Auxiliary\Build\vcvarsall.bat" x64
++if errorlevel 1 exit /b 1
++cd /d D:\DLSSNR-Lab\re9-presr\source
++call tools\test-lmxxf-list-split.cmd D:\DLSSNR-Lab\re9-presr\tests
++if errorlevel 1 exit /b 1
++call tools\test-lmxxf-create-execute.cmd D:\DLSSNR-Lab\re9-presr\tests
++if errorlevel 1 exit /b 1
++call tools\test-lmxxf-list1-wrap.cmd D:\DLSSNR-Lab\re9-presr\tests
++if errorlevel 1 exit /b 1
++call tools\test-lmxxf-same-frame-boundary.cmd D:\DLSSNR-Lab\re9-presr\tests
++exit /b %errorlevel%
+diff --git a/Development/OptiScaler/bundle-source.py b/Development/OptiScaler/bundle-source.py
+new file mode 100644
+index 0000000..45419a7
+--- /dev/null
++++ b/Development/OptiScaler/bundle-source.py
+@@ -0,0 +1,48 @@
++"""Archive matching modified host/runtime source, including pinned dependency headers/libs."""
++from pathlib import Path
++import tarfile,io,subprocess
++root=Path(__file__).resolve().parents[3]
++host=Path('/tmp/re9-upstream-bridge-review')
++out=Path('/tmp/re9-presr-source.tar.gz')
++# Refresh HIP source/build recipes too: the runtime uses the current common kernels.
++import shutil
++for p in (root/'hip').iterdir():
++ if p.is_file() and p.suffix in ('.hip','.h','.cpp','.ps1','.md'):
++  shutil.copyfile(p,host/'third_party/lmxxf/hip'/p.name)
++notes='''Modified RE9 OptiScaler host and lmxxf HIP runtime source.
++Upstream: https://github.com/TheAutomatic/dlss-5-amd-project/tree/release/1.9.0
++Commit: 8f71f73bfc836a37936e7cee6701750ad4e8bfec
++Host GPL-3.0 license: OptiScaler-DLSSNR-PreSR-Multipass-main/LICENSE
++Our core MIT license: third_party/lmxxf/LICENSE
++The archive includes adapted sources, dependency headers/libraries and current HIP kernel sources.
++
++Host: Visual Studio2022 v143, Windows SDK10.0.26100.0, x64 Release.
++Run MSBuild on OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/OptiScaler.vcxproj.
++Set SolutionDir to the absolute OptiScaler-DLSSNR-PreSR-Multipass-main directory (trailing separator).
++Set PreBuildEventUseInBuild=false and PostBuildEventUseInBuild=false; generated version headers are included.
++Runtime: from archive root on Linux with mingw-w64, run bash build-lmxxf-runtime.sh.
++Driver HIP7 is dynamically loaded. Model weights and .hsaco are runtime assets, shipped in the binary package.
++HIP recipes: third_party/lmxxf/hip/build-modules.ps1.
++
++Pinned external dependencies:
++xess 8fe81bdbbaf00b3c1b733fd0d830c333dc84e6f0
++FidelityFX-SDK c6efa6bf7f2027b3ec94f28578bb5965eabb9e55
++FidelityFX-SDK-v2 60f4ea81909200d8542eca14dccb2628b763a9a3
++Their upstream URLs are recorded in .gitmodules; their own licenses remain applicable.
++'''
++build='''#!/usr/bin/env bash
++set -euo pipefail
++rt=OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime
++x86_64-w64-mingw32-g++ -std=c++17 -O2 -shared -static -D_WIN32_WINNT=0x0A00 -DLMXXF_NR_RUNTIME_EXPORTS -I "$rt" -I third_party/lmxxf/src -I third_party/lmxxf/Development/HIP "$rt/LmxxfNrRuntime.cpp" -o LmxxfNrRuntime.dll -ld3d12 -ldxgi -ld3dcompiler -ldxguid
++'''
++prefix='OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/'
++extra={'BUILD-SOURCE.txt':notes,'build-lmxxf-runtime.sh':build,prefix+'resource_build_date.h':'#define VER_BUILD_DATE "20260922_RE9_PreSR"\n',prefix+'resource_build_commit.h':'#define VER_BUILD_COMMIT "8f71f73_lmxxf_staged"\n'}
++with tarfile.open(out,'w:gz') as tar:
++ for p in sorted(host.rglob('*')):
++  rel=p.relative_to(host)
++  if not p.is_file() or any(x in ('.git','shader-cache','__pycache__') for x in rel.parts) or p.suffix.lower() in ('.exe','.dll','.pdb','.obj','.addon64','.hsaco'):continue
++  if str(rel) in extra:continue
++  tar.add(p,arcname=str(rel),recursive=False)
++ for name,value in extra.items():
++  data=value.encode();info=tarfile.TarInfo(name);info.size=len(data);info.mode=0o755 if name.endswith('.sh') else 0o644;tar.addfile(info,io.BytesIO(data))
++print(out,out.stat().st_size)
+diff --git a/Development/OptiScaler/install-build-tools.ps1 b/Development/OptiScaler/install-build-tools.ps1
+new file mode 100644
+index 0000000..2b0b0af
+--- /dev/null
++++ b/Development/OptiScaler/install-build-tools.ps1
+@@ -0,0 +1,11 @@
++$ErrorActionPreference='Stop'
++$root='D:\DLSSNR-Lab\re9-presr';$installer="$root\vs_buildtools.exe";$dest='D:\DLSSNR-Lab\build-tools'
++if(Test-Path "$dest\MSBuild\Current\Bin\MSBuild.exe"){'BUILD_TOOLS_PRESENT';exit 0}
++$s=Get-AuthenticodeSignature $installer
++if($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch 'Microsoft Corporation'){throw 'Build Tools signature verification failed'}
++$args=@('--quiet','--wait','--norestart','--nocache','--installPath',$dest,'--add','Microsoft.VisualStudio.Workload.VCTools','--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','--add','Microsoft.VisualStudio.Component.Windows11SDK.26100')
++$p=Start-Process $installer -ArgumentList $args -PassThru -Wait
++[IO.File]::WriteAllText("$root\installer-pid.txt",[string]$p.Id)
++[IO.File]::WriteAllText("$root\installer-exit.txt",[string]$p.ExitCode)
++"BUILD_TOOLS_EXIT code=$($p.ExitCode)"
++if($p.ExitCode -notin 0,3010){throw "Build Tools install failed: $($p.ExitCode)"}
+diff --git a/Development/OptiScaler/install.ps1 b/Development/OptiScaler/install.ps1
+new file mode 100644
+index 0000000..3c2c8b8
+--- /dev/null
++++ b/Development/OptiScaler/install.ps1
+@@ -0,0 +1,38 @@
++param([string]$Diagnostic='split-original',[string]$RestoreBackup='')
++$ErrorActionPreference='Stop'
++$g='C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem'
++$lab='D:\DLSSNR-Lab\re9-presr'
++if(Get-Process re9 -ErrorAction SilentlyContinue){throw 'Game still running; no files changed'}
++if($RestoreBackup){
++ $m=Get-Content "$RestoreBackup\manifest.json" -Raw|ConvertFrom-Json
++ foreach($f in $m.files){$p=Join-Path $g $f.name;if($f.existed){Copy-Item (Join-Path $RestoreBackup $f.name) $p -Force}else{if(Test-Path $p){Remove-Item $p}}}
++ "RESTORED $RestoreBackup";exit
++}
++$names=@('config.ini','OptiScaler.ini','dxgi.dll','LmxxfNrRuntime.dll','re9-present.addon64','_storage_\OptiScaler.ini','_storage_\dxgi.dll','_storage_\LmxxfNrRuntime.dll','_storage_\re9-present.addon64','DLSS5-AMD\native-game-tiled-assets\HIP\SHA256SUMS')
++$names+=@('DLSS5-AMD\native-game-tiled-assets\native_codec_encode.hlsl','DLSS5-AMD\native-game-tiled-assets\native_codec_decode.hlsl')
++$b="$lab\backups\$(Get-Date -Format yyyyMMdd-HHmmss-fff)"
++New-Item -ItemType Directory $b -Force|Out-Null
++$files=@(foreach($n in $names){$exists=Test-Path "$g\$n";if($exists){$dest=Join-Path $b $n;New-Item -ItemType Directory (Split-Path $dest) -Force|Out-Null;Copy-Item "$g\$n" $dest};[pscustomobject]@{name=$n;existed=$exists}})
++[pscustomobject]@{files=$files;diagnostic=$Diagnostic}|ConvertTo-Json -Depth 4|Set-Content "$b\manifest.json"
++Set-Content "$lab\last-backup.txt" $b
++foreach($d in @($g,"$g\_storage_")){
++ Copy-Item "$lab\bin\OptiScaler.dll" "$d\dxgi.dll" -Force
++ Copy-Item "$lab\LmxxfNrRuntime.dll" "$d\LmxxfNrRuntime.dll" -Force
++ if(Test-Path "$d\re9-present.addon64"){Remove-Item "$d\re9-present.addon64"}
++}
++foreach($n in @('native_codec_encode.hlsl','native_codec_decode.hlsl')){Copy-Item "$lab\shaders\$n" "$g\DLSS5-AMD\native-game-tiled-assets\$n" -Force}
++$ini=Get-Content "$g\OptiScaler.ini" -Raw
++$ini=$ini -replace '(?ms)^\[DlssNr\].*?(?=^\[|\z)',''
++$ini=$ini -replace '(?m)^LoadReshade=.*$','LoadReshade=false'
++$ini+="`r`n[DlssNr]`r`nEnabled=true`r`nRunBeforeSR=true`r`nNrBackend=lmxxf`r`nLmxxfDiagnostic=$Diagnostic`r`nAmdEveryFrame=true`r`nTransferStrength=1.0`r`nColourStrength=1.0`r`nToggleKey=117`r`n"
++[IO.File]::WriteAllText("$g\OptiScaler.ini",$ini)
++Copy-Item "$g\OptiScaler.ini" "$g\_storage_\OptiScaler.ini" -Force
++$config=Get-Content "$g\config.ini" -Raw
++$config=$config -replace '(?m)^Resolution=.*$','Resolution=2560x1440'
++$config=$config -replace '(?m)^WindowMode=.*$','WindowMode=Borderless'
++$config=$config -replace '(?m)^FrameGeneration=.*$','FrameGeneration=Off'
++[IO.File]::WriteAllText("$g\config.ini",$config)
++$hip="$g\DLSS5-AMD\native-game-tiled-assets\HIP"
++$hashes=Get-ChildItem "$hip\*.hsaco"|Sort-Object Name|ForEach-Object{(Get-FileHash $_.FullName).Hash.ToLower()+'  '+$_.Name}
++[IO.File]::WriteAllLines("$hip\SHA256SUMS",[string[]]$hashes)
++"BACKUP $b";Get-FileHash "$g\dxgi.dll","$g\LmxxfNrRuntime.dll"
+diff --git a/Development/OptiScaler/prepare-host.py b/Development/OptiScaler/prepare-host.py
+new file mode 100644
+index 0000000..9371f1a
+--- /dev/null
++++ b/Development/OptiScaler/prepare-host.py
+@@ -0,0 +1,123 @@
++from pathlib import Path
++import subprocess,shutil,difflib,json
++root=Path(__file__).resolve().parents[3];here=Path(__file__).resolve().parent
++host=Path('/tmp/re9-upstream-bridge-review');rev='8f71f73bfc836a37936e7cee6701750ad4e8bfec'
++assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=host,text=True).strip()==rev
++prefix='OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/'
++def original(name):return subprocess.check_output(['git','show',rev+':'+prefix+name],cwd=host,text=True)
++def write(name,s):
++ old=original(name);(host/prefix/name).write_text(s)
++ (here/(Path(name).name+'.patch')).write_text(''.join(difflib.unified_diff(old.splitlines(True),s.splitlines(True),fromfile='a/'+prefix+name,tofile='b/'+prefix+name,n=2)))
++
++# --- LmxxfNrApi.h: ABI v2 ---
++name='dlssnr/backend/lmxxf_runtime/LmxxfNrApi.h';s=original(name).replace('#define LMXXF_NR_ABI_VERSION 1u','#define LMXXF_NR_ABI_VERSION 2u')
++write(name,s)
++
++# --- LmxxfNrRuntime.cpp ---
++name='dlssnr/backend/lmxxf_runtime/LmxxfNrRuntime.cpp';s=original(name)
++s=s.replace('(info->struct_size != sizeof(LmxxfNrFrameInfo) && info->struct_size != legacySize)', '(info->struct_size != sizeof(LmxxfNrFrameInfo))')
++s=s.replace('JoinPath(dll, L"shaders"),','JoinPath(dll, L"DLSS5-AMD\\native-game-tiled-assets"),\n        JoinPath(dll, L"..\\DLSS5-AMD\\native-game-tiled-assets"),\n        JoinPath(dll, L"shaders"),')
++s=s.replace('session->bridge->EnqueueAfterProducer(j->seed, false);','session->bridge->EnqueueAfterProducer(session->queue, j->seed, false);')
++s=s.replace('1.f, j->transfer_strength, j->color_strength, j->debug_view);','1.f, NativeCodecParameters{j->transfer_strength, j->color_strength, NativeCodecDebugView(j->debug_view)});')
++s=s.replace('    uint32_t state = LMXXF_NR_JOB_NONE;', '    uint32_t state = LMXXF_NR_JOB_NONE;\n    bool hipQueued = false, outputsRecorded = false;')
++s=s.replace('        j->state = LMXXF_NR_JOB_NR_COMPLETE;', '        j->hipQueued = true;\n        j->state = LMXXF_NR_JOB_NR_COMPLETE;')
++s=s.replace('        j->state = LMXXF_NR_JOB_CONSUMER_COMPLETE;', '        j->outputsRecorded = true;\n        j->state = LMXXF_NR_JOB_CONSUMER_COMPLETE;')
++s=s.replace('        if (j)\n            j->state = LMXXF_NR_JOB_RETIRED;', '        if (!j || !j->hipQueued || !j->outputsRecorded)\n            return Fail(LMXXF_NR_INVALID_ARGUMENT, "Retire: producer/HIP/consumer incomplete");\n        session->bridge->NotifyOutputSubmitted(session->queue);\n        j->state = LMXXF_NR_JOB_RETIRED;')
++s=s.replace('        if (FAILED(DrainGpu()))','        if ((bridge && !bridge->WaitForSubmittedWork()) || FAILED(DrainGpu()))')
++s=s.replace('        NativeResolveNetworkGeometry(info->color_width, info->color_height);','        _wputenv_s(L"DLSS5_CODEC_SRGB", L"0");\n        NativeResolveNetworkGeometry(info->color_width, info->color_height);')
++s=s.replace('session->bridge->Create(session->queue, opt, {});', 'session->bridge->Create(session->queue, opt, {});\n            session->bridge->PrepareStagedKernels();')
++
++# Reject unsupported render inputs before changing network globals or allocating HIP.
++start=s.index('        if (!session->hipPrepared)\n', s.index('int32_t PrepareFrame('))
++end=s.index('        auto *color =', start)
++s=s[:start]+s[end:]
++start=s.index('        auto *color =', s.index('int32_t PrepareFrame('))
++end=s.index('        const bool geoChanged', start)
++validation=s[start:end]
++s=s[:start]+s[end:]
++validation += r'''        {
++            static const bool fitLarge = [&] {
++                unsigned v = 0;
++                if (const char *e = std::getenv("DLSS5_FIT_LARGE")) return e[0] == '1' && !e[1];
++                std::wstring dir = session->assetsDir;
++                for (int up = 0; up < 4 && !dir.empty(); up++)
++                {
++                    const std::wstring flags = JoinPath(dir, L"native-game-flags.txt");
++                    if (FILE *f = _wfopen(flags.c_str(), L"rb")) { char line[256]; while (fgets(line, sizeof line, f)) sscanf(line, "DLSS5_FIT_LARGE=%u", &v); fclose(f); break; }
++                    const size_t cut = dir.find_last_of(L"\\/"); if (cut == std::wstring::npos) break; dir.resize(cut);
++                }
++                return v == 1;
++            }();
++            if (fitLarge)
++                NativeFitLargeInputOverride() = true;
++        }
++        if (!NativeInputGeometry::Supported(cdesc.Width, ch, NativeFitLargeInput()))
++        {
++            char message[192] {};
++            std::snprintf(message, sizeof message,
++                          "PrepareFrame: render input %llux%u exceeds supported limit 1920x1080 (DLSS5_FIT_LARGE=0); original SR",
++                          static_cast<unsigned long long>(cdesc.Width), ch);
++            return Fail(LMXXF_NR_INVALID_ARGUMENT, message);
++        }
++        if (cw != info->color_width || ch != info->color_height)
++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: render input metadata/texture size mismatch; original SR");
++        if (cdesc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D || cdesc.DepthOrArraySize != 1 ||
++            cdesc.MipLevels != 1 || cdesc.SampleDesc.Count != 1 ||
++            (cdesc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) ||
++            !(NativeIsGameColor(cfmt) || cfmt == DXGI_FORMAT_R9G9B9E5_SHAREDEXP))
++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: unsupported render input texture; original SR");
++        if (session->initializationBlocked)
++            return Fail(LMXXF_NR_FAILED, "PrepareFrame: failed initialization could not drain safely; original SR");
++        if (session->job.state != LMXXF_NR_JOB_NONE && session->job.state != LMXXF_NR_JOB_RETIRED)
++            return Fail(LMXXF_NR_INVALID_ARGUMENT, "PrepareFrame: previous frame not retired; original SR");
++
++'''
++s=s.replace('        // Match upstream auto tier:', validation+'        // Match upstream auto tier:',1)
++s=s.replace('    bool hipPrepared = false;', '    bool hipPrepared = false;\n    bool initializationBlocked = false;')
++
++# Bring lazy bridge creation into the same transaction as the codec chain.
++start=s.index('            if (!session->bridge)', s.index('int32_t PrepareFrame('))
++end=s.index('            NativeGameCodec *enc',start)
++bridge=s[start:end]
++s=s[:start]+s[end:]
++s=s.replace('                enc = new NativeGameCodec();', bridge+'                enc = new NativeGameCodec();',1)
++s=s.replace('                delete enc;\n                throw;', r'''                delete enc;
++                if (!session->bridge || session->bridge->WaitForSubmittedWork())
++                {
++                    session->TeardownCodecChain();
++                    session->job = {};
++                }
++                else
++                    session->initializationBlocked = true;
++                throw;''',1)
++write(name,s)
++
++# --- LmxxfProductionOptions.h ---
++name='dlssnr/backend/lmxxf_runtime/LmxxfProductionOptions.h';s=original(name).replace('    return o;','    o.mh_feature_byte=o.mh_proj_diag_fb=o.mh_byte_stream=o.decoder_byte=o.mh_ffn_frag256=true;\n    return o;');write(name,s)
++
++# --- LmxxfBackend.cpp ---
++name='dlssnr/backend/LmxxfBackend.cpp';s=original(name)
++s=s.replace('    const auto nextToDll = directory / L"lmxxf-modules";','    for(const auto& base : {directory, directory.parent_path()}){\n        const auto bundled=base / L"DLSS5-AMD" / L"native-game-tiled-assets" / L"HIP";\n        if(std::filesystem::exists(bundled / L"SHA256SUMS"))return bundled;\n    }\n    const auto nextToDll = directory / L"lmxxf-modules";')
++s=s.replace('    LmxxfCut::ClearPendingEnqueue();\n    pendingJob = nullptr;','    if(pendingJob){SetStatus("lmxxf: prior job not yet submitted; original SR");return nullptr;}\n    LmxxfCut::ClearPendingEnqueue();\n    pendingJob = nullptr;',1)
++s=s.replace('void LmxxfBackend::Submitted(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *)\n{','void LmxxfBackend::Submitted(ID3D12CommandQueue *submittedQueue, UINT, ID3D12CommandList *const *)\n{\n    if(DlssNr::Submission::InsideLogicalExecute() || submittedQueue != queue || LmxxfCut::Pending().job)return;')
++s=s.replace('        api->table.Retire(session, pendingJob);','        const auto rc=api->table.Retire(session, pendingJob);\n        if(rc != LMXXF_NR_OK){SetStatus("lmxxf: consumer retirement failed");return;}')
++s=s.replace('const bool rebindish = frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry")));', 'const bool rebindish = frameRc != LMXXF_NR_INVALID_ARGUMENT && (frameRc == LMXXF_NR_UNAVAILABLE || (err[0] && (std::strstr(err, "rebind") || std::strstr(err, "geometry"))));')
++write(name,s)
++
++# --- AmdBridge.cpp ---
++name='dlssnr/amd/AmdBridge.cpp';s=original(name).replace('    return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);','    if(DlssNr::Backend::RequestedKind()==DlssNr::Backend::Kind::Lmxxf)\n        return std::filesystem::exists(Directory() / L"LmxxfNrRuntime.dll", ec);\n    return std::filesystem::exists(Directory() / L"dlssnr_amd_pass1.dll", ec);');write(name,s)
++
++# --- ResourceStateBook.h ---
++name='dlssnr/submission/ResourceStateBook.h';s=original(name)
++s=s.replace('                if (reasonOut)\n                    *reasonOut = "aliasing_barrier";\n                return false;','                if (openSplitBarrier || bar.Flags != D3D12_RESOURCE_BARRIER_FLAG_NONE)\n                {\n                    if (reasonOut) *reasonOut = "aliasing_during_split_transition";\n                    return false;\n                }\n                continue;',1)
++s=s.replace('        if (sawAliasing)\n        {\n            if (reasonOut)\n                *reasonOut = "aliasing_barrier";\n            return false;\n        }\n','')
++write(name,s)
++
++# Copy core headers/shaders
++for folder,patterns in [('src',('*.h',)),('Development/HIP',('*.h',)),('shaders',('*.hlsl','*.hlsli'))]:
++ target=host/'third_party/lmxxf'/folder;target.mkdir(parents=True,exist_ok=True)
++ for pattern in patterns:
++  for p in (root/folder).glob(pattern):shutil.copyfile(p,target/p.name)
++shutil.copyfile(root/'LICENSE',host/'third_party/lmxxf/LICENSE')
++(here/'upstream.json').write_text(json.dumps({'repository':'https://github.com/TheAutomatic/dlss-5-amd-project','branch':'release/1.9.0','commit':rev,'core_base':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'host_license':'GPL-3.0 (retained upstream)','core_license':'MIT'},indent=2)+'\n')
++print('prepared external host',rev)
+diff --git a/Development/OptiScaler/runtime-smoke.ps1 b/Development/OptiScaler/runtime-smoke.ps1
+new file mode 100644
+index 0000000..a6f0c11
+--- /dev/null
++++ b/Development/OptiScaler/runtime-smoke.ps1
+@@ -0,0 +1,10 @@
++$ErrorActionPreference='Stop'
++if(Get-Process re9 -ErrorAction SilentlyContinue){throw 'Game running'}
++$g='C:\Program Files (x86)\Steam\steamapps\common\RESIDENT EVIL requiem BIOHAZARD requiem'
++$env:LMXXF_WEIGHTS_DIR="$g\DLSS5-AMD\native-game-tiled-assets"
++$env:LMXXF_SHADER_DIR="$g\DLSS5-AMD\native-game-tiled-assets"
++New-Item -ItemType Directory D:\DLSSNR-Lab\re9-presr\shaders -Force|Out-Null
++Copy-Item "$g\DLSS5-AMD\native-game-tiled-assets\*.hlsl" D:\DLSSNR-Lab\re9-presr\shaders -Force
++Copy-Item "$g\DLSS5-AMD\native-game-tiled-assets\*.hlsli" D:\DLSSNR-Lab\re9-presr\shaders -Force
++& D:\DLSSNR-Lab\re9-presr\runtime-smoke.exe D:\DLSSNR-Lab\re9-presr\LmxxfNrRuntime.dll "$g\DLSS5-AMD\native-game-tiled-assets\HIP"
++exit $LASTEXITCODE
+diff --git a/Development/OptiScaler/test-bridge.ps1 b/Development/OptiScaler/test-bridge.ps1
+new file mode 100644
+index 0000000..c92eae3
+--- /dev/null
++++ b/Development/OptiScaler/test-bridge.ps1
+@@ -0,0 +1,11 @@
++﻿$ErrorActionPreference='Stop';$r='D:\DLSSNR-Lab\hip-backend';$d="$r\bridge-stages";$a='D:\DLSSNR-Lab\Magpie-DLSS5-AMD-0.23\DLSS5-AMD\native-game-tiled-assets'
++function Idle{if(Get-Process LOP-Win64-Shipping,SB-Win64-Shipping,OnimushaWotS,re9,Magpie -ErrorAction SilentlyContinue){throw 'Game running'}}
++Idle;New-Item -ItemType Directory -Force "$d\modules\gfx1201"|Out-Null
++Copy-Item "$r\network-fixed-shapes\selected-modules\*.hsaco" "$d\modules\gfx1201"
++foreach($case in @(@(900,0),@(1080,0),@(900,1))){
++ Idle;$height=$case[0];$graph=$case[1];$w=if($height -eq 900){1600}else{1920};$h=if($height -eq 900){960}else{1152}
++ $modules=if($height -eq 900){"$d\modules"}else{"$r\network-fixed-shapes\selected-modules"}
++ & "D:\DLSSNR-Lab\re9-presr\test-presr.exe" $a $modules "$r\network-timeline\$height\flags.txt" "$r\network-timeline\$height\input.f32" "$r\network-timeline\$height\expected.f32" $w $h $graph > "$d\presr-bridge-$height-g$graph.log"
++ if($LASTEXITCODE){Get-Content "$d\presr-bridge-$height-g$graph.log";throw 'Bridge stage test failed'}
++ Get-Content "$d\presr-bridge-$height-g$graph.log" | Select-String '^(DEVICE|PASS|graph_stats)'
++}
+diff --git a/Development/OptiScaler/upstream.json b/Development/OptiScaler/upstream.json
+new file mode 100644
+index 0000000..74a0932
+--- /dev/null
++++ b/Development/OptiScaler/upstream.json
+@@ -0,0 +1,8 @@
++{
++  "repository": "https://github.com/TheAutomatic/dlss-5-amd-project",
++  "branch": "release/1.9.0",
++  "commit": "8f71f73bfc836a37936e7cee6701750ad4e8bfec",
++  "core_base": "253db5f740a4e7a5a3dedb0b11ba9efe2d446b57",
++  "host_license": "GPL-3.0 (retained upstream)",
++  "core_license": "MIT"
++}
+-- 
+2.34.1
+

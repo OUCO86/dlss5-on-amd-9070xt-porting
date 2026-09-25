@@ -1,0 +1,9 @@
+--- a/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrApi.h
++++ b/OptiScaler-DLSSNR-PreSR-Multipass-main/OptiScaler/dlssnr/backend/lmxxf_runtime/LmxxfNrApi.h
+@@ -11,5 +11,5 @@
+ #endif
+ 
+-#define LMXXF_NR_ABI_VERSION 1u
++#define LMXXF_NR_ABI_VERSION 2u
+ 
+ enum LmxxfNrStatus

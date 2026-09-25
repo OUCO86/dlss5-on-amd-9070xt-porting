@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/TheAutomatic/dlss-5-amd-project",
+  "branch": "release/1.9.0",
+  "commit": "8f71f73bfc836a37936e7cee6701750ad4e8bfec",
+  "core_base": "3d9b3e42f3529609f824506c8d385bdd00b3e70c",
+  "host_license": "GPL-3.0 (retained upstream)",
+  "core_license": "MIT"
+}

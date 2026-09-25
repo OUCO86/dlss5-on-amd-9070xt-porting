@@ -1,0 +1,46 @@
+--- a/tests/lmxxf_same_frame_boundary.cpp
++++ b/tests/lmxxf_same_frame_boundary.cpp
+@@ -46,7 +46,7 @@
+ {
+     using namespace DlssNr::Backend::LmxxfProbe;
+     Require(NeedsOpenListProxy(ParseMode("proxy-original")) && NeedsOpenListProxy(ParseMode("split-original")) &&
+-            !NeedsOpenListProxy(ParseMode("off")) && !NeedsOpenListProxy(ParseMode("staging-current")), "opt-in modes");
++            NeedsOpenListProxy(ParseMode("off")) && !NeedsOpenListProxy(ParseMode("staging-current")), "opt-in modes");
+     ComPtr<IDXGIFactory4> factory;
+     ComPtr<IDXGIAdapter> warp;
+     ComPtr<ID3D12Device> device;
+@@ -107,9 +107,17 @@
+         td.Width = 16; td.Height = 8; td.DepthOrArraySize = 1; td.MipLevels = 1;
+         td.Format = format; td.SampleDesc.Count = 1;
+         D3D12_HEAP_PROPERTIES hp {}; hp.Type = D3D12_HEAP_TYPE_DEFAULT;
+-        ComPtr<ID3D12Resource> texture;
+-        Check(device->CreateCommittedResource(&hp, D3D12_HEAP_FLAG_NONE, &td, D3D12_RESOURCE_STATE_COPY_DEST,
+-                                              nullptr, IID_PPV_ARGS(&texture)), "texture");
++        const auto allocation = device->GetResourceAllocationInfo(0, 1, &td);
++        D3D12_HEAP_DESC hd {}; hd.SizeInBytes=allocation.SizeInBytes;
++        hd.Alignment=allocation.Alignment; hd.Properties=hp;
++        hd.Flags=D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
++        ComPtr<ID3D12Heap> heap;
++        Check(device->CreateHeap(&hd, IID_PPV_ARGS(&heap)), "alias heap");
++        ComPtr<ID3D12Resource> texture, alias;
++        Check(device->CreatePlacedResource(heap.Get(), 0, &td, D3D12_RESOURCE_STATE_COPY_DEST,
++                                          nullptr, IID_PPV_ARGS(&texture)), "placed texture");
++        Check(device->CreatePlacedResource(heap.Get(), 0, &td, D3D12_RESOURCE_STATE_COPY_DEST,
++                                          nullptr, IID_PPV_ARGS(&alias)), "placed alias");
+         D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint {};
+         UINT rows = 0; UINT64 rowBytes = 0, total = 0;
+         device->GetCopyableFootprints(&td, 0, 1, 0, &footprint, &rows, &rowBytes, &total);
+@@ -142,6 +150,13 @@
+             D3D12_TEXTURE_COPY_LOCATION dst {}, src {};
+             dst.pResource = texture.Get(); dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+             src.pResource = upload.Get(); src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT; src.PlacedFootprint = footprint;
++            D3D12_RESOURCE_BARRIER ab {};
++            ab.Type=D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
++            ab.Aliasing={nullptr,alias.Get()}; cmd->ResourceBarrier(1,&ab);
++            dst.pResource=alias.Get();
++            cmd->CopyTextureRegion(&dst,0,0,0,&src,nullptr);
++            ab.Aliasing={alias.Get(),texture.Get()}; cmd->ResourceBarrier(1,&ab);
++            dst.pResource=texture.Get();
+             cmd->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+             Barrier(cmd.Get(), texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE);
+             Check(logical->SplitSegments(), "same-frame cut");
