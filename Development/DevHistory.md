@@ -528,3 +528,9 @@ add-on SHA256 3e3ca57a079b607405227a7b3b5b1c72b71ae0416438928e69bc3b65808e67a8�
 ## 2026-09-26 05:51～05:54：wave-owned 正式装进剑星
 
 用户关游戏后 `install.ps1 -Game stellar`：5 文件哈希校验、flags 加 `DLSS5_HIP_WAVE_OWNED=1`、dxgi/OptiScaler.ini 不变，备份 `deploy-stellar\backups\20260926-055146`。用户同场景 2K 质量档实测 49～50fps（prod8 47～48）。`native-hip.txt` 当前进程 `wave_owned_requested=1 wave_owned_active=1`，未回落。2077 未装，发布包未改。
+
+## 2026-09-26 06:02～06:10：Daniel v0.4.0 同场景实机——快在少算 35% 像素，按像素效率持平
+
+手动代理装（`results/daniel-040-ingame-20260926/swap.ps1`，只换 dxgi.dll，已切回并核对 fbfb6676）。剑星 2K 质量档同场景：Daniel **56～57fps**，我们 wave-owned 49～50。其日志：网络直接跑渲染分辨率 1707×961（我们 FIT 到 1080 层，处理 1920×1152，像素多 35%），网络 GPU 11.7～12.2ms；我们 15.87ms 按像素折算 ≈11.8ms——**内核效率持平，差距全在网络尺寸**。其 0.3→0.4 的 42% 是补自家旧通用路径的课（与闇静态拆包结论一致）。另见 WMMA 统计：Daniel 全包仅 73 条 FP16 WMMA，我们 ViT QKV（130 条）与 decoder 投影为 FP16——原版权重即 float/half，逐位约束所致，全换 FP8 估计整网仅 2～4%，不是主因。
+画质："浅"有依据——其默认 PreHistory=0（日志 `history off`，时序历史未喂网络）、LocalTone=0、961 行网络。
+**新主线**：网络按渲染分辨率跑（只补齐到网络所需倍数，不再放大到 1080 几何），像素约 −20%，预期帧时 −3ms 级，保留时序历史与现有色彩控制。需新增任意尺寸几何（ViT token、decoder 移位、固定尺寸编译特化）。
