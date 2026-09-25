@@ -1,0 +1,46 @@
+#include <windows.h>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <map>
+#include <algorithm>
+#include <chrono>
+#include "Development/HIP/hip_reference_network.h"
+std::vector<float> read(const char*p){std::ifstream f(p,std::ios::binary|std::ios::ate);if(!f)throw std::runtime_error(p);size_t n=size_t(f.tellg());if(n%4)throw std::runtime_error("unaligned");std::vector<float>x(n/4);f.seekg(0);if(!f.read(reinterpret_cast<char*>(x.data()),n))throw std::runtime_error("read");return x;}
+int main(int argc,char**argv){try{
+ if(argc!=8)throw std::runtime_error("assets modules flags input expected width height");unsigned W=unsigned(std::stoul(argv[6])),H=unsigned(std::stoul(argv[7]));
+ std::ifstream flags(argv[3]);std::string line;while(std::getline(flags,line)){if(!line.empty()&&line.back()=='\r')line.pop_back();auto eq=line.find('=');if(line.rfind("DLSS5_",0)==0&&eq!=std::string::npos)_putenv_s(line.substr(0,eq).c_str(),line.substr(eq+1).c_str());}
+ /* OPTIONS */
+ if(o.graph)throw std::runtime_error("ledger requires graph off");o.modules=argv[2];hip_reference::Network net(o);auto&api=net.Runtime();
+ printf("CONFIG wave_owned_active=%d pdl=%d skip=%zu\n",int(net.WaveOwnedActive()),int(o.pdl),o.skip_blocks.size());
+ auto input=read(argv[4]),expected=read(argv[5]);if(input.size()!=size_t(W)*H*4||expected.size()!=size_t(W)*H*3)throw std::runtime_error("shape");
+ void*x{},*y{};api.Check(api.hipMalloc(&x,input.size()*4),"input");api.Check(api.hipMalloc(&y,expected.size()*4),"output");api.Check(api.hipMemcpy(x,input.data(),input.size()*4,1),"upload");
+ auto run=[&](){net.Enqueue(x,nullptr,y,0);net.Synchronize();};
+ unsigned checks=0;
+ auto verify=[&](const char*label){std::vector<float>actual(expected.size());api.Check(api.hipMemcpy(actual.data(),y,actual.size()*4,2),"check");size_t diff=0,invalid=0;for(size_t i=0;i<actual.size();i++){diff+=memcmp(&actual[i],&expected[i],4)!=0;invalid+=!std::isfinite(actual[i]);}printf("VERIFY label=%s bitdiff=%llu invalid=%llu\n",label,(unsigned long long)diff,(unsigned long long)invalid);fflush(stdout);if(diff||invalid)throw std::runtime_error("output changed");++checks;};
+ for(int i=0;i<60;i++)run();verify("warm");
+ /* topology: one frame, record Stage cursors and per-dispatch kernels */
+ net.TopoBegin();net.Enqueue(x,nullptr,y,0);unsigned total=net.TopoEnd();net.Synchronize();verify("topology");
+ auto&st=net.TopoStages();auto&ks=net.TopoKernels();
+ {FILE*t=fopen("topology.csv","wb");fprintf(t,"index,stage,kernel\n");size_t si=0;for(unsigned i=0;i<total;i++){while(si<st.size()&&st[si].second<=i)si++;fprintf(t,"%u,%s,%s\n",i,si<st.size()?st[si].first.c_str():"(tail)",ks[i].c_str());}fclose(t);
+  FILE*s=fopen("stages.csv","wb");fprintf(s,"stage,end_cursor\n");for(auto&v:st)fprintf(s,"%s,%u\n",v.first.c_str(),v.second);fclose(s);}
+ auto end_of=[&](const char*n){for(auto&v:st)if(v.first==n)return v.second;throw std::runtime_error(std::string("missing stage ")+n);};
+ unsigned before70=0;for(size_t i=0;i<st.size();i++)if(st[i].first=="block70"){if(!i)throw std::runtime_error("block70 first");before70=st[i-1].second;}
+ std::vector<unsigned> b={0,end_of("pre-down"),end_of("block4"),end_of("block8"),end_of("block14"),end_of("block22"),end_of("block30"),end_of("head"),end_of("block38"),end_of("block39"),end_of("block47"),end_of("block55"),end_of("block61"),end_of("block65"),before70,total};
+ for(size_t i=1;i<b.size();i++)if(b[i]<=b[i-1])throw std::runtime_error("non-monotonic boundaries at "+std::to_string(i));
+ {FILE*f=fopen("bounds.txt","wb");for(auto v:b)fprintf(f,"%u\n",v);fclose(f);}printf("TOPOLOGY dispatches=%u stages=%zu\n",total,st.size());
+ const unsigned rounds=16;net.PrefixPrepare(15*rounds*4+8);
+ FILE*base=fopen("prefix-baseline.csv","wb"),*cuts=fopen("prefix.csv","wb");if(!base||!cuts)throw std::runtime_error("CSV");fprintf(base,"phase,frame,wall_ms\n");fprintf(cuts,"region,round,slot,cut,prefix_ms,gpu_frame_ms,tail_ms,wall_ms\n");
+ auto baseline=[&](unsigned phase){for(unsigned i=0;i<100;i++){auto t=std::chrono::steady_clock::now();run();fprintf(base,"%u,%u,%.9f\n",phase,i,std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-t).count());}fflush(base);};baseline(0);
+ for(unsigned region=0;region<15;region++){
+  for(unsigned i=0;i<8;i++)run();
+  for(unsigned round=0;round<rounds;round++)for(unsigned slot=0;slot<4;slot++){
+   unsigned cut=b[region+((slot==1||slot==2)?1:0)];auto t=std::chrono::steady_clock::now();
+   net.PrefixBegin(cut);net.Enqueue(x,nullptr,y,0);net.PrefixEnd();net.Synchronize();double wall=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-t).count();float prefix=0,whole=0,tail=0;net.PrefixRead(prefix,whole,tail);
+   if(whole>wall+.05)throw std::runtime_error("GPU time exceeds wall");
+   fprintf(cuts,"%u,%u,%u,%u,%.9f,%.9f,%.9f,%.9f\n",region,round,slot,cut,double(prefix),double(whole),double(tail),wall);
+  }
+  fflush(cuts);verify(("region-"+std::to_string(region)).c_str());
+ }
+ baseline(1);verify("final");fclose(base);fclose(cuts);net.PrefixRelease();api.hipFree(x);api.hipFree(y);printf("PASS family ledger checks=%u\n",checks);return 0;
+}catch(const std::exception&e){fprintf(stderr,"FAIL %s\n",e.what());fprintf(stdout,"FAIL %s\n",e.what());return 1;}}
