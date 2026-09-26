@@ -603,3 +603,7 @@ c512-ffn 回归里那次"基线第 8～11 帧不一致"：回归的 `extra-900-h
 
 核 flags 发现剑星早就是 `DLSS5_VIT_ADAPTIVE=1`（REUSE_HOTKEY=1，F8 切换；AE/EXACT 提示只附在 FPS 文字行，黄字行看不到——下次重编挪到黄字行）。`AdaptiveVitGroup` 在生产路径每帧调用。用户 2K AA 实测：AE 运动 44 / 静止 47；EXACT（F8）静止 44。**复用静止 +3 帧，运动无额外开销，保持开。**
 **修正**：上午标准对照"我们 47～48 = Daniel 47～48"时我们开着 AE、主菜单静止，不公平；EXACT 下我们估计 44～45，比 Daniel 慢约 3 帧，与离线按像素折算（我们 ≈14.9ms 对其 14.0ms，约慢 6%）一致；其差额部分是时序历史（他关、我们开）的代价。今日所有游戏内读数均为 AE 状态（同状态之间的前后对比仍有效）。标准测试规则已加"F8 切 EXACT"。
+
+## 2026-09-26 10:50～11:00：0.31 三包打完（待上传）
+
+`Development/tools/package-031.ps1`（0.30 底包；只新增 5 个模块×双架构，取自剑星安装、每架构 29 个，其余 24 个与 0.30 相同——剑星上多出的非 packed `deep_fast.hsaco` 是旧实验残留、生产不加载，不入包；add-on 106ff3d0；模板 WAVE_OWNED/C512_M32/VIT_PROJ_N64=1、常规包 VIT_ADAPTIVE=1；源码提交 1c3950c）。产物 `D:\給網友打包`：Magpie 339,077,522 B `acd8e64b…`、OptiScaler 369,275,463 B `f53af436…`、OptiScaler-REFramework 423,711,009 B `c030bf36…`；底包逐文件核对、44 shader 变体编译、ZIP 回读、RE9 runtime 冒烟通过。清单 `Development/tools/release-031-results.json`。README 当前版本/更新记录已改好（本地未提交），等 Zero 上传夸克 + Google Drive 后填链接。
