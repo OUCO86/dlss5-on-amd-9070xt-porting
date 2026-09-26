@@ -1,5 +1,8 @@
 OptiScaler-REFramework-DLSS5-AMD @VERSION@ — special RE9 pre-SR full package
 
+0.31 update
+Shared HIP kernels follow the regular package (five new modules, 29 per gfx1200/gfx1201); this runtime does not read the new flags, so they are bundled but unused. Host dxgi.dll and runtime LmxxfNrRuntime.dll are identical to 0.30.
+
 0.30 update
 Shared HIP kernels updated to the same set as the regular package (FFN full-line stores, bit-exact, about -0.6%; the any-order twin kernels are bundled but not used by this runtime). Host dxgi.dll and runtime LmxxfNrRuntime.dll are identical to 0.29; only the kernels under DLSS5-AMD\native-game-tiled-assets\HIP change.
 

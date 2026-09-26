@@ -130,4 +130,9 @@ DLSS5_VIT_REUSE_HOTKEY=1
 DLSS5_HIP_GRAPH=0
 # 0.30: C64/C128/C256 chain launches submitted any-order with per-tile flags (no AQL barrier); bit-exact, 900p about -1.6%.
 DLSS5_HIP_PDL=1
+# 0.31 (2026-09-26): bit-exact faster kernels. wave-owned = one head per wave for C32/C64/C128 + C256 attention (46 blocks);
+# C512_M32 = C512 QKV/mix at 32 tokens per wave; VIT_PROJ_N64 = ViT projection 64 columns per wave. Each falls back to the 0.30 path if 0.
+DLSS5_HIP_WAVE_OWNED=1
+DLSS5_HIP_C512_M32=1
+DLSS5_HIP_VIT_PROJ_N64=1
 DLSS5_HIP_VIT_BYTE_STREAM=0
