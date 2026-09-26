@@ -611,3 +611,7 @@ c512-ffn 回归里那次"基线第 8～11 帧不一致"：回归的 `extra-900-h
 ## 2026-09-26 11:19：0.31 发布
 
 用户上传完成：夸克 https://pan.quark.cn/s/e76b8611e3cc（三包一个分享）、Google Drive https://drive.google.com/drive/folders/1xtBe_XhgF9eqBlrlIQMgWcEkzm0UKHIZ?usp=sharing；中英 README 当前版本与更新记录已填。
+
+## 2026-09-26 10:50～12:30：ViT attention 四候选全 null；C32 prefix 分摊 1080 −0.03ms（宏并入、默认关）
+
+`experiments/vit-attn-c32-input`（m32-sweep 派生，基线含 VIT_PROJ_N64），五候选均逐位 + 动态历史通过。ViT attention：m32 两 query tile 共用 K/V +0.08ms（并行度减半），V 转置写/8 字节读 −0.01，QK 操作数对调去 LDS 转置与 barrier ±0.03，二者叠加 ≈0——不卡访存量、V gather、同步链，卡在逐元素 exp/fp8 打包的 VALU 依赖延迟，逐位下无结构空间，不采用。C32 prefix：原来只有半 wave 算 16 个输入特征（Box–Muller 噪声），改两半 wave 同指令流分摊、g0 一次 bpermute：900 −0.01（噪声内）、1080 −0.034（6 组全负），以 `CW_PREFIX_SPLIT`（默认 0）并入 `hip/wave_owned_c32.inc`，配方未改、未进生产，下轮合包重编时打开并回归。结果 `results/vit-attn-c32-input-20260926`。
