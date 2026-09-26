@@ -590,3 +590,7 @@ c512-ffn 回归里那次"基线第 8～11 帧不一致"：回归的 `extra-900-h
 - **ViT project 16×64（每 K16 步 f32→E4M3 的 A 片段喂 4 个 WMMA）：三批 ABBA 900 −0.105/−0.112/−0.101，1080 −0.300/−0.289/−0.281 ms**，槽首尾与 16 帧动态历史逐位。手写特化版编出来不同（98 vs 160 VGPR）只剩 −0.04/−0.22，生产用实测模板原文，ISA 逐条相同。
 - 接入：`hip/vit_wide_deep.inc`、模块 `vit-wide-deep`（配方 29 模块）、开关 `DLSS5_HIP_VIT_PROJ_N64`（默认 0，要求 vit_proj_frag）。NativeGameFrame 回归（900/1080 静态/移动、720 移动、900/1080 历史、关 frag 回落）全部逐帧同、计数每帧 8 次全替换。生产 host 千帧长测未跑（10:20 Zero 开了剑星，停手）。add-on 106ff3d0 + 2 模块 + install.ps1 在 `D:\DLSSNR-Lab\vit-proj-n64-20260926`，**未安装**。
 - **配方缺口已补**：prod7/prod8 的 mh_fast 带 `HIP_FFN_LINE_STORES 1` 编，但 `hip/build-modules.ps1` 那行没写，按配方重编会丢 prod7 的 −0.6%。补后与 prod8 `mhfast.generated.hip` 逐字节相同。
+
+## 2026-09-26 10:22～10:27：ViT project N64 千帧长测通过并装进剑星
+
+`vit-proj-n64-production\regression.ps1 -TimingOnly`（生产 host，1000 帧去前 200，槽 0/3 基线、1/2 候选；两侧 WAVE_OWNED/PDL/C512_M32=1）：900 10.997→10.893ms（−0.104，−0.95%）；1080 15.511→15.232ms（−0.279，−1.80%），1080 四槽最终 rgb.f16 哈希相同。随即 `install.ps1`：add-on 106ff3d0 + 2 个 vit-wide-deep 模块，flags `DLSS5_HIP_VIT_PROJ_N64=1`，备份 `D:\DLSSNR-Lab\vit-proj-n64-20260926\backups\stellar-20260926-102640`。待用户实测。
