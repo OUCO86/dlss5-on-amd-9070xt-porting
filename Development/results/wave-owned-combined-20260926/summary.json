@@ -1,0 +1,28 @@
+{
+  "results-1080-validate": {
+    "3": {
+      "paired_delta_ms": [
+        -1.1083125000000003,
+        -1.1010550000000006,
+        -1.0959200000000013
+      ],
+      "mean_delta_ms": -1.1017625000000006,
+      "baseline_ms": 16.693508333333334,
+      "time_reduction_percent": 6.599945787309542
+    },
+    "dynamic_frames_verified": 16
+  },
+  "results-900-validate": {
+    "3": {
+      "paired_delta_ms": [
+        -0.7005524999999988,
+        -0.7063274999999996,
+        -0.7003349999999999
+      ],
+      "mean_delta_ms": -0.7024049999999994,
+      "baseline_ms": 11.661035,
+      "time_reduction_percent": 6.0235219257981765
+    },
+    "dynamic_frames_verified": 16
+  }
+}

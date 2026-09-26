@@ -1,0 +1,2207 @@
+{
+  "old_count": 44,
+  "new_count": 86,
+  "added": [
+    "_Z11k_reg1d_qkv14Reg1dQkvParams",
+    "_Z12k_reg1d_attnILi1EEv15Reg1dAttnParams",
+    "_Z12k_reg1d_convILi1ELb0EEv12ConvParams1d",
+    "_Z12k_reg1d_convILi1ELb1EEv12ConvParams1d",
+    "_Z12k_reg1d_convILi2ELb0EEv12ConvParams1d",
+    "_Z13k_clock_probePy",
+    "_Z13k_reg_swin_mhILi128ELi0EEv9VarParams",
+    "_Z13k_reg_swin_mhILi128ELi10EEv9VarParams",
+    "_Z13k_reg_swin_mhILi128ELi1EEv9VarParams",
+    "_Z13k_reg_swin_mhILi128ELi2EEv9VarParams",
+    "_Z13k_reg_swin_mhILi128ELi3EEv9VarParams",
+    "_Z13k_reg_swin_mhILi128ELi4EEv9VarParams",
+    "_Z13k_reg_swin_mhILi128ELi5EEv9VarParams",
+    "_Z13k_reg_swin_mhILi128ELi8EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi0EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi10EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi1EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi2EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi3EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi4EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi5EEv9VarParams",
+    "_Z13k_reg_swin_mhILi256ELi8EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi0EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi10EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi1EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi2EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi3EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi4EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi5EEv9VarParams",
+    "_Z13k_reg_swin_mhILi64ELi8EEv9VarParams",
+    "_Z14k_reg1d_expandILi2EEv12ExpandParams",
+    "_Z14k_reg1d_reduce12ConvParams1d",
+    "_Z14k_reg_vit_attn10AttnParams",
+    "_Z14k_reg_vit_convILi1ELi0EEv13VitConvParams",
+    "_Z14k_reg_vit_convILi1ELi1EEv13VitConvParams",
+    "_Z14k_reg_vit_convILi1ELi2EEv13VitConvParams",
+    "_Z14k_reg_vit_convILi1ELi4EEv13VitConvParams",
+    "_Z14k_reg_vit_ffwdILi1ELb0EEv13VitFfwdParams",
+    "_Z14k_reg_vit_ffwdILi1ELb1EEv13VitFfwdParams",
+    "_Z16k_frag512_to_tinPKhPhi",
+    "_Z16k_reg_swin_chainILi256EEv11ChainParams",
+    "_Z16k_tin_to_frag512PKhPhi"
+  ],
+  "removed": [],
+  "common": {
+    "_Z10k_conv_res10ConvParams": {
+      "same_code": false,
+      "old_bytes": 3516,
+      "new_bytes": 3500,
+      "old_resources": {
+        ".group_segment_fixed_size": 8192,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_conv_res10ConvParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 18,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_conv_res10ConvParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 49,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 8192,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_conv_res10ConvParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 18,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_conv_res10ConvParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 51,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z10k_flag_setPjjS_": {
+      "same_code": true,
+      "old_bytes": 232,
+      "new_bytes": 232,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 24,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z10k_flag_setPjjS_",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 7,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_flag_setPjjS_.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 4,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 24,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z10k_flag_setPjjS_",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 7,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_flag_setPjjS_.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 4,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z10k_qkv_attn10AttnParams": {
+      "same_code": false,
+      "old_bytes": 9320,
+      "new_bytes": 9556,
+      "old_resources": {
+        ".group_segment_fixed_size": 58368,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_qkv_attn10AttnParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 61,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_qkv_attn10AttnParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 95,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 58368,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_qkv_attn10AttnParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 61,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_qkv_attn10AttnParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 111,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z10k_reg_copy9VarParams": {
+      "same_code": true,
+      "old_bytes": 1036,
+      "new_bytes": 1036,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z10k_reg_copy9VarParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 20,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_reg_copy9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 20,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z10k_reg_copy9VarParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 20,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_reg_copy9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 20,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z10k_swin_varILi128ELb0EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 25720,
+      "new_bytes": 25700,
+      "old_resources": {
+        ".group_segment_fixed_size": 15616,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi128ELb0EEv9VarParams",
+        ".private_segment_fixed_size": 36,
+        ".sgpr_count": 55,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi128ELb0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 120,
+        ".vgpr_spill_count": 3,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 15616,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi128ELb0EEv9VarParams",
+        ".private_segment_fixed_size": 56,
+        ".sgpr_count": 55,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi128ELb0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 120,
+        ".vgpr_spill_count": 8,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z10k_swin_varILi256ELb0EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 22304,
+      "new_bytes": 21956,
+      "old_resources": {
+        ".group_segment_fixed_size": 19200,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi256ELb0EEv9VarParams",
+        ".private_segment_fixed_size": 24,
+        ".sgpr_count": 55,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi256ELb0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 141,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 19200,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi256ELb0EEv9VarParams",
+        ".private_segment_fixed_size": 24,
+        ".sgpr_count": 55,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi256ELb0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 164,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z10k_swin_varILi32ELb1EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 28372,
+      "new_bytes": 28424,
+      "old_resources": {
+        ".group_segment_fixed_size": 15616,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi32ELb1EEv9VarParams",
+        ".private_segment_fixed_size": 24,
+        ".sgpr_count": 70,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi32ELb1EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 94,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 15616,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi32ELb1EEv9VarParams",
+        ".private_segment_fixed_size": 24,
+        ".sgpr_count": 70,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi32ELb1EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 61,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z10k_swin_varILi64ELb0EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 22880,
+      "new_bytes": 22828,
+      "old_resources": {
+        ".group_segment_fixed_size": 15616,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi64ELb0EEv9VarParams",
+        ".private_segment_fixed_size": 24,
+        ".sgpr_count": 58,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi64ELb0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 119,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 15616,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 424,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z10k_swin_varILi64ELb0EEv9VarParams",
+        ".private_segment_fixed_size": 52,
+        ".sgpr_count": 58,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z10k_swin_varILi64ELb0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 120,
+        ".vgpr_spill_count": 7,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z11k_attention12AttnParams1d": {
+      "same_code": false,
+      "old_bytes": 6768,
+      "new_bytes": 6660,
+      "old_resources": {
+        ".group_segment_fixed_size": 28928,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_attention12AttnParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 48,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_attention12AttnParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 145,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 28928,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_attention12AttnParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 40,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_attention12AttnParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 137,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z11k_contract212ConvParams1d": {
+      "same_code": false,
+      "old_bytes": 19404,
+      "new_bytes": 19412,
+      "old_resources": {
+        ".group_segment_fixed_size": 16384,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 304,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_contract212ConvParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 55,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_contract212ConvParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 161,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 16384,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 328,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_contract212ConvParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 55,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_contract212ConvParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 161,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z11k_conv_res211Conv2Params": {
+      "same_code": false,
+      "old_bytes": 23412,
+      "new_bytes": 23208,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 320,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_conv_res211Conv2Params",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 107,
+        ".sgpr_spill_count": 64,
+        ".symbol": "_Z11k_conv_res211Conv2Params.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 202,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 320,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_conv_res211Conv2Params",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 107,
+        ".sgpr_spill_count": 64,
+        ".symbol": "_Z11k_conv_res211Conv2Params.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 202,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z11k_flag_waitPjjj": {
+      "same_code": true,
+      "old_bytes": 180,
+      "new_bytes": 180,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 16,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z11k_flag_waitPjjj",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 9,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_flag_waitPjjj.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 4,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 16,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z11k_flag_waitPjjj",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 9,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_flag_waitPjjj.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 4,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z11k_qkv_attn210AttnParams": {
+      "same_code": false,
+      "old_bytes": 8804,
+      "new_bytes": 8564,
+      "old_resources": {
+        ".group_segment_fixed_size": 23808,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_qkv_attn210AttnParams",
+        ".private_segment_fixed_size": 24,
+        ".sgpr_count": 33,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_qkv_attn210AttnParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 99,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 23808,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z11k_qkv_attn210AttnParams",
+        ".private_segment_fixed_size": 24,
+        ".sgpr_count": 33,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_qkv_attn210AttnParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 99,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z11k_reproject12ReprojParams": {
+      "same_code": false,
+      "old_bytes": 15492,
+      "new_bytes": 15492,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 384,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z11k_reproject12ReprojParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 41,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_reproject12ReprojParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 66,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 384,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z11k_reproject12ReprojParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 41,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z11k_reproject12ReprojParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 66,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_attention212AttnParams1d": {
+      "same_code": false,
+      "old_bytes": 7436,
+      "new_bytes": 7360,
+      "old_resources": {
+        ".group_segment_fixed_size": 19456,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z12k_attention212AttnParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 46,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_attention212AttnParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 82,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 19456,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z12k_attention212AttnParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 46,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_attention212AttnParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 90,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_final_head10HeadParams": {
+      "same_code": false,
+      "old_bytes": 2936,
+      "new_bytes": 2908,
+      "old_resources": {
+        ".group_segment_fixed_size": 8192,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z12k_final_head10HeadParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 16,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_final_head10HeadParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 41,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 8192,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z12k_final_head10HeadParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 16,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_final_head10HeadParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 41,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi0EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 30200,
+      "new_bytes": 29168,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi0EEv9VarParams",
+        ".private_segment_fixed_size": 40,
+        ".sgpr_count": 26,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 9,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi0EEv9VarParams",
+        ".private_segment_fixed_size": 56,
+        ".sgpr_count": 26,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi0EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 13,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi1EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 30376,
+      "new_bytes": 29692,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi1EEv9VarParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi1EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 167,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi1EEv9VarParams",
+        ".private_segment_fixed_size": 52,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi1EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 12,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi20EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 41944,
+      "new_bytes": 41060,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi20EEv9VarParams",
+        ".private_segment_fixed_size": 464,
+        ".sgpr_count": 42,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi20EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 1,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi20EEv9VarParams",
+        ".private_segment_fixed_size": 464,
+        ".sgpr_count": 42,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi20EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 160,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi2EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 30796,
+      "new_bytes": 29608,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi2EEv9VarParams",
+        ".private_segment_fixed_size": 36,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi2EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 8,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi2EEv9VarParams",
+        ".private_segment_fixed_size": 20,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi2EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 4,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi32EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 45928,
+      "new_bytes": 45560,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi32EEv9VarParams",
+        ".private_segment_fixed_size": 424,
+        ".sgpr_count": 28,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi32EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 110,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi32EEv9VarParams",
+        ".private_segment_fixed_size": 424,
+        ".sgpr_count": 28,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi32EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 105,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi4EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 39620,
+      "new_bytes": 39240,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi4EEv9VarParams",
+        ".private_segment_fixed_size": 320,
+        ".sgpr_count": 32,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi4EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 13,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi4EEv9VarParams",
+        ".private_segment_fixed_size": 320,
+        ".sgpr_count": 32,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi4EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 13,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi5EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 39660,
+      "new_bytes": 37980,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi5EEv9VarParams",
+        ".private_segment_fixed_size": 272,
+        ".sgpr_count": 25,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi5EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 163,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi5EEv9VarParams",
+        ".private_segment_fixed_size": 336,
+        ".sgpr_count": 25,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi5EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 168,
+        ".vgpr_spill_count": 17,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z12k_reg_swin32ILi8EEv9VarParams": {
+      "same_code": false,
+      "old_bytes": 35368,
+      "new_bytes": 33640,
+      "old_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi8EEv9VarParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 30,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi8EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 165,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 2048,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 168,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 32,
+        ".name": "_Z12k_reg_swin32ILi8EEv9VarParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 30,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z12k_reg_swin32ILi8EEv9VarParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 164,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z13k_align_probePh": {
+      "same_code": true,
+      "old_bytes": 56,
+      "new_bytes": 56,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 8,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z13k_align_probePh",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 3,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_align_probePh.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 3,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 8,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z13k_align_probePh",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 3,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_align_probePh.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 3,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z13k_conv_splitk12ConvParams1d": {
+      "same_code": false,
+      "old_bytes": 7480,
+      "new_bytes": 7544,
+      "old_resources": {
+        ".group_segment_fixed_size": 4096,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 304,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z13k_conv_splitk12ConvParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 31,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_conv_splitk12ConvParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 82,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 4096,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 328,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z13k_conv_splitk12ConvParams1d",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 31,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_conv_splitk12ConvParams1d.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 82,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z13k_frag_to_tinPKhPhii": {
+      "same_code": true,
+      "old_bytes": 1128,
+      "new_bytes": 1128,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z13k_frag_to_tinPKhPhii",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 9,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_frag_to_tinPKhPhii.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 12,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z13k_frag_to_tinPKhPhii",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 9,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_frag_to_tinPKhPhii.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 12,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z13k_tin_to_fragPKhPhii": {
+      "same_code": true,
+      "old_bytes": 1136,
+      "new_bytes": 1136,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z13k_tin_to_fragPKhPhii",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 9,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_tin_to_fragPKhPhii.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 11,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z13k_tin_to_fragPKhPhii",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 9,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z13k_tin_to_fragPKhPhii.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 11,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z14k_dec_upsample11DecUpParams": {
+      "same_code": false,
+      "old_bytes": 3348,
+      "new_bytes": 3540,
+      "old_resources": {
+        ".group_segment_fixed_size": 4096,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z14k_dec_upsample11DecUpParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 20,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z14k_dec_upsample11DecUpParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 51,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 4096,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 304,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z14k_dec_upsample11DecUpParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 22,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z14k_dec_upsample11DecUpParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 63,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z14k_ffwd_inpview12FfwdPlParams": {
+      "same_code": false,
+      "old_bytes": 4788,
+      "new_bytes": 4640,
+      "old_resources": {
+        ".group_segment_fixed_size": 24576,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z14k_ffwd_inpview12FfwdPlParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z14k_ffwd_inpview12FfwdPlParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 66,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 24576,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z14k_ffwd_inpview12FfwdPlParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z14k_ffwd_inpview12FfwdPlParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 77,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z16k_conv_res_views12ConvPlParams": {
+      "same_code": false,
+      "old_bytes": 7304,
+      "new_bytes": 7272,
+      "old_resources": {
+        ".group_segment_fixed_size": 24576,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 328,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z16k_conv_res_views12ConvPlParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 48,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z16k_conv_res_views12ConvPlParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 98,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 24576,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 328,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z16k_conv_res_views12ConvPlParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 48,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z16k_conv_res_views12ConvPlParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 99,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z16k_swin_1h_32_fp810SwinParams": {
+      "same_code": false,
+      "old_bytes": 14652,
+      "new_bytes": 14892,
+      "old_resources": {
+        ".group_segment_fixed_size": 62592,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z16k_swin_1h_32_fp810SwinParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 25,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z16k_swin_1h_32_fp810SwinParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 71,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 62592,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z16k_swin_1h_32_fp810SwinParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 25,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z16k_swin_1h_32_fp810SwinParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 71,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z21k_pre_block_1h_32_fp89PreParams": {
+      "same_code": false,
+      "old_bytes": 19196,
+      "new_bytes": 19568,
+      "old_resources": {
+        ".group_segment_fixed_size": 64640,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 336,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z21k_pre_block_1h_32_fp89PreParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 43,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z21k_pre_block_1h_32_fp89PreParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 71,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 64640,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 336,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z21k_pre_block_1h_32_fp89PreParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 43,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z21k_pre_block_1h_32_fp89PreParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 71,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z22k_post_block_1h_32_fp810PostParams": {
+      "same_code": false,
+      "old_bytes": 17256,
+      "new_bytes": 17640,
+      "old_resources": {
+        ".group_segment_fixed_size": 62592,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 336,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z22k_post_block_1h_32_fp810PostParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 40,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z22k_post_block_1h_32_fp810PostParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 74,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 62592,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 336,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z22k_post_block_1h_32_fp810PostParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 40,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z22k_post_block_1h_32_fp810PostParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 74,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z5k_qkv9QkvParams": {
+      "same_code": false,
+      "old_bytes": 6080,
+      "new_bytes": 6200,
+      "old_resources": {
+        ".group_segment_fixed_size": 6144,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z5k_qkv9QkvParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 40,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z5k_qkv9QkvParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 119,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 6144,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z5k_qkv9QkvParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 40,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z5k_qkv9QkvParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 119,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z6k_ffwd10FfwdParams": {
+      "same_code": false,
+      "old_bytes": 6044,
+      "new_bytes": 5896,
+      "old_resources": {
+        ".group_segment_fixed_size": 24576,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z6k_ffwd10FfwdParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z6k_ffwd10FfwdParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 66,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 24576,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z6k_ffwd10FfwdParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 24,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z6k_ffwd10FfwdParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 77,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z6k_mean10MeanParams": {
+      "same_code": false,
+      "old_bytes": 1272,
+      "new_bytes": 1244,
+      "old_resources": {
+        ".group_segment_fixed_size": 1024,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z6k_mean10MeanParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 17,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z6k_mean10MeanParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 8,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 1024,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z6k_mean10MeanParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 17,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z6k_mean10MeanParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 8,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z6k_qkv29QkvParams": {
+      "same_code": false,
+      "old_bytes": 8444,
+      "new_bytes": 8352,
+      "old_resources": {
+        ".group_segment_fixed_size": 12800,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z6k_qkv29QkvParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 20,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z6k_qkv29QkvParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 96,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 12800,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 296,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z6k_qkv29QkvParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 20,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z6k_qkv29QkvParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 128,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z7k_ffwd211Ffwd2Params": {
+      "same_code": false,
+      "old_bytes": 7460,
+      "new_bytes": 7288,
+      "old_resources": {
+        ".group_segment_fixed_size": 21504,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 304,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z7k_ffwd211Ffwd2Params",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 40,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z7k_ffwd211Ffwd2Params.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 90,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 21504,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 304,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z7k_ffwd211Ffwd2Params",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 40,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z7k_ffwd211Ffwd2Params.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 113,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z8k_expand12ExpandParams": {
+      "same_code": false,
+      "old_bytes": 3908,
+      "new_bytes": 3872,
+      "old_resources": {
+        ".group_segment_fixed_size": 16384,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z8k_expand12ExpandParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 21,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_expand12ExpandParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 41,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 16384,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z8k_expand12ExpandParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 21,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_expand12ExpandParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 43,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z8k_export12ExportParams": {
+      "same_code": false,
+      "old_bytes": 8588,
+      "new_bytes": 8588,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 320,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z8k_export12ExportParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 17,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_export12ExportParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 29,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 320,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z8k_export12ExportParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 17,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_export12ExportParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 29,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z8k_import12ImportParams": {
+      "same_code": false,
+      "old_bytes": 6236,
+      "new_bytes": 6236,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 304,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z8k_import12ImportParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 18,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_import12ImportParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 21,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 304,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z8k_import12ImportParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 18,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_import12ImportParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 21,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z8k_repack12RepackParams": {
+      "same_code": true,
+      "old_bytes": 1032,
+      "new_bytes": 1032,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z8k_repack12RepackParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 21,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_repack12RepackParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 15,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 1024,
+        ".name": "_Z8k_repack12RepackParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 21,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z8k_repack12RepackParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 15,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    },
+    "_Z9k_expand212ExpandParams": {
+      "same_code": false,
+      "old_bytes": 4928,
+      "new_bytes": 5092,
+      "old_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 280,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z9k_expand212ExpandParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 22,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z9k_expand212ExpandParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 93,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      },
+      "new_resources": {
+        ".group_segment_fixed_size": 0,
+        ".kernarg_segment_align": 8,
+        ".kernarg_segment_size": 288,
+        ".language": "OpenCL C",
+        ".language_version": [
+          2,
+          0
+        ],
+        ".max_flat_workgroup_size": 256,
+        ".name": "_Z9k_expand212ExpandParams",
+        ".private_segment_fixed_size": 0,
+        ".sgpr_count": 28,
+        ".sgpr_spill_count": 0,
+        ".symbol": "_Z9k_expand212ExpandParams.kd",
+        ".uniform_work_group_size": 1,
+        ".uses_dynamic_stack": false,
+        ".vgpr_count": 126,
+        ".vgpr_spill_count": 0,
+        ".wavefront_size": 32,
+        ".workgroup_processor_mode": 1
+      }
+    }
+  }
+}

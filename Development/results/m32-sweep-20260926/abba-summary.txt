@@ -1,0 +1,65 @@
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c1b-1080.csv base 15.1396 ms
+  cand  1                                                          hits/f  15.0  diffs +0.0457 +0.0379 +0.0256  mean +0.0364 ms (+0.24%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c1p0-1080.csv base 15.1729 ms
+  cand  1                                                          hits/f  15.0  diffs +0.1631 +0.1599 +0.1646  mean +0.1625 ms (+1.07%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c2-1080.csv base 15.1392 ms
+  cand  2                                                          hits/f   8.0  diffs +0.0734 +0.0631 +0.0590  mean +0.0651 ms (+0.43%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c2-900.csv base 10.8195 ms
+  cand  2                                                          hits/f   8.0  diffs +0.1270 +0.1082 +0.1418  mean +0.1257 ms (+1.16%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c3-1080.csv base 15.2503 ms
+  cand  3                                                          hits/f   8.0  diffs +0.1756 +0.1720 +0.1888  mean +0.1788 ms (+1.17%) 
+  cand  2                                                          hits/f   8.0  diffs +0.1177 +0.1573 +0.1332  mean +0.1360 ms (+0.89%) 
+  cand  4                                                          hits/f   8.0  diffs -0.0584 -0.0523 -0.0437  mean -0.0514 ms (-0.34%) 
+  cand  7                                                          hits/f   8.0  diffs -0.1827 -0.1404 -0.1767  mean -0.1666 ms (-1.09%) 
+  cand  5                                                          hits/f   8.0  diffs -0.2316 -0.2241 -0.2326  mean -0.2294 ms (-1.50%) 
+  cand  6                                                          hits/f   8.0  diffs -0.2919 -0.2940 -0.3146  mean -0.3002 ms (-1.97%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c3-900.csv base 10.8648 ms
+  cand  2                                                          hits/f   8.0  diffs +0.1682 +0.1723 +0.1704  mean +0.1703 ms (+1.57%) 
+  cand  3                                                          hits/f   8.0  diffs +0.0915 +0.1033 +0.0997  mean +0.0982 ms (+0.90%) 
+  cand  4                                                          hits/f   8.0  diffs +0.0723 +0.0657 +0.0651  mean +0.0677 ms (+0.62%) 
+  cand  7                                                          hits/f   8.0  diffs -0.0215 -0.0138 -0.0128  mean -0.0160 ms (-0.15%) 
+  cand  5                                                          hits/f   8.0  diffs -0.0468 -0.0357 -0.0462  mean -0.0429 ms (-0.39%) 
+  cand  6                                                          hits/f   8.0  diffs -0.0999 -0.0958 -0.1206  mean -0.1054 ms (-0.97%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c4-1080.csv base 15.2081 ms
+  cand  8                                                          hits/f   5.0  diffs +0.1361 +0.1303 +0.1511  mean +0.1392 ms (+0.92%) 
+  cand  10                                                         hits/f  13.0  diffs -0.1468 -0.1538 -0.1648  mean -0.1551 ms (-1.02%) 
+  cand  6                                                          hits/f   8.0  diffs -0.2654 -0.2993 -0.3031  mean -0.2893 ms (-1.90%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c4-900.csv base 10.8444 ms
+  cand  8                                                          hits/f   5.0  diffs +0.1164 +0.1161 +0.1091  mean +0.1139 ms (+1.05%) 
+  cand  10                                                         hits/f  13.0  diffs +0.0051 +0.0105 +0.0117  mean +0.0091 ms (+0.08%) 
+  cand  6                                                          hits/f   8.0  diffs -0.1247 -0.1046 -0.1070  mean -0.1121 ms (-1.03%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c5-1080.csv base 15.1968 ms
+  cand  11                                                         hits/f   8.0  diffs -0.2052 -0.2279 -0.2411  mean -0.2247 ms (-1.48%) 
+  cand  6                                                          hits/f   8.0  diffs -0.2661 -0.2761 -0.2994  mean -0.2805 ms (-1.85%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/c5-900.csv base 10.8526 ms
+  cand  11                                                         hits/f   8.0  diffs -0.0401 -0.0457 -0.0470  mean -0.0443 ms (-0.41%) 
+  cand  6                                                          hits/f   8.0  diffs -0.1013 -0.0998 -0.1003  mean -0.1005 ms (-0.93%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/census-1080.csv base 15.2630 ms
+  dup   vit_attention_fused                                        hits/f   8.0  diffs +0.5584 +0.5525  mean +0.5554 ms (+3.64%) 
+  dup   vit_qkv_project_normalize_fused_f16compact_fp8_frag$       hits/f   8.0  diffs +0.5522 +0.5292  mean +0.5407 ms (+3.54%) 
+  dup   decoder_project2x_h16w                                     hits/f   5.0  diffs +0.4602 +0.4596  mean +0.4599 ms (+3.01%) 
+  dup   vit_project_frag$                                          hits/f   8.0  diffs +0.3999 +0.4168  mean +0.4084 ms (+2.68%) 
+  dup   vit_expand_blocked_fp8_frag_bytein$                        hits/f   8.0  diffs +0.2911 +0.3150  mean +0.3030 ms (+1.99%) 
+  dup   split_ffn_fused_fp8_t8$                                    hits/f  13.0  diffs +0.2902 +0.2798  mean +0.2850 ms (+1.87%) 
+  dup   vit_contract_blocked_fp8_frag$                             hits/f   8.0  diffs +0.2666 +0.2991  mean +0.2829 ms (+1.85%) 
+  dup   mh_pool_project                                            hits/f   5.0  diffs +0.2613 +0.2633  mean +0.2623 ms (+1.72%) 
+  dup   split_projection_frag$                                     hits/f  13.0  diffs +0.2171 +0.1968  mean +0.2069 ms (+1.36%) 
+  dup   mh_shift_pack$                                             hits/f  13.0  diffs +0.1362 +0.1501  mean +0.1431 ms (+0.94%) 
+  dup   'mh_ffn_fused_c256                                         hits/f   0.0  diffs +0.0122 +0.0174  mean +0.0148 ms (+0.10%) 
+  dup   vit_pack_input$'                                           hits/f   0.0  diffs -0.0263 +0.0021  mean -0.0121 ms (-0.08%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/census2-1080.csv base 15.3087 ms
+  dup   mh_ffn_fused_c256                                          hits/f  16.0  diffs +1.3253 +1.3178  mean +1.3216 ms (+8.63%) 
+  dup   vit_pack_input$                                            hits/f   8.0  diffs +0.0196 +0.0189  mean +0.0193 ms (+0.13%) 
+/home/lmxxf/work/ai-theorys-study/wechat/assets/297/Development/results/m32-sweep-20260926/csv/census-900.csv base 10.8450 ms
+  dup   mh_ffn_fused_c256                                          hits/f  16.0  diffs +0.9375 +0.9125  mean +0.9250 ms (+8.53%) 
+  dup   vit_attention_fused                                        hits/f   8.0  diffs +0.3644 +0.3518  mean +0.3581 ms (+3.30%) 
+  dup   decoder_project2x_h16w                                     hits/f   5.0  diffs +0.3459 +0.3340  mean +0.3400 ms (+3.13%) 
+  dup   vit_qkv_project_normalize_fused_f16compact_fp8_frag$       hits/f   8.0  diffs +0.3312 +0.3484  mean +0.3398 ms (+3.13%) 
+  dup   split_ffn_fused_fp8_t8$                                    hits/f  13.0  diffs +0.2456 +0.2331  mean +0.2394 ms (+2.21%) 
+  dup   vit_project_frag$                                          hits/f   8.0  diffs +0.2205 +0.2513  mean +0.2359 ms (+2.18%) 
+  dup   vit_expand_blocked_fp8_frag_bytein$                        hits/f   8.0  diffs +0.2212 +0.2215  mean +0.2214 ms (+2.04%) 
+  dup   vit_contract_blocked_fp8_frag$                             hits/f   8.0  diffs +0.1891 +0.1851  mean +0.1871 ms (+1.73%) 
+  dup   split_projection_frag$                                     hits/f  13.0  diffs +0.1904 +0.1753  mean +0.1828 ms (+1.69%) 
+  dup   mh_pool_project                                            hits/f   5.0  diffs +0.1425 +0.1541  mean +0.1483 ms (+1.37%) 
+  dup   mh_shift_pack$                                             hits/f  13.0  diffs +0.1273 +0.1038  mean +0.1155 ms (+1.07%) 
+  dup   vit_pack_input$                                            hits/f   8.0  diffs +0.0031 +0.0196  mean +0.0114 ms (+0.10%) 

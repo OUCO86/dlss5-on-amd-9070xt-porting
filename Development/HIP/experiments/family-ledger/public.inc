@@ -1,0 +1,10 @@
+ void TopoBegin(){topo_active=true;prefix_cursor=0;topo_stages.clear();topo_kernels.clear();}
+ unsigned TopoEnd(){topo_active=false;prefix_total=prefix_cursor;return prefix_total;}
+ const std::vector<std::pair<std::string,unsigned>>&TopoStages()const{return topo_stages;}
+ const std::vector<std::string>&TopoKernels()const{return topo_kernels;}
+ void PrefixPrepare(size_t n){prefix_events.resize(n);for(auto&e:prefix_events){api.Check(api.hipEventCreate(&e.begin),"prefix begin event");api.Check(api.hipEventCreate(&e.mid),"prefix mid event");api.Check(api.hipEventCreate(&e.end),"prefix end event");}}
+ void PrefixBegin(unsigned cut){if(!prefix_total||prefix_event_index>=prefix_events.size()||cut>prefix_total)throw std::runtime_error("prefix bounds");auto&e=prefix_events[prefix_event_index++];prefix_begin=e.begin;prefix_end=e.end;prefix_mid=cut==0?e.begin:cut==prefix_total?e.end:e.mid;prefix_active=true;prefix_cursor=0;prefix_cut=cut;api.Check(api.hipEventRecord(prefix_begin,stream),"prefix begin");}
+ void PrefixEnd(){if(prefix_cursor!=prefix_total)throw std::runtime_error("dispatch topology changed");prefix_active=false;}
+ void PrefixRead(float&prefix,float&whole,float&tail){api.Check(api.hipEventSynchronize(prefix_end),"end event ready");api.Check(api.hipEventElapsedTime(&whole,prefix_begin,prefix_end),"whole elapsed");if(prefix_cut==0){prefix=0;tail=whole;}else if(prefix_cut==prefix_total){prefix=whole;tail=0;}else{api.Check(api.hipEventSynchronize(prefix_mid),"mid event ready");api.Check(api.hipEventElapsedTime(&prefix,prefix_begin,prefix_mid),"prefix elapsed");api.Check(api.hipEventElapsedTime(&tail,prefix_mid,prefix_end),"tail elapsed");}
+ if(!(prefix>=0&&whole>0&&tail>=0)||!std::isfinite(whole)||fabs(double(prefix)+tail-whole)>.00005)throw std::runtime_error("prefix event timing invalid cut="+std::to_string(prefix_cut));}
+ void PrefixRelease(){Synchronize();for(auto&e:prefix_events){api.hipEventDestroy(e.begin);api.hipEventDestroy(e.mid);api.hipEventDestroy(e.end);}prefix_events.clear();}

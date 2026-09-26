@@ -1,0 +1,548 @@
+{
+  "production_functions_identical": {
+    "c32_fast_ffn_attention_fused_half_chain": true,
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": true,
+    "c32_post_merge_head_half": true,
+    "c32_post_merge_fused_half": true,
+    "c32_fast_ffn_attention_fused": true,
+    "c32_fast_ffn_attention_fused_half": true,
+    "c32_fast_ffn_attention_fused_half_chain_finish": true,
+    "c32_fast_ffn_attention_fused_half_finish_main8": true,
+    "c32_fast_ffn_attention_fused_half_mapped": true
+  },
+  "kernels": {
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase7": {
+      "code_bytes": 21200,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase1": {
+      "code_bytes": 23744,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase8": {
+      "code_bytes": 23232,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase8": {
+      "code_bytes": 21192,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase2": {
+      "code_bytes": 23744,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase9": {
+      "code_bytes": 23248,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase9": {
+      "code_bytes": 21192,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase3": {
+      "code_bytes": 23748,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase4": {
+      "code_bytes": 23744,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase10": {
+      "code_bytes": 23252,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_post_merge_head_half_phase10": {
+      "code_bytes": 18340,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain": {
+      "code_bytes": 21768,
+      "vgpr": 151,
+      "sgpr": 30,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase5": {
+      "code_bytes": 23744,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase6": {
+      "code_bytes": 23740,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase10": {
+      "code_bytes": 21200,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase0": {
+      "code_bytes": 20392,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 2
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase0": {
+      "code_bytes": 22460,
+      "vgpr": 174,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 2
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase7": {
+      "code_bytes": 23728,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8": {
+      "code_bytes": 21028,
+      "vgpr": 152,
+      "sgpr": 27,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase1": {
+      "code_bytes": 20412,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase10": {
+      "code_bytes": 20444,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase1": {
+      "code_bytes": 22480,
+      "vgpr": 174,
+      "sgpr": 36,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase8": {
+      "code_bytes": 23724,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused": {
+      "code_bytes": 16492,
+      "vgpr": 169,
+      "sgpr": 13,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase2": {
+      "code_bytes": 20424,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase2": {
+      "code_bytes": 22488,
+      "vgpr": 174,
+      "sgpr": 36,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase9": {
+      "code_bytes": 23744,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase3": {
+      "code_bytes": 20424,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase3": {
+      "code_bytes": 22488,
+      "vgpr": 174,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish": {
+      "code_bytes": 22488,
+      "vgpr": 153,
+      "sgpr": 36,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase4": {
+      "code_bytes": 20416,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase4": {
+      "code_bytes": 22480,
+      "vgpr": 174,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase5": {
+      "code_bytes": 20412,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase5": {
+      "code_bytes": 22476,
+      "vgpr": 174,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half": {
+      "code_bytes": 19152,
+      "vgpr": 169,
+      "sgpr": 13,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase6": {
+      "code_bytes": 20408,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase6": {
+      "code_bytes": 22476,
+      "vgpr": 174,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase7": {
+      "code_bytes": 20416,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase7": {
+      "code_bytes": 22496,
+      "vgpr": 174,
+      "sgpr": 36,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase8": {
+      "code_bytes": 20412,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase8": {
+      "code_bytes": 22488,
+      "vgpr": 174,
+      "sgpr": 36,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_mapped_phase9": {
+      "code_bytes": 20416,
+      "vgpr": 174,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase9": {
+      "code_bytes": 22480,
+      "vgpr": 174,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_post_merge_head_half": {
+      "code_bytes": 18128,
+      "vgpr": 158,
+      "sgpr": 84,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase10": {
+      "code_bytes": 23748,
+      "vgpr": 176,
+      "sgpr": 43,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_post_merge_head_half_phase0": {
+      "code_bytes": 18320,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 2
+    },
+    "c32_post_merge_head_half_phase1": {
+      "code_bytes": 18340,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_post_merge_head_half_phase2": {
+      "code_bytes": 18344,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_post_merge_head_half_phase3": {
+      "code_bytes": 18344,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_finish_main8": {
+      "code_bytes": 19804,
+      "vgpr": 172,
+      "sgpr": 27,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_post_merge_head_half_phase4": {
+      "code_bytes": 18340,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_post_merge_head_half_phase5": {
+      "code_bytes": 18340,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_post_merge_head_half_phase6": {
+      "code_bytes": 18336,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_chain_phase10": {
+      "code_bytes": 22508,
+      "vgpr": 174,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_post_merge_head_half_phase7": {
+      "code_bytes": 18344,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase0": {
+      "code_bytes": 23232,
+      "vgpr": 176,
+      "sgpr": 40,
+      "private_bytes": 0,
+      "counter_reads": 2
+    },
+    "c32_post_merge_head_half_phase8": {
+      "code_bytes": 18352,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": {
+      "code_bytes": 22984,
+      "vgpr": 153,
+      "sgpr": 37,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase0": {
+      "code_bytes": 21180,
+      "vgpr": 152,
+      "sgpr": 30,
+      "private_bytes": 0,
+      "counter_reads": 2
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase1": {
+      "code_bytes": 23248,
+      "vgpr": 176,
+      "sgpr": 41,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_post_merge_head_half_phase9": {
+      "code_bytes": 18348,
+      "vgpr": 156,
+      "sgpr": 26,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase1": {
+      "code_bytes": 21192,
+      "vgpr": 152,
+      "sgpr": 31,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase2": {
+      "code_bytes": 23256,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase2": {
+      "code_bytes": 21200,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase3": {
+      "code_bytes": 23252,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_mapped": {
+      "code_bytes": 20068,
+      "vgpr": 169,
+      "sgpr": 16,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase3": {
+      "code_bytes": 21204,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase4": {
+      "code_bytes": 23248,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase4": {
+      "code_bytes": 21200,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase5": {
+      "code_bytes": 23248,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase5": {
+      "code_bytes": 21200,
+      "vgpr": 152,
+      "sgpr": 32,
+      "private_bytes": 0,
+      "counter_reads": 4
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase6": {
+      "code_bytes": 23248,
+      "vgpr": 176,
+      "sgpr": 41,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_post_merge_fused_half": {
+      "code_bytes": 17404,
+      "vgpr": 153,
+      "sgpr": 12,
+      "private_bytes": 0,
+      "counter_reads": 0
+    },
+    "c32_fast_ffn_attention_fused_half_prefix_finish_main8_phase6": {
+      "code_bytes": 21188,
+      "vgpr": 152,
+      "sgpr": 31,
+      "private_bytes": 0,
+      "counter_reads": 3
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_dcrop_phase0": {
+      "code_bytes": 23724,
+      "vgpr": 176,
+      "sgpr": 41,
+      "private_bytes": 0,
+      "counter_reads": 2
+    },
+    "c32_fast_ffn_attention_fused_half_chain_finish_phase7": {
+      "code_bytes": 23232,
+      "vgpr": 176,
+      "sgpr": 42,
+      "private_bytes": 0,
+      "counter_reads": 4
+    }
+  }
+}

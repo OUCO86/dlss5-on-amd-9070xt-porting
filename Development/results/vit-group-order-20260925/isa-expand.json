@@ -1,0 +1,118 @@
+{
+  "production_functions_identical": {
+    "vit_expand_blocked_fp8_frag_tiledin": true,
+    "vit_contract_blocked_fp8_tiled": true,
+    "vit_contract_blocked_fp8_tiled_bstream": true,
+    "vit_project_frag": true,
+    "reuse_image_commit": true,
+    "vit_contract_parts_blocked_fp8": true,
+    "vit_qkv_project_normalize_fused_f16compact_fp8_frag": true,
+    "reuse_decide": true,
+    "vit_attention_fused_640_bytein_bout": true,
+    "vit_project_bytein_bout_hskip": true,
+    "reuse_image_stats": true,
+    "vit_expand_blocked_fp8_tiled": true,
+    "vit_qkv_project_normalize_fused_f16weight": true,
+    "vit_expand_fp8": true,
+    "split_projection_frag": true,
+    "split_mix_blocked_h16w": true,
+    "vit_qkv_project_blocked": true,
+    "split_ffn_fused_fp8": true,
+    "split_expand": true,
+    "vit_attention_inverse_fast": true,
+    "reuse_finish": true,
+    "vit_attention_fused_400_bytein": true,
+    "split_contract": true,
+    "vit_expand_blocked_fp8_tiled_bytein": true,
+    "vit_attention_fused_256_bytein": true,
+    "split_contract_fp8": true,
+    "vit_ffn_fused": true,
+    "vit_expand_blocked_fp8": true,
+    "split_mix_blocked": true,
+    "vit_contract_blocked_fp8_hstream": true,
+    "vit_qkv_project": true,
+    "vit_contract_parts_blocked_fp8_tiled": true,
+    "vit_project": true,
+    "vit_attention_fused_640_bytein": true,
+    "split_mix": true,
+    "vit_qkv_project_normalize_fused_f16compact": true,
+    "split_ffn_fused_fp8_t8": true,
+    "vit_project_bytein_bout": true,
+    "vit_expand_blocked_fp8_bytein": true,
+    "split_projection_blocked_t8": true,
+    "vit_qkv_project_normalize_fused_f16compact_fp8_h16in": true,
+    "vit_pack_input": true,
+    "vit_qkv_project_normalize_fused_f16compact_fp8": true,
+    "vit_qkv_project_normalize_fused_f16compact_fp8_h16in_n4": true,
+    "vit_attention_fused_640": true,
+    "vit_attention_av_fast": true,
+    "vit_contract_blocked_fp8_frag": true,
+    "vit_contract_blocked_fp8_bstream": true,
+    "vit_attention_scores_fast": true,
+    "vit_pack_input_tiled": true,
+    "split_ffn_fused": true,
+    "vit_project_fp8": true,
+    "vit_contract_combine": true,
+    "vit_attention_fused_256_bytein_bout": true,
+    "vit_expand_blocked_fp8_tiled_bytein_m4": true,
+    "vit_expand": true,
+    "vit_contract_parts_fp8": true,
+    "split_projection_blocked": true,
+    "vit_qkv_normalize": true,
+    "vit_attention_fused_400_bytein_bout": true,
+    "decoder_project2x": true,
+    "vit_qkv_project_normalize_fused": true,
+    "vit_attention_fused_400": true,
+    "vit_expand_blocked_fp8_frag_bytein_m2": true,
+    "split_ffn_fused_fp8_mix": true,
+    "split_projection": true,
+    "vit_contract_blocked_fp8_tiled_hstream": true,
+    "vit_contract_blocked_fp8": true,
+    "vit_expand_blocked_fp8_frag_bytein_m4": true,
+    "vit_expand_blocked_fp8_frag_bytein": true,
+    "vit_qkv_project_normalize_fused_f16compact_fp8_bytein": true,
+    "decoder_project2x_h16w": true,
+    "vit_attention_fused_256": true,
+    "decoder_project2x_h16w_byteout": true,
+    "split_expand_fp8": true,
+    "reuse_token_stats": true
+  },
+  "control_identical": true,
+  "kernels": {
+    "vit_expand_blocked_fp8_frag_bytein": {
+      "code_bytes": 9624,
+      "vgpr": 77,
+      "static_global_loads": {
+        "global_load_b64": 25
+      }
+    },
+    "vit_expand_blocked_fp8_frag_bytein_order1": {
+      "code_bytes": 9624,
+      "vgpr": 77,
+      "static_global_loads": {
+        "global_load_b64": 25
+      }
+    },
+    "vit_expand_blocked_fp8_frag_bytein_order2": {
+      "code_bytes": 9992,
+      "vgpr": 78,
+      "static_global_loads": {
+        "global_load_b64": 25
+      }
+    },
+    "vit_expand_blocked_fp8_frag_bytein_order3": {
+      "code_bytes": 10196,
+      "vgpr": 77,
+      "static_global_loads": {
+        "global_load_b64": 25
+      }
+    },
+    "vit_expand_blocked_fp8_frag_bytein_order4": {
+      "code_bytes": 7200,
+      "vgpr": 77,
+      "static_global_loads": {
+        "global_load_b64": 25
+      }
+    }
+  }
+}

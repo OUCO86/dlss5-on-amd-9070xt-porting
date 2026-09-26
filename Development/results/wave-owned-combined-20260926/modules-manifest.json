@@ -1,0 +1,106 @@
+[
+    {
+        "sha256":  "B3835EDEB77C51FE199E5F1F45BDEEF2F5E2F2550DCA42D826FB6B63FF373D6D",
+        "name":  "c32_prefix_reference.hsaco"
+    },
+    {
+        "sha256":  "1CFA639E9F37B7872C69D738C7332B58EAAF0539CAF720CC29A844E770FC8CBE",
+        "name":  "multihead-reference.hsaco"
+    },
+    {
+        "sha256":  "0D2E3E9658A8ABC53BE68B6FC108CE57594784D3ED56F237BEDD9766D86DB895",
+        "name":  "deep_reference.hsaco"
+    },
+    {
+        "sha256":  "1B1A514743924D43542ED9AC30E4CA50EC6E84E62D2BAFAB1960AAF061E0ADC8",
+        "name":  "boundary_reference.hsaco"
+    },
+    {
+        "sha256":  "4D239CA134400EE2B42C60F99DC24202F9A4FD38C21A471C01A98217DF04B294",
+        "name":  "c32_wmma.hsaco"
+    },
+    {
+        "sha256":  "BFC99774435FCF89985A795EA6E1C20DE3335053097B40206839ADF687D0E226",
+        "name":  "multihead-wmma.hsaco"
+    },
+    {
+        "sha256":  "B562C8986300B0517818AE54A46108E725E1ECC6C6B6C88A3B7FA14C749A5B2F",
+        "name":  "deep_wmma.hsaco"
+    },
+    {
+        "sha256":  "5E65693DA46044B697218194BB17EC8453952FA4A4A684C6ECC59DF1CECF12AA",
+        "name":  "wave-pointwise.hsaco"
+    },
+    {
+        "sha256":  "6E7DB748FBD492CD566F208A1AA3B7E48A42A9C0D8B31022148469BB46D01E8F",
+        "name":  "c32_tiled.hsaco"
+    },
+    {
+        "sha256":  "3799AE40ECEC89796132BF6464A76FAF1ADFFFE65DF2F5E6406F47A86F67AA81",
+        "name":  "multihead-tiled.hsaco"
+    },
+    {
+        "sha256":  "3D3B7E40B917CB1E31E9D3FE46CB59840BFE45DE1C9E51BF9845B0DECF3A48D3",
+        "name":  "c32_fast.hsaco"
+    },
+    {
+        "sha256":  "B3ABD5620764F5A5BA4D86FB439E0A57688E346AFDD5945F6F1D9067DA6D032C",
+        "name":  "c32_fast_attention.hsaco"
+    },
+    {
+        "sha256":  "40FA66062ECA6BBE654E480944783C27B9BD93970696E1FFCA9BBC8773CA9700",
+        "name":  "boundary-fast.hsaco"
+    },
+    {
+        "sha256":  "5091D35E5AC53E4A8D16DE2F5FB1C8C057159C72D6605FAEB5A5CA7DAA65AACD",
+        "name":  "c32_fused_attention.hsaco"
+    },
+    {
+        "sha256":  "0F3AFF3FB906BD493443B1C74440716969B780D39FF98C785412DD36112F042B",
+        "name":  "c32_fused_ffn_attention.hsaco"
+    },
+    {
+        "sha256":  "6F66096EE326EF47C51288CDB033AC97BEC7C5BC63B86151F9AACE931FD01F00",
+        "name":  "c32_fused_ffn_attention-packed.hsaco"
+    },
+    {
+        "sha256":  "A195C115F8930A467D2113D076435BE5EE784106C9F15215832EEE54C5680F34",
+        "name":  "prefix_fast.hsaco"
+    },
+    {
+        "sha256":  "9FE4B5F7016A5369F4A7995AD9E2BDD56F21C393FA0FAA1561CDA5F6B7A7EB4C",
+        "name":  "multihead-fast.hsaco"
+    },
+    {
+        "sha256":  "1D0CAC2814C29AEB917B6EF867820D43689C8868137B91CF14C27F8057E509FD",
+        "name":  "multihead-fast-padded-wave.hsaco"
+    },
+    {
+        "sha256":  "F7F23560D490868EACB161D7E49C958548FAAA1D61384014EA0859B5E8CEF1B9",
+        "name":  "multihead_fused_attention.hsaco"
+    },
+    {
+        "sha256":  "A6B763EA9E4DB5C7F85F8B838A6B6CAA928DB2A152C7935650D7326BF4A05C1B",
+        "name":  "deep_fast.hsaco"
+    },
+    {
+        "sha256":  "AB42263E1C27170BB7E449C39908E981568A6AEB2BF1D34668E692ACFE480900",
+        "name":  "deep_fast-packed.hsaco"
+    },
+    {
+        "sha256":  "39D5376CDB6C603130048E1F369DCC9CD7887C23FBA084D9132E6C35073A7795",
+        "name":  "multihead-fast-packed.hsaco"
+    },
+    {
+        "sha256":  "EFEB32FD85D69BA25515B127D622A370C492FEC633D3A4C77CD96380F412D388",
+        "name":  "multihead-fast-padded-wave-packed.hsaco"
+    },
+    {
+        "sha256":  "CC8166B3D8DFE1A1BCB35C4F45B94098AB0B1E00F2F2E152CBB6F2702E95FC83",
+        "name":  "c64-wave2.hsaco"
+    },
+    {
+        "sha256":  "73A2DFDBB84967086B7F8E36C1776163EE8D584B1240764ECEDC276B330DE3D2",
+        "name":  "c32-wave1.hsaco"
+    }
+]

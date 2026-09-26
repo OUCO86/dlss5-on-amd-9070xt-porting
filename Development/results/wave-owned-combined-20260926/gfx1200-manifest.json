@@ -1,0 +1,30 @@
+[
+    {
+        "sha256":  "F256217EFBBF69C9B5F82BF6301C7FAA67B380DF4AB637E7826D256BBE3F42EE",
+        "name":  "c32_fused_ffn_attention-packed.hsaco"
+    },
+    {
+        "sha256":  "5B1CAD8F5B5061FBDF9D26C98C68785F4A57E359BFDAAB6B0A330E51F59DB10B",
+        "name":  "multihead_fused_attention.hsaco"
+    },
+    {
+        "sha256":  "A4FA5DA1AE40CB1C51F713B29AFDC0AC0E12D3DE59E5ACA9EDDA079CF0137B4B",
+        "name":  "deep_fast.hsaco"
+    },
+    {
+        "sha256":  "54AD89ADDF636E9239BC3D0468DA0242EA4CE10C7071251D7B5739726A44D159",
+        "name":  "deep_fast-packed.hsaco"
+    },
+    {
+        "sha256":  "970C260E3ED6F3C6845896ACF9F86C59533DF2E2CAE5E756D3F7D83558BBB4C6",
+        "name":  "multihead-fast-padded-wave-packed.hsaco"
+    },
+    {
+        "sha256":  "0FF2FAA5A82A5E6007BE576EB44E7A073CEB3CC37BED55499DD77710B6E230EB",
+        "name":  "c64-wave2.hsaco"
+    },
+    {
+        "sha256":  "E2EDB93AF6B4650D1E7AA739BD79C6F07E94F6D0CED09D2072283E3EC3053D44",
+        "name":  "c32-wave1.hsaco"
+    }
+]

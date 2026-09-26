@@ -1,0 +1,27 @@
+[
+    {
+        "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c32-wave1.hsaco",
+        "sha256":  "E2EDB93AF6B4650D1E7AA739BD79C6F07E94F6D0CED09D2072283E3EC3053D44",
+        "source":  "D:\\DLSSNR-Lab\\hip-backend\\wave-owned-production\\modules-gfx1200\\c32-wave1.hsaco"
+    },
+    {
+        "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1200/c64-wave2.hsaco",
+        "sha256":  "58F948F3DDED75C86161FB4624EF3A038F5E77E8638347727DB659542F2F7081",
+        "source":  "D:\\DLSSNR-Lab\\hip-backend\\wave-owned-production\\modules-gfx1200\\c64-wave2.hsaco"
+    },
+    {
+        "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c32-wave1.hsaco",
+        "sha256":  "73A2DFDBB84967086B7F8E36C1776163EE8D584B1240764ECEDC276B330DE3D2",
+        "source":  "D:\\DLSSNR-Lab\\hip-backend\\wave-owned-production\\modules-gfx1201\\c32-wave1.hsaco"
+    },
+    {
+        "target":  "DLSS5-AMD/native-game-tiled-assets/HIP/gfx1201/c64-wave2.hsaco",
+        "sha256":  "8F03E233F638325B869CFB46E965E933242C893367F7FBEBCF187862EC3CDA91",
+        "source":  "D:\\DLSSNR-Lab\\hip-backend\\wave-owned-production\\modules-gfx1201\\c64-wave2.hsaco"
+    },
+    {
+        "target":  "dlss5-amd.addon64",
+        "sha256":  "3E3CA57A079B607405227A7B3B5B1C72B71AE0416438928E69BC3B65808E67A8",
+        "source":  "D:\\DLSSNR-Lab\\hip-backend\\wave-owned-production\\dlss5-amd.addon64"
+    }
+]

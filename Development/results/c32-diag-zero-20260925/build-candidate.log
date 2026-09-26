@@ -1,0 +1,16 @@
+GPU benchmark guard: idle
+COMGR 3.0
+ISA amdgcn-amd-amdhsa--gfx1201
+assembly emitted
+COMGR kind5:
+ELF hsaco saved bytes=222744 path=D:\DLSSNR-Lab\hip-backend\c32-diag-zero\candidate-modules\c32_fused_ffn_attention-packed.hsaco
+
+Algorithm       Hash                                                                   Path
+---------       ----                                                                   ----
+SHA256          E41C5C0BCB91235B5A6842FC67F09EE86C53E232FAD8B3CAFAA4A7F8146DAC08       D:\DLSSNR-Lab\hip-backend\c32...
+COMGR 3.0
+ISA amdgcn-amd-amdhsa--gfx1200
+assembly emitted
+COMGR kind5:
+ELF hsaco saved bytes=222744 path=D:\DLSSNR-Lab\hip-backend\c32-diag-zero\candidate-gfx1200\c32_fused_ffn_attention-packed.hsaco
+SHA256          FAFE5FE1213B333F3A2FDFDD2C7420BFDEB5423849D7E8E4DD5517EDCD273FE2       D:\DLSSNR-Lab\hip-backend\c32...

@@ -1,0 +1,2 @@
+      1 PASS single-wave C32 phase trace
+    177 VERIFY bitdiff=0

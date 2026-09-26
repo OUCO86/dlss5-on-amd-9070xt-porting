@@ -1,0 +1,13 @@
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=0 mode=0 ms=16.417912 calls=640 replaced=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=1 mode=4 ms=16.245538 calls=640 replaced=640
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=2 mode=4 ms=16.245300 calls=640 replaced=640
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+VERIFY bitdiff=0 invalid=0 max=0 rmse=0 first=6635520 actual=0 expected=0
+SLOT repeat=0 candidate=4 slot=3 mode=0 ms=16.526513 calls=640 replaced=0
+PASS C32 one-wave

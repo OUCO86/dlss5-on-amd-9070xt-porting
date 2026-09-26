@@ -1,5 +1,8 @@
 OptiScaler-REFramework-DLSS5-AMD @VERSION@ — RE9特殊前置完整包
 
+0.31 更新
+共享HIP核随常规包更新（新增5个模块，gfx1200/gfx1201各29个）；本runtime不读取新开关，新核随包但不启用。宿主dxgi.dll与runtime LmxxfNrRuntime.dll与0.30相同。
+
 0.30 更新
 共享HIP核更新到与常规包相同的一组（含FFN全行写，逐位无损约−0.6%；任意序孪生核随包但本runtime不启用，无影响）。宿主dxgi.dll与runtime LmxxfNrRuntime.dll与0.29相同，只换DLSS5-AMD\native-game-tiled-assets\HIP下的核。
 

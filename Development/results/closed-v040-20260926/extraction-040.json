@@ -1,0 +1,153 @@
+{
+  "input": "/tmp/dlssnr-closed-20260926/setup.exe",
+  "size": 13183488,
+  "sha256": "2d37453e918a1c5487314b3ae7c088b624ac0be1b82469427ec04b481a845ded",
+  "bundle_offset": 3185607,
+  "entries": [
+    {
+      "name": "host-x86_64-unknown-linux-gnu-",
+      "offset": 4096,
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx10-3-generic",
+      "offset": 4096,
+      "size": 627128,
+      "sha256": "cc45620064936387c8728372522ce5fd2c9f9022c7f972013145cb91be4824c5"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx11-generic",
+      "offset": 634880,
+      "size": 1136936,
+      "sha256": "80de1d802c64c7e242f79b598fae02b11016b1c1a33f3ca40ddc87572c479b52"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx1100",
+      "offset": 1773568,
+      "size": 1128744,
+      "sha256": "70f6c12d7fbbdeca2d5941896848003cc1a4daa1ddd718f99e4b8bd2e4cdff26"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx1101",
+      "offset": 2904064,
+      "size": 1128744,
+      "sha256": "9f1a66691972a9c68c7847a7ea0a90ad2f12183281ce2e35f8e531f60d8e3df9"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx1102",
+      "offset": 4034560,
+      "size": 1136936,
+      "sha256": "fc09f8710960c742cfd123f49be8b02965b5552b6d2159e8a998290152304eca"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx1200",
+      "offset": 5173248,
+      "size": 1766128,
+      "sha256": "744546797a503a93cf9ac9bb2daaba7c43f8191f0e95af6597530f9f0e2e5b79"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx1201",
+      "offset": 6942720,
+      "size": 1766128,
+      "sha256": "613f7a2cd32b14798cff0343dacdf94774d0096fa47a37ca769570a2bd6955cf"
+    },
+    {
+      "name": "hipv4-amdgcn-amd-amdhsa--gfx9-generic",
+      "offset": 8712192,
+      "size": 603064,
+      "sha256": "67b7b86333886e4cf9e470dd84877e377138a84a47ec2eb896c685959b1adb9e"
+    }
+  ],
+  "dll": {
+    "offset": 2492871,
+    "size": 10027008,
+    "sha256": "d62be3d8b9fbb3c6c81982c4ddb3dfa00eb9662e3206925cbe5b7e1bc6798b80",
+    "sections": [
+      {
+        "name": ".text",
+        "rva": 4096,
+        "raw": 1024,
+        "size": 454144,
+        "vsize": 454075
+      },
+      {
+        "name": ".rdata",
+        "rva": 458752,
+        "raw": 455168,
+        "size": 208896,
+        "vsize": 208580
+      },
+      {
+        "name": ".data",
+        "rva": 667648,
+        "raw": 664064,
+        "size": 10752,
+        "vsize": 28384
+      },
+      {
+        "name": ".pdata",
+        "rva": 696320,
+        "raw": 674816,
+        "size": 16896,
+        "vsize": 16488
+      },
+      {
+        "name": ".fptable",
+        "rva": 716800,
+        "raw": 691712,
+        "size": 512,
+        "vsize": 256
+      },
+      {
+        "name": ".hipFatB",
+        "rva": 720896,
+        "raw": 692224,
+        "size": 512,
+        "vsize": 24
+      },
+      {
+        "name": ".hip_fat",
+        "rva": 724992,
+        "raw": 692736,
+        "size": 9315328,
+        "vsize": 9315256
+      },
+      {
+        "name": ".retarc",
+        "rva": 10043392,
+        "raw": 10008064,
+        "size": 8704,
+        "vsize": 8688
+      },
+      {
+        "name": ".retard",
+        "rva": 10055680,
+        "raw": 10016768,
+        "size": 512,
+        "vsize": 24
+      },
+      {
+        "name": ".tls",
+        "rva": 10059776,
+        "raw": 10017280,
+        "size": 512,
+        "vsize": 17
+      },
+      {
+        "name": "_RDATA",
+        "rva": 10063872,
+        "raw": 10017792,
+        "size": 512,
+        "vsize": 500
+      },
+      {
+        "name": ".reloc",
+        "rva": 10067968,
+        "raw": 10018304,
+        "size": 8704,
+        "vsize": 8332
+      }
+    ]
+  }
+}

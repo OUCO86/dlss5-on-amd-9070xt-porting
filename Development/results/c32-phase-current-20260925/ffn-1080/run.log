@@ -1,0 +1,142 @@
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=0 slot=0 mode=0 ms=16.613937
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=0 slot=1 mode=1 ms=16.730425
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=0 slot=2 mode=1 ms=16.744175
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=0 slot=3 mode=0 ms=16.647200
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=1 slot=0 mode=0 ms=16.635275
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=1 slot=1 mode=2 ms=16.752100
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=1 slot=2 mode=2 ms=16.766987
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=1 slot=3 mode=0 ms=16.631750
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=2 slot=0 mode=0 ms=16.644163
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=2 slot=1 mode=3 ms=16.751900
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=2 slot=2 mode=3 ms=16.758450
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=2 slot=3 mode=0 ms=16.694875
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=7 slot=0 mode=0 ms=16.700837
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=7 slot=1 mode=8 ms=16.812912
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=7 slot=2 mode=8 ms=16.811975
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=7 slot=3 mode=0 ms=16.696800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=8 slot=0 mode=0 ms=16.665425
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=8 slot=1 mode=9 ms=16.802925
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=8 slot=2 mode=9 ms=16.785150
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=8 slot=3 mode=0 ms=16.695538
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=9 slot=0 mode=0 ms=16.737100
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=9 slot=1 mode=10 ms=16.824250
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=9 slot=2 mode=10 ms=16.821000
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=9 slot=3 mode=0 ms=16.699325
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=10 slot=0 mode=0 ms=16.712775
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=10 slot=1 mode=11 ms=16.814400
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=10 slot=2 mode=11 ms=16.787312
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+TIMING phase=10 slot=3 mode=0 ms=16.726075
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+PASS current C32 phase trace

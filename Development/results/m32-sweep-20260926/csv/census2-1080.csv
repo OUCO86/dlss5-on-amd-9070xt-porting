@@ -1,0 +1,17 @@
+kind,repeat,target,slot,active,frames,ms,hits_per_frame,bitdiff
+dup,0,mh_ffn_fused_c256,0,0,150,15.289282000,0.000,0
+dup,0,mh_ffn_fused_c256,1,1,150,16.618502667,16.000,0
+dup,0,mh_ffn_fused_c256,2,1,150,16.618880667,16.000,0
+dup,0,mh_ffn_fused_c256,3,0,150,15.297511333,0.000,0
+dup,0,vit_pack_input$,0,0,150,15.311834000,0.000,0
+dup,0,vit_pack_input$,1,1,150,15.322622000,8.000,0
+dup,0,vit_pack_input$,2,1,150,15.342171333,8.000,0
+dup,0,vit_pack_input$,3,0,150,15.313693333,0.000,0
+dup,1,mh_ffn_fused_c256,0,0,150,15.344827333,0.000,0
+dup,1,mh_ffn_fused_c256,1,1,150,16.640816000,16.000,0
+dup,1,mh_ffn_fused_c256,2,1,150,16.633774667,16.000,0
+dup,1,mh_ffn_fused_c256,3,0,150,15.294071333,0.000,0
+dup,1,vit_pack_input$,0,0,150,15.296714000,0.000,0
+dup,1,vit_pack_input$,1,1,150,15.322112000,8.000,0
+dup,1,vit_pack_input$,2,1,150,15.333989333,8.000,0
+dup,1,vit_pack_input$,3,0,150,15.321520000,0.000,0

@@ -1,0 +1,184 @@
+{
+  "results-1080-launder-validate": {
+    "1": {
+      "paired_delta_ms": [
+        -0.05992250000000077,
+        -0.07789999999999964,
+        -0.055079999999998464
+      ],
+      "mean_delta_ms": -0.06430083333333296
+    }
+  },
+  "results-1080-rollh-expandedvalidate": {
+    "4": {
+      "paired_delta_ms": [
+        -0.11802999999999919,
+        -0.15076499999999804,
+        -0.14666249999999792
+      ],
+      "mean_delta_ms": -0.13848583333333173
+    }
+  },
+  "results-1080-rollh-qf-probe": {
+    "4": {
+      "paired_delta_ms": [
+        -0.06934374999999982
+      ],
+      "mean_delta_ms": -0.06934374999999982
+    }
+  },
+  "results-1080-rollh-rw-fullvalidate": {
+    "8": {
+      "paired_delta_ms": [
+        -0.43555249999999823,
+        -0.47153750000000016,
+        -0.4618924999999976
+      ],
+      "mean_delta_ms": -0.45632749999999866
+    },
+    "dynamic_frames_verified": 16
+  },
+  "results-1080-rollh-rw-probe": {
+    "4": {
+      "paired_delta_ms": [
+        -0.22679375000000057
+      ],
+      "mean_delta_ms": -0.22679375000000057
+    }
+  },
+  "results-1080-rollh-rw-validate": {
+    "4": {
+      "paired_delta_ms": [
+        -0.2457674999999977,
+        -0.26210749999999905,
+        -0.26294999999999824
+      ],
+      "mean_delta_ms": -0.256941666666665
+    }
+  },
+  "results-1080-rollh-validate": {
+    "1": {
+      "paired_delta_ms": [
+        -0.08969249999999995,
+        -0.11550000000000082,
+        -0.10359000000000052
+      ],
+      "mean_delta_ms": -0.10292750000000044
+    }
+  },
+  "results-1080-rollh-wgp-probe": {
+    "4": {
+      "paired_delta_ms": [
+        -0.11415625000000063
+      ],
+      "mean_delta_ms": -0.11415625000000063
+    }
+  },
+  "results-1080-validate": {
+    "1": {
+      "paired_delta_ms": [
+        -0.06531500000000001,
+        -0.10541999999999874,
+        -0.08172000000000068
+      ],
+      "mean_delta_ms": -0.08415166666666647
+    }
+  },
+  "results-900-rollh-expanded": {
+    "2": {
+      "paired_delta_ms": [
+        -0.0004000000000008441
+      ],
+      "mean_delta_ms": -0.0004000000000008441
+    },
+    "3": {
+      "paired_delta_ms": [
+        0.0042125000000003965
+      ],
+      "mean_delta_ms": 0.0042125000000003965
+    },
+    "4": {
+      "paired_delta_ms": [
+        -0.10698750000000068
+      ],
+      "mean_delta_ms": -0.10698750000000068
+    }
+  },
+  "results-900-rollh-expandedvalidate": {
+    "4": {
+      "paired_delta_ms": [
+        -0.0828149999999992,
+        -0.09576250000000108,
+        -0.09835499999999975
+      ],
+      "mean_delta_ms": -0.09231083333333334
+    }
+  },
+  "results-900-rollh-rw-fullvalidate": {
+    "8": {
+      "paired_delta_ms": [
+        -0.2903424999999986,
+        -0.2951850000000009,
+        -0.3007750000000007
+      ],
+      "mean_delta_ms": -0.2954341666666667
+    },
+    "dynamic_frames_verified": 16
+  },
+  "results-900-rollh-rw-postprobe": {
+    "5": {
+      "paired_delta_ms": [
+        -0.041875000000000995
+      ],
+      "mean_delta_ms": -0.041875000000000995
+    },
+    "6": {
+      "paired_delta_ms": [
+        -0.2148500000000011
+      ],
+      "mean_delta_ms": -0.2148500000000011
+    }
+  },
+  "results-900-rollh-rw-prefixprobe": {
+    "7": {
+      "paired_delta_ms": [
+        -0.07053749999999859
+      ],
+      "mean_delta_ms": -0.07053749999999859
+    },
+    "8": {
+      "paired_delta_ms": [
+        -0.307599999999999
+      ],
+      "mean_delta_ms": -0.307599999999999
+    }
+  },
+  "results-900-rollh-rw-validate": {
+    "4": {
+      "paired_delta_ms": [
+        -0.16489500000000046,
+        -0.1812350000000018,
+        -0.17030750000000072
+      ],
+      "mean_delta_ms": -0.17214583333333433
+    }
+  },
+  "results-900-smoke": {
+    "1": {
+      "paired_delta_ms": [
+        -0.05664999999999942
+      ],
+      "mean_delta_ms": -0.05664999999999942
+    }
+  },
+  "results-900-validate": {
+    "1": {
+      "paired_delta_ms": [
+        -0.06175249999999988,
+        -0.04656000000000038,
+        -0.05189749999999904
+      ],
+      "mean_delta_ms": -0.0534033333333331
+    }
+  }
+}

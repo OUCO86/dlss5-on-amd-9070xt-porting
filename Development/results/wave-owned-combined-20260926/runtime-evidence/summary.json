@@ -1,0 +1,65 @@
+{
+  "correctness": [
+    {
+      "baseline": "base-900-0",
+      "candidate": "candidate-900-0",
+      "matching_frames": 12
+    },
+    {
+      "baseline": "base-900-1",
+      "candidate": "candidate-900-1",
+      "matching_frames": 12
+    },
+    {
+      "baseline": "base-1080-0",
+      "candidate": "candidate-1080-0",
+      "matching_frames": 12
+    },
+    {
+      "baseline": "base-1080-1",
+      "candidate": "candidate-1080-1",
+      "matching_frames": 12
+    },
+    {
+      "baseline": "extra-720-motion-False",
+      "candidate": "extra-720-motion-True",
+      "matching_frames": 12
+    },
+    {
+      "baseline": "extra-900-history-False",
+      "candidate": "extra-900-history-True",
+      "matching_frames": 12
+    }
+  ],
+  "timing": {
+    "900": {
+      "slots_ms": [
+        11.9455425,
+        11.23668,
+        11.28361125,
+        12.00644125
+      ],
+      "baseline_ms": 11.975991875,
+      "candidate_ms": 11.260145625,
+      "delta_ms": -0.7158462500000002,
+      "time_reduction_percent": 5.9773441521310335,
+      "frames_per_slot": 1000,
+      "warmup_excluded": 200
+    },
+    "1080": {
+      "slots_ms": [
+        16.98308125,
+        15.85462125,
+        15.87310625,
+        17.0118825
+      ],
+      "baseline_ms": 16.997481875,
+      "candidate_ms": 15.86386375,
+      "delta_ms": -1.1336181249999981,
+      "time_reduction_percent": 6.669329806242246,
+      "frames_per_slot": 1000,
+      "warmup_excluded": 200
+    }
+  },
+  "candidate_frames_bit_exact": 72
+}

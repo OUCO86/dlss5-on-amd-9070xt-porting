@@ -1,0 +1,18 @@
+{
+  "host_source_sha256": "2f05ef7f7ca7e281c1ecdd6d3bf43c5acea9363d819f569078c182c892aef4b9",
+  "modes": {
+    "0": "production",
+    "1": "dup mix",
+    "2": "dup ffn_fused_t8",
+    "3": "dup projection_frag",
+    "4": "dup qkv_norm",
+    "5": "qkv_norm with LDS-staged 128-bit byte stores",
+    "6": "mode 5 + 32 tokens per wave",
+    "7": "48 tokens per wave",
+    "8": "64 tokens per wave",
+    "9": "split_projection_frag 32 tokens/wave",
+    "10": "split_mix_h16w 32 tokens/wave",
+    "11": "qkv m32 + projection m32 + mix m32",
+    "12": "qkv m32 + mix m32"
+  }
+}

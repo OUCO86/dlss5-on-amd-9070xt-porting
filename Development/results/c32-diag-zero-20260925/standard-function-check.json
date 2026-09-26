@@ -1,0 +1,42 @@
+{
+  "c32_fast_ffn_attention_fused_half_chain": {
+    "matches_measured_function": true,
+    "changed_from_prod8": true
+  },
+  "c32_fast_ffn_attention_fused_half_prefix_finish_main8": {
+    "matches_measured_function": true,
+    "changed_from_prod8": false
+  },
+  "c32_fast_ffn_attention_fused_half_chain_finish_dcrop": {
+    "matches_measured_function": true,
+    "changed_from_prod8": true
+  },
+  "c32_post_merge_head_half": {
+    "matches_measured_function": true,
+    "changed_from_prod8": false
+  },
+  "c32_post_merge_fused_half": {
+    "matches_measured_function": true,
+    "changed_from_prod8": false
+  },
+  "c32_fast_ffn_attention_fused": {
+    "matches_measured_function": true,
+    "changed_from_prod8": false
+  },
+  "c32_fast_ffn_attention_fused_half": {
+    "matches_measured_function": true,
+    "changed_from_prod8": false
+  },
+  "c32_fast_ffn_attention_fused_half_chain_finish": {
+    "matches_measured_function": true,
+    "changed_from_prod8": true
+  },
+  "c32_fast_ffn_attention_fused_half_finish_main8": {
+    "matches_measured_function": true,
+    "changed_from_prod8": false
+  },
+  "c32_fast_ffn_attention_fused_half_mapped": {
+    "matches_measured_function": true,
+    "changed_from_prod8": false
+  }
+}

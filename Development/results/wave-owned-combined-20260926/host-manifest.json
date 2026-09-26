@@ -1,0 +1,9 @@
+{
+  "generated_host_sha256": "d49e691f8d994431f2ea0c66bd7784b6eaf80bc612e4efd68e22c474b60f790e",
+  "modes": {
+    "0": "prod8",
+    "1": "MH best C64/128 fused + C256 attention",
+    "2": "C32 all ten",
+    "3": "both"
+  }
+}

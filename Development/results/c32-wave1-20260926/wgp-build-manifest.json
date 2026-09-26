@@ -1,0 +1,8 @@
+{
+    "launder":  false,
+    "module_sha256":  "6712CA64516978A6E9C672DE6646A70CC362FA9F48E8A6805A4AEB3027073D46",
+    "wgp":  true,
+    "roll_hidden":  true,
+    "qkv_fence":  false,
+    "source_sha256":  "A1EC8DE79B269ECE4172B1DBB2181C28E751C5E96986BC3F86840D5BE1D3508B"
+}

@@ -1,0 +1,55 @@
+FINITE block=2 comparisons=8192 bitdiff=0
+FINITE block=3 comparisons=8192 bitdiff=0
+FINITE block=4 comparisons=8192 bitdiff=0
+FINITE block=67 comparisons=8192 bitdiff=0
+FINITE block=68 comparisons=8192 bitdiff=0
+FINITE block=69 comparisons=8192 bitdiff=0
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=0 mode=0 ms=11.607535 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=1 mode=1 ms=11.661139 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=2 mode=1 ms=11.688769 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=1 slot=3 mode=0 ms=11.726019 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=0 mode=0 ms=11.721109 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=1 mode=2 ms=11.706461 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=2 mode=2 ms=11.715099 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=0 candidate=2 slot=3 mode=0 ms=11.746096 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=0 mode=0 ms=11.742224 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=1 mode=1 ms=11.751656 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=2 mode=1 ms=11.754861 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=1 slot=3 mode=0 ms=11.753127 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=0 mode=0 ms=11.760782 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=1 mode=2 ms=11.727021 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=2 mode=2 ms=11.711035 calls=4800
+VERIFY bitdiff=0
+VERIFY bitdiff=0
+SLOT repeat=1 candidate=2 slot=3 mode=0 ms=11.734102 calls=4800
+PASS C32 diagonal zero controls

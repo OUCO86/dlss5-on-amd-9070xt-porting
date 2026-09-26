@@ -1,0 +1,8 @@
+{
+    "schedule_fence":  true,
+    "label":  "base",
+    "module_sha256":  "7555FBAC32E60FC40462713B3DBB863AB4AB1889105CE48CE1A6577E2BB91A4E",
+    "roll_query":  true,
+    "roll_k":  false,
+    "source_sha256":  "13F9EE5F51FB769F79E71C8785F08CE1BA22DFBC345F271333FAFAC5F30D66DC"
+}

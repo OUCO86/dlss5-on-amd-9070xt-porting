@@ -1,0 +1,35 @@
+#include <windows.h>
+#include <cstdio>
+#include "Development/HIP/hip_reference_network.h"
+std::vector<float> read(const char*path){auto b=hip_reference::ReadBytes(path);if(b.size()%4)throw std::runtime_error("alignment");std::vector<float>v(b.size()/4);memcpy(v.data(),b.data(),b.size());return v;}
+int main(int argc,char**argv){try{
+ if(argc!=9)throw std::runtime_error("assets modules flags input expected width height timing_frames");
+ unsigned W=unsigned(std::stoul(argv[6])),H=unsigned(std::stoul(argv[7])),frames=unsigned(std::stoul(argv[8]));if(!frames)throw std::runtime_error("frames");
+ std::ifstream flags(argv[3]);if(!flags)throw std::runtime_error("flags");std::string line;
+ while(std::getline(flags,line)){if(!line.empty()&&line.back()=='\r')line.pop_back();auto eq=line.find('=');if(line.rfind("DLSS5_",0)==0&&eq!=std::string::npos)_putenv_s(line.substr(0,eq).c_str(),line.substr(eq+1).c_str());}
+ _putenv_s("DLSS5_HIP_FAST","1");_putenv_s("DLSS5_HIP_PDL","1");_putenv_s("DLSS5_HIP_GRAPH","0");_putenv_s("DLSS5_VIT_ADAPTIVE","0");_putenv_s("DLSS5_VIT_REUSE_HOTKEY","0");_putenv_s("DLSS5_HIP_DUP_PREFIX","");
+ /* OPTIONS */
+ o.modules=argv[2];hip_reference::Network net(o);auto&api=net.Runtime();net.InitPhase();
+ auto input=read(argv[4]),expected=read(argv[5]);if(input.size()!=size_t(W)*H*4||expected.size()!=size_t(W)*H*3)throw std::runtime_error("shape");
+ void*x{},*y{};api.Check(api.hipMalloc(&x,input.size()*4),"input");api.Check(api.hipMalloc(&y,expected.size()*4),"output");api.Check(api.hipMemcpy(x,input.data(),input.size()*4,1),"upload");
+ auto run=[&](){net.Enqueue(x,nullptr,y,0);net.Synchronize();if(net.PhaseCalls()!=10)throw std::runtime_error("expected 10 C32 launches");};
+ auto verify=[&](){std::vector<float>v(expected.size());api.Check(api.hipMemcpy(v.data(),y,v.size()*4,2),"check");size_t diff=0;for(size_t i=0;i<v.size();i++)diff+=memcmp(&v[i],&expected[i],4)!=0||!std::isfinite(v[i]);printf("VERIFY bitdiff=%llu\n",(unsigned long long)diff);fflush(stdout);if(diff)throw std::runtime_error("traced output differs");};
+ net.PhaseMode(0);for(unsigned i=0;i<80;i++)run();verify();
+ FILE*f=fopen("timing.csv","wb");if(!f)throw std::runtime_error("timing csv");fprintf(f,"phase,slot,mode,frames,ms\n");
+ std::vector<unsigned> modes_to_run;
+ if(const char*env=std::getenv("C32_TRACE_PHASES")){
+  std::string list=env;size_t p=0;while(p<list.size()){size_t e=list.find(',',p);if(e==std::string::npos)e=list.size();unsigned phase=unsigned(std::stoul(list.substr(p,e-p)));if(phase>10)throw std::runtime_error("phase must be 0..10");modes_to_run.push_back(phase+1);p=e+1;}
+ }else for(unsigned m=1;m<=11;m++)modes_to_run.push_back(m);
+ for(unsigned mode:modes_to_run){
+  unsigned modes[]={0,mode,mode,0};
+  for(unsigned slot=0;slot<4;slot++){
+   net.PhaseMode(modes[slot]);for(unsigned i=0;i<20;i++)run();verify();
+   auto t=std::chrono::steady_clock::now();for(unsigned i=0;i<frames;i++)run();double ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-t).count()/frames;verify();
+   fprintf(f,"%u,%u,%u,%u,%.9f\n",mode-1,slot,modes[slot],frames,ms);fflush(f);printf("TIMING phase=%u slot=%u mode=%u ms=%.6f\n",mode-1,slot,modes[slot],ms);fflush(stdout);
+  }
+  net.PhaseMode(mode);net.ClearPhase();
+  for(unsigned frame=0;frame<8;frame++){net.PhaseFrame(frame);run();verify();}
+  net.DumpPhase("phase"+std::to_string(mode-1));
+ }
+ fclose(f);net.ReleasePhase();api.hipFree(x);api.hipFree(y);puts("PASS current C32 phase trace");return 0;
+}catch(const std::exception&e){fprintf(stderr,"FAIL %s\n",e.what());return 1;}}

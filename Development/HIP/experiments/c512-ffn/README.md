@@ -1,0 +1,3 @@
+# C512 FFN 链分账与 32 token/wave 候选
+
+`prepare.py` → /tmp/c512-ffn：`network.cpp`（生产 host 副本加 C5Mode：0 生产；1–4 重复派发 mix/ffn_fused_t8/projection_frag/qkv_norm；5 QKV 宽写；6 QKV m32；7/8 QKV m48/m64；9 投影 m32；10 mix m32；11 = 6+9+10；12 = 6+10）、`kernel.hip`（multihead_fast_padded.hip + `qkv_wide.inc` → c512-ffn.hsaco）、`deep.hip`（deep_fast.hip + `deep_m32.inc` → c512-deep.hsaco）。host：`x86_64-w64-mingw32-g++-posix -std=c++17 -O2 -static -D_WIN32_WINNT=0x0A00 -I. network.cpp`。AMD 机 `build.ps1 -Label cand` 编模块，`run.ps1 -Heights 900 -Label cand -Candidates 6ac`（候选字符 1–9、a–f=10–15），`abba.py slots.csv` 算配对差。结论 `Development/results/c512-ffn-20260926/README.md`；采用的两核已移入 `hip/c512_m32_*.inc`。

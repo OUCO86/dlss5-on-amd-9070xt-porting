@@ -1,0 +1,14 @@
+[
+    {
+        "module":  "vit-wide-deep",
+        "module_sha256":  "20AD91A849B01F7204A7469CCD43D9C02E94ED17A96EE45EF8D57AAFACFA86AD",
+        "arch":  "gfx1200",
+        "source_sha256":  "337CB57B14F29DCE35DB7BC7B1851D087FB38D37264566D67441E1D7AB94F7AD"
+    },
+    {
+        "module":  "vit-wide-deep",
+        "module_sha256":  "AD8642DAA421E1100E6801FE37D04E6ECD9D6359C39DE42F91FFF865E751FBC9",
+        "arch":  "gfx1201",
+        "source_sha256":  "337CB57B14F29DCE35DB7BC7B1851D087FB38D37264566D67441E1D7AB94F7AD"
+    }
+]

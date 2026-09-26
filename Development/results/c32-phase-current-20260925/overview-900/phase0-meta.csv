@@ -1,0 +1,11 @@
+launch,kernel,groups
+0,c32_fast_ffn_attention_fused_half_prefix_finish_main8,24000
+1,c32_fast_ffn_attention_fused_half_mapped,6000
+2,c32_fast_ffn_attention_fused_half_chain,6161
+3,c32_fast_ffn_attention_fused_half_chain,6060
+4,c32_fast_ffn_attention_fused_half_chain_finish_dcrop,6100
+5,c32_fast_ffn_attention_fused_half_mapped,6000
+6,c32_fast_ffn_attention_fused_half_chain,6161
+7,c32_fast_ffn_attention_fused_half_chain,6060
+8,c32_fast_ffn_attention_fused_half_chain_finish,6100
+9,c32_post_merge_head_half,24321

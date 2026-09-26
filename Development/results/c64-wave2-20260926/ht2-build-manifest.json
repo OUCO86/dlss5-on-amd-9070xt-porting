@@ -1,0 +1,10 @@
+{
+    "roll_query":  true,
+    "hidden_tiles":  2,
+    "defer_q":  false,
+    "source_sha256":  "2E670D49554FB5F79B9356EF385AFE3414FB61EC7A11C0ACBD61AE07E4BE9564",
+    "layout":  "frag",
+    "launder_qkv":  true,
+    "module_sha256":  "601F93AF77AFB3AC376EF5FDBE6CAD8E9E2865F005988D4DC381A13FCACFE8BD",
+    "schedule_fence":  true
+}

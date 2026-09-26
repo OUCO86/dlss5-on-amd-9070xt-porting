@@ -1,0 +1,201 @@
+[
+  {
+    "variant": "first",
+    "module_sha256": "380a5da9f3585cfe5dae905816ff01775ec5293eab34f0b3ba54fc2b012bffc8",
+    "metadata_excerpt": "y_value\n      - .offset:         68\n        .size:           4\n        .value_kind:     by_value\n    .group_segment_fixed_size: 4096\n    .kernarg_segment_align: 8\n    .kernarg_segment_size: 72\n    .max_flat_workgroup_size: 32\n    .name:           c32_wave1_chain\n    .private_segment_fixed_size: 0\n    .sgpr_count:     21\n    .sgpr_spill_count: 0\n    .symbol:         c32_wave1_chain.kd\n    .uniform_work_group_size: 1\n    .uses_dynamic_stack: false\n    .vgpr_count:     240\n    .vgpr_spill_count: 0\n    .wavefront_size: 32\n    .workgroup_processor_mode: 0\namdhsa.target:   amdgcn-amd-amdhsa--gfx1201\namdhsa.version:\n  - 1\n  - 2\n...\n\n\t.end_amdgpu_metadata\n"
+  },
+  {
+    "variant": "launder",
+    "module_sha256": "e61b9fbda30a309e0e61d79d899b510ddecd28b4cd7c02d6b82ee14eb7e94adc",
+    "metadata_excerpt": "y_value\n      - .offset:         68\n        .size:           4\n        .value_kind:     by_value\n    .group_segment_fixed_size: 4096\n    .kernarg_segment_align: 8\n    .kernarg_segment_size: 72\n    .max_flat_workgroup_size: 32\n    .name:           c32_wave1_chain\n    .private_segment_fixed_size: 0\n    .sgpr_count:     26\n    .sgpr_spill_count: 0\n    .symbol:         c32_wave1_chain.kd\n    .uniform_work_group_size: 1\n    .uses_dynamic_stack: false\n    .vgpr_count:     239\n    .vgpr_spill_count: 0\n    .wavefront_size: 32\n    .workgroup_processor_mode: 0\namdhsa.target:   amdgcn-amd-amdhsa--gfx1201\namdhsa.version:\n  - 1\n  - 2\n...\n\n\t.end_amdgpu_metadata\n"
+  },
+  {
+    "variant": "rollh",
+    "module_sha256": "efc870c3724b07bae03bef98452e441e04b40dbf2f83062c0c21a7027b506cdf",
+    "metadata_excerpt": "y_value\n      - .offset:         68\n        .size:           4\n        .value_kind:     by_value\n    .group_segment_fixed_size: 4096\n    .kernarg_segment_align: 8\n    .kernarg_segment_size: 72\n    .max_flat_workgroup_size: 32\n    .name:           c32_wave1_chain\n    .private_segment_fixed_size: 0\n    .sgpr_count:     25\n    .sgpr_spill_count: 0\n    .symbol:         c32_wave1_chain.kd\n    .uniform_work_group_size: 1\n    .uses_dynamic_stack: false\n    .vgpr_count:     240\n    .vgpr_spill_count: 0\n    .wavefront_size: 32\n    .workgroup_processor_mode: 0\namdhsa.target:   amdgcn-amd-amdhsa--gfx1201\namdhsa.version:\n  - 1\n  - 2\n...\n\n\t.end_amdgpu_metadata\n"
+  },
+  {
+    "variant": "expanded",
+    "module_sha256": "650cdf6bc1cfbd4a822f3d0ecdea6869e3d5292c70faaf43a122bcbac72c56ca",
+    "kernels": {
+      "c32_wave1_chain": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 240,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_mapped": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 60,
+        "vgpr_count": 256,
+        "vgpr_spill_count": 14,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 244,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish_dcrop": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 244,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      }
+    }
+  },
+  {
+    "variant": "qkv-fence",
+    "module_sha256": "c1ba44c777461855b6131f2d77619b9cbc804d148ebc93343dff24bcab69c265",
+    "kernels": {
+      "c32_wave1_chain": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 246,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_mapped": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 64,
+        "vgpr_count": 256,
+        "vgpr_spill_count": 15,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 246,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish_dcrop": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 246,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      }
+    }
+  },
+  {
+    "variant": "wgp",
+    "module_sha256": "6712ca64516978a6e9c672de6646a70cc362fa9f48e8a6805a4aeb3027073d46",
+    "kernels": {
+      "c32_wave1_chain": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 240,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 1
+      },
+      "c32_wave1_mapped": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 60,
+        "vgpr_count": 256,
+        "vgpr_spill_count": 14,
+        "workgroup_processor_mode": 1
+      },
+      "c32_wave1_finish": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 244,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 1
+      },
+      "c32_wave1_finish_dcrop": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 244,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 1
+      }
+    }
+  },
+  {
+    "variant": "window-loop",
+    "module_sha256": "e51696a7f645d660b1f8e413601bd6a2f7716ecfb1e3bbe047269e2b13fce0d3",
+    "kernels": {
+      "c32_wave1_chain": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 165,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_mapped": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 165,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish_dcrop": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      }
+    }
+  },
+  {
+    "variant": "full-c32",
+    "module_sha256": "73a2dfdbb84967086b7f8e36c1776163ee8d584b1240764ecedc276b330de3d2",
+    "kernels": {
+      "c32_wave1_chain": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 165,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_mapped": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 165,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_finish_dcrop": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_post": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 176,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      },
+      "c32_wave1_prefix": {
+        "group_segment_fixed_size": 4096,
+        "private_segment_fixed_size": 0,
+        "vgpr_count": 174,
+        "vgpr_spill_count": 0,
+        "workgroup_processor_mode": 0
+      }
+    }
+  }
+]
