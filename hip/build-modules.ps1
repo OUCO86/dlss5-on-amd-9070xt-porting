@@ -5,7 +5,7 @@ param(
     [string]$Only = '',
     [ValidateSet('gfx1200','gfx1201')][string[]]$Targets = @('gfx1200','gfx1201')
 )
-# Builds 26 modules per target (24 legacy plus two opt-in wave-owned modules); by default gfx1200 and gfx1201 go into architecture subdirectories.
+# Builds 28 modules per target (24 legacy, two opt-in wave-owned modules, two opt-in C512 32-token modules); by default gfx1200 and gfx1201 go into architecture subdirectories.
 # One row per module: output name, extra #defines, source files (concatenated in order). Every row prepends HIP_ISA_HALF 1;
 # names ending in -packed also prepend HIP_PREPACKED_WEIGHTS 1. The extra defines below are the production selections of
 # 2026-09-17 (0.20); they coincide with the sources' defaults and are spelled out so the recipe does not depend on them.
@@ -40,7 +40,9 @@ $modules = @(
     @{ name = 'multihead-fast-packed';              defines = @();                        sources = @('multihead_fast.hip') },
     @{ name = 'multihead-fast-padded-wave-packed';  defines = @('HIP_FFN_HOIST_RES 2');   sources = @('multihead_fast_padded.hip') },
     @{ name = 'c32-wave1'; defines = @('HIP_PREPACKED_WEIGHTS 1','CW_ROLL_HIDDEN 1','CW_ROLL_WINDOW 1'); sources = @('c32_fused_ffn_attention.hip','wave_owned_c32.inc') },
-    @{ name = 'c64-wave2'; defines = @('HIP_PREPACKED_WEIGHTS 1','HIP_FFN_HOIST_RES 2','HIP_PDL_KERNELS 0','W2_FRAGMENT_WEIGHTS 1','W2_LAUNDER_QKV 1','W2_SCHED_FENCE 1','W2_ROLL_QUERY 1','W2_HIDDEN_TILES 2'); sources = @('multihead_fast_padded.hip','wave_owned_mh.inc','wave_owned_attention_setup.inc','@wave-owned-attention-body','wave_owned_attention_exports.inc') }
+    @{ name = 'c64-wave2'; defines = @('HIP_PREPACKED_WEIGHTS 1','HIP_FFN_HOIST_RES 2','HIP_PDL_KERNELS 0','W2_FRAGMENT_WEIGHTS 1','W2_LAUNDER_QKV 1','W2_SCHED_FENCE 1','W2_ROLL_QUERY 1','W2_HIDDEN_TILES 2'); sources = @('multihead_fast_padded.hip','wave_owned_mh.inc','wave_owned_attention_setup.inc','@wave-owned-attention-body','wave_owned_attention_exports.inc') },
+    @{ name = 'c512-m32-mh'; defines = @('HIP_PREPACKED_WEIGHTS 1','HIP_FFN_HOIST_RES 2','HIP_PDL_KERNELS 0'); sources = @('multihead_fast_padded.hip','c512_m32_mh.inc') },
+    @{ name = 'c512-m32-deep'; defines = @('HIP_PREPACKED_WEIGHTS 1','HIP_BRANCHLESS_F 1'); sources = @('deep_fast.hip','c512_m32_deep.inc') }
 )
 $outputRoot=$OutputDir
 foreach($target in $Targets){
