@@ -14,6 +14,9 @@
 #ifndef CW_PREFIX_SPLIT
 #define CW_PREFIX_SPLIT 0 /* 1: prefix features split across both half-waves (bit-exact; 1080 -0.03ms, results/vit-attn-c32-input-20260926) */
 #endif
+#ifndef CW_TAIL_QUAD
+#define CW_TAIL_QUAD 0 /* 1: finish/prefix tail walks 2x2 quads once: 4 LDS reads feed both main and down (was 64+64 reads), 32-bit byte offsets for stores; arithmetic unchanged */
+#endif
 #ifndef CW_VEC_INPUT
 #define CW_VEC_INPUT 0 /* 1: mapped/post input rows read as b128/b64 instead of per-element loads (bit-exact; results/c32-wave-phase-20260926) */
 #endif
@@ -159,8 +162,19 @@ DEV void cw_body(const unsigned char*in,const float*fw,const float*w,unsigned ch
   WG_FENCE(3);WG_FENCE(2);
   uint c=__builtin_amdgcn_workitem_id_x(),ww=width+2*sx,tx=(win%(ww/8))*8,ty=(win/(ww/8))*8;
   auto load=[&](uint t)->float{return float(residual[((t/16*2+c/16)*32+(c%16/8*16+t%16))*8+c%8]);};
+#if CW_TAIL_QUAD
+  auto put_main=[&](uint t,float raw_v){int x=int(tx+t%8)-int(sx),y=int(ty+t/8)-int(sy);if(x>=0&&y>=0&&x<int(width)&&y<int(height)){uint dest=(uint(y)*width+uint(x))*32+c;float v=F(raw_v);
+   if constexpr(Prefix)*reinterpret_cast<unsigned char*>(reinterpret_cast<char*>(main)+dest)=static_cast<unsigned char>(fp8(v));else *reinterpret_cast<float*>(reinterpret_cast<char*>(main)+dest*4u)=v;}};
+  for(uint k=0;k<16;k++){uint t=(k/4)*16+(k%4)*2;float a0=load(t),a1=load(t+1),b0=load(t+8),b1=load(t+9);
+   if(main){put_main(t,a0);put_main(t+1,a1);put_main(t+8,b0);put_main(t+9,b1);}
+   if(down){float top=Hrtz(a0+a1),bottom=Hrtz(b0+b1);uint x=tx+t%8,y=ty+t/8;
+    if constexpr(DownCrop){int cx=int(x/2)-int(sx/2),cy=int(y/2)-int(sy/2);if(cx>=0&&cy>=0&&cx<int(width/2)&&cy<int(height/2))*reinterpret_cast<float*>(reinterpret_cast<char*>(down)+((uint(cy)*(width/2)+uint(cx))*32+c)*4u)=F(Hrtz(Hrtz(top+bottom)*.25f));}
+    else *reinterpret_cast<float*>(reinterpret_cast<char*>(down)+(((y/2)*(ww/2)+x/2)*32+c)*4u)=F(Hrtz(Hrtz(top+bottom)*.25f));}
+  }
+  if(false)
+#endif
   if(main)for(uint t=0;t<64;t++){int x=int(tx+t%8)-int(sx),y=int(ty+t/8)-int(sy);if(x>=0&&y>=0&&x<int(width)&&y<int(height)){uint dest=(uint(y)*width+uint(x))*32+c;float v=F(load(t));if constexpr(Prefix)reinterpret_cast<unsigned char*>(main)[dest]=static_cast<unsigned char>(fp8(v));else main[dest]=v;}}
-  if(down)for(uint k=0;k<16;k++){uint t=(k/4)*16+(k%4)*2;float top=Hrtz(load(t)+load(t+1)),bottom=Hrtz(load(t+8)+load(t+9));uint x=tx+t%8,y=ty+t/8;
+  if(!CW_TAIL_QUAD&&down)for(uint k=0;k<16;k++){uint t=(k/4)*16+(k%4)*2;float top=Hrtz(load(t)+load(t+1)),bottom=Hrtz(load(t+8)+load(t+9));uint x=tx+t%8,y=ty+t/8;
    if constexpr(DownCrop){int cx=int(x/2)-int(sx/2),cy=int(y/2)-int(sy/2);if(cx>=0&&cy>=0&&cx<int(width/2)&&cy<int(height/2))down[(uint(cy)*(width/2)+uint(cx))*32+c]=F(Hrtz(Hrtz(top+bottom)*.25f));}
    else down[((y/2)*(ww/2)+x/2)*32+c]=F(Hrtz(Hrtz(top+bottom)*.25f));
   }
