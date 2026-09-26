@@ -581,3 +581,12 @@ c512-ffn 回归里那次"基线第 8～11 帧不一致"：回归的 `extra-900-h
 ## 2026-09-26 10:17：C512 M32 剑星实测
 
 用户 2K 质量档（1707×961→900 档）：主菜单 57～58（C512 前 56～57），最简场景 60（上限）。日志 pid=29300：`c512_m32_active=1`、`wave_owned_active=1`、`network=1600x900`。当日 2K 质量档主菜单累计：prod8 约 47～48 → auto 分档 56～57 → +C512 57～58。
+
+## 2026-09-26 09:15～10:40：m32-sweep——普查 16 token/wave 核，ViT project 加宽到 64 列（逐位，1080 −1.9%，900 −1.0%）
+
+推广 c512-ffn 的"一 wave 多算、权重少读"（`HIP/experiments/m32-sweep`，`results/m32-sweep-20260926`；对照 = prod8 + wave-owned + C512_M32）。重复派发普查：C256 生产 FFN 最贵（16 次/帧，900/1080 边际 0.93/1.32 ms），其后 ViT attention 0.36/0.56、ViT QKV 0.34/0.54、decoder 投影 0.34/0.46、ViT project 0.24/0.41。
+- **C256 FFN 32 token/组：null**（LINE_STORES 版 1080 +0.036）。按 FLOP 算它 ≈460 TF，已贴 FP8 峰值——算力瓶颈，少读权重没用，LDS 60 KB/181 VGPR 反拖驻留。**排序要看离峰值多远，不只看边际成本。**
+- ViT QKV 三种加宽（32×64 / 32×32 / 16×64）两档不一致或变慢：wave 数不够藏延迟。decoder 16×64 变慢（2×2 上采样尾部每元素散写 4 处，加宽后串行）。
+- **ViT project 16×64（每 K16 步 f32→E4M3 的 A 片段喂 4 个 WMMA）：三批 ABBA 900 −0.105/−0.112/−0.101，1080 −0.300/−0.289/−0.281 ms**，槽首尾与 16 帧动态历史逐位。手写特化版编出来不同（98 vs 160 VGPR）只剩 −0.04/−0.22，生产用实测模板原文，ISA 逐条相同。
+- 接入：`hip/vit_wide_deep.inc`、模块 `vit-wide-deep`（配方 29 模块）、开关 `DLSS5_HIP_VIT_PROJ_N64`（默认 0，要求 vit_proj_frag）。NativeGameFrame 回归（900/1080 静态/移动、720 移动、900/1080 历史、关 frag 回落）全部逐帧同、计数每帧 8 次全替换。生产 host 千帧长测未跑（10:20 Zero 开了剑星，停手）。add-on 106ff3d0 + 2 模块 + install.ps1 在 `D:\DLSSNR-Lab\vit-proj-n64-20260926`，**未安装**。
+- **配方缺口已补**：prod7/prod8 的 mh_fast 带 `HIP_FFN_LINE_STORES 1` 编，但 `hip/build-modules.ps1` 那行没写，按配方重编会丢 prod7 的 −0.6%。补后与 prod8 `mhfast.generated.hip` 逐字节相同。

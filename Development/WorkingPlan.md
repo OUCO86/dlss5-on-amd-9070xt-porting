@@ -1,5 +1,7 @@
 # 当前工作计划（覆盖式，不续写；最后更新 2026-09-26，Yami（一头一wave扩展筛选））
 
+> **09-26 10:40 m32-sweep**：ViT project 16×64 逐位 −1.0/−1.9%，已进可选路径 `DLSS5_HIP_VIT_PROJ_N64`，待生产 host 千帧长测 + 装机（payload 在 D:\DLSSNR-Lab\vit-proj-n64-20260926）。C256 FFN 已近 FP8 峰值（加宽 null），ViT QKV/decoder 加宽 null（`results/m32-sweep-20260926`）。下一候选：ViT attention（边际 0.36/0.56，K/V 在 L0 内，先查瓶颈再动）。
+
 > **09-26 08:40 C512 FFN 链**：QKV+mix 32 token/wave 逐位 −1.0%/−1.3%，已进可选生产路径 `DLSS5_HIP_C512_M32`（payload 就绪未装，`results/c512-ffn-20260926`）。同法候选：其他「一 wave 16 token × 64 列、B 片段按 16 token 重读」的核（ViT/decoder 投影等）先查 M；投影 m32 为 null 需拆原因。另：现行生产基线历史模式出现一次偶发不一致，PDL 正确性核查升为优先。
 
 
