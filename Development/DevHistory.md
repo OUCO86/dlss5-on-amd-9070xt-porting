@@ -577,3 +577,7 @@ c512-ffn 回归里那次"基线第 8～11 帧不一致"：回归的 `extra-900-h
 ## 2026-09-26 09:12：C512 M32 装进剑星（待用户标准测试）
 
 游戏关闭时执行 `deployments/c512-m32-20260926/install.ps1`：add-on 3d8295db（含 auto-tier）+ 双架构 c512-m32-mh/deep 模块，flags 加 `DLSS5_HIP_C512_M32=1`（auto / PDL=1 / WAVE_OWNED=1 保持）。备份 `D:\DLSSNR-Lab\c512-m32-20260926\backups\stellar-20260926-091206`。待 Zero 按标准测试（1080P 窗口 FSR 原生 AA 主菜单）读数，并核对日志替换生效。
+
+## 2026-09-26 10:17：C512 M32 剑星实测
+
+用户 2K 质量档（1707×961→900 档）：主菜单 57～58（C512 前 56～57），最简场景 60（上限）。日志 pid=29300：`c512_m32_active=1`、`wave_owned_active=1`、`network=1600x900`。当日 2K 质量档主菜单累计：prod8 约 47～48 → auto 分档 56～57 → +C512 57～58。
