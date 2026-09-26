@@ -3,7 +3,7 @@ from pathlib import Path
 import sys,json,hashlib
 ROOT=Path(__file__).resolve().parents[2];OUT=Path(sys.argv[1] if len(sys.argv)>1 else '/tmp/wave-owned-production');OUT.mkdir(parents=True,exist_ok=True)
 read=lambda name:(ROOT/'hip'/name).read_text()
-c32='#define CW_ROLL_HIDDEN 1\n#define CW_ROLL_WINDOW 1\n#define HIP_ISA_HALF 1\n#define HIP_PREPACKED_WEIGHTS 1\n'+read('c32_fused_ffn_attention.hip')+'\n'+read('wave_owned_c32.inc')
+c32='#define CW_ROLL_HIDDEN 1\n#define CW_ROLL_WINDOW 1\n#define CW_VEC_INPUT 1\n#define CW_PREFIX_SPLIT 1\n#define HIP_ISA_HALF 1\n#define HIP_PREPACKED_WEIGHTS 1\n'+read('c32_fused_ffn_attention.hip')+'\n'+read('wave_owned_c32.inc')
 core=read('wave_owned_mh.inc');attention=core[core.index(' // One wave owns all keys'):core.index('#define W2_KERNEL')]
 a='i2 a=w2_load<C>(plane0,qt,ct);';assert attention.count(a)==1
 attention=attention.replace(a,'''i2 a;

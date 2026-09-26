@@ -14,6 +14,9 @@
 #ifndef CW_PREFIX_SPLIT
 #define CW_PREFIX_SPLIT 0 /* 1: prefix features split across both half-waves (bit-exact; 1080 -0.03ms, results/vit-attn-c32-input-20260926) */
 #endif
+#ifndef CW_VEC_INPUT
+#define CW_VEC_INPUT 0 /* 1: mapped/post input rows read as b128/b64 instead of per-element loads (bit-exact; results/c32-wave-phase-20260926) */
+#endif
 using cw_i16=int __attribute__((ext_vector_type(16)));
 DEV i2 cw_input(const unsigned char*in,uint win,uint qt,uint ci,uint width,uint height,uint sx,uint sy,uint prevw,uint px,uint py,uint r,uint g){
  uint ww=width+2*sx;int x=int((win%(ww/8))*8+(qt*16+r)%8)-int(sx),y=int((win/(ww/8))*8+(qt*16+r)/8)-int(sy);i2 a{};
@@ -69,7 +72,25 @@ DEV void cw_body(const unsigned char*in,const float*fw,const float*w,unsigned ch
   else{
    uint ww=width+2*sx;int x=int((win%(ww/8))*8+(qt*16+r)%8)-int(sx),y=int((win/(ww/8))*8+(qt*16+r)/8)-int(sy);
    bool valid=x>=0&&y>=0&&x<int(width)&&y<int(height);
+#if CW_VEC_INPUT
+   // The lane's 8 channels c=ci*16+g*8..+7 are contiguous in every source (f32 features, FP8 skip bytes, scales, FFN residual
+   // scale), 32-byte aligned (hipMalloc bases, channel offsets multiple of 8). Read them as whole rows (2x b128 / 1x b64)
+   // instead of 8 per-element loads each; the per-element arithmetic and its order are unchanged.
+   for(uint ci=0;ci<2;ci++){uint c0=ci*16+g*8;float src[8]{};
+    if(valid){
+     if constexpr(Post){uint p=uint(y)*width+uint(x),low=(uint(y)/2)*(width/2)+uint(x)/2;
+      float lo[8],s0[8],s1[8];unsigned long long sk;
+      __builtin_memcpy(lo,__builtin_assume_aligned(reinterpret_cast<const float*>(in)+low*32+c0,32),32);
+      __builtin_memcpy(s0,__builtin_assume_aligned(scales+c0,32),32);__builtin_memcpy(s1,__builtin_assume_aligned(scales+32+c0,32),32);
+      __builtin_memcpy(&sk,__builtin_assume_aligned(skip+p*32+c0,8),8);
+      for(uint e=0;e<8;e++){float high=__builtin_amdgcn_cvt_f32_fp8(int((sk>>(8*e))&255u),0);src[e]=Hrtz(Hrtz(lo[e]*s0[e])+high*s1[e]);}
+     }else __builtin_memcpy(src,__builtin_assume_aligned(reinterpret_cast<const float*>(in)+(uint(y)*width+uint(x))*32+c0,32),32);
+    }
+    float res[8];__builtin_memcpy(res,__builtin_assume_aligned(fw+8704+c0,32),32);
+    i2 a{};for(uint e=0;e<8;e++){float v=src[e];put_bits(a,e,fp8(v));ffn[ci][e]=clampf(float((_Float16)v),-448.f,448.f)*res[e];}input[ci]=a;}
+#else
    for(uint ci=0;ci<2;ci++){i2 a{};for(uint e=0;e<8;e++){uint c=ci*16+g*8+e;float v=0.f;if(valid){if constexpr(Post){uint p=uint(y)*width+uint(x),low=(uint(y)/2)*(width/2)+uint(x)/2;float high=__builtin_amdgcn_cvt_f32_fp8(int(skip[p*32+c]),0);v=Hrtz(Hrtz(reinterpret_cast<const float*>(in)[low*32+c]*scales[c])+high*scales[32+c]);}else v=reinterpret_cast<const float*>(in)[(uint(y)*width+uint(x))*32+c];}put_bits(a,e,fp8(v));ffn[ci][e]=clampf(float((_Float16)v),-448.f,448.f)*fw[8704+c];}input[ci]=a;}
+#endif
   }
   if constexpr(Chain)for(uint part=0;part<3;part++)for(uint ci=0;ci<2;ci++)for(uint kt=0;kt<2;kt++){
    i2 b=matrix8(fw,34944+((part*2+ci)*2+kt)*512+(g*16+r)*8);

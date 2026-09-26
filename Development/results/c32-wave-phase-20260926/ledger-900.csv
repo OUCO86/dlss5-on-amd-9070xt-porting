@@ -1,0 +1,22 @@
+# results-900
+phase,name,share_of_c32_wave_cycles,instrument_ms_delta,samples
+0,whole,1.0000,+0.0142,24247
+1,input,0.2449,+0.0100,24247
+2,chain_mix,0.0012,+0.0036,24247
+3,ffn,0.3763,+0.0192,24247
+4,feature_pack,0.0166,+0.1020,24247
+5,qkv_norm,0.0999,+0.0952,24245
+6,scores_exp,0.0087,+0.0011,24247
+7,sums_prob,0.0004,-0.0073,24247
+8,av,0.0004,+0.0266,24247
+9,projection_store,0.0933,+0.0084,24247
+10,tail,0.0983,+0.0354,24247
+
+# per kernel (mean cycles per wave; share of that kernel's whole in the same run)
+kernel,groups,whole_cycles,input,chain_mix,ffn,feature_pack,qkv_norm,scores_exp,sums_prob,av,projection_store,tail
+c32_wave1_prefix,24000,88500,0.203,0.000,0.368,0.014,0.089,0.008,0.000,0.000,0.071,0.207
+c32_wave1_mapped,6000,83606,0.352,0.002,0.326,0.016,0.096,0.009,0.000,0.000,0.122,0.000
+c32_wave1_chain,6060,67924,0.026,0.002,0.566,0.025,0.139,0.011,0.000,0.000,0.148,0.000
+c32_wave1_finish_dcrop,6100,87725,0.016,0.002,0.455,0.017,0.091,0.009,0.000,0.000,0.081,0.264
+c32_wave1_finish,6100,77923,0.020,0.002,0.466,0.020,0.100,0.009,0.000,0.000,0.083,0.228
+c32_wave1_post,24321,95930,0.494,0.000,0.236,0.013,0.086,0.008,0.000,0.000,0.067,0.048

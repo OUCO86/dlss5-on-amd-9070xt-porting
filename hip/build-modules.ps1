@@ -42,7 +42,7 @@ $modules = @(
     @{ name = 'deep_fast-packed';                   defines = @('HIP_BRANCHLESS_F 1');    sources = @('deep_fast.hip') },
     @{ name = 'multihead-fast-packed';              defines = @();                        sources = @('multihead_fast.hip') },
     @{ name = 'multihead-fast-padded-wave-packed';  defines = @('HIP_FFN_HOIST_RES 2','HIP_FFN_LINE_STORES 1'); sources = @('multihead_fast_padded.hip') },
-    @{ name = 'c32-wave1'; defines = @('HIP_PREPACKED_WEIGHTS 1','CW_ROLL_HIDDEN 1','CW_ROLL_WINDOW 1'); sources = @('c32_fused_ffn_attention.hip','wave_owned_c32.inc') },
+    @{ name = 'c32-wave1'; defines = @('HIP_PREPACKED_WEIGHTS 1','CW_ROLL_HIDDEN 1','CW_ROLL_WINDOW 1','CW_VEC_INPUT 1','CW_PREFIX_SPLIT 1'); sources = @('c32_fused_ffn_attention.hip','wave_owned_c32.inc') },
     @{ name = 'c64-wave2'; defines = @('HIP_PREPACKED_WEIGHTS 1','HIP_FFN_HOIST_RES 2','HIP_PDL_KERNELS 0','W2_FRAGMENT_WEIGHTS 1','W2_LAUNDER_QKV 1','W2_SCHED_FENCE 1','W2_ROLL_QUERY 1','W2_HIDDEN_TILES 2'); sources = @('multihead_fast_padded.hip','wave_owned_mh.inc','wave_owned_attention_setup.inc','@wave-owned-attention-body','wave_owned_attention_exports.inc') },
     @{ name = 'c512-m32-mh'; defines = @('HIP_PREPACKED_WEIGHTS 1','HIP_FFN_HOIST_RES 2','HIP_PDL_KERNELS 0'); sources = @('multihead_fast_padded.hip','c512_m32_mh.inc') },
     @{ name = 'c512-m32-deep'; defines = @('HIP_PREPACKED_WEIGHTS 1','HIP_BRANCHLESS_F 1'); sources = @('deep_fast.hip','c512_m32_deep.inc') },

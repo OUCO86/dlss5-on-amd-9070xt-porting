@@ -615,3 +615,9 @@ c512-ffn 回归里那次"基线第 8～11 帧不一致"：回归的 `extra-900-h
 ## 2026-09-26 10:50～12:30：ViT attention 四候选全 null；C32 prefix 分摊 1080 −0.03ms（宏并入、默认关）
 
 `experiments/vit-attn-c32-input`（m32-sweep 派生，基线含 VIT_PROJ_N64），五候选均逐位 + 动态历史通过。ViT attention：m32 两 query tile 共用 K/V +0.08ms（并行度减半），V 转置写/8 字节读 −0.01，QK 操作数对调去 LDS 转置与 barrier ±0.03，二者叠加 ≈0——不卡访存量、V gather、同步链，卡在逐元素 exp/fp8 打包的 VALU 依赖延迟，逐位下无结构空间，不采用。C32 prefix：原来只有半 wave 算 16 个输入特征（Box–Muller 噪声），改两半 wave 同指令流分摊、g0 一次 bpermute：900 −0.01（噪声内）、1080 −0.034（6 组全负），以 `CW_PREFIX_SPLIT`（默认 0）并入 `hip/wave_owned_c32.inc`，配方未改、未进生产，下轮合包重编时打开并回归。结果 `results/vit-attn-c32-input-20260926`。
+
+## 2026-09-26 11:20～12:40：单 wave C32 阶段账；输入宽读 + prefix split 进生产配方（−0.8～0.9%，待装）
+
+`HIP/experiments/c32-wave-phase`（核内 SHADER_CYCLES，阶段变体与生产核同模块，生产核机器码逐条同；两档 177 次 VERIFY 全逐位）。wave 周期份额（两档一致）：输入 24.5%、FFN 37.7%、特征打包+QKV 11.6%、注意力+投影+写出 10.3%（loop 2 纯寄存器算术被编译器跨过计时点，只能合并看）、尾部 9.8%。按核：post 输入段 49%（折合全 C32 约 14%）、mapped 输入 35%。post 每 lane 每 tile 69×b32 + 16×u8 逐元素读 8 个连续通道（`if(valid)` + 4 字节对齐阻止合并）。
+`CW_VEC_INPUT=1`：整行 b128/b64 读取，算术不变，VGPR 不变零溢出。`experiments/c32-vec-input` 三候选两档三组 200 帧 ABBA + 动态历史全逐位：宽读 −0.86/−0.82%，宽读 + `CW_PREFIX_SPLIT` −1.06/−0.94%（采用），仅 split −0.17/−0.21%。
+生产：c32-wave1 配方（build-modules.ps1 + prepare_wave_owned.py）加两宏，跟 WAVE_OWNED 走、无新开关；双架构编译（gfx1201 7AC34418…、gfx1200 128BB82C…），gfx1201 模块 16 函数与实测候选逐条同；NativeGameFrame 7 用例 84 帧逐帧同；生产 host 千帧长测 900 −0.088ms（−0.81%）、1080 −0.140ms（−0.92%）。payload + install.ps1 在 `D:\DLSSNR-Lab\c32-vec-20260926`（前置哈希与剑星现装一致），**未安装未发包**。结果 `results/c32-wave-phase-20260926`。下一刀候选：finish/prefix 尾部（各自核 21～26%）。

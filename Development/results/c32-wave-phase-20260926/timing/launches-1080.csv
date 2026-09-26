@@ -1,0 +1,11 @@
+launch,kernel,groups
+0,c32_wave1_prefix,34560
+1,c32_wave1_mapped,8640
+2,c32_wave1_chain,8833
+3,c32_wave1_chain,8712
+4,c32_wave1_finish_dcrop,8760
+5,c32_wave1_mapped,8640
+6,c32_wave1_chain,8833
+7,c32_wave1_chain,8712
+8,c32_wave1_finish,8760
+9,c32_wave1_post,34945
